@@ -1,0 +1,168 @@
+<Window x:Class="GUI.Views.Dialogs.ThongBaoDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        mc:Ignorable="d"
+        Title="Thông Báo Hệ Thống"
+        Width="490"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        FontFamily="Segoe UI">
+
+    <Grid Margin="16">
+        <Border x:Name="bdWindowBorder"
+                Background="#FFFFFF" 
+                BorderBrush="#002855" 
+                BorderThickness="1.5" 
+                CornerRadius="4">
+            <Border.Effect>
+                <DropShadowEffect Color="#0F172A" BlurRadius="28" ShadowDepth="6" Opacity="0.35"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="38"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" 
+                      x:Name="gridHeader"
+                      Background="#003B73" 
+                      MouseLeftButtonDown="Header_MouseLeftButtonDown"
+                      Cursor="SizeAll">
+                    <Border CornerRadius="3,3,0,0" Background="{Binding Background, ElementName=gridHeader}"/>
+                    
+                    <Grid Margin="16,0,10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   x:Name="txtTieuDeHeader" 
+                                   Text="XÁC NHẬN ĐIỀU ĐỘ CHẠY TÀU" 
+                                   FontSize="12" 
+                                   FontWeight="Bold" 
+                                   Foreground="#FFFFFF" 
+                                   VerticalAlignment="Center"/>
+
+                        <Button Grid.Column="1" 
+                                Click="BtnDong_Click"
+                                Width="28" Height="28"
+                                Background="Transparent" 
+                                BorderThickness="0" 
+                                Cursor="Hand"
+                                ToolTip="Đóng (Esc)">
+                            <TextBlock Text="✕" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
+                </Grid>
+
+                <Border Grid.Row="1" Background="#F8FAFC" Padding="18,16">
+                    <Border x:Name="bdCardThongBao"
+                            Background="#FFFFFF" 
+                            BorderBrush="#CBD5E1" 
+                            BorderThickness="1" 
+                            CornerRadius="4"
+                            Padding="16,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" 
+                                    x:Name="borderIcon"
+                                    Width="44" Height="44" 
+                                    CornerRadius="22" 
+                                    Background="#E0E7FF" 
+                                    VerticalAlignment="Center" 
+                                    Margin="0,0,16,0">
+                                <ui:SymbolIcon x:Name="iconThongBao" 
+                                               Symbol="QuestionCircle24" 
+                                               FontSize="22" 
+                                               Foreground="#003B73" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="txtTieuDe" 
+                                           Text="Xác Nhận Thao Tác" 
+                                           FontSize="13" 
+                                           FontWeight="Bold" 
+                                           Foreground="#0F172A" 
+                                           Margin="0,0,0,6"/>
+
+                                <TextBlock x:Name="txtNoiDung" 
+                                           Text="Nội dung thông báo hiển thị tại đây." 
+                                           FontSize="12" 
+                                           Foreground="#334155" 
+                                           TextWrapping="Wrap" 
+                                           LineHeight="19"/>
+
+                                <StackPanel x:Name="pnlNhapMaXacNhan" Visibility="Collapsed" Margin="0,12,0,0">
+                                    <TextBlock x:Name="lblHuongDanNhapMa" 
+                                               Text="Nhập chính xác mã để mở khóa xác nhận:" 
+                                               FontSize="11" FontWeight="SemiBold" Foreground="#DC2626" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="txtMaXacNhan" 
+                                             Height="28" FontSize="12" FontWeight="Bold" FontFamily="Consolas" CharacterCasing="Upper"
+                                             VerticalContentAlignment="Center" Padding="8,0"
+                                             TextChanged="TxtMaXacNhan_TextChanged"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Border>
+
+                <Border Grid.Row="2" 
+                        Background="#F1F5F9" 
+                        BorderBrush="#CBD5E1" 
+                        BorderThickness="0,1,0,0" 
+                        CornerRadius="0,0,3,3" 
+                        Padding="16,12">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        
+                        <Button x:Name="btnHuy" 
+                                Click="BtnHuy_Click"
+                                Visibility="Collapsed"
+                                Height="30" Padding="14,0" 
+                                Margin="0,0,10,0"
+                                Background="#FFFFFF" 
+                                BorderBrush="#94A3B8" 
+                                BorderThickness="1"
+                                Foreground="#1E293B" 
+                                FontSize="12" 
+                                FontWeight="SemiBold" 
+                                Cursor="Hand"
+                                IsCancel="True">
+                            <TextBlock x:Name="txtNutHuy" Text="Hủy bỏ"/>
+                        </Button>
+
+                        <Button x:Name="btnChinh" 
+                                Click="BtnChinh_Click"
+                                Height="30" Padding="18,0"
+                                Background="#003B73" 
+                                BorderBrush="#002855" 
+                                BorderThickness="1"
+                                Foreground="#FFFFFF" 
+                                FontSize="12" 
+                                FontWeight="Bold" 
+                                Cursor="Hand"
+                                IsDefault="True">
+                            <TextBlock x:Name="txtNutChinh" Text="Đã hiểu"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

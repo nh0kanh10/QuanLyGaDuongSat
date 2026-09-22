@@ -1,0 +1,92 @@
+<UserControl x:Class="GUI.Views.UserControls.PaginationControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <Border Background="#F8FAFC" 
+            BorderBrush="#E2E8F0" 
+            BorderThickness="0,1,0,0" 
+            Padding="10,5">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Thông tin hiển thị -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock x:Name="txtSummary" 
+                           Text="Hiển thị 1 - 10 / 13 ga" 
+                           FontSize="11" 
+                           Foreground="#475569" 
+                           FontWeight="Medium"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Điều khiển phân trang -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Cỡ trang:" Style="{StaticResource FieldLabel}" FontSize="11" Margin="0,0,4,0"/>
+                <ComboBox x:Name="cboPageSize" 
+                          Height="24" Width="68" 
+                          FontSize="11" 
+                          Margin="0,0,10,0"
+                          SelectionChanged="CboPageSize_SelectionChanged">
+                    <ComboBoxItem Content="10"/>
+                    <ComboBoxItem Content="15"/>
+                    <ComboBoxItem Content="25"/>
+                    <ComboBoxItem Content="50" IsSelected="True"/>
+                    <ComboBoxItem Content="Tất cả"/>
+                </ComboBox>
+
+                <Border Width="1" Height="14" Background="#CBD5E1" Margin="0,0,10,0"/>
+
+                <Button x:Name="btnFirst" 
+                        Click="BtnFirst_Click" 
+                        Style="{StaticResource DesktopButton}" 
+                        Width="26" Height="24" Padding="0" Margin="0,0,3,0"
+                        ToolTip="Về trang đầu">
+                    <ui:SymbolIcon Symbol="ChevronDoubleLeft20" FontSize="11"/>
+                </Button>
+
+                <Button x:Name="btnPrev" 
+                        Click="BtnPrev_Click" 
+                        Style="{StaticResource DesktopButton}" 
+                        Width="26" Height="24" Padding="0" Margin="0,0,6,0"
+                        ToolTip="Trang trước">
+                    <ui:SymbolIcon Symbol="ChevronLeft20" FontSize="11"/>
+                </Button>
+
+                <TextBlock Text="Trang" Style="{StaticResource FieldLabel}" FontSize="11" Margin="0,0,4,0"/>
+                <TextBox x:Name="txtCurrentPage" 
+                         Text="1" 
+                         Width="34" Height="24" 
+                         HorizontalContentAlignment="Center" 
+                         FontSize="11" 
+                         FontWeight="Bold"
+                         KeyDown="TxtCurrentPage_KeyDown"
+                         Margin="0,0,4,0"/>
+                <TextBlock x:Name="txtTotalPages" 
+                           Text="/ 2" 
+                           Style="{StaticResource FieldLabel}" 
+                           FontSize="11" 
+                           Margin="0,0,6,0"/>
+
+                <Button x:Name="btnNext" 
+                        Click="BtnNext_Click" 
+                        Style="{StaticResource DesktopButton}" 
+                        Width="26" Height="24" Padding="0" Margin="0,0,3,0"
+                        ToolTip="Trang sau">
+                    <ui:SymbolIcon Symbol="ChevronRight20" FontSize="11"/>
+                </Button>
+
+                <Button x:Name="btnLast" 
+                        Click="BtnLast_Click" 
+                        Style="{StaticResource DesktopButton}" 
+                        Width="26" Height="24" Padding="0" Margin="0"
+                        ToolTip="Đến trang cuối">
+                    <ui:SymbolIcon Symbol="ChevronDoubleRight20" FontSize="11"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
