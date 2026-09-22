@@ -1,0 +1,562 @@
+<Window x:Class="GUI.Views.Dialogs.BaoCaoGaDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        mc:Ignorable="d"
+        Title="Trung Tâm Báo Cáo &amp; Thống Kê Mạng Lưới Ga — Tuyến Bắc - Nam" 
+        Height="820" Width="1240"
+        MinHeight="680" MinWidth="1050"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        Background="#F1F5F9"
+        FontFamily="Segoe UI"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#003B73" Padding="16,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:SymbolIcon Symbol="DocumentPdf24" FontSize="18" Foreground="#FFFFFF" Margin="0,0,10,0"/>
+                <TextBlock Text="TRUNG TÂM BÁO CÁO &amp; THỐNG KÊ MẠNG LƯỚI GA ĐƯỜNG SẮT BẮC — NAM" 
+                           FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <TabControl Grid.Row="1" x:Name="tabControlChinh" Background="#F1F5F9" BorderThickness="0,1,0,0" BorderBrush="#CBD5E1">
+
+            <!-- Thiết lập bộ lọc và xem trước bản in A4 -->
+            <TabItem x:Name="tabThietLap">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Margin="4,2">
+                        <ui:SymbolIcon Symbol="Drafts24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
+                        <TextBlock Text="Thiết Lập &amp; Xem Trước Bản In (A4)" FontWeight="SemiBold" FontSize="12"/>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="380"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="0,0,1,0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14,12">
+                            <StackPanel>
+
+                                <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="10" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <ui:SymbolIcon Symbol="Flashlight24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
+                                            <TextBlock Text="MẪU BÁO CÁO TIÊU CHUẨN (1-CLICK)" FontSize="11" FontWeight="Bold" Foreground="#003B73"/>
+                                        </StackPanel>
+
+                                        <Button x:Name="btnMauHaTang" Click="BtnMauHaTang_Click" 
+                                                Height="30" Margin="0,0,0,6" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" HorizontalContentAlignment="Left" Padding="8,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ui:SymbolIcon Symbol="ArrowTrendingLines24" FontSize="13" Foreground="#0284C7" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Báo cáo Năng Lực Hạ Tầng &amp; Ray Tránh" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Button x:Name="btnMauKhaiThac" Click="BtnMauKhaiThac_Click" 
+                                                Height="30" Margin="0,0,0,6" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" HorizontalContentAlignment="Left" Padding="8,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ui:SymbolIcon Symbol="VehicleSubway24" FontSize="13" Foreground="#15803D" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Báo cáo Hiện Trạng Vận Hành Khai Thác" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Button x:Name="btnMauKiemToan" Click="BtnMauKiemToan_Click" 
+                                                Height="30" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" HorizontalContentAlignment="Left" Padding="8,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ui:SymbolIcon Symbol="ClipboardTask24" FontSize="13" Foreground="#7C3AED" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Báo cáo Tổng Hợp Kiểm Toán Ga" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="10" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <ui:SymbolIcon Symbol="Filter24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
+                                            <TextBlock Text="BỘ LỌC DỮ LIỆU TÙY BIẾN" FontSize="11" FontWeight="Bold" Foreground="#003B73"/>
+                                        </StackPanel>
+
+                                        <TextBlock Text="Khoảng Lý Trình (Km):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="txtTuKm" Text="0.00" Height="26" FontSize="11" VerticalContentAlignment="Center" Padding="4,0" TextChanged="FilterInput_Changed"/>
+                                            <TextBlock Grid.Column="1" Text="—" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#64748B"/>
+                                            <TextBox Grid.Column="2" x:Name="txtDenKm" Text="1726.20" Height="26" FontSize="11" VerticalContentAlignment="Center" Padding="4,0" TextChanged="FilterInput_Changed"/>
+                                        </Grid>
+
+                                        <TextBlock Text="Phân Cấp Ga Cần Lọc:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
+                                        <WrapPanel Margin="0,0,0,8">
+                                            <CheckBox x:Name="chkHang1" Content="Hạng I" IsChecked="True" FontSize="11" Margin="0,0,10,4" Click="FilterInput_Changed"/>
+                                            <CheckBox x:Name="chkHang2" Content="Hạng II" IsChecked="True" FontSize="11" Margin="0,0,10,4" Click="FilterInput_Changed"/>
+                                            <CheckBox x:Name="chkHang3" Content="Hạng III" IsChecked="True" FontSize="11" Margin="0,0,10,4" Click="FilterInput_Changed"/>
+                                        </WrapPanel>
+
+                                        <TextBlock Text="Hạ Tầng Kỹ Thuật:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
+                                        <StackPanel Margin="0,0,0,6">
+                                            <CheckBox x:Name="chkChiCauQuay" Content="Chỉ lấy ga có Cầu Quay đầu máy" FontSize="11" Click="FilterInput_Changed"/>
+                                        </StackPanel>
+
+                                        <TextBlock Text="Số Lượng Đường Ray Trong Ga:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="6"/>
+                                                <ColumnDefinition Width="65"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ComboBox x:Name="cboToanTuRay" SelectedIndex="0" Height="26" FontSize="11" SelectionChanged="CboToanTuRay_SelectionChanged">
+                                                <ComboBoxItem Content="Tất cả quy mô ray"/>
+                                                <ComboBoxItem Content="≥ (Tối thiểu từ)"/>
+                                                <ComboBoxItem Content="≤ (Tối đa đến)"/>
+                                                <ComboBoxItem Content="= (Chính xác đúng)"/>
+                                            </ComboBox>
+                                            <TextBox Grid.Column="2" x:Name="txtSoRay" Text="2" Height="26" FontSize="11" FontWeight="SemiBold"
+                                                     VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
+                                                     Padding="4,0" IsEnabled="False"
+                                                     TextChanged="FilterInput_Changed"
+                                                     PreviewTextInput="TxtSoRay_PreviewTextInput"
+                                                     ToolTip="Nhập số lượng đường ray (chỉ nhập số 1 - 20)"/>
+                                        </Grid>
+
+                                        <TextBlock Text="Trạng Thái Khai Thác:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
+                                        <ComboBox x:Name="cboLocKhaiThac" SelectedIndex="0" Height="26" FontSize="11" SelectionChanged="CboLocKhaiThac_SelectionChanged">
+                                            <ComboBoxItem Content="Tất cả trạng thái"/>
+                                            <ComboBoxItem Content="Đang khai thác vận hành"/>
+                                            <ComboBoxItem Content="Tạm ngừng khai thác"/>
+                                        </ComboBox>
+
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                            <Button Click="BtnDatLaiLoc_Click" Height="26" Padding="8,0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" Margin="0,0,6,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:SymbolIcon Symbol="ArrowReset24" FontSize="11" Foreground="#64748B" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="Đặt lại" FontSize="11" Foreground="#475569"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Click="BtnApDungLoc_Click" Height="26" Padding="10,0" Background="#003B73" BorderBrush="#002855" BorderThickness="1" Cursor="Hand">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:SymbolIcon Symbol="Checkmark24" FontSize="11" Foreground="#FFFFFF" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="Áp dụng lọc" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="10">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <ui:SymbolIcon Symbol="Table24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
+                                                <TextBlock Text="CỘT HIỂN THỊ TRÊN BÁO CÁO" FontSize="11" FontWeight="Bold" Foreground="#003B73"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Click="BtnChonTatCaCot_Click" Height="20" Padding="6,0" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                                <TextBlock Text="Chọn tất cả" FontSize="10" Foreground="#0284C7" TextDecorations="Underline"/>
+                                            </Button>
+                                        </Grid>
+
+                                        <CheckBox x:Name="chkColMaGa" Content="Mã Code Ga" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                        <CheckBox x:Name="chkColTenGa" Content="Tên Ga" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                        <CheckBox x:Name="chkColLyTrinh" Content="Lý Trình (Km)" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                        <CheckBox x:Name="chkColTinhThanh" Content="Tỉnh / Thành Phố" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                        <CheckBox x:Name="chkColHangGa" Content="Phân Cấp Ga" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                        <CheckBox x:Name="chkColSoRay" Content="Số Đường Ray" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                        <CheckBox x:Name="chkColCauQuay" Content="Cầu Quay Đầu Máy" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                        <CheckBox x:Name="chkColKhaiThac" Content="Trạng Thái Khai Thác" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                        <CheckBox x:Name="chkColNguoiTao" Content="Người Khởi Tạo Bản Ghi" IsChecked="False" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                        <CheckBox x:Name="chkColNgayCapNhat" Content="Thời Điểm Cập Nhật Cuối" IsChecked="False" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                    </StackPanel>
+                                </Border>
+
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Background="#1E293B" Padding="16,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon Symbol="Eye24" FontSize="16" Foreground="#38BDF8" Margin="0,0,8,0"/>
+                                    <TextBlock Text="BẢN XEM TRƯỚC TRANG IN CHUẨN A4" FontSize="12" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                                    <Border Background="#334155" CornerRadius="2" Padding="6,2" Margin="10,0,0,0">
+                                        <TextBlock x:Name="txtSoBanGhiHienThi" Text="13 ga" FontSize="11" FontWeight="Bold" Foreground="#38BDF8"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <Button x:Name="btnLuuBaoCao" Click="BtnLuuBaoCao_Click"
+                                            Height="30" Padding="12,0" Margin="0,0,8,0" Background="#15803D" BorderThickness="0" Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon Symbol="Save24" FontSize="13" Foreground="#FFFFFF" Margin="0,0,6,0"/>
+                                            <TextBlock Text="Lưu Snapshot Báo Cáo" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button x:Name="btnXuatExcel" Click="BtnXuatExcel_Click"
+                                            Height="30" Padding="10,0" Margin="0,0,8,0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon Symbol="Table24" FontSize="13" Foreground="#003B73" Margin="0,0,5,0"/>
+                                            <TextBlock Text="Xuất Excel" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button x:Name="btnIn" Click="BtnIn_Click"
+                                            Height="30" Padding="14,0" Background="#0284C7" BorderThickness="0" Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon Symbol="Print24" FontSize="13" Foreground="#FFFFFF" Margin="0,0,6,0"/>
+                                            <TextBlock Text="In Báo Cáo / PDF" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="#525659" Padding="20">
+                            <Border x:Name="printArea" 
+                                    Background="#FFFFFF" 
+                                    Width="794" 
+                                    MinHeight="1123" 
+                                    Margin="0,0,0,20" 
+                                    Padding="48,40"
+                                    BorderBrush="#CBD5E1" 
+                                    BorderThickness="1"
+                                    HorizontalAlignment="Center">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="4" Opacity="0.3"/>
+                                </Border.Effect>
+
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,24">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="TỔNG CÔNG TY ĐƯỜNG SẮT VIỆT NAM" FontSize="11" FontWeight="Bold" Foreground="#003B73"/>
+                                            <TextBlock Text="TRUNG TÂM ĐIỀU ĐỘ CHẠY TÀU ĐƯỜNG SẮT" FontSize="11" FontWeight="Bold" Foreground="#334155"/>
+                                            <TextBlock Text="Số: ...... /BC-ĐĐCT-HẠTẦNG" FontSize="10" FontStyle="Italic" Foreground="#64748B" Margin="0,2,0,0"/>
+                                            <Rectangle Width="140" Height="1" Fill="#003B73" HorizontalAlignment="Left" Margin="0,4,0,0"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                            <TextBlock Text="CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM" FontSize="11" FontWeight="Bold" Foreground="#0F172A" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Độc lập — Tự do — Hạnh phúc" FontSize="10" FontWeight="Bold" Foreground="#334155" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            <Rectangle Width="120" Height="1" Fill="#334155" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock x:Name="txtTieuDeBaoCao" 
+                                               Text="BÁO CÁO THỐNG KÊ MẠNG LƯỚI GA &amp; NĂNG LỰC HẠ TẦNG KỸ THUẬT" 
+                                               FontSize="15" FontWeight="Bold" Foreground="#003B73" 
+                                               TextAlignment="Center" Margin="0,0,0,4"/>
+
+                                    <TextBlock x:Name="txtPhamViKm" 
+                                               Text="Khu đoạn kiểm tra: Toàn tuyến Bắc — Nam (Km 0.00 Hà Nội — Km 1726.20 Sài Gòn)" 
+                                               FontSize="11" FontStyle="Italic" Foreground="#475569" 
+                                               TextAlignment="Center" Margin="0,0,0,4"/>
+
+                                    <TextBlock x:Name="txtNgayXuat" 
+                                               Text="Thời điểm lập biểu: 17/09/2026 05:30:00 (Giờ Việt Nam UTC+7)" 
+                                               FontSize="10" Foreground="#64748B" 
+                                               TextAlignment="Center" Margin="0,0,0,16"/>
+
+                                    <!-- KHỐI KPI TÓM TẮT THỐNG KÊ (3 Ô) -->
+                                    <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="12,8" Margin="0,0,0,16">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="1"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="1"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                                <TextBlock Text="TỔNG SỐ GA ĐÃ LỌC" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                                <TextBlock x:Name="txtKpiTongGa" Text="13 ga" FontSize="15" FontWeight="Bold" Foreground="#003B73" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            </StackPanel>
+
+                                            <Rectangle Grid.Column="1" Fill="#E2E8F0" Height="28"/>
+
+                                            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                                <TextBlock Text="TỔNG SỐ ĐƯỜNG RAY" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                                <TextBlock x:Name="txtKpiTongRay" Text="48 ray" FontSize="15" FontWeight="Bold" Foreground="#0284C7" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            </StackPanel>
+
+                                            <Rectangle Grid.Column="3" Fill="#E2E8F0" Height="28"/>
+
+                                            <StackPanel Grid.Column="4" HorizontalAlignment="Center">
+                                                <TextBlock Text="GA CÓ CẦU QUAY" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                                <TextBlock x:Name="txtKpiCauQuay" Text="5 ga" FontSize="15" FontWeight="Bold" Foreground="#15803D" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <DataGrid x:Name="dgBaoCao" 
+                                              AutoGenerateColumns="False" 
+                                              IsReadOnly="True" 
+                                              CanUserAddRows="False"
+                                              BorderBrush="#CBD5E1" 
+                                              BorderThickness="1"
+                                              GridLinesVisibility="All"
+                                              HorizontalGridLinesBrush="#CBD5E1"
+                                              VerticalGridLinesBrush="#CBD5E1"
+                                              RowHeight="28"
+                                              FontSize="11"
+                                              HeadersVisibility="Column"
+                                              Margin="0,0,0,24">
+                                        <DataGrid.ColumnHeaderStyle>
+                                            <Style TargetType="DataGridColumnHeader">
+                                                <Setter Property="Background" Value="#F1F5F9"/>
+                                                <Setter Property="Foreground" Value="#0F172A"/>
+                                                <Setter Property="FontWeight" Value="Bold"/>
+                                                <Setter Property="Height" Value="32"/>
+                                                <Setter Property="Padding" Value="6,0"/>
+                                                <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                                                <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                                            </Style>
+                                        </DataGrid.ColumnHeaderStyle>
+                                    </DataGrid>
+
+                                    <Grid Margin="0,16,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                            <TextBlock Text="NGƯỜI LẬP BIỂU BÁO CÁO" FontSize="11" FontWeight="Bold" Foreground="#0F172A" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="(Ký, ghi rõ họ tên và chức danh)" FontSize="10" FontStyle="Italic" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            <TextBlock Text="admin (Điều độ viên)" FontSize="11" FontWeight="Bold" Foreground="#003B73" HorizontalAlignment="Center" Margin="0,60,0,0"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                            <TextBlock Text="TRƯỞNG BAN ĐIỀU ĐỘ CHẠY TÀU" FontSize="11" FontWeight="Bold" Foreground="#0F172A" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="(Ký duyệt và đóng dấu xác nhận)" FontSize="10" FontStyle="Italic" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            <TextBlock Text="TRẦN VĂN AN (Phó Giám Đốc)" FontSize="11" FontWeight="Bold" Foreground="#0F172A" HorizontalAlignment="Center" Margin="0,60,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                </StackPanel>
+                            </Border>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- Kho lưu trữ báo cáo cũ -->
+            <TabItem x:Name="tabLuuTru">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Margin="4,2">
+                        <ui:SymbolIcon Symbol="History24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
+                        <TextBlock Text="Kho Lưu Trữ Báo Cáo Đã Xuất" FontWeight="SemiBold" FontSize="12"/>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <Grid Margin="16,14">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="12,10" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="320"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
+                                <ui:SymbolIcon Symbol="Archive24" FontSize="16" Foreground="#003B73" Margin="0,0,6,0"/>
+                                <TextBlock Text="LỊCH SỬ BÁO CÁO:" FontSize="11" FontWeight="Bold" Foreground="#003B73" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <ui:TextBox Grid.Column="1" x:Name="txtTimBaoCaoCu" 
+                                        PlaceholderText="Tìm theo tiêu đề, người lập..." 
+                                        TextChanged="TxtTimBaoCaoCu_TextChanged"
+                                        Height="28" FontSize="11" VerticalContentAlignment="Center"/>
+
+                            <Button Grid.Column="3" Click="BtnLamMoiBaoCaoCu_Click"
+                                    Height="28" Padding="12,0" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="ArrowSync24" FontSize="12" Foreground="#003B73" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Làm Mới Danh Sách" FontSize="11" FontWeight="SemiBold" Foreground="#334155"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3">
+                        <DataGrid x:Name="dgBaoCaoCu" 
+                                  AutoGenerateColumns="False" 
+                                  IsReadOnly="True" 
+                                  CanUserAddRows="False" 
+                                  SelectionMode="Single"
+                                  BorderThickness="0"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#E2E8F0"
+                                  RowHeight="36">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Mã" Binding="{Binding MaBaoCao}" Width="60">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontFamily" Value="Consolas"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Thời Gian Lưu (UTC+7)" Binding="{Binding ThoiGianDisplay}" Width="150">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontFamily" Value="Consolas"/>
+                                            <Setter Property="Foreground" Value="#0F172A"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Margin" Value="6,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Tiêu Đề Báo Cáo" Binding="{Binding TieuDe}" Width="280">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                            <Setter Property="Foreground" Value="#003B73"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Margin" Value="6,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Số Ga" Binding="{Binding SoBanGhi}" Width="70">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Người Lập" Binding="{Binding NguoiLap}" Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Margin" Value="6,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Tiêu Chí Lọc Đã Dùng" Binding="{Binding TieuChiLoc}" Width="*">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#475569"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                            <Setter Property="Margin" Value="6,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Cột Thao Tác: Xem Lại Snapshot & Xóa -->
+                                <DataGridTemplateColumn Header="Thao Tác" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <!-- Nút Xem Lại Snapshot -->
+                                                <Button Click="BtnXemLaiSnapshot_Click" Tag="{Binding}" 
+                                                        Height="24" Padding="6,0" Margin="0,0,6,0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" ToolTip="Nạp lại snapshot này lên trang in A4">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ui:SymbolIcon Symbol="Eye24" FontSize="11" Foreground="#0284C7" Margin="0,0,4,0"/>
+                                                        <TextBlock Text="Xem lại" FontSize="10" FontWeight="SemiBold" Foreground="#0284C7"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Click="BtnXoaBaoCaoCu_Click" Tag="{Binding}" 
+                                                        Height="24" Padding="6,0" Background="#FFFFFF" BorderBrush="#FECACA" BorderThickness="1" Cursor="Hand" ToolTip="Xóa báo cáo này khỏi CSDL">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ui:SymbolIcon Symbol="Delete24" FontSize="11" Foreground="#DC2626" Margin="0,0,4,0"/>
+                                                        <TextBlock Text="Xóa" FontSize="10" FontWeight="SemiBold" Foreground="#DC2626"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Hộp thoại nhập tiêu đề lưu snapshot -->
+        <Grid x:Name="pnlNhapTenBaoCao" Grid.RowSpan="2" Background="#800F172A" Visibility="Collapsed">
+            <Border Background="#FFFFFF" BorderBrush="#002855" BorderThickness="1.5" CornerRadius="4" 
+                    Width="460" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="20">
+                <Border.Effect>
+                    <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="4" Opacity="0.3"/>
+                </Border.Effect>
+
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <ui:SymbolIcon Symbol="Save24" FontSize="18" Foreground="#003B73" Margin="0,0,8,0"/>
+                        <TextBlock Text="LƯU SNAPSHOT BÁO CÁO VÀO CSDL" FontSize="13" FontWeight="Bold" Foreground="#003B73"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Vui lòng đặt tên cho bản báo cáo để lưu trữ và tra cứu lại sau này:" FontSize="11" Foreground="#475569" Margin="0,0,0,8"/>
+                    <TextBox x:Name="txtTieuDeLuuMoi" 
+                             Height="30" FontSize="12" VerticalContentAlignment="Center" Padding="6,0" Margin="0,0,0,16"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Click="BtnHuyLuuSnapshot_Click" Height="30" Padding="14,0" Margin="0,0,8,0" Background="#FFFFFF" BorderBrush="#94A3B8" BorderThickness="1" Cursor="Hand">
+                            <TextBlock Text="Hủy bỏ" FontSize="11" FontWeight="SemiBold" Foreground="#334155"/>
+                        </Button>
+                        <Button Click="BtnXacNhanLuuSnapshot_Click" Height="30" Padding="16,0" Background="#15803D" BorderBrush="#166534" BorderThickness="1" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Checkmark24" FontSize="12" Foreground="#FFFFFF" Margin="0,0,6,0"/>
+                                <TextBlock Text="Xác Nhận Lưu" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+    </Grid>
+</Window>

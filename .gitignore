@@ -1,0 +1,56 @@
+## Build Results & Binaries (Tuyệt đối không đẩy cache lên Git)
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.cache
+*.dll
+*.pdb
+*.exe
+*.baml
+*.resources
+*.lref
+*.Up2Date
+*.BuildWithSkipAnalyzers
+
+## Visual Studio & IDE Cache
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Local Backup (Tuyệt đối không đẩy lên Git)
+Pages_Full_Backup/
+scratch/
+.agents/
+
+## Tài liệu, Office & Báo cáo (Không đẩy lên Git)
+*.md
+*.markdown
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.xlsm
+*.csv
+*.pdf
+
+## Scripts ngoài & Database (Không đẩy lên Git)
+*.sql
+*.bat
+*.cmd
+*.ps1
+*.py
+
+## Node.js & Temporary
+node_modules/
+q/
+b.js
+package.json
+package-lock.json
+
+## OS Files
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
