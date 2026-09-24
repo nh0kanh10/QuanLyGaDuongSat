@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Input;
 using GUI.Views.Pages;
 using GUI.Views.Dialogs;
+using GUI.Views.KyThuat;
 
 namespace GUI
 {
@@ -14,6 +15,9 @@ namespace GUI
         private readonly LichTrinhPage _lichTrinhPage = new();
         private readonly BanVePage _banVePage = new();
         private readonly HangHoaPage _hangHoaPage = new();
+
+        // Phân hệ Kỹ thuật & Quản trị
+        private readonly PhuongTienPage _phuongTienPage = new();
 
         private string _currentTag = "MangLuoiGa";
         private readonly System.Windows.Threading.DispatcherTimer _timer;
@@ -74,6 +78,11 @@ namespace GUI
                 case "HangHoa":
                     MainFrame.Navigate(_hangHoaPage);
                     SetTabActive(tabHangHoa, txtTabHangHoa, iconTabHangHoa);
+                    break;
+
+                case "PhuongTien":
+                    MainFrame.Navigate(_phuongTienPage);
+                    SetTabActive(tabNavPhuongTien, txtTabPhuongTien, iconTabPhuongTien);
                     break;
             }
 
@@ -225,6 +234,30 @@ namespace GUI
                     btnScF9.Visibility = Visibility.Collapsed;
                     sepScF9.Visibility = Visibility.Collapsed;
                     break;
+
+                case "PhuongTien":
+                    btnScF2.Visibility = Visibility.Collapsed;
+                    sepScF2.Visibility = Visibility.Collapsed;
+
+                    btnScF3.Visibility = Visibility.Visible;
+                    sepScF3.Visibility = Visibility.Visible;
+                    txtScF3.Text = "Tra Cứu Đầu Máy";
+                    btnScF3.ToolTip = "F3: Focus ô tìm kiếm số hiệu đầu máy / dòng máy / xí nghiệp";
+
+                    btnScF4.Visibility = Visibility.Collapsed;
+                    sepScF4.Visibility = Visibility.Collapsed;
+
+                    btnScF5.Visibility = Visibility.Visible;
+                    sepScF5.Visibility = Visibility.Visible;
+                    txtScF5.Text = "Nạp Lại";
+                    btnScF5.ToolTip = "F5: Nạp lại toàn bộ dữ liệu phương tiện từ CSDL";
+
+                    btnScF6.Visibility = Visibility.Collapsed;
+                    sepScF6.Visibility = Visibility.Collapsed;
+
+                    btnScF9.Visibility = Visibility.Collapsed;
+                    sepScF9.Visibility = Visibility.Collapsed;
+                    break;
             }
         }
 
@@ -259,6 +292,11 @@ namespace GUI
             tabHangHoa.BorderBrush = inactiveBorder;
             txtTabHangHoa.Foreground = inactiveFg;
             iconTabHangHoa.Foreground = inactiveIconFg;
+
+            tabNavPhuongTien.Background = inactiveBg;
+            tabNavPhuongTien.BorderBrush = inactiveBorder;
+            txtTabPhuongTien.Foreground = inactiveFg;
+            iconTabPhuongTien.Foreground = inactiveIconFg;
         }
 
         private void SetTabActive(Border tab, TextBlock text, Wpf.Ui.Controls.SymbolIcon icon)
@@ -378,6 +416,9 @@ namespace GUI
                 case "HangHoa":
                     _hangHoaPage.FocusTimKiem();
                     break;
+                case "PhuongTien":
+                    _phuongTienPage.FocusTimKiem();
+                    break;
             }
         }
 
@@ -421,6 +462,9 @@ namespace GUI
                     break;
                 case "HangHoa":
                     _hangHoaPage.KichHoatNapLai();
+                    break;
+                case "PhuongTien":
+                    _phuongTienPage.KichHoatNapLai();
                     break;
             }
         }
@@ -478,6 +522,9 @@ namespace GUI
                     break;
                 case "KhuGian":
                     _khuGianPage.KichHoatHuy();
+                    break;
+                case "PhuongTien":
+                    _phuongTienPage.KichHoatHuy();
                     break;
             }
         }
