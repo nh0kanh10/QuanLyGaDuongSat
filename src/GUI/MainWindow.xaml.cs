@@ -18,6 +18,7 @@ namespace GUI
 
         // Phân hệ Kỹ thuật & Quản trị
         private readonly PhuongTienPage _phuongTienPage = new();
+        private readonly BaoTriPage _baoTriPage = new();
 
         private string _currentTag = "MangLuoiGa";
         private readonly System.Windows.Threading.DispatcherTimer _timer;
@@ -83,6 +84,11 @@ namespace GUI
                 case "PhuongTien":
                     MainFrame.Navigate(_phuongTienPage);
                     SetTabActive(tabNavPhuongTien, txtTabPhuongTien, iconTabPhuongTien);
+                    break;
+
+                case "BaoTri":
+                    MainFrame.Navigate(_baoTriPage);
+                    SetTabActive(tabNavBaoTri, txtTabBaoTri, iconTabBaoTri);
                     break;
             }
 
@@ -258,6 +264,32 @@ namespace GUI
                     btnScF9.Visibility = Visibility.Collapsed;
                     sepScF9.Visibility = Visibility.Collapsed;
                     break;
+
+                case "BaoTri":
+                    btnScF2.Visibility = Visibility.Visible;
+                    sepScF2.Visibility = Visibility.Visible;
+                    txtScF2.Text = "Lập Mới";
+                    btnScF2.ToolTip = "F2: Lập biên bản / phiếu mới theo tab đang mở (khám xe, nhiên liệu, bảo dưỡng)";
+
+                    btnScF3.Visibility = Visibility.Visible;
+                    sepScF3.Visibility = Visibility.Visible;
+                    txtScF3.Text = "Tra Cứu";
+                    btnScF3.ToolTip = "F3: Focus ô tìm kiếm của tab đang mở";
+
+                    btnScF4.Visibility = Visibility.Collapsed;
+                    sepScF4.Visibility = Visibility.Collapsed;
+
+                    btnScF5.Visibility = Visibility.Visible;
+                    sepScF5.Visibility = Visibility.Visible;
+                    txtScF5.Text = "Nạp Lại";
+                    btnScF5.ToolTip = "F5: Nạp lại dữ liệu bảo trì kỹ thuật";
+
+                    btnScF6.Visibility = Visibility.Collapsed;
+                    sepScF6.Visibility = Visibility.Collapsed;
+
+                    btnScF9.Visibility = Visibility.Collapsed;
+                    sepScF9.Visibility = Visibility.Collapsed;
+                    break;
             }
         }
 
@@ -297,6 +329,11 @@ namespace GUI
             tabNavPhuongTien.BorderBrush = inactiveBorder;
             txtTabPhuongTien.Foreground = inactiveFg;
             iconTabPhuongTien.Foreground = inactiveIconFg;
+
+            tabNavBaoTri.Background = inactiveBg;
+            tabNavBaoTri.BorderBrush = inactiveBorder;
+            txtTabBaoTri.Foreground = inactiveFg;
+            iconTabBaoTri.Foreground = inactiveIconFg;
         }
 
         private void SetTabActive(Border tab, TextBlock text, Wpf.Ui.Controls.SymbolIcon icon)
@@ -419,6 +456,9 @@ namespace GUI
                 case "PhuongTien":
                     _phuongTienPage.FocusTimKiem();
                     break;
+                case "BaoTri":
+                    _baoTriPage.FocusTimKiem();
+                    break;
             }
         }
 
@@ -440,6 +480,9 @@ namespace GUI
                     break;
                 case "HangHoa":
                     _hangHoaPage.KichHoatThemMoi();
+                    break;
+                case "BaoTri":
+                    _baoTriPage.KichHoatThemMoi();
                     break;
             }
         }
@@ -465,6 +508,9 @@ namespace GUI
                     break;
                 case "PhuongTien":
                     _phuongTienPage.KichHoatNapLai();
+                    break;
+                case "BaoTri":
+                    _baoTriPage.KichHoatNapLai();
                     break;
             }
         }
@@ -525,6 +571,9 @@ namespace GUI
                     break;
                 case "PhuongTien":
                     _phuongTienPage.KichHoatHuy();
+                    break;
+                case "BaoTri":
+                    _baoTriPage.KichHoatHuy();
                     break;
             }
         }
