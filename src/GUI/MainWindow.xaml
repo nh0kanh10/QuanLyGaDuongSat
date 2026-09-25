@@ -68,12 +68,19 @@
         <Border Grid.Row="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="0,0,0,1" Padding="12,6">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
+                    <!-- Cột 0 dùng '*' (không phải Auto) để thanh phân hệ co lại được khi
+                         cửa sổ hẹp. Nếu để Auto, tổng bề rộng các tab sẽ làm phình cả Grid
+                         và đẩy nội dung trang ra ngoài màn hình. -->
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <ScrollViewer Grid.Column="0"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Disabled"
+                              Padding="0,0,0,2">
+                <StackPanel Orientation="Horizontal">
                     <Border x:Name="tabGa" Background="#003B73" BorderBrush="#002855" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
                         <Button Click="NavTab_Click" Tag="MangLuoiGa" Background="Transparent" BorderThickness="0" Padding="12,6" Cursor="Hand">
                             <StackPanel Orientation="Horizontal">
@@ -118,9 +125,24 @@
                             </StackPanel>
                         </Button>
                     </Border>
-                </StackPanel>
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- ========================================================= -->
+                    <!-- NHÓM PHÂN HỆ KỸ THUẬT & QUẢN TRỊ                          -->
+                    <!-- ========================================================= -->
+                    <Rectangle Width="1" Height="24" Fill="#CBD5E1" Margin="4,0,10,0" VerticalAlignment="Center"/>
+
+                    <Border x:Name="tabNavPhuongTien" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
+                        <Button Click="NavTab_Click" Tag="PhuongTien" Background="Transparent" BorderThickness="0" Padding="12,6" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon x:Name="iconTabPhuongTien" Symbol="Engine24" FontSize="16" Foreground="#475569" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="txtTabPhuongTien" Text="PHƯƠNG TIỆN" FontSize="12" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Border>
+                </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                     <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="2" Padding="8,4">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Đường sắt Bắc - Nam (1,726.20 km)" FontSize="11" Foreground="#334155" FontWeight="SemiBold"/>
