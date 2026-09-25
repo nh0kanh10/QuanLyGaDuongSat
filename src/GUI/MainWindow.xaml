@@ -139,6 +139,15 @@
                             </StackPanel>
                         </Button>
                     </Border>
+
+                    <Border x:Name="tabNavBaoTri" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
+                        <Button Click="NavTab_Click" Tag="BaoTri" Background="Transparent" BorderThickness="0" Padding="12,6" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon x:Name="iconTabBaoTri" Symbol="WrenchScrewdriver24" FontSize="16" Foreground="#475569" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="txtTabBaoTri" Text="BẢO TRÌ &amp; AN TOÀN" FontSize="12" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Border>
                 </StackPanel>
                 </ScrollViewer>
 

@@ -1,0 +1,173 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+
+    <!-- ===================================================================== -->
+    <!-- STYLE DÙNG CHUNG CHO CÁC TRANG PHÂN HỆ KỸ THUẬT (Đạt)                  -->
+    <!-- Bảo trì · Nhân sự · Quản trị. Giống hệt style cục bộ của               -->
+    <!-- PhuongTienPage để các trang đồng bộ giao diện.                         -->
+    <!-- Gộp vào Page bằng /GUI;component/Views/KyThuat/Styles/KyThuatPageStyles.xaml -->
+    <!-- ===================================================================== -->
+
+    <!-- Tab phẳng chuẩn hệ thống -->
+    <Style x:Key="KtTabItem" TargetType="TabItem">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="Foreground" Value="#64748B"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <Border x:Name="border" BorderBrush="Transparent" BorderThickness="0,0,0,2"
+                            Padding="{TemplateBinding Padding}" Background="Transparent" Margin="0,0,8,0">
+                        <ContentPresenter ContentSource="Header" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="border" Property="BorderBrush" Value="#003B73"/>
+                            <Setter Property="Foreground" Value="#003B73"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="#003B73"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Nhãn và giá trị trong bảng thông số -->
+    <Style x:Key="KtSpecLabel" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="#64748B"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="KtSpecValue" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#0F172A"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextAlignment" Value="Right"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="KtSectionHeader" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="#003B73"/>
+        <Setter Property="Margin" Value="0,0,0,6"/>
+    </Style>
+
+    <!-- Khung thẻ trắng -->
+    <Style x:Key="KtCard" TargetType="Border">
+        <Setter Property="Background" Value="#FFFFFF"/>
+        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="3"/>
+    </Style>
+
+    <Style x:Key="KtToolbar" TargetType="Border">
+        <Setter Property="Background" Value="#F8FAFC"/>
+        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+
+    <!-- Thẻ chỉ số (KPI) trên dải tiêu đề: đặt Background / BorderBrush tại chỗ -->
+    <Style x:Key="KtKpi" TargetType="Border">
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <!-- Nút phẳng không viền, dùng cho thẻ bấm được (nội dung tự vẽ) -->
+    <Style x:Key="KtNutThe" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="True"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="Transparent">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.88"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.75"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Một dòng đối chiếu hạng mục khám xe (HangMucKhamXe).
+         Dùng ở BaoTriPage (panel chi tiết) và KhamXeDialog (xem trước). -->
+    <DataTemplate x:Key="KtMauHangMucKhamXe">
+        <Border Background="{Binding MauNen}" BorderBrush="{Binding MauVien}" BorderThickness="1"
+                CornerRadius="3" Padding="8,5" Margin="0,0,0,5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ui:SymbolIcon Grid.Column="0" Symbol="{Binding BieuTuong}" FontSize="15"
+                               Foreground="{Binding MauChu}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TenHangMuc}" FontSize="11" FontWeight="SemiBold" Foreground="#0F172A"/>
+                    <TextBlock FontSize="10" Foreground="#64748B">
+                        <Run Text="Yêu cầu:"/><Run Text=" "/><Run Text="{Binding YeuCau, Mode=OneWay}"/>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <TextBlock Text="{Binding GiaTriDo}" FontSize="11" FontWeight="Bold"
+                               Foreground="{Binding MauChu}" HorizontalAlignment="Right"/>
+                    <TextBlock Text="{Binding NhanKetQua}" FontSize="9" FontWeight="SemiBold"
+                               Foreground="{Binding MauChu}" HorizontalAlignment="Right"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </DataTemplate>
+
+    <!-- Tiến độ một cấp bảo dưỡng (TienDoCapBaoDuong).
+         Dùng ở BaoTriPage (panel chi tiết) và BaoDuongDialog (xem trước). -->
+    <DataTemplate x:Key="KtMauTienDoBaoDuong">
+        <Border Background="{Binding MauNen}" BorderBrush="{Binding MauVien}" BorderThickness="1"
+                CornerRadius="3" Padding="8,6" Margin="0,0,0,5">
+            <StackPanel>
+                <Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <Border Background="{Binding NenCap}" CornerRadius="3" Padding="6,0" Margin="0,0,7,0">
+                            <TextBlock Text="{Binding Cap}" FontSize="11" FontWeight="Bold" Foreground="{Binding MauCap}"/>
+                        </Border>
+                        <TextBlock Text="{Binding NhanTrangThai}" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{Binding MauChu}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding ConLai}" FontSize="11" FontWeight="Bold" Foreground="{Binding MauChu}"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
+                <Grid Height="6" Margin="0,5,0,4">
+                    <Border CornerRadius="3" Background="#E2E8F0"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="{Binding PhanDaDung}"/>
+                            <ColumnDefinition Width="{Binding PhanConLai}"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" CornerRadius="3" Background="{Binding MauChu}"/>
+                    </Grid>
+                </Grid>
+                <TextBlock Text="{Binding MoTaMoc}" FontSize="9" Foreground="#64748B" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
+</ResourceDictionary>
