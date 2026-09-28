@@ -1089,8 +1089,7 @@ namespace GUI.Views.KyThuat
 
         // Lich dung ga cua chuyen cho thanh hanh trinh o man hinh lap tau.
         // Giai doan giao dien chua co truy van vanhanh.LichDungGa trong Repository nen lay
-        // tu du lieu mau DanhMucMauNhanSu (bam seed). Khop theo MaChuyenTau + mac tau,
-        // lech thi tim theo mac tau + ngay xuat phat.
+        // tu du lieu mau DanhMucMauPhuongTien.LichDungGa (bam seed).
         private static (List<DiemDungLapTau> HanhTrinh, string GhiChu) LayHanhTrinhLapTau(DataRow? dong)
         {
             if (dong == null)
@@ -1099,17 +1098,14 @@ namespace GUI.Views.KyThuat
 
             int ma = Convert.ToInt32(dong["MaChuyenTau"]);
             string mac = dong["SoHieuMacTau"]?.ToString() ?? "";
-            DateTime ngay = Convert.ToDateTime(dong["NgayXuatPhat"]).Date;
+            DateTime ngayChay = Convert.ToDateTime(dong["GioXuatPhatKH"]).Date;
 
-            var chuyen = DanhMucMauNhanSu.TimChuyen(ma);
-            if (chuyen == null || chuyen.SoHieuMacTau != mac)
-                chuyen = DanhMucMauNhanSu.ChuyenTau.FirstOrDefault(c => c.SoHieuMacTau == mac && c.NgayXuatPhat.Date == ngay);
-
-            if (chuyen == null || !chuyen.CoLichDungGa || chuyen.LichDung.Count < 3)
+            var lich = DanhMucMauPhuongTien.TimLichDung(ma, mac);
+            if (lich == null || lich.DiemDung.Count < 3)
                 return (new List<DiemDungLapTau>(),
                         "Chuyến chưa có lịch dừng ga trung gian: đoàn tàu chạy suốt, không cắt / nối toa dọc đường.");
 
-            return (DiemDungLapTau.TaoHanhTrinh(chuyen.LichDung), "");
+            return (DiemDungLapTau.TaoHanhTrinh(lich, ngayChay), "");
         }
 
         private List<DauMayLapTau> LayDauMayChoLapTau()
