@@ -200,6 +200,10 @@ namespace GUI.Views.KyThuat.Models
         public GridLength PhanDaBan { get; set; } = new(0, GridUnitType.Star);
         public GridLength PhanConTrong { get; set; } = new(100, GridUnitType.Star);
 
+        // Pham vi chay cua toa (chi phuong an keo - tha co; bien che trong CSDL luon chay suot)
+        public string PhamViChay { get; set; } = "Suốt hành trình";
+        public bool CoPhamViRieng { get; set; }
+
         public static ToaBienCheHienThi TuDongDuLieu(DataRow r)
         {
             var toa = new ToaBienCheHienThi
@@ -250,8 +254,10 @@ namespace GUI.Views.KyThuat.Models
             ThuTuToa = t.ThuTu,
             SucChua = t.SucChua,
             ChieuDaiToaM = t.ChieuDaiM,
-            NhanLapDay = t.LaToaHang ? "Toa hàng" : "Phương án mô phỏng",
-            MauLapDay = "#94A3B8"
+            NhanLapDay = t.LaToaHang ? "Toa hàng" : "Mô phỏng",
+            MauLapDay = "#94A3B8",
+            PhamViChay = t.CoPhamViRieng ? t.NhanPhamVi : "Suốt hành trình",
+            CoPhamViRieng = t.CoPhamViRieng
         };
     }
 

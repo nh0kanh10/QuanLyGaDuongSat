@@ -893,8 +893,8 @@
                                         Padding="10,2,3,2" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
                                         <Ellipse Width="7" Height="7" Fill="#F59E0B" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Đang xem phương án kéo–thả" FontSize="11" FontWeight="SemiBold"
-                                                   Foreground="#92400E" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="txtPhuongAnMoPhong" Text="Đang xem phương án kéo–thả" FontSize="11"
+                                                   FontWeight="SemiBold" Foreground="#92400E" VerticalAlignment="Center"/>
                                         <Button Click="BtnBoPhuongAn_Click" Style="{StaticResource DesktopButton}"
                                                 Height="22" Margin="8,0,0,0" Padding="8,0"
                                                 ToolTip="Bỏ phương án mô phỏng, hiển thị lại đoàn tàu trong CSDL">
@@ -1027,7 +1027,7 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
-                                        <DataGridTextColumn Header="Nhãn Hiệu Toa" Width="130" Binding="{Binding NhanHieuToa}">
+                                        <DataGridTextColumn Header="Nhãn Hiệu Toa" Width="110" Binding="{Binding NhanHieuToa}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="FontWeight" Value="SemiBold"/>
@@ -1035,7 +1035,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTemplateColumn Header="Loại Toa" Width="185">
+                                        <DataGridTemplateColumn Header="Loại Toa" Width="160">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border x:Name="bdLt" CornerRadius="4" BorderThickness="1" Padding="8,2"
@@ -1082,6 +1082,28 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
+                                        <!-- Phạm vi chạy: toa nối / cắt dọc đường (phương án kéo – thả) -->
+                                        <DataGridTemplateColumn Header="Chạy Từ – Đến" Width="108">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border x:Name="bdPv" CornerRadius="4" BorderThickness="1" Padding="7,1"
+                                                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                            Background="Transparent" BorderBrush="Transparent">
+                                                        <TextBlock x:Name="txtPv" Text="{Binding PhamViChay}" FontSize="10"
+                                                                   Foreground="#94A3B8"/>
+                                                    </Border>
+                                                    <DataTemplate.Triggers>
+                                                        <DataTrigger Binding="{Binding CoPhamViRieng}" Value="True">
+                                                            <Setter TargetName="bdPv" Property="Background" Value="#FEF3C7"/>
+                                                            <Setter TargetName="bdPv" Property="BorderBrush" Value="#FCD34D"/>
+                                                            <Setter TargetName="txtPv" Property="Foreground" Value="#92400E"/>
+                                                            <Setter TargetName="txtPv" Property="FontWeight" Value="Bold"/>
+                                                        </DataTrigger>
+                                                    </DataTemplate.Triggers>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
                                         <DataGridTextColumn Header="Dài" Width="70"
                                                             Binding="{Binding ChieuDaiToaM, StringFormat={}{0:N1} m}"
                                                             HeaderStyle="{StaticResource DataGridHeaderRight}">
@@ -1105,7 +1127,7 @@
                                         </DataGridTextColumn>
 
                                         <!-- Tỷ lệ lấp đầy -->
-                                        <DataGridTemplateColumn Header="Tỷ Lệ Lấp Đầy" Width="*"
+                                        <DataGridTemplateColumn Header="Tỷ Lệ Lấp Đầy" Width="*" MinWidth="100"
                                                                 HeaderStyle="{StaticResource DataGridHeaderCenter}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
