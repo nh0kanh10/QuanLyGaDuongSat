@@ -565,7 +565,7 @@ namespace GUI.Views.Pages
 
             if (r == MessageBoxResult.Yes)
             {
-                if (_chuyenTauService.Xoa(_selectedMaChuyenTau))
+                if (_chuyenTauService.Xoa(_selectedMaChuyenTau, out string thongBaoLoi))
                 {
                     MessageBox.Show("Đã xóa chuyến tàu thành công.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                     _selectedMaChuyenTau = 0;
@@ -573,10 +573,12 @@ namespace GUI.Views.Pages
                 }
                 else
                 {
-                    MessageBox.Show("Không thể xóa chuyến tàu này (có thể đã phát sinh giao dịch vé).", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    string msg = !string.IsNullOrWhiteSpace(thongBaoLoi) ? thongBaoLoi : "Không thể xóa chuyến tàu này (có thể đã phát sinh giao dịch vé).";
+                    MessageBox.Show(msg, "Cảnh báo an toàn dữ liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
         }
+
 
         private void BtnNapLai_Click(object sender, RoutedEventArgs e)
         {

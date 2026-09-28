@@ -6,6 +6,9 @@ namespace BUS.Services
 {
     public class ChuyenTauService
     {
+        // Quy chuẩn kỹ thuật quốc gia về khai thác đường sắt QCVN 08:2018/BGTVT (Chiều dài đoàn tàu tối đa không quá chiều dài hữu dụng đường tránh 450m)
+        public const decimal CHIEU_DAI_TOI_DA_DOAN_TAU_M = 450.0m;
+
         private readonly ChuyenTauRepository _repo = new();
 
         public DataTable LayDanhSach(DateTime? ngay = null, int? maMacTau = null, string? trangThai = null)
@@ -74,11 +77,18 @@ namespace BUS.Services
             return _repo.SaoChepLichDungTuChuyenKhac(maChuyenMau, maChuyenDich, ngayKhoiHanh) > 0;
         }
 
-        public bool Xoa(int maChuyenTau)
+        public bool Xoa(int maChuyenTau, out string thongBaoLoi)
         {
-            if (maChuyenTau <= 0) return false;
-            return _repo.Xoa(maChuyenTau) > 0;
+            if (maChuyenTau <= 0)
+            {
+                thongBaoLoi = "Mã chuyến tàu không hợp lệ!";
+                return false;
+            }
+            return _repo.Xoa(maChuyenTau, out thongBaoLoi);
         }
+
+        public bool Xoa(int maChuyenTau) => Xoa(maChuyenTau, out _);
+
 
         // =========================================================================
         // NGHIỆP VỤ ĐOÀN TÀU & ĐẦU MÁY (DoanTau, DauMay)
@@ -123,9 +133,9 @@ namespace BUS.Services
                 thongBaoLoi = "Vui lòng chỉ định Đầu Máy Kéo Chính!";
                 return false;
             }
-            if (dt.TongChieuDaiM > 450.0m)
+            if (dt.TongChieuDaiM > CHIEU_DAI_TOI_DA_DOAN_TAU_M)
             {
-                thongBaoLoi = $"Chiều dài đoàn tàu ({dt.TongChieuDaiM:F1}m) vượt quá trần quy chuẩn an toàn tối đa (450m)!";
+                thongBaoLoi = $"Chiều dài đoàn tàu ({dt.TongChieuDaiM:F1}m) vượt quá trần quy chuẩn an toàn tối đa ({CHIEU_DAI_TOI_DA_DOAN_TAU_M:F0}m)!";
                 return false;
             }
             if (dt.TongSoToa <= 0 || dt.TongSoToa > 20)

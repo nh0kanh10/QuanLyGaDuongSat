@@ -21,6 +21,7 @@
 *.sln.docstates
 
 ## Local Backup (Tuyệt đối không đẩy lên Git)
+Pages_Full_Backup/
 src/GUI/Views/Pages_Full_Backup/
 scratch/
 .agents/

@@ -24,6 +24,10 @@ namespace GUI.Converters
         private static readonly SolidColorBrush GrayBg = new((Color)ColorConverter.ConvertFromString("#F1F5F9"));
         private static readonly SolidColorBrush GrayBorder = new((Color)ColorConverter.ConvertFromString("#CBD5E1"));
 
+        private static readonly SolidColorBrush BlueText = new((Color)ColorConverter.ConvertFromString("#0369A1"));
+        private static readonly SolidColorBrush BlueBg = new((Color)ColorConverter.ConvertFromString("#E0F2FE"));
+        private static readonly SolidColorBrush BlueBorder = new((Color)ColorConverter.ConvertFromString("#BAE6FD"));
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string val = value?.ToString() ?? "";
@@ -33,7 +37,8 @@ namespace GUI.Converters
             {
                 return val switch
                 {
-                    "DA_DAT" => SymbolRegular.CheckmarkCircle24,
+                    "DA_LEN_TAU" => SymbolRegular.CheckmarkCircle24,
+                    "DA_DAT" => SymbolRegular.TicketDiagonal24,
                     "DA_HOAN_VE" => SymbolRegular.ArrowUndo24,
                     "DA_HUY" => SymbolRegular.DismissCircle24,
                     _ => SymbolRegular.TicketDiagonal24
@@ -44,7 +49,8 @@ namespace GUI.Converters
             {
                 return val switch
                 {
-                    "DA_DAT" => GreenText,
+                    "DA_LEN_TAU" => GreenText,
+                    "DA_DAT" => BlueText,
                     "DA_HOAN_VE" => AmberText,
                     "DA_HUY" => RedText,
                     _ => GrayText
@@ -55,7 +61,8 @@ namespace GUI.Converters
             {
                 return val switch
                 {
-                    "DA_DAT" => GreenBg,
+                    "DA_LEN_TAU" => GreenBg,
+                    "DA_DAT" => BlueBg,
                     "DA_HOAN_VE" => AmberBg,
                     "DA_HUY" => RedBg,
                     _ => GrayBg
@@ -66,7 +73,8 @@ namespace GUI.Converters
             {
                 return val switch
                 {
-                    "DA_DAT" => GreenBorder,
+                    "DA_LEN_TAU" => GreenBorder,
+                    "DA_DAT" => BlueBorder,
                     "DA_HOAN_VE" => AmberBorder,
                     "DA_HUY" => RedBorder,
                     _ => GrayBorder
@@ -75,7 +83,8 @@ namespace GUI.Converters
 
             return val switch
             {
-                "DA_DAT" => "Đã Đặt",
+                "DA_LEN_TAU" => "Đã Lên Tàu",
+                "DA_DAT" => "Chưa Lên Tàu",
                 "DA_HOAN_VE" => "Đã Hoàn",
                 "DA_HUY" => "Đã Hủy",
                 _ => val

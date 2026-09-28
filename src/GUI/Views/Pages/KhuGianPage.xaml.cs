@@ -1400,6 +1400,7 @@ namespace GUI.Views.Pages
             }
         }
 
+       
          public void FocusTimKiem()
         {
             if (txtTimKiem != null)

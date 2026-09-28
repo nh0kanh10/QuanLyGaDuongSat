@@ -13,6 +13,8 @@ namespace DAL.Connection
             _connectionString = connStr;
         }
 
+        public static string GetConnectionString() => _connectionString;
+
         // SELECT -> DataTable
         public static DataTable ExecuteQuery(string query, SqlParameter[]? parameters = null)
         {

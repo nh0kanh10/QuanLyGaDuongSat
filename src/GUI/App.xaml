@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:conv="clr-namespace:GUI.Converters"
+             xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -17,6 +18,9 @@
             <conv:BooleanToSymbolConverter x:Key="BoolSymbolConv"/>
             <conv:HangGaConverter x:Key="HangGaConv"/>
             <conv:TrangThaiVeConverter x:Key="TrangThaiVeConv"/>
+            <conv:ChoTrongBadgeConverter x:Key="ChoTrongBadgeConv"/>
+            <conv:LoaiVanChuyenConverter x:Key="LoaiVCConv"/>
+            <conv:TrangThaiVanDonConverter x:Key="TrangThaiVDConv"/>
 
             <SolidColorBrush x:Key="VnrNavyBrush" Color="#003B73"/>
             <SolidColorBrush x:Key="VnrDarkNavyBrush" Color="#002855"/>
@@ -26,23 +30,37 @@
             <Thickness x:Key="ComboBoxPadding">10,0,26,0</Thickness>
             <Thickness x:Key="ComboBoxItemContentMargin">10,3,8,3</Thickness>
 
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="Segoe UI, Aptos, Inter, sans-serif"/>
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
+            </Style>
+
             <Style x:Key="FieldLabel" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#334155"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+                <Setter Property="Foreground" Value="#475569"/>
+                <Setter Property="FontSize" Value="12"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
             </Style>
 
             <Style TargetType="TextBox">
-                <Setter Property="Height" Value="28"/>
+                <Setter Property="Height" Value="30"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
                 <Setter Property="BorderBrush" Value="#CBD5E1"/>
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Padding" Value="6,0"/>
-                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Padding" Value="8,0"/>
+                <Setter Property="FontSize" Value="12.5"/>
                 <Setter Property="Foreground" Value="#0F172A"/>
                 <Setter Property="Background" Value="#FFFFFF"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
                 <Style.Triggers>
                     <Trigger Property="IsKeyboardFocused" Value="True">
                         <Setter Property="BorderBrush" Value="#003B73"/>
@@ -51,19 +69,44 @@
             </Style>
 
             <Style TargetType="ui:TextBox" BasedOn="{StaticResource {x:Type ui:TextBox}}">
+                <Setter Property="Height" Value="30"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+            </Style>
+
+            <!-- Khắc phục triệt để lỗi DatePickerTextBox bị cắt chân chữ do style TextBox chung -->
+            <Style TargetType="{x:Type primitives:DatePickerTextBox}">
+                <Setter Property="Height" Value="Auto"/>
+                <Setter Property="MinHeight" Value="0"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Padding" Value="4,0,2,0"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
+            </Style>
+
+            <Style TargetType="DatePicker">
+                <Setter Property="Height" Value="30"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
             </Style>
 
             <Style TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
-                <Setter Property="Height" Value="28"/>
-                <Setter Property="MinHeight" Value="28"/>
+                <Setter Property="Height" Value="30"/>
+                <Setter Property="MinHeight" Value="30"/>
                 <Setter Property="Padding" Value="10,0,26,0"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontSize" Value="12"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
             </Style>
 
             <Style TargetType="ComboBoxItem" BasedOn="{StaticResource DefaultComboBoxItemStyle}">
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontSize" Value="12"/>
                 <Setter Property="MinHeight" Value="28"/>
                 <Setter Property="Padding" Value="10,4,8,4"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -72,7 +115,7 @@
             <Style x:Key="DesktopButton" TargetType="Button">
                 <Setter Property="Height" Value="28"/>
                 <Setter Property="Padding" Value="12,0"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontSize" Value="12"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Foreground" Value="#1E293B"/>
                 <Setter Property="Cursor" Value="Hand"/>
@@ -111,7 +154,7 @@
             <Style x:Key="PrimaryDesktopButton" TargetType="Button">
                 <Setter Property="Height" Value="28"/>
                 <Setter Property="Padding" Value="14,0"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontSize" Value="12"/>
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="Foreground" Value="#FFFFFF"/>
                 <Setter Property="Cursor" Value="Hand"/>
@@ -149,7 +192,7 @@
             <Style x:Key="DangerDesktopButton" TargetType="Button">
                 <Setter Property="Height" Value="28"/>
                 <Setter Property="Padding" Value="12,0"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontSize" Value="12"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Foreground" Value="#B91C1C"/>
                 <Setter Property="Cursor" Value="Hand"/>
@@ -185,6 +228,12 @@
             </Style>
 
             <Style TargetType="DataGrid">
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+                <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
+                <Setter Property="FontFamily" Value="Segoe UI, sans-serif"/>
                 <Setter Property="Background" Value="#FFFFFF"/>
                 <Setter Property="BorderBrush" Value="#CBD5E1"/>
                 <Setter Property="BorderThickness" Value="1"/>
@@ -193,8 +242,8 @@
                 <Setter Property="GridLinesVisibility" Value="All"/>
                 <Setter Property="HorizontalGridLinesBrush" Value="#E2E8F0"/>
                 <Setter Property="VerticalGridLinesBrush" Value="#E2E8F0"/>
-                <Setter Property="RowHeight" Value="28"/>
-                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="RowHeight" Value="32"/>
+                <Setter Property="FontSize" Value="12.5"/>
                 <Setter Property="Foreground" Value="#0F172A"/>
                 <Setter Property="AutoGenerateColumns" Value="False"/>
                 <Setter Property="IsReadOnly" Value="True"/>
@@ -204,11 +253,16 @@
             </Style>
 
             <Style TargetType="DataGridColumnHeader">
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+                <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
                 <Setter Property="Background" Value="#F1F5F9"/>
                 <Setter Property="Foreground" Value="#0F172A"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="FontSize" Value="11"/>
-                <Setter Property="Height" Value="30"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Height" Value="32"/>
                 <Setter Property="Padding" Value="8,0"/>
                 <Setter Property="BorderBrush" Value="#CBD5E1"/>
                 <Setter Property="BorderThickness" Value="0,0,1,1"/>
@@ -231,17 +285,24 @@
             <Style TargetType="DataGridRow">
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#F8FAFC"/>
+                        <Setter Property="Background" Value="#EFF6FF"/>
                     </Trigger>
                     <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Background" Value="#E2E8F0"/>
-                        <Setter Property="Foreground" Value="#0F172A"/>
+                        <Setter Property="Background" Value="#DBEAFE"/>
+                        <Setter Property="Foreground" Value="#002855"/>
                         <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="BorderBrush" Value="#003B73"/>
+                        <Setter Property="BorderThickness" Value="3,0,0,0"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
 
             <Style TargetType="DataGridCell">
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+                <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
                 <Setter Property="Padding" Value="8,0"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Template">
@@ -258,8 +319,8 @@
                 </Setter>
                 <Style.Triggers>
                     <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Background" Value="#E2E8F0"/>
-                        <Setter Property="Foreground" Value="#0F172A"/>
+                        <Setter Property="Background" Value="#DBEAFE"/>
+                        <Setter Property="Foreground" Value="#002855"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>

@@ -8,37 +8,6 @@ namespace DAL.Repositories
 {
     public class DuongNgangRepository
     {
-        public DuongNgangRepository()
-        {
-            DamBaoBangTonTai();
-        }
-
-        private void DamBaoBangTonTai()
-        {
-            try
-            {
-                string sql = @"
-                    IF SCHEMA_ID('hatang') IS NULL EXEC('CREATE SCHEMA hatang');
-                    IF OBJECT_ID('hatang.DuongNgang', 'U') IS NULL
-                    BEGIN
-                        CREATE TABLE hatang.DuongNgang (
-                            MaDuongNgang        INT IDENTITY(1,1) PRIMARY KEY,
-                            MaKhuGian           INT             NOT NULL,
-                            LyTrinhKm           DECIMAL(7,2)    NOT NULL CHECK (LyTrinhKm >= 0),
-                            LoaiDuongNgang      VARCHAR(30)     NOT NULL
-                                CHECK (LoaiDuongNgang IN ('CO_NGUOI_GAC', 'TU_DONG', 'BIEN_BAO')),
-                            TenDuongBoGiaoCat   NVARCHAR(150)   NOT NULL,
-                            LaDiemDen           BIT             NOT NULL DEFAULT 0,
-                            CONSTRAINT FK_DuongNgang_KhuGian FOREIGN KEY (MaKhuGian) REFERENCES hatang.KhuGian(MaKhuGian)
-                        );
-                    END";
-                DatabaseHelper.ExecuteNonQuery(sql);
-            }
-            catch
-            {
-                // Phòng vệ nếu user phân quyền hạn chế DDL
-            }
-        }
 
         public DataTable LayTheoKhuGian(int maKhuGian)
         {

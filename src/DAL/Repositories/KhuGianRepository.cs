@@ -10,40 +10,20 @@ namespace DAL.Repositories
         public DataTable LayDanhSach()
         {
             string sql = @"
-                IF OBJECT_ID('hatang.DuongNgang', 'U') IS NOT NULL
-                BEGIN
-                    SELECT kg.*, 
-                           g1.TenGa AS TenGaDau, g1.MaGaCode AS MaGaDauCode, g1.LyTrinhKm AS LyTrinhDauKm,
-                           g2.TenGa AS TenGaCuoi, g2.MaGaCode AS MaGaCuoiCode, g2.LyTrinhKm AS LyTrinhCuoiKm,
-                           CASE kg.TrangThai
-                               WHEN 'RONG' THEN N'Thông đường sẵn sàng'
-                               WHEN 'CO_TAU' THEN N'Đang có đoàn tàu'
-                               WHEN 'PHONG_TOA' THEN N'Phong tỏa thi công'
-                               ELSE kg.TrangThai END AS TenTrangThai,
-                           ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian), 0) AS SoDuongNgang,
-                           ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian AND dn.LaDiemDen = 1), 0) AS SoDiemDen
-                    FROM hatang.KhuGian kg
-                    JOIN hatang.Ga g1 ON kg.MaGaDau = g1.MaGa
-                    JOIN hatang.Ga g2 ON kg.MaGaCuoi = g2.MaGa
-                    ORDER BY g1.LyTrinhKm;
-                END
-                ELSE
-                BEGIN
-                    SELECT kg.*, 
-                           g1.TenGa AS TenGaDau, g1.MaGaCode AS MaGaDauCode, g1.LyTrinhKm AS LyTrinhDauKm,
-                           g2.TenGa AS TenGaCuoi, g2.MaGaCode AS MaGaCuoiCode, g2.LyTrinhKm AS LyTrinhCuoiKm,
-                           CASE kg.TrangThai
-                               WHEN 'RONG' THEN N'Thông đường sẵn sàng'
-                               WHEN 'CO_TAU' THEN N'Đang có đoàn tàu'
-                               WHEN 'PHONG_TOA' THEN N'Phong tỏa thi công'
-                               ELSE kg.TrangThai END AS TenTrangThai,
-                           0 AS SoDuongNgang,
-                           0 AS SoDiemDen
-                    FROM hatang.KhuGian kg
-                    JOIN hatang.Ga g1 ON kg.MaGaDau = g1.MaGa
-                    JOIN hatang.Ga g2 ON kg.MaGaCuoi = g2.MaGa
-                    ORDER BY g1.LyTrinhKm;
-                END";
+                SELECT kg.*, 
+                       g1.TenGa AS TenGaDau, g1.MaGaCode AS MaGaDauCode, g1.LyTrinhKm AS LyTrinhDauKm,
+                       g2.TenGa AS TenGaCuoi, g2.MaGaCode AS MaGaCuoiCode, g2.LyTrinhKm AS LyTrinhCuoiKm,
+                       CASE kg.TrangThai
+                           WHEN 'RONG' THEN N'Thông đường sẵn sàng'
+                           WHEN 'CO_TAU' THEN N'Đang có đoàn tàu'
+                           WHEN 'PHONG_TOA' THEN N'Phong tỏa thi công'
+                           ELSE kg.TrangThai END AS TenTrangThai,
+                       ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian), 0) AS SoDuongNgang,
+                       ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian AND dn.LaDiemDen = 1), 0) AS SoDiemDen
+                FROM hatang.KhuGian kg
+                JOIN hatang.Ga g1 ON kg.MaGaDau = g1.MaGa
+                JOIN hatang.Ga g2 ON kg.MaGaCuoi = g2.MaGa
+                ORDER BY g1.LyTrinhKm";
             return DatabaseHelper.ExecuteQuery(sql);
         }
 

@@ -421,27 +421,28 @@ namespace DAL.Repositories
 
         private void SinhGheChoToa(int maToa, string loaiToa, int sucChua)
         {
+            if (sucChua <= 0) return;
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append("INSERT INTO vantai.ChoNgoi (MaToaXeKhach, SoGhe, TangGiuong, LaGhePhu) VALUES ");
+            var pList = new List<SqlParameter> { new("@toa", maToa) };
+
             for (int i = 1; i <= sucChua; i++)
             {
-                int? tangGiuong = null;
-                if (loaiToa == "AN")
+                int? tangGiuong = loaiToa switch
                 {
-                    tangGiuong = ((i - 1) % 2) + 1;
-                }
-                else if (loaiToa == "BN")
-                {
-                    tangGiuong = ((i - 1) % 3) + 1;
-                }
+                    "AN" => ((i - 1) % 2) + 1,
+                    "BN" => ((i - 1) % 3) + 1,
+                    _ => null
+                };
 
-                string sqlGhe = @"INSERT INTO vantai.ChoNgoi (MaToaXeKhach, SoGhe, TangGiuong, LaGhePhu)
-                                  VALUES (@toa, @soGhe, @tang, 0)";
-                DatabaseHelper.ExecuteNonQuery(sqlGhe, new[]
-                {
-                    new SqlParameter("@toa", maToa),
-                    new SqlParameter("@soGhe", i),
-                    new SqlParameter("@tang", (object?)tangGiuong ?? DBNull.Value)
-                });
+                if (i > 1) sb.Append(", ");
+                sb.Append($"(@toa, @soGhe{i}, @tang{i}, 0)");
+                pList.Add(new SqlParameter($"@soGhe{i}", i));
+                pList.Add(new SqlParameter($"@tang{i}", (object?)tangGiuong ?? DBNull.Value));
             }
+
+            DatabaseHelper.ExecuteNonQuery(sb.ToString(), pList.ToArray());
         }
 
         public bool XoaToaXeKhach(int maToaXeKhach, out string thongBaoLoi)
@@ -479,13 +480,44 @@ namespace DAL.Repositories
             object? res = DatabaseHelper.ExecuteScalar(checkSql, new[] { new SqlParameter("@ct", maChuyenTau) });
             if (res == null || Convert.ToInt32(res) == 0) return;
 
-            string calcSql = @"SELECT COUNT(*) AS SoToa FROM vantai.ToaXeKhach WHERE MaChuyenTau = @ct";
+            // Truy vấn thông số thực tế từ phuongtien.DongDauMay và phuongtien.ChungLoaiToa
+            string calcSql = @"
+                SELECT 
+                    ISNULL(ddmChinh.ChieuDaiM, 16.5) + ISNULL(ddmDay.ChieuDaiM, 0.0) AS ChieuDaiDauMay,
+                    ISNULL(ddmChinh.TrongLuongTan, 78.0) + ISNULL(ddmDay.TrongLuongTan, 0.0) AS TrongLuongDauMay,
+                    ISNULL(txInfo.SoToa, 0) AS SoToa,
+                    ISNULL(txInfo.TongChieuDaiToa, 0.0) AS TongChieuDaiToa,
+                    ISNULL(txInfo.TongTrongLuongToa, 0.0) AS TongTrongLuongToa
+                FROM vanhanh.DoanTau dt
+                LEFT JOIN phuongtien.DauMay dmChinh ON dt.MaDauMayChinh = dmChinh.MaDauMay
+                LEFT JOIN phuongtien.DongDauMay ddmChinh ON dmChinh.MaDongDauMay = ddmChinh.MaDongDauMay
+                LEFT JOIN phuongtien.DauMay dmDay ON dt.MaDauMayDay = dmDay.MaDauMay
+                LEFT JOIN phuongtien.DongDauMay ddmDay ON dmDay.MaDongDauMay = ddmDay.MaDongDauMay
+                OUTER APPLY (
+                    SELECT 
+                        COUNT(tx.MaToaXeKhach) AS SoToa,
+                        ISNULL(SUM(cl.ChieuDaiChuanM), COUNT(tx.MaToaXeKhach) * 20.0) AS TongChieuDaiToa,
+                        ISNULL(SUM(CASE tx.LoaiToa 
+                            WHEN 'NC' THEN 38.0 
+                            WHEN 'NML' THEN 40.0 
+                            WHEN 'BN' THEN 42.0 
+                            WHEN 'AN' THEN 44.0 
+                            ELSE 40.0 END), COUNT(tx.MaToaXeKhach) * 40.0) AS TongTrongLuongToa
+                    FROM vantai.ToaXeKhach tx
+                    LEFT JOIN phuongtien.ChungLoaiToa cl ON tx.LoaiToa = cl.MaChungLoaiCode
+                    WHERE tx.MaChuyenTau = dt.MaChuyenTau
+                ) txInfo
+                WHERE dt.MaChuyenTau = @ct";
+
             DataTable dt = DatabaseHelper.ExecuteQuery(calcSql, new[] { new SqlParameter("@ct", maChuyenTau) });
-            int soToa = dt.Rows.Count > 0 ? Convert.ToInt32(dt.Rows[0]["SoToa"]) : 0;
+            if (dt.Rows.Count == 0) return;
+
+            DataRow r = dt.Rows[0];
+            int soToa = Convert.ToInt32(r["SoToa"]);
             if (soToa == 0) soToa = 1;
 
-            decimal chieuDai = 16.5m + (soToa * 20.0m);
-            decimal trongLuong = 78.0m + (soToa * 40.0m);
+            decimal chieuDai = Convert.ToDecimal(r["ChieuDaiDauMay"]) + Convert.ToDecimal(r["TongChieuDaiToa"]);
+            decimal trongLuong = Convert.ToDecimal(r["TrongLuongDauMay"]) + Convert.ToDecimal(r["TongTrongLuongToa"]);
 
             string updateSql = @"UPDATE vanhanh.DoanTau
                                  SET TongSoToa = @soToa,
@@ -525,8 +557,20 @@ namespace DAL.Repositories
             return count;
         }
 
-        public int Xoa(int maChuyenTau)
+        public bool Xoa(int maChuyenTau, out string thongBaoLoi)
         {
+            thongBaoLoi = string.Empty;
+            string checkVeSql = @"SELECT COUNT(*) 
+                                  FROM vantai.Ve 
+                                  WHERE MaChuyenTau = @id 
+                                    AND TrangThai IN ('DA_DAT', 'DA_LEN_TAU')";
+            object? veCount = DatabaseHelper.ExecuteScalar(checkVeSql, new[] { new SqlParameter("@id", maChuyenTau) });
+            if (veCount != null && Convert.ToInt32(veCount) > 0)
+            {
+                thongBaoLoi = $"Không thể hủy chuyến tàu này vì đã có {Convert.ToInt32(veCount)} vé được bán cho hành khách! Vui lòng thực hiện hoàn/hủy vé trước khi xóa chuyến.";
+                return false;
+            }
+
             string sql = @"DELETE FROM vanhanh.ChiTietDoanTau WHERE MaDoanTau IN (SELECT MaDoanTau FROM vanhanh.DoanTau WHERE MaChuyenTau = @id);
                            DELETE FROM vanhanh.DoanTau WHERE MaChuyenTau = @id;
                            DELETE FROM vanhanh.NhatKyChamGio WHERE MaChuyenTau = @id;
@@ -534,7 +578,14 @@ namespace DAL.Repositories
                            DELETE FROM vantai.ToaXeKhach WHERE MaChuyenTau = @id;
                            DELETE FROM vanhanh.LichDungGa WHERE MaChuyenTau = @id;
                            DELETE FROM vanhanh.ChuyenTau WHERE MaChuyenTau = @id;";
-            return DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@id", maChuyenTau) });
+            int affected = DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@id", maChuyenTau) });
+            return affected > 0;
+        }
+
+        public int Xoa(int maChuyenTau)
+        {
+            return Xoa(maChuyenTau, out _) ? 1 : 0;
         }
     }
 }
+

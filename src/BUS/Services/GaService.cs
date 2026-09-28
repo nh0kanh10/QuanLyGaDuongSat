@@ -179,16 +179,17 @@ namespace BUS.Services
 
             try
             {
+                // Thuc hien Soft Delete (chuyen DangKhaiThac = 0) de bao toan toan ven du lieu lich su
                 bool ok = _repo.Xoa(maGa) > 0;
                 if (!ok)
                 {
-                    error = "Không tìm thấy bản ghi Ga cần xóa trong CSDL.";
+                    error = "Không tìm thấy bản ghi Ga cần ngừng khai thác trong CSDL.";
                 }
                 return ok;
             }
             catch (Exception ex)
             {
-                error = $"Không thể xóa Ga này do ràng buộc toàn vẹn dữ liệu (đang có hạ tầng đường ray, phân đoạn khu gian hoặc lịch chạy tàu liên quan). Chi tiết: {ex.Message}";
+                error = $"Lỗi khi cập nhật trạng thái ngừng khai thác cho Ga: {ex.Message}";
                 return false;
             }
         }

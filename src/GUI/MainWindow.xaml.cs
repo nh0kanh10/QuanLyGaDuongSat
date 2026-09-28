@@ -12,11 +12,40 @@ namespace GUI
         private readonly MangLuoiGaPage _mangLuoiGaPage = new();
         private readonly KhuGianPage _khuGianPage = new();
         private readonly LichTrinhPage _lichTrinhPage = new();
+        private readonly BieuDoChayTauPage _bieuDoPage = new();
         private readonly BanVePage _banVePage = new();
+        private readonly SoatVePage _soatVePage = new();
         private readonly HangHoaPage _hangHoaPage = new();
+
+        // Phân hệ Kỹ thuật
+        private readonly PhuongTienPage _phuongTienPage = new();
+        private readonly BaoTriPage _baoTriPage = new();
+        private readonly NhanSuPage _nhanSuPage = new();
 
         private string _currentTag = "MangLuoiGa";
         private readonly System.Windows.Threading.DispatcherTimer _timer;
+
+        private static readonly Dictionary<string, string> TagToClusterMap = new()
+        {
+            { "MangLuoiGa", "MasterData" },
+            { "KhuGian", "MasterData" },
+            { "NhanSu", "MasterData" },
+            { "LichTrinh", "VanHanh" },
+            { "BieuDo", "VanHanh" },
+            { "BanVe", "KinhDoanh" },
+            { "SoatVe", "KinhDoanh" },
+            { "HangHoa", "KinhDoanh" },
+            { "PhuongTien", "KyThuat" },
+            { "BaoTri", "KyThuat" }
+        };
+
+        private readonly Dictionary<string, string> _lastActiveTabPerCluster = new()
+        {
+            { "MasterData", "MangLuoiGa" },
+            { "VanHanh", "LichTrinh" },
+            { "KinhDoanh", "BanVe" },
+            { "KyThuat", "PhuongTien" }
+        };
 
         public MainWindow()
         {
@@ -32,6 +61,30 @@ namespace GUI
             txtClock.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
         }
 
+        private void NavCluster_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string clusterKey)
+            {
+                if (_lastActiveTabPerCluster.TryGetValue(clusterKey, out var lastSubTag))
+                {
+                    NavigateTo(lastSubTag);
+                }
+                else
+                {
+                    NavigateTo(GetDefaultTabForCluster(clusterKey));
+                }
+            }
+        }
+
+        private static string GetDefaultTabForCluster(string clusterKey) => clusterKey switch
+        {
+            "MasterData" => "MangLuoiGa",
+            "VanHanh" => "LichTrinh",
+            "KinhDoanh" => "BanVe",
+            "KyThuat" => "PhuongTien",
+            _ => "MangLuoiGa"
+        };
+
         private void NavTab_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is string tag)
@@ -43,18 +96,19 @@ namespace GUI
         public void NavigateTo(string tag, int? focusId = null)
         {
             _currentTag = tag;
-            ResetRibbonTabs();
+            var clusterKey = TagToClusterMap.TryGetValue(tag, out var ck) ? ck : "MasterData";
+            _lastActiveTabPerCluster[clusterKey] = tag;
+
+            CapNhatTrangThaiRibbon(clusterKey, tag);
 
             switch (tag)
             {
                 case "MangLuoiGa":
                     MainFrame.Navigate(_mangLuoiGaPage);
-                    SetTabActive(tabGa, txtTabGa, iconTabGa);
                     break;
 
                 case "KhuGian":
                     MainFrame.Navigate(_khuGianPage);
-                    SetTabActive(tabKhuGian, txtTabKhuGian, iconTabKhuGian);
                     if (focusId.HasValue && focusId.Value > 0)
                     {
                         _khuGianPage.ChonKhuGianTheoId(focusId.Value);
@@ -63,17 +117,35 @@ namespace GUI
 
                 case "LichTrinh":
                     MainFrame.Navigate(_lichTrinhPage);
-                    SetTabActive(tabLichTrinh, txtTabLichTrinh, iconTabLichTrinh);
+                    break;
+
+                case "BieuDo":
+                    MainFrame.Navigate(_bieuDoPage);
+                    _bieuDoPage.LoadData();
                     break;
 
                 case "BanVe":
                     MainFrame.Navigate(_banVePage);
-                    SetTabActive(tabBanVe, txtTabBanVe, iconTabBanVe);
+                    break;
+
+                case "SoatVe":
+                    MainFrame.Navigate(_soatVePage);
                     break;
 
                 case "HangHoa":
                     MainFrame.Navigate(_hangHoaPage);
-                    SetTabActive(tabHangHoa, txtTabHangHoa, iconTabHangHoa);
+                    break;
+
+                case "PhuongTien":
+                    MainFrame.Navigate(_phuongTienPage);
+                    break;
+
+                case "BaoTri":
+                    MainFrame.Navigate(_baoTriPage);
+                    break;
+
+                case "NhanSu":
+                    MainFrame.Navigate(_nhanSuPage);
                     break;
             }
 
@@ -82,6 +154,9 @@ namespace GUI
 
         private void CapNhatThanhPhimTatTheoPhanHe(string tag)
         {
+            btnScF7.Visibility = Visibility.Collapsed;
+            sepScF7.Visibility = Visibility.Collapsed;
+
             switch (tag)
             {
                 case "MangLuoiGa":
@@ -174,6 +249,31 @@ namespace GUI
                     sepScF9.Visibility = Visibility.Collapsed;
                     break;
 
+                case "BieuDo":
+                    btnScF2.Visibility = Visibility.Collapsed;
+                    sepScF2.Visibility = Visibility.Collapsed;
+
+                    btnScF3.Visibility = Visibility.Visible;
+                    sepScF3.Visibility = Visibility.Visible;
+                    txtScF3.Text = "Kiểm Tra";
+                    btnScF3.ToolTip = "F3: Quét kiểm tra xung đột an toàn toàn tuyến";
+
+                    btnScF4.Visibility = Visibility.Collapsed;
+                    sepScF4.Visibility = Visibility.Collapsed;
+
+                    btnScF5.Visibility = Visibility.Visible;
+                    sepScF5.Visibility = Visibility.Visible;
+                    txtScF5.Text = "Nạp Lại";
+                    btnScF5.ToolTip = "F5: Tải lại dữ liệu biểu đồ chạy tàu";
+
+                    btnScF6.Visibility = Visibility.Collapsed;
+                    sepScF6.Visibility = Visibility.Collapsed;
+
+                    btnScF9.Visibility = Visibility.Collapsed;
+                    sepScF9.Visibility = Visibility.Collapsed;
+                    break;
+
+
                 case "BanVe":
                     btnScF2.Visibility = Visibility.Visible;
                     sepScF2.Visibility = Visibility.Visible;
@@ -193,8 +293,46 @@ namespace GUI
                     txtScF5.Text = "Nạp Lại";
                     btnScF5.ToolTip = "F5: Nạp lại danh sách vé đã bán";
 
-                    btnScF6.Visibility = Visibility.Collapsed;
-                    sepScF6.Visibility = Visibility.Collapsed;
+                    btnScF6.Visibility = Visibility.Visible;
+                    sepScF6.Visibility = Visibility.Visible;
+                    txtScF6.Text = "Xuất Excel";
+                    btnScF6.ToolTip = "F6: Xuất danh sách vé ra tệp Excel (.xlsx)";
+
+                    btnScF7.Visibility = Visibility.Visible;
+                    sepScF7.Visibility = Visibility.Visible;
+
+                    btnScF9.Visibility = Visibility.Visible;
+                    sepScF9.Visibility = Visibility.Visible;
+                    txtScF9.Text = "Báo Cáo";
+                    btnScF9.ToolTip = "F9: Mở tổng hợp & báo cáo doanh thu bán vé";
+                    break;
+
+                case "SoatVe":
+                    btnScF2.Visibility = Visibility.Visible;
+                    sepScF2.Visibility = Visibility.Visible;
+                    txtScF2.Text = "Quét Mã";
+                    btnScF2.ToolTip = "F2: Focus vào ô quét mã vé / CCCD";
+
+                    btnScF3.Visibility = Visibility.Visible;
+                    sepScF3.Visibility = Visibility.Visible;
+                    txtScF3.Text = "Lọc Khách";
+                    btnScF3.ToolTip = "F3: Focus ô tìm kiếm trong danh sách khách (Manifest)";
+
+                    btnScF4.Visibility = Visibility.Collapsed;
+                    sepScF4.Visibility = Visibility.Collapsed;
+
+                    btnScF5.Visibility = Visibility.Visible;
+                    sepScF5.Visibility = Visibility.Visible;
+                    txtScF5.Text = "Nạp Lại";
+                    btnScF5.ToolTip = "F5: Tải lại dữ liệu chuyến tàu và danh sách khách";
+
+                    btnScF6.Visibility = Visibility.Visible;
+                    sepScF6.Visibility = Visibility.Visible;
+                    txtScF6.Text = "Xuất Manifest";
+                    btnScF6.ToolTip = "F6: Xuất bảng danh sách hành khách ra file CSV";
+
+                    btnScF7.Visibility = Visibility.Collapsed;
+                    sepScF7.Visibility = Visibility.Collapsed;
 
                     btnScF9.Visibility = Visibility.Collapsed;
                     sepScF9.Visibility = Visibility.Collapsed;
@@ -225,6 +363,131 @@ namespace GUI
                     btnScF9.Visibility = Visibility.Collapsed;
                     sepScF9.Visibility = Visibility.Collapsed;
                     break;
+
+                case "PhuongTien":
+                    btnScF2.Visibility = Visibility.Collapsed;
+                    sepScF2.Visibility = Visibility.Collapsed;
+
+                    btnScF3.Visibility = Visibility.Visible;
+                    sepScF3.Visibility = Visibility.Visible;
+                    txtScF3.Text = "Tra Cứu Đầu Máy";
+                    btnScF3.ToolTip = "F3: Focus ô tìm kiếm số hiệu đầu máy / dòng máy / xí nghiệp";
+
+                    btnScF4.Visibility = Visibility.Collapsed;
+                    sepScF4.Visibility = Visibility.Collapsed;
+
+                    btnScF5.Visibility = Visibility.Visible;
+                    sepScF5.Visibility = Visibility.Visible;
+                    txtScF5.Text = "Nạp Lại";
+                    btnScF5.ToolTip = "F5: Nạp lại toàn bộ dữ liệu phương tiện từ CSDL";
+
+                    btnScF6.Visibility = Visibility.Collapsed;
+                    sepScF6.Visibility = Visibility.Collapsed;
+
+                    btnScF9.Visibility = Visibility.Collapsed;
+                    sepScF9.Visibility = Visibility.Collapsed;
+                    break;
+
+                case "BaoTri":
+                    btnScF2.Visibility = Visibility.Visible;
+                    sepScF2.Visibility = Visibility.Visible;
+                    txtScF2.Text = "Lập Mới";
+                    btnScF2.ToolTip = "F2: Lập biên bản / phiếu mới theo tab đang mở (khám xe, nhiên liệu, bảo dưỡng)";
+
+                    btnScF3.Visibility = Visibility.Visible;
+                    sepScF3.Visibility = Visibility.Visible;
+                    txtScF3.Text = "Tra Cứu";
+                    btnScF3.ToolTip = "F3: Focus ô tìm kiếm của tab đang mở";
+
+                    btnScF4.Visibility = Visibility.Collapsed;
+                    sepScF4.Visibility = Visibility.Collapsed;
+
+                    btnScF5.Visibility = Visibility.Visible;
+                    sepScF5.Visibility = Visibility.Visible;
+                    txtScF5.Text = "Nạp Lại";
+                    btnScF5.ToolTip = "F5: Nạp lại dữ liệu bảo trì kỹ thuật";
+
+                    btnScF6.Visibility = Visibility.Collapsed;
+                    sepScF6.Visibility = Visibility.Collapsed;
+
+                    btnScF9.Visibility = Visibility.Collapsed;
+                    sepScF9.Visibility = Visibility.Collapsed;
+                    break;
+
+                case "NhanSu":
+                    btnScF2.Visibility = Visibility.Visible;
+                    sepScF2.Visibility = Visibility.Visible;
+                    txtScF2.Text = "Thêm Mới";
+                    btnScF2.ToolTip = "F2: Thêm theo tab đang mở (hồ sơ nhân viên, kíp lái, kết quả kiểm tra lên ban)";
+
+                    btnScF3.Visibility = Visibility.Visible;
+                    sepScF3.Visibility = Visibility.Visible;
+                    txtScF3.Text = "Tra Cứu";
+                    btnScF3.ToolTip = "F3: Focus ô tìm kiếm của tab đang mở";
+
+                    btnScF4.Visibility = Visibility.Collapsed;
+                    sepScF4.Visibility = Visibility.Collapsed;
+
+                    btnScF5.Visibility = Visibility.Visible;
+                    sepScF5.Visibility = Visibility.Visible;
+                    txtScF5.Text = "Nạp Lại";
+                    btnScF5.ToolTip = "F5: Nạp lại và đối chiếu lại điều kiện kíp lái theo giờ hiện tại";
+
+                    btnScF6.Visibility = Visibility.Collapsed;
+                    sepScF6.Visibility = Visibility.Collapsed;
+
+                    btnScF9.Visibility = Visibility.Collapsed;
+                    sepScF9.Visibility = Visibility.Collapsed;
+                    break;
+            }
+        }
+
+        private void CapNhatTrangThaiRibbon(string clusterKey, string activeSubTag)
+        {
+            // 1. Tầng 1: Cập nhật trạng thái hiển thị 4 Cụm Phân Hệ Lớn
+            DatTrangThaiCluster(clusterMasterData, iconClusterMasterData, txtClusterMasterData, indicatorMasterData, clusterKey == "MasterData");
+            DatTrangThaiCluster(clusterVanHanh, iconClusterVanHanh, txtClusterVanHanh, indicatorVanHanh, clusterKey == "VanHanh");
+            DatTrangThaiCluster(clusterKinhDoanh, iconClusterKinhDoanh, txtClusterKinhDoanh, indicatorKinhDoanh, clusterKey == "KinhDoanh");
+            DatTrangThaiCluster(clusterKyThuat, iconClusterKyThuat, txtClusterKyThuat, indicatorKyThuat, clusterKey == "KyThuat");
+
+            // 2. Tầng 2: Hiện / Ẩn Sub-bar tương ứng theo Cụm
+            subBarMasterData.Visibility = clusterKey == "MasterData" ? Visibility.Visible : Visibility.Collapsed;
+            subBarVanHanh.Visibility = clusterKey == "VanHanh" ? Visibility.Visible : Visibility.Collapsed;
+            subBarKinhDoanh.Visibility = clusterKey == "KinhDoanh" ? Visibility.Visible : Visibility.Collapsed;
+            subBarKyThuat.Visibility = clusterKey == "KyThuat" ? Visibility.Visible : Visibility.Collapsed;
+
+            // 3. Tầng 2: Reset và Highlight Tab Tác Nghiệp Con đang được chọn
+            ResetRibbonTabs();
+            switch (activeSubTag)
+            {
+                case "MangLuoiGa": SetTabActive(tabGa, txtTabGa, iconTabGa); break;
+                case "KhuGian": SetTabActive(tabKhuGian, txtTabKhuGian, iconTabKhuGian); break;
+                case "NhanSu": SetTabActive(tabNavNhanSu, txtTabNhanSu, iconTabNhanSu); break;
+                case "LichTrinh": SetTabActive(tabLichTrinh, txtTabLichTrinh, iconTabLichTrinh); break;
+                case "BieuDo": SetTabActive(tabBieuDo, txtTabBieuDo, iconTabBieuDo); break;
+                case "BanVe": SetTabActive(tabBanVe, txtTabBanVe, iconTabBanVe); break;
+                case "SoatVe": SetTabActive(tabSoatVe, txtTabSoatVe, iconTabSoatVe); break;
+                case "HangHoa": SetTabActive(tabHangHoa, txtTabHangHoa, iconTabHangHoa); break;
+                case "PhuongTien": SetTabActive(tabNavPhuongTien, txtTabPhuongTien, iconTabPhuongTien); break;
+                case "BaoTri": SetTabActive(tabNavBaoTri, txtTabBaoTri, iconTabBaoTri); break;
+            }
+        }
+
+        private static void DatTrangThaiCluster(Border clusterBorder, Wpf.Ui.Controls.SymbolIcon icon, TextBlock text, System.Windows.Shapes.Rectangle indicator, bool isActive)
+        {
+            if (isActive)
+            {
+                clusterBorder.Background = (Brush)new BrushConverter().ConvertFrom("#003B73")!;
+                icon.Foreground = (Brush)new BrushConverter().ConvertFrom("#38BDF8")!;
+                text.Foreground = Brushes.White;
+                indicator.Fill = (Brush)new BrushConverter().ConvertFrom("#38BDF8")!;
+            }
+            else
+            {
+                clusterBorder.Background = Brushes.Transparent;
+                icon.Foreground = (Brush)new BrushConverter().ConvertFrom("#94A3B8")!;
+                text.Foreground = (Brush)new BrushConverter().ConvertFrom("#94A3B8")!;
+                indicator.Fill = Brushes.Transparent;
             }
         }
 
@@ -250,15 +513,40 @@ namespace GUI
             txtTabLichTrinh.Foreground = inactiveFg;
             iconTabLichTrinh.Foreground = inactiveIconFg;
 
+            tabBieuDo.Background = inactiveBg;
+            tabBieuDo.BorderBrush = inactiveBorder;
+            txtTabBieuDo.Foreground = inactiveFg;
+            iconTabBieuDo.Foreground = inactiveIconFg;
+
             tabBanVe.Background = inactiveBg;
             tabBanVe.BorderBrush = inactiveBorder;
             txtTabBanVe.Foreground = inactiveFg;
             iconTabBanVe.Foreground = inactiveIconFg;
 
+            tabSoatVe.Background = inactiveBg;
+            tabSoatVe.BorderBrush = inactiveBorder;
+            txtTabSoatVe.Foreground = inactiveFg;
+            iconTabSoatVe.Foreground = inactiveIconFg;
+
             tabHangHoa.Background = inactiveBg;
             tabHangHoa.BorderBrush = inactiveBorder;
             txtTabHangHoa.Foreground = inactiveFg;
             iconTabHangHoa.Foreground = inactiveIconFg;
+
+            tabNavPhuongTien.Background = inactiveBg;
+            tabNavPhuongTien.BorderBrush = inactiveBorder;
+            txtTabPhuongTien.Foreground = inactiveFg;
+            iconTabPhuongTien.Foreground = inactiveIconFg;
+
+            tabNavBaoTri.Background = inactiveBg;
+            tabNavBaoTri.BorderBrush = inactiveBorder;
+            txtTabBaoTri.Foreground = inactiveFg;
+            iconTabBaoTri.Foreground = inactiveIconFg;
+
+            tabNavNhanSu.Background = inactiveBg;
+            tabNavNhanSu.BorderBrush = inactiveBorder;
+            txtTabNhanSu.Foreground = inactiveFg;
+            iconTabNhanSu.Foreground = inactiveIconFg;
         }
 
         private void SetTabActive(Border tab, TextBlock text, Wpf.Ui.Controls.SymbolIcon icon)
@@ -272,9 +560,14 @@ namespace GUI
         // Xử lý menu
         private void MenuGa_Click(object sender, RoutedEventArgs e) => NavigateTo("MangLuoiGa");
         private void MenuKhuGian_Click(object sender, RoutedEventArgs e) => NavigateTo("KhuGian");
+        private void MenuNhanSu_Click(object sender, RoutedEventArgs e) => NavigateTo("NhanSu");
         private void MenuLichTrinh_Click(object sender, RoutedEventArgs e) => NavigateTo("LichTrinh");
+        private void MenuBieuDo_Click(object sender, RoutedEventArgs e) => NavigateTo("BieuDo");
         private void MenuBanVe_Click(object sender, RoutedEventArgs e) => NavigateTo("BanVe");
         private void MenuHangHoa_Click(object sender, RoutedEventArgs e) => NavigateTo("HangHoa");
+        private void MenuPhuongTien_Click(object sender, RoutedEventArgs e) => NavigateTo("PhuongTien");
+        private void MenuBaoTri_Click(object sender, RoutedEventArgs e) => NavigateTo("BaoTri");
+
 
         private void MenuKetNoi_Click(object sender, RoutedEventArgs e)
         {
@@ -324,7 +617,17 @@ namespace GUI
                     e.Handled = true;
                     ThucHienXuatTep();
                     break;
+                case Key.F7:
+                    if (btnScF7.Visibility != Visibility.Visible) return;
+                    e.Handled = true;
+                    ThucHienSoatVe();
+                    break;
+                case Key.F8:
+                    e.Handled = true;
+                    NavigateTo("BieuDo");
+                    break;
                 case Key.F9:
+
                     if (btnScF9.Visibility != Visibility.Visible) return;
                     e.Handled = true;
                     ThucHienBaoCao();
@@ -351,7 +654,10 @@ namespace GUI
                     case "F4": if (btnScF4.Visibility == Visibility.Visible) ThucHienNhapTep(); break;
                     case "F5": if (btnScF5.Visibility == Visibility.Visible) ThucHienNapLai(); break;
                     case "F6": if (btnScF6.Visibility == Visibility.Visible) ThucHienXuatTep(); break;
+                    case "F7": if (btnScF7.Visibility == Visibility.Visible) ThucHienSoatVe(); break;
+                    case "F8": NavigateTo("BieuDo"); break;
                     case "F9": if (btnScF9.Visibility == Visibility.Visible) ThucHienBaoCao(); break;
+
                     case "F11": ThucHienToanManHinh(); break;
                     case "ESC": ThucHienHuy(); break;
                 }
@@ -375,8 +681,20 @@ namespace GUI
                 case "BanVe":
                     _banVePage.FocusTimKiem();
                     break;
+                case "SoatVe":
+                    _soatVePage.FocusTimKiem();
+                    break;
                 case "HangHoa":
                     _hangHoaPage.FocusTimKiem();
+                    break;
+                case "PhuongTien":
+                    _phuongTienPage.FocusTimKiem();
+                    break;
+                case "BaoTri":
+                    _baoTriPage.FocusTimKiem();
+                    break;
+                case "NhanSu":
+                    _nhanSuPage.FocusTimKiem();
                     break;
             }
         }
@@ -397,8 +715,17 @@ namespace GUI
                 case "BanVe":
                     _banVePage.KichHoatThemMoi();
                     break;
+                case "SoatVe":
+                    _soatVePage.FocusScanner();
+                    break;
                 case "HangHoa":
                     _hangHoaPage.KichHoatThemMoi();
+                    break;
+                case "BaoTri":
+                    _baoTriPage.KichHoatThemMoi();
+                    break;
+                case "NhanSu":
+                    _nhanSuPage.KichHoatThemMoi();
                     break;
             }
         }
@@ -419,8 +746,23 @@ namespace GUI
                 case "BanVe":
                     _banVePage.KichHoatNapLai();
                     break;
+                case "SoatVe":
+                    _soatVePage.KichHoatNapLai();
+                    break;
                 case "HangHoa":
                     _hangHoaPage.KichHoatNapLai();
+                    break;
+                case "BieuDo":
+                    _bieuDoPage.LoadData();
+                    break;
+                case "PhuongTien":
+                    _phuongTienPage.KichHoatNapLai();
+                    break;
+                case "BaoTri":
+                    _baoTriPage.KichHoatNapLai();
+                    break;
+                case "NhanSu":
+                    _nhanSuPage.KichHoatNapLai();
                     break;
             }
         }
@@ -448,6 +790,12 @@ namespace GUI
                 case "KhuGian":
                     _khuGianPage.KichHoatXuatTep();
                     break;
+                case "BanVe":
+                    _banVePage.KichHoatXuatTep();
+                    break;
+                case "SoatVe":
+                    _soatVePage.KichHoatXuatTep();
+                    break;
             }
         }
 
@@ -460,6 +808,9 @@ namespace GUI
                     break;
                 case "KhuGian":
                     _khuGianPage.KichHoatBaoCao();
+                    break;
+                case "BanVe":
+                    _banVePage.KichHoatBaoCao();
                     break;
             }
         }
@@ -479,6 +830,15 @@ namespace GUI
                 case "KhuGian":
                     _khuGianPage.KichHoatHuy();
                     break;
+                case "PhuongTien":
+                    _phuongTienPage.KichHoatHuy();
+                    break;
+                case "BaoTri":
+                    _baoTriPage.KichHoatHuy();
+                    break;
+                case "NhanSu":
+                    _nhanSuPage.KichHoatHuy();
+                    break;
             }
         }
 
@@ -489,6 +849,17 @@ namespace GUI
                 Owner = this
             };
             dialog.ShowDialog();
+        }
+
+        private void ThucHienSoatVe()
+        {
+            NavigateTo("SoatVe");
+            _soatVePage.FocusScanner();
+        }
+
+        private void MenuSoatVe_Click(object sender, RoutedEventArgs e)
+        {
+            ThucHienSoatVe();
         }
     }
 }
