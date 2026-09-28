@@ -1031,11 +1031,13 @@ namespace GUI.Views.KyThuat
             DataRow? dong = ma > 0 ? TimDongChuyenTau(ma) : null;
             _phuongAnLapTau.TryGetValue(ma, out var phuongAnCu);
 
-            // Doan tau ban dau: phuong an da lap truoc do, hoac bien che dang hien thi cua chuyen
+            // Doan tau ban dau: phuong an da lap truoc do (ban sao), hoac bien che dang hien thi cua chuyen
             List<ToaLapTau> doanTau = phuongAnCu != null
-                ? phuongAnCu.DanhSachToa.ToList()
+                ? phuongAnCu.DanhSachToa.Select(t => t.SaoChep()).ToList()
                 : (dgBienCheToa.ItemsSource as IEnumerable<ToaBienCheHienThi>)?.Select(ToaLapTau.TuBienChe).ToList()
                   ?? new List<ToaLapTau>();
+
+            var (hanhTrinh, ghiChuHanhTrinh) = LayHanhTrinhLapTau(dong);
 
             // Bai toa: toa san sang trong doi + toa mau, bo cac so hieu da nam trong doan
             var soHieuDaDung = new HashSet<string>(doanTau.Select(t => t.SoHieu), StringComparer.OrdinalIgnoreCase);
@@ -1058,6 +1060,8 @@ namespace GUI.Views.KyThuat
                     : null,
                 SoHieuDauMayDangChon = phuongAnCu?.DauMay?.SoHieu
                     ?? (dong != null && dong["SoHieuDauMayChinh"] != DBNull.Value ? dong["SoHieuDauMayChinh"].ToString() : null),
+                HanhTrinh = hanhTrinh,
+                GhiChuHanhTrinh = ghiChuHanhTrinh,
                 DanhSachDauMay = LayDauMayChoLapTau(),
                 DoanTauBanDau = doanTau,
                 BaiToa = baiToa
@@ -1071,11 +1075,41 @@ namespace GUI.Views.KyThuat
             ApDungPhuongAnLapTau(kq);
             CapNhatNhanThayDoiTam();
 
+            string moTaDoan = kq.CoCatNoi
+                ? $"Đã áp dụng phương án lập tàu gồm {kq.DanhSachToa.Count} toa, có cắt / nối dọc đường ({kq.MoTaCatNoi}).\n" +
+                  $"Lớn nhất {kq.SoToaLonNhat} toa, dài {kq.TongChieuDaiM:N1} m (đoạn {kq.ChangDaiNhat}), " +
+                  $"đầu máy {kq.DauMay?.SoHieu ?? "—"}."
+                : $"Đã áp dụng phương án lập tàu gồm {kq.DanhSachToa.Count} toa, dài {kq.TongChieuDaiM:N1} m, " +
+                  $"đầu máy {kq.DauMay?.SoHieu ?? "—"}.";
+
             ThongBaoDialog.ThanhCong(
-                $"Đã áp dụng phương án lập tàu gồm {kq.DanhSachToa.Count} toa, dài {kq.TongChieuDaiM:N1} m, " +
-                $"đầu máy {kq.DauMay?.SoHieu ?? "—"}.\n\n" +
-                "Phương án đang hiển thị ở tab Lập Đoàn Tàu (chưa ghi vào CSDL).",
+                moTaDoan + "\n\nPhương án đang hiển thị ở tab Lập Đoàn Tàu (chưa ghi vào CSDL).",
                 "Lập tàu thành công");
+        }
+
+        // Lich dung ga cua chuyen cho thanh hanh trinh o man hinh lap tau.
+        // Giai doan giao dien chua co truy van vanhanh.LichDungGa trong Repository nen lay
+        // tu du lieu mau DanhMucMauNhanSu (bam seed). Khop theo MaChuyenTau + mac tau,
+        // lech thi tim theo mac tau + ngay xuat phat.
+        private static (List<DiemDungLapTau> HanhTrinh, string GhiChu) LayHanhTrinhLapTau(DataRow? dong)
+        {
+            if (dong == null)
+                return (new List<DiemDungLapTau>(),
+                        "Chưa chọn chuyến tàu: đoàn tàu mô phỏng chạy suốt, không cắt / nối toa dọc đường.");
+
+            int ma = Convert.ToInt32(dong["MaChuyenTau"]);
+            string mac = dong["SoHieuMacTau"]?.ToString() ?? "";
+            DateTime ngay = Convert.ToDateTime(dong["NgayXuatPhat"]).Date;
+
+            var chuyen = DanhMucMauNhanSu.TimChuyen(ma);
+            if (chuyen == null || chuyen.SoHieuMacTau != mac)
+                chuyen = DanhMucMauNhanSu.ChuyenTau.FirstOrDefault(c => c.SoHieuMacTau == mac && c.NgayXuatPhat.Date == ngay);
+
+            if (chuyen == null || !chuyen.CoLichDungGa || chuyen.LichDung.Count < 3)
+                return (new List<DiemDungLapTau>(),
+                        "Chuyến chưa có lịch dừng ga trung gian: đoàn tàu chạy suốt, không cắt / nối toa dọc đường.");
+
+            return (DiemDungLapTau.TaoHanhTrinh(chuyen.LichDung), "");
         }
 
         private List<DauMayLapTau> LayDauMayChoLapTau()
@@ -1113,13 +1147,22 @@ namespace GUI.Views.KyThuat
                 ? $"Dòng {dm.MaDongCode} · Sức kéo {dm.SucKeoTan:N0} tấn"
                 : "Chưa chỉ định đầu máy kéo";
 
+            // Co cat / noi doc duong: the thong so hien doan tau lon nhat tren hanh trinh
+            txtPhuongAnMoPhong.Text = kq.CoCatNoi
+                ? $"Phương án kéo–thả · {kq.MoTaCatNoi}"
+                : "Đang xem phương án kéo–thả";
+
             txtTongChieuDai.Text = $"{kq.TongChieuDaiM:N1} m";
-            txtTongSoToa.Text = $"· {kq.DanhSachToa.Count} toa";
-            txtChieuDaiPhu.Text = "Theo phương án kéo – thả (mô phỏng)";
+            txtTongSoToa.Text = kq.CoCatNoi ? $"· tối đa {kq.SoToaLonNhat} toa" : $"· {kq.DanhSachToa.Count} toa";
+            txtChieuDaiPhu.Text = kq.CoCatNoi
+                ? $"Dài nhất đoạn {kq.ChangDaiNhat} · theo phương án kéo – thả"
+                : "Theo phương án kéo – thả (mô phỏng)";
 
             txtTongTrongLuong.Text = $"{kq.TongTrongLuongTan:N1} tấn";
             var (_, tyLe, thongDiep) = PhuongTienService.DoiChieuSucKeo(kq.TongTrongLuongTan, dm?.SucKeoTan);
-            txtTrongLuongPhu.Text = tyLe > 0 ? $"Chiếm {tyLe:N1}% sức kéo định mức" : thongDiep;
+            txtTrongLuongPhu.Text = tyLe <= 0 ? thongDiep
+                : kq.CoCatNoi ? $"Chiếm {tyLe:N1}% sức kéo · đoạn nặng nhất {kq.ChangNangNhat}"
+                : $"Chiếm {tyLe:N1}% sức kéo định mức";
 
             for (int i = 0; i < kq.DanhSachToa.Count; i++) kq.DanhSachToa[i].ThuTu = i + 1;
             dgBienCheToa.ItemsSource = kq.DanhSachToa.Select(ToaBienCheHienThi.TuToaLapTau).ToList();

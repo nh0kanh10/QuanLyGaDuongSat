@@ -42,53 +42,92 @@
                 </Setter>
             </Style>
 
+            <!-- Nút trơn: chỉ hiện nội dung, để DataTemplate tự tô viền / nền theo trạng thái -->
+            <Style x:Key="NutTron" TargetType="Button">
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <ContentPresenter/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <!-- ================================================================= -->
             <!-- THẺ TOA TRONG ĐOÀN TÀU (có số thứ tự móc nối + bánh xe)           -->
+            <!-- Toa không có mặt ở khu đoạn đang xem (chưa nối / đã cắt) hiện mờ. -->
             <!-- ================================================================= -->
             <DataTemplate x:Key="MauToaDoanTau">
                 <StackPanel Width="108" Margin="0,0,6,0">
-                    <Border x:Name="bdThe" Height="88" CornerRadius="4" BorderThickness="1.5"
-                            Background="{Binding MauNen}" BorderBrush="{Binding MauVien}"
-                            Cursor="SizeAll" ToolTip="{Binding MoTaChiTiet}"
-                            PreviewMouseLeftButtonDown="The_PreviewMouseLeftButtonDown"
-                            PreviewMouseMove="The_PreviewMouseMove">
-                        <Grid Margin="7,5,5,6">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
+                    <Grid>
+                        <Border x:Name="bdThe" Height="104" CornerRadius="4" BorderThickness="1.5"
+                                Background="{Binding MauNen}" BorderBrush="{Binding MauVien}"
+                                Cursor="SizeAll" ToolTip="{Binding MoTaChiTiet}"
+                                PreviewMouseLeftButtonDown="The_PreviewMouseLeftButtonDown"
+                                PreviewMouseMove="The_PreviewMouseMove">
+                            <Grid Margin="7,5,5,5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                            <Grid Grid.Row="0">
-                                <StackPanel Orientation="Horizontal">
-                                    <Border Width="18" Height="18" CornerRadius="9" Background="#003B73">
-                                        <TextBlock Text="{Binding ThuTu}" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="{Binding LoaiCode}" FontSize="10" FontWeight="Bold"
-                                               Foreground="{Binding MauChu}" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                <Grid Grid.Row="0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="18" Height="18" CornerRadius="9" Background="#003B73">
+                                            <TextBlock Text="{Binding ThuTu}" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding LoaiCode}" FontSize="10" FontWeight="Bold"
+                                                   Foreground="{Binding MauChu}" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <Button x:Name="btnThao" Style="{StaticResource NutThaoToa}" Click="BtnThaoToa_Click"
+                                            HorizontalAlignment="Right" Visibility="Hidden" ToolTip="{Binding GoiYNutThao}"/>
+                                </Grid>
+
+                                <TextBlock Grid.Row="1" Text="{Binding SoHieu}" FontSize="12" FontWeight="Bold"
+                                           Foreground="#0F172A" Margin="0,5,0,0" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Row="2" Text="{Binding MoTaNgan}" FontSize="10" Foreground="#64748B"
+                                           Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
+
+                                <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,1,0,0">
+                                    <TextBlock Text="{Binding NhanSucChua}" FontSize="10" FontWeight="SemiBold"
+                                               Foreground="{Binding MauChu}"/>
+                                    <ui:SymbolIcon x:Name="icoVuotTruc" Symbol="Warning24" FontSize="12" Foreground="#DC2626"
+                                                   Margin="5,0,0,0" Visibility="Collapsed"/>
                                 </StackPanel>
-                                <Button x:Name="btnThao" Style="{StaticResource NutThaoToa}" Click="BtnThaoToa_Click"
-                                        HorizontalAlignment="Right" Visibility="Hidden" ToolTip="Tháo toa khỏi đoàn"/>
+
+                                <!-- Phạm vi chạy: bấm để đổi ga nối / ga cắt -->
+                                <Button Grid.Row="4" x:Name="btnPhamVi" Style="{StaticResource NutTron}" Click="BtnPhamVi_Click"
+                                        HorizontalAlignment="Left" Visibility="Collapsed"
+                                        ToolTip="Phạm vi chạy của toa trên hành trình. Bấm để đổi ga nối / ga cắt.">
+                                    <Border x:Name="bdPhamVi" CornerRadius="7" BorderThickness="1" Padding="5,0,6,1"
+                                            Background="#F1F5F9" BorderBrush="#E2E8F0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon x:Name="icoPhamVi" Symbol="Location24" FontSize="10"
+                                                           Foreground="#64748B" Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="txtPhamVi" Text="{Binding NhanPhamVi}" FontSize="9"
+                                                       FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Button>
                             </Grid>
+                        </Border>
 
-                            <TextBlock Grid.Row="1" Text="{Binding SoHieu}" FontSize="12" FontWeight="Bold"
-                                       Foreground="#0F172A" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Grid.Row="2" Text="{Binding MoTaNgan}" FontSize="10" Foreground="#64748B"
-                                       Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
-
-                            <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                <TextBlock Text="{Binding NhanSucChua}" FontSize="10" FontWeight="SemiBold"
-                                           Foreground="{Binding MauChu}"/>
-                                <ui:SymbolIcon x:Name="icoVuotTruc" Symbol="Warning24" FontSize="12" Foreground="#DC2626"
-                                               Margin="5,0,0,0" Visibility="Collapsed"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
+                        <!-- Nhãn khi toa không có mặt ở khu đoạn đang xem -->
+                        <Border x:Name="bdNgoaiDoan" Visibility="Collapsed" IsHitTestVisible="False"
+                                HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,24,0,0"
+                                Background="#FFFFFF" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="3" Padding="6,2">
+                            <TextBlock Text="{Binding NhanNgoaiDoan}" FontSize="10" FontWeight="Bold" Foreground="#B45309"/>
+                        </Border>
+                    </Grid>
 
                     <!-- Hai giá chuyển hướng -->
-                    <Grid Height="8" Margin="12,0">
+                    <Grid x:Name="gridBanhXe" Height="8" Margin="12,0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <Ellipse Width="7" Height="7" Fill="#334155" Margin="0,1,3,0"/>
                             <Ellipse Width="7" Height="7" Fill="#334155" Margin="0,1,0,0"/>
@@ -108,6 +147,94 @@
                     <DataTrigger Binding="{Binding VuotTaiTrongTruc}" Value="True">
                         <Setter TargetName="icoVuotTruc" Property="Visibility" Value="Visible"/>
                         <Setter TargetName="bdThe" Property="BorderBrush" Value="#F87171"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding HienPhamVi}" Value="True">
+                        <Setter TargetName="btnPhamVi" Property="Visibility" Value="Visible"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding CoPhamViRieng}" Value="True">
+                        <Setter TargetName="bdPhamVi" Property="Background" Value="#FEF3C7"/>
+                        <Setter TargetName="bdPhamVi" Property="BorderBrush" Value="#FCD34D"/>
+                        <Setter TargetName="icoPhamVi" Property="Foreground" Value="#B45309"/>
+                        <Setter TargetName="txtPhamVi" Property="Foreground" Value="#92400E"/>
+                    </DataTrigger>
+                    <Trigger SourceName="btnPhamVi" Property="IsMouseOver" Value="True">
+                        <Setter TargetName="bdPhamVi" Property="BorderBrush" Value="#003B73"/>
+                    </Trigger>
+                    <!-- Đặt sau cùng để thắng trigger rê chuột (không cho bấm X trên toa ngoài đoạn) -->
+                    <DataTrigger Binding="{Binding DangHoatDong}" Value="False">
+                        <Setter TargetName="bdThe" Property="Opacity" Value="0.4"/>
+                        <Setter TargetName="gridBanhXe" Property="Opacity" Value="0.35"/>
+                        <Setter TargetName="bdNgoaiDoan" Property="Visibility" Value="Visible"/>
+                        <Setter TargetName="btnThao" Property="Visibility" Value="Hidden"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <!-- ================================================================= -->
+            <!-- MỘT GA TRÊN THANH HÀNH TRÌNH + ĐOẠN NỐI TỚI GA KẾ TIẾP            -->
+            <!-- ================================================================= -->
+            <DataTemplate x:Key="MauGaHanhTrinh">
+                <StackPanel Orientation="Horizontal">
+                    <Border x:Name="bdGa" MinWidth="58" Padding="8,3,8,4" CornerRadius="4" BorderThickness="1.5"
+                            Background="#FFFFFF" BorderBrush="#CBD5E1" Cursor="Hand"
+                            ToolTip="{Binding MoTaChiTiet}" MouseLeftButtonDown="Ga_MouseLeftButtonDown">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="txtMaGa" Text="{Binding MaGaCode}" FontSize="11" FontWeight="Bold"
+                                           Foreground="#0F172A" VerticalAlignment="Center"/>
+                                <Border x:Name="bdThayDoi" Visibility="Collapsed" Margin="5,0,0,0" Padding="4,0"
+                                        CornerRadius="6" Background="#FEF3C7" BorderBrush="#FCD34D" BorderThickness="1"
+                                        VerticalAlignment="Center">
+                                    <TextBlock x:Name="txtThayDoi" Text="{Binding NhanThayDoi}" FontSize="9"
+                                               FontWeight="Bold" Foreground="#92400E"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock x:Name="txtGio" Text="{Binding NhanGio}" FontSize="9" Foreground="#64748B" Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid x:Name="gridDoanSau" Width="52" VerticalAlignment="Center">
+                        <Border x:Name="bdDuongDoan" Height="2" Background="#CBD5E1" VerticalAlignment="Center"/>
+                        <Border Background="#FFFFFF" Padding="3,0" HorizontalAlignment="Center">
+                            <TextBlock x:Name="txtDoanSau" Text="{Binding NhanDoanSau}" FontSize="9"
+                                       FontWeight="SemiBold" Foreground="#64748B"/>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+
+                <DataTemplate.Triggers>
+                    <Trigger SourceName="bdGa" Property="IsMouseOver" Value="True">
+                        <Setter TargetName="bdGa" Property="BorderBrush" Value="#003B73"/>
+                    </Trigger>
+                    <DataTrigger Binding="{Binding CoThayDoi}" Value="True">
+                        <Setter TargetName="bdThayDoi" Property="Visibility" Value="Visible"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding DangChon}" Value="True">
+                        <Setter TargetName="bdGa" Property="Background" Value="#003B73"/>
+                        <Setter TargetName="bdGa" Property="BorderBrush" Value="#003B73"/>
+                        <Setter TargetName="txtMaGa" Property="Foreground" Value="#FFFFFF"/>
+                        <Setter TargetName="txtGio" Property="Foreground" Value="#BFDBFE"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding DoanSauDangChon}" Value="True">
+                        <Setter TargetName="bdDuongDoan" Property="Background" Value="#003B73"/>
+                        <Setter TargetName="bdDuongDoan" Property="Height" Value="3"/>
+                        <Setter TargetName="txtDoanSau" Property="Foreground" Value="#003B73"/>
+                        <Setter TargetName="txtDoanSau" Property="FontWeight" Value="Bold"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding CoLoiTaiGa}" Value="True">
+                        <Setter TargetName="bdGa" Property="BorderBrush" Value="#DC2626"/>
+                        <Setter TargetName="bdThayDoi" Property="Background" Value="#FEE2E2"/>
+                        <Setter TargetName="bdThayDoi" Property="BorderBrush" Value="#FCA5A5"/>
+                        <Setter TargetName="txtThayDoi" Property="Foreground" Value="#B91C1C"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding DoanSauCoLoi}" Value="True">
+                        <Setter TargetName="bdDuongDoan" Property="Background" Value="#DC2626"/>
+                        <Setter TargetName="txtDoanSau" Property="Foreground" Value="#B91C1C"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding LaGaCuoi}" Value="True">
+                        <Setter TargetName="gridDoanSau" Property="Visibility" Value="Collapsed"/>
+                        <Setter TargetName="bdGa" Property="Cursor" Value="Arrow"/>
+                        <Setter TargetName="bdGa" Property="Background" Value="#F8FAFC"/>
                     </DataTrigger>
                 </DataTemplate.Triggers>
             </DataTemplate>
@@ -240,7 +367,7 @@
 
                 <StackPanel Grid.Column="4" Orientation="Horizontal">
                     <Button Style="{StaticResource DesktopButton}" Click="BtnTuDongSapXep_Click"
-                            ToolTip="Xếp toa khách theo hạng (AN → BN → NML → NC), dồn toa hàng về cuối đoàn">
+                            ToolTip="Xếp toa khách theo hạng (AN → BN → NML → NC), dồn toa hàng về cuối đoàn. Toa nối / cắt dọc đường xếp thành nhóm ở cuối đoàn theo thứ tự ga.">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="ArrowSort24" FontSize="12" Foreground="#003B73" Margin="0,0,5,0"/>
                             <TextBlock Text="Tự Động Sắp Xếp"/>
@@ -272,11 +399,16 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,7">
                         <Grid>
-                            <StackPanel Orientation="Horizontal">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="VehicleSubway24" FontSize="13" Foreground="#003B73" Margin="0,0,8,0"/>
                                 <TextBlock Text="ĐOÀN TÀU THEO THỨ TỰ MÓC NỐI" FontSize="11" FontWeight="Bold"
                                            Foreground="#003B73" VerticalAlignment="Center"/>
@@ -284,9 +416,11 @@
                                     <TextBlock x:Name="txtDemToaDoan" Text="0 toa" FontSize="10" FontWeight="Bold" Foreground="#334155"/>
                                 </Border>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <TextBlock Text="Kéo để đổi vị trí  ·  nhấp đúp hoặc kéo xuống bãi để tháo toa  ·  "
-                                           FontSize="10" Foreground="#64748B" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Margin="12,0,0,0">
+                                <TextBlock x:Name="txtGoiYDoanTau" Text="Kéo để đổi vị trí  ·  nhấp đúp hoặc kéo xuống bãi để tháo toa"
+                                           FontSize="10" Foreground="#64748B" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="  ·  " FontSize="10" Foreground="#64748B" VerticalAlignment="Center"/>
                                 <ui:SymbolIcon Symbol="ArrowLeft24" FontSize="12" Foreground="#003B73" Margin="0,0,3,0"
                                                VerticalAlignment="Center"/>
                                 <TextBlock Text="Hướng chạy" FontSize="10" FontWeight="Bold" Foreground="#003B73"
@@ -295,7 +429,46 @@
                         </Grid>
                     </Border>
 
-                    <Border Grid.Row="1" x:Name="bdVungDoanTau" Background="#FCFDFE" AllowDrop="True"
+                    <!-- Thanh hành trình: chọn ga để xem đoàn tàu khi rời ga đó và cắt / nối toa tại ga -->
+                    <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,6">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Location24" FontSize="12" Foreground="#003B73" Margin="0,0,5,0"/>
+                                    <TextBlock Text="HÀNH TRÌNH" FontSize="10" FontWeight="Bold" Foreground="#003B73"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock x:Name="txtGoiYHanhTrinh" Text="Chọn ga để cắt / nối" FontSize="9"
+                                           Foreground="#94A3B8" Margin="0,1,0,0"/>
+                            </StackPanel>
+
+                            <ScrollViewer Grid.Column="1" x:Name="svHanhTrinh" HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl x:Name="icHanhTrinh" ItemTemplate="{StaticResource MauGaHanhTrinh}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <!-- Chuyến không có ga dừng trung gian -->
+                            <StackPanel Grid.Column="1" x:Name="spKhongCoHanhTrinh" Orientation="Horizontal"
+                                        VerticalAlignment="Center" Visibility="Collapsed">
+                                <ui:SymbolIcon Symbol="Info24" FontSize="12" Foreground="#94A3B8" Margin="0,0,6,0"/>
+                                <TextBlock x:Name="txtKhongCoHanhTrinh" Text="" FontSize="10" FontStyle="Italic"
+                                           Foreground="#64748B" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="2" x:Name="bdVungDoanTau" Background="#FCFDFE" AllowDrop="True"
                             DragOver="DoanTau_DragOver" DragLeave="DoanTau_DragLeave" Drop="DoanTau_Drop">
                         <ScrollViewer x:Name="svDoanTau" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                             <Grid x:Name="gridDoanTau" Margin="14,12,14,14" HorizontalAlignment="Left">
@@ -307,7 +480,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <!-- Đầu máy (cố định ở đầu đoàn) -->
                                     <StackPanel Width="134" Margin="0,0,8,0">
-                                        <Border Height="88" Background="#003B73" BorderBrush="#002855" BorderThickness="1.5"
+                                        <Border Height="104" Background="#003B73" BorderBrush="#002855" BorderThickness="1.5"
                                                 CornerRadius="18,4,4,4" Padding="10,6,8,6"
                                                 ToolTip="Đầu máy kéo chính — đổi ở ô chọn phía trên">
                                             <Grid>
@@ -352,7 +525,7 @@
                                     </ItemsControl>
 
                                     <!-- Ô chờ ở cuối đoàn -->
-                                    <Grid Width="112" Height="88" VerticalAlignment="Top">
+                                    <Grid Width="112" Height="104" VerticalAlignment="Top">
                                         <Rectangle Stroke="#94A3B8" StrokeThickness="1.5" StrokeDashArray="4 3"
                                                    RadiusX="4" RadiusY="4" Fill="#F8FAFC"/>
                                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -393,7 +566,7 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                             <ui:SymbolIcon Symbol="Couch24" FontSize="12" Foreground="#003B73" Margin="0,0,6,0"/>
-                            <TextBlock Text="SỐ TOA TRONG ĐOÀN" FontSize="10" FontWeight="Bold" Foreground="#003B73"/>
+                            <TextBlock x:Name="txtTieuDeSoToa" Text="SỐ TOA TRONG ĐOÀN" FontSize="10" FontWeight="Bold" Foreground="#003B73"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="txtSoToa" Text="0" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
@@ -409,7 +582,7 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                             <ui:SymbolIcon Symbol="Ruler24" FontSize="12" Foreground="#4338CA" Margin="0,0,6,0"/>
-                            <TextBlock Text="CHIỀU DÀI ĐOÀN TÀU" FontSize="10" FontWeight="Bold" Foreground="#4338CA"/>
+                            <TextBlock x:Name="txtTieuDeChieuDai" Text="CHIỀU DÀI ĐOÀN TÀU" FontSize="10" FontWeight="Bold" Foreground="#4338CA"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="txtChieuDai" Text="0.0 m" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
@@ -434,7 +607,7 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                             <ui:SymbolIcon Symbol="Gauge24" FontSize="12" Foreground="#15803D" Margin="0,0,6,0"/>
-                            <TextBlock Text="TRỌNG LƯỢNG KÉO (TOÀN TẢI)" FontSize="10" FontWeight="Bold" Foreground="#15803D"/>
+                            <TextBlock x:Name="txtTieuDeTrongLuong" Text="TRỌNG LƯỢNG KÉO (TOÀN TẢI)" FontSize="10" FontWeight="Bold" Foreground="#15803D"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="txtTrongLuong" Text="0.0 t" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
@@ -459,7 +632,7 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                             <ui:SymbolIcon Symbol="People24" FontSize="12" Foreground="#B45309" Margin="0,0,6,0"/>
-                            <TextBlock Text="SỨC CHỨA HÀNH KHÁCH" FontSize="10" FontWeight="Bold" Foreground="#B45309"/>
+                            <TextBlock x:Name="txtTieuDeSucChua" Text="SỨC CHỨA HÀNH KHÁCH" FontSize="10" FontWeight="Bold" Foreground="#B45309"/>
                         </StackPanel>
                         <TextBlock x:Name="txtSucChua" Text="0 chỗ" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
                         <TextBlock x:Name="txtSucChuaPhu" Text="" FontSize="10" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
@@ -550,8 +723,8 @@
                                                RadiusX="4" RadiusY="4"/>
                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <ui:SymbolIcon Symbol="ArrowUndo24" FontSize="22" Foreground="#DC2626" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="Thả vào đây để tháo toa khỏi đoàn" FontSize="12" FontWeight="Bold"
-                                                   Foreground="#B91C1C" Margin="0,4,0,0"/>
+                                        <TextBlock x:Name="txtLopThaoToa" Text="Thả vào đây để tháo toa khỏi đoàn" FontSize="12"
+                                                   FontWeight="Bold" Foreground="#B91C1C" Margin="0,4,0,0" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Grid>
                             </Grid>

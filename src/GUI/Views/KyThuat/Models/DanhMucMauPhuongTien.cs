@@ -18,6 +18,10 @@ namespace GUI.Views.KyThuat.Models
         // Can doi chieu quy chuan chinh thuc truoc khi dua vao bao cao.
         public const decimal TaiTrongTrucToiDaTan = 14.0m;
 
+        // Thoi gian do toi thieu tai ga trung gian de cat / noi toa (don toa, noi ong gio,
+        // thu ham lai). QUY UOC GIAO DIEN - chua doi chieu quy trinh tac nghiep cua VNR.
+        public const int SoPhutDoToiThieuCatNoi = 15;
+
         // ---------------------------------------------------------------------
         // Dong dau may (phuongtien.DongDauMay) - trung seed data
         // ---------------------------------------------------------------------

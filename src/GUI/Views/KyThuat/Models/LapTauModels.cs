@@ -58,7 +58,87 @@ namespace GUI.Views.KyThuat.Models
             $"Tải trọng trục: {TaiTrongTrucTan:N2} t/trục" +
             (VuotTaiTrongTruc ? $" (vượt ngưỡng {DanhMucMauPhuongTien.TaiTrongTrucToiDaTan:N1} t)" : "") +
             (LaToaHang ? "" : $"\nSức chứa: {SucChua} chỗ") +
+            (CoPhamViRieng ? $"\nChạy từ {GaNoiCode} đến {GaCatCode} (cắt / nối dọc đường)" : "") +
             (GhiChu.Length > 0 ? $"\n{GhiChu}" : "");
+
+        // ---------------------------------------------------------------------
+        // Pham vi chay tren hanh trinh (cat / noi toa doc duong).
+        // De xuat 2 cot NULL cho vanhanh.ChiTietDoanTau: MaGaNoi, MaGaCat.
+        // null = noi tu ga dau / chay toi ga cuoi cua chuyen (chay suot).
+        // GaNoiCode / GaCatCode chi de hien thi (ma ga, ke ca khi chay suot).
+        // ---------------------------------------------------------------------
+        public int? MaGaNoi { get; private set; }
+        public int? MaGaCat { get; private set; }
+        public string GaNoiCode { get; private set; } = "";
+        public string GaCatCode { get; private set; } = "";
+
+        public bool CoPhamViRieng => MaGaNoi != null || MaGaCat != null;
+
+        public string NhanPhamVi => GaNoiCode.Length > 0 ? $"{GaNoiCode} → {GaCatCode}" : "Suốt hành trình";
+
+        public void DatPhamVi(int? maGaNoi, string gaNoiCode, int? maGaCat, string gaCatCode)
+        {
+            MaGaNoi = maGaNoi;
+            MaGaCat = maGaCat;
+            GaNoiCode = gaNoiCode;
+            GaCatCode = gaCatCode;
+            BaoThayDoiPhamVi();
+        }
+
+        public void XoaPhamVi() => DatPhamVi(null, "", null, "");
+
+        private void BaoThayDoiPhamVi()
+        {
+            BaoThayDoi(nameof(MaGaNoi));
+            BaoThayDoi(nameof(MaGaCat));
+            BaoThayDoi(nameof(CoPhamViRieng));
+            BaoThayDoi(nameof(NhanPhamVi));
+            BaoThayDoi(nameof(MoTaChiTiet));
+        }
+
+        // ---------------------------------------------------------------------
+        // Trang thai hien thi tren man hinh lap tau (dialog dat lai sau moi thao tac)
+        // ---------------------------------------------------------------------
+
+        // Toa co mat trong doan tau o khu doan dang xem hay khong
+        private bool _dangHoatDong = true;
+        public bool DangHoatDong
+        {
+            get => _dangHoatDong;
+            set { if (_dangHoatDong != value) { _dangHoatDong = value; BaoThayDoi(); } }
+        }
+
+        // Nhan tren the toa khi toa khong co mat o khu doan dang xem: "Nối tại DAN", "Đã cắt tại BTH"
+        private string _nhanNgoaiDoan = "";
+        public string NhanNgoaiDoan
+        {
+            get => _nhanNgoaiDoan;
+            set { if (_nhanNgoaiDoan != value) { _nhanNgoaiDoan = value; BaoThayDoi(); } }
+        }
+
+        // Tooltip nut X: thao han khoi doan hoac cat tai ga dang xem
+        private string _goiYNutThao = "Tháo toa khỏi đoàn";
+        public string GoiYNutThao
+        {
+            get => _goiYNutThao;
+            set { if (_goiYNutThao != value) { _goiYNutThao = value; BaoThayDoi(); } }
+        }
+
+        // Chuyen co lich dung ga trung gian thi moi hien nhan pham vi chay
+        private bool _hienPhamVi;
+        public bool HienPhamVi
+        {
+            get => _hienPhamVi;
+            set { if (_hienPhamVi != value) { _hienPhamVi = value; BaoThayDoi(); } }
+        }
+
+        // Ban sao de dialog thao tac, bam Huy thi phuong an goc khong bi dung
+        public ToaLapTau SaoChep()
+        {
+            var ban = (ToaLapTau)MemberwiseClone();
+            ban.PropertyChanged = null;
+            return ban;
+        }
 
         // Tao tu dong doi toa xe (phuongtien.ToaXe)
         public static ToaLapTau TuToaXe(ToaXeHienThi tx)
@@ -170,6 +250,109 @@ namespace GUI.Views.KyThuat.Models
     }
 
     // -------------------------------------------------------------------------
+    // Mot ga dung cua chuyen tau (vanhanh.LichDungGa JOIN hatang.Ga) tren thanh
+    // hanh trinh cua man hinh lap tau. Moi diem kem so lieu cua KHU DOAN NGAY
+    // SAU no (ga nay -> ga dung ke tiep) de ve doan noi giua hai ga.
+    // -------------------------------------------------------------------------
+    public class DiemDungLapTau : INotifyPropertyChanged
+    {
+        public int ViTri { get; init; }                 // 0 = ga dau
+        public int MaGa { get; init; }
+        public string MaGaCode { get; init; } = "";
+        public string TenGa { get; init; } = "";
+        public int ThuTuDung { get; init; }
+        public DateTime GioDenKeHoach { get; init; }
+        public DateTime GioDiKeHoach { get; init; }
+        public bool LaGaDau { get; init; }
+        public bool LaGaCuoi { get; init; }
+
+        public int SoPhutDo => (int)Math.Round((GioDiKeHoach - GioDenKeHoach).TotalMinutes);
+
+        public bool DuThoiGianCatNoi => SoPhutDo >= DanhMucMauPhuongTien.SoPhutDoToiThieuCatNoi;
+
+        public string NhanGio => LaGaDau ? $"đi {GioDiKeHoach:HH:mm}"
+                               : LaGaCuoi ? $"đến {GioDenKeHoach:HH:mm}"
+                               : $"{GioDenKeHoach:HH:mm} · đỗ {SoPhutDo}'";
+
+        public string NhanMenu => LaGaDau ? $"{MaGaCode} · {TenGa} (ga đầu)"
+                                : LaGaCuoi ? $"{MaGaCode} · {TenGa} (ga cuối)"
+                                : $"{MaGaCode} · {TenGa} (đỗ {SoPhutDo} phút)";
+
+        // --- Trang thai do dialog cap nhat sau moi thao tac ---
+        private bool _dangChon;
+        public bool DangChon { get => _dangChon; set => Dat(ref _dangChon, value); }
+
+        // Nhan so toa noi / cat tai ga: "+5", "−2", "−2 +3"
+        private string _nhanThayDoi = "";
+        public string NhanThayDoi
+        {
+            get => _nhanThayDoi;
+            set { if (Dat(ref _nhanThayDoi, value)) BaoThayDoi(nameof(CoThayDoi)); }
+        }
+        public bool CoThayDoi => NhanThayDoi.Length > 0;
+
+        private bool _coLoiTaiGa;
+        public bool CoLoiTaiGa { get => _coLoiTaiGa; set => Dat(ref _coLoiTaiGa, value); }
+
+        private string _moTaChiTiet = "";
+        public string MoTaChiTiet { get => _moTaChiTiet; set => Dat(ref _moTaChiTiet, value); }
+
+        // Khu doan ngay sau ga nay
+        private string _nhanDoanSau = "";
+        public string NhanDoanSau { get => _nhanDoanSau; set => Dat(ref _nhanDoanSau, value); }
+
+        private bool _doanSauCoLoi;
+        public bool DoanSauCoLoi { get => _doanSauCoLoi; set => Dat(ref _doanSauCoLoi, value); }
+
+        private bool _doanSauDangChon;
+        public bool DoanSauDangChon { get => _doanSauDangChon; set => Dat(ref _doanSauDangChon, value); }
+
+        public static List<DiemDungLapTau> TaoHanhTrinh(IEnumerable<DiemDungNhanSu> lichDung)
+        {
+            var ds = lichDung.OrderBy(d => d.ThuTuDung).ToList();
+            return ds.Select((d, i) => new DiemDungLapTau
+            {
+                ViTri = i,
+                MaGa = d.MaGa,
+                MaGaCode = d.Ga.MaGaCode,
+                TenGa = d.TenGa,
+                ThuTuDung = d.ThuTuDung,
+                GioDenKeHoach = d.GioDenKeHoach,
+                GioDiKeHoach = d.GioDiKeHoach,
+                LaGaDau = i == 0,
+                LaGaCuoi = i == ds.Count - 1
+            }).ToList();
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        private bool Dat<T>(ref T truong, T giaTri, [CallerMemberName] string? ten = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(truong, giaTri)) return false;
+            truong = giaTri;
+            BaoThayDoi(ten);
+            return true;
+        }
+
+        private void BaoThayDoi(string? ten) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(ten));
+    }
+
+    // -------------------------------------------------------------------------
+    // Thanh phan doan tau tren mot chang (cac khu doan lien tiep co cung bo toa)
+    // -------------------------------------------------------------------------
+    public class ChangThanhPhan
+    {
+        public string TuGa { get; init; } = "";     // MaGaCode; rong = khong co lich dung ga
+        public string DenGa { get; init; } = "";
+        public int SoToa { get; init; }
+        public decimal ChieuDaiM { get; init; }
+        public decimal TrongLuongTan { get; init; }
+        public int SucChua { get; init; }
+
+        public string NhanChang => TuGa.Length > 0 ? $"{TuGa} → {DenGa}" : "Toàn hành trình";
+    }
+
+    // -------------------------------------------------------------------------
     // Du lieu dau vao cua dialog lap tau
     // -------------------------------------------------------------------------
     public class ThongTinLapTau
@@ -178,6 +361,10 @@ namespace GUI.Views.KyThuat.Models
         public string TenChuyen { get; set; } = "";
         public decimal? DuongTranhNganNhatM { get; set; }
         public string? SoHieuDauMayDangChon { get; set; }
+
+        // Cac ga dung theo thu tu; it hon 3 ga (khong co ga trung gian) thi khong cat / noi duoc
+        public List<DiemDungLapTau> HanhTrinh { get; set; } = new();
+        public string GhiChuHanhTrinh { get; set; } = "";
 
         public List<DauMayLapTau> DanhSachDauMay { get; set; } = new();
         public List<ToaLapTau> DoanTauBanDau { get; set; } = new();
@@ -190,10 +377,25 @@ namespace GUI.Views.KyThuat.Models
     public class KetQuaLapTau
     {
         public DauMayLapTau? DauMay { get; set; }
+
+        // Toan bo toa cua chuyen theo thu tu moc noi (ke ca toa chi chay mot phan hanh trinh)
         public List<ToaLapTau> DanhSachToa { get; set; } = new();
+
+        // Gia tri LON NHAT tren cac chang - tuong ung DoanTau.TongSoToa / TongChieuDaiM /
+        // TongTrongLuongTan (CHECK <= 20 toa, <= 450 m ap cho doan tau o moi thoi diem)
+        public int SoToaLonNhat { get; set; }
         public decimal TongChieuDaiM { get; set; }
         public decimal TongTrongLuongTan { get; set; }
         public int TongSucChua { get; set; }
+        public string ChangDaiNhat { get; set; } = "";
+        public string ChangNangNhat { get; set; } = "";
+
+        public List<ChangThanhPhan> CacChang { get; set; } = new();
+
+        // Tom tat tac nghiep doc duong: "NTR +5 · DAN −2"; rong = khong cat / noi
+        public string MoTaCatNoi { get; set; } = "";
+        public bool CoCatNoi => MoTaCatNoi.Length > 0;
+
         public List<HangMucAnToanHienThi> HangMuc { get; set; } = new();
     }
 }
