@@ -307,18 +307,19 @@ namespace GUI.Views.KyThuat.Models
         private bool _doanSauDangChon;
         public bool DoanSauDangChon { get => _doanSauDangChon; set => Dat(ref _doanSauDangChon, value); }
 
-        public static List<DiemDungLapTau> TaoHanhTrinh(IEnumerable<DiemDungNhanSu> lichDung)
+        // ngayChay: 00:00 ngay tau chay ga dau; phut trong lich mau tinh tu moc nay
+        public static List<DiemDungLapTau> TaoHanhTrinh(LichDungMau lich, DateTime ngayChay)
         {
-            var ds = lichDung.OrderBy(d => d.ThuTuDung).ToList();
+            var ds = lich.DiemDung.OrderBy(d => d.ThuTuDung).ToList();
             return ds.Select((d, i) => new DiemDungLapTau
             {
                 ViTri = i,
-                MaGa = d.MaGa,
+                MaGa = d.Ga.MaGa,
                 MaGaCode = d.Ga.MaGaCode,
-                TenGa = d.TenGa,
+                TenGa = d.Ga.TenGa,
                 ThuTuDung = d.ThuTuDung,
-                GioDenKeHoach = d.GioDenKeHoach,
-                GioDiKeHoach = d.GioDiKeHoach,
+                GioDenKeHoach = ngayChay.AddMinutes(d.PhutDen),
+                GioDiKeHoach = ngayChay.AddMinutes(d.PhutDi),
                 LaGaDau = i == 0,
                 LaGaCuoi = i == ds.Count - 1
             }).ToList();

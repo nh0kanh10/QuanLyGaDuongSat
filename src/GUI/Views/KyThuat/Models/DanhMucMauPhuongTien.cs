@@ -99,7 +99,57 @@ namespace GUI.Views.KyThuat.Models
             ("G-501", "G"), ("G-502", "G"),
             ("M-602", "M")
         };
+
+        // ---------------------------------------------------------------------
+        // Lich dung ga mau (vanhanh.LichDungGa) cho thanh hanh trinh cua man hinh
+        // lap tau - cat / noi toa doc duong. Repository chua co truy van LichDungGa
+        // nen bam seed data: MaChuyenTau 1..8 theo thu tu INSERT, MaGa theo thu tu
+        // INSERT cua hatang.Ga. Phut tinh tu 00:00 ngay tau chay ga dau
+        // (> 1440 = sang ngay hom sau). Chi dung de hien gio / tinh thoi gian do.
+        // ---------------------------------------------------------------------
+        private static readonly GaDungMau HNI = new(1, "HNI", "Hà Nội"), PLY = new(3, "PLY", "Phủ Lý"),
+            NDH = new(4, "NDH", "Nam Định"), NBH = new(5, "NBH", "Ninh Bình"), THA = new(7, "THA", "Thanh Hóa"),
+            VIN = new(8, "VIN", "Vinh"), DHO = new(11, "DHO", "Đồng Hới"), HUE = new(13, "HUE", "Huế"),
+            LCO = new(14, "LCO", "Lăng Cô"), DAN = new(15, "DAN", "Đà Nẵng"), DTR = new(18, "DTR", "Diêu Trì"),
+            NTR = new(20, "NTR", "Nha Trang"), BTH = new(22, "BTH", "Bình Thuận"), SGO = new(27, "SGO", "Sài Gòn");
+
+        private static LichDungMau Lich(int maChuyen, string mac, bool boSung, params (GaDungMau Ga, int Den, int Di)[] diem)
+            => new(maChuyen, mac, diem.Select((d, i) => new DiemDungMau(d.Ga, i + 1, d.Den, d.Di)).ToList(), boSung);
+
+        public static readonly IReadOnlyList<LichDungMau> LichDungGa = new[]
+        {
+            Lich(1, "SE1", false, (HNI, 360, 370), (PLY, 430, 435), (VIN, 660, 675), (HUE, 1080, 1095),
+                                  (LCO, 1200, 1210), (DAN, 1275, 1290), (SGO, 2280, 2280)),
+            Lich(2, "SE2", false, (SGO, 1140, 1150), (DAN, 2040, 2055), (VIN, 2460, 2475), (THA, 2640, 2650),
+                                  (HNI, 2820, 2820)),
+            // Seed khong co lich dung cho SE3 - bo sung mau theo mau chay cua SE19 (trung DanhMucMauNhanSu)
+            Lich(3, "SE3", true,  (HNI, 1120, 1140), (PLY, 1195, 1198), (NDH, 1228, 1233), (THA, 1315, 1320),
+                                  (VIN, 1480, 1490), (DHO, 1730, 1738), (HUE, 1920, 1930), (DAN, 2100, 2100)),
+            Lich(4, "SE4", false, (SGO, 1140, 1155), (BTH, 1395, 1400), (NTR, 1700, 1715), (DTR, 1960, 1970),
+                                  (DAN, 2350, 2365), (VIN, 2920, 2930), (HNI, 3330, 3330)),
+            Lich(5, "SE19", false, (HNI, 1170, 1190), (PLY, 1245, 1248), (NDH, 1278, 1283), (THA, 1365, 1370),
+                                   (VIN, 1550, 1560), (DHO, 1810, 1818), (HUE, 2000, 2010), (DAN, 2180, 2180)),
+            Lich(6, "NA1", false, (HNI, 1315, 1335), (PLY, 1392, 1395), (NDH, 1425, 1430), (NBH, 1460, 1463),
+                                  (THA, 1525, 1530), (VIN, 1780, 1780))
+        };
+
+        // Khop theo MaChuyenTau + mac tau; lech (CSDL nap lai seed nhieu lan) thi lay theo
+        // mac tau neu mac do chi co mot lich mau.
+        public static LichDungMau? TimLichDung(int maChuyenTau, string soHieuMacTau)
+        {
+            var theoMa = LichDungGa.FirstOrDefault(l => l.MaChuyenTau == maChuyenTau && l.SoHieuMacTau == soHieuMacTau);
+            if (theoMa != null) return theoMa;
+
+            var theoMac = LichDungGa.Where(l => l.SoHieuMacTau == soHieuMacTau).ToList();
+            return theoMac.Count == 1 ? theoMac[0] : null;
+        }
     }
+
+    public record GaDungMau(int MaGa, string MaGaCode, string TenGa);
+
+    public record DiemDungMau(GaDungMau Ga, int ThuTuDung, int PhutDen, int PhutDi);
+
+    public record LichDungMau(int MaChuyenTau, string SoHieuMacTau, IReadOnlyList<DiemDungMau> DiemDung, bool LaBoSungMau);
 
     public record DongDauMayMau(
         string MaDongCode,
