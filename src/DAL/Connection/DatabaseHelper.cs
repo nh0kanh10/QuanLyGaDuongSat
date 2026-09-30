@@ -6,7 +6,7 @@ namespace DAL.Connection
     public static class DatabaseHelper
     {
         private static string _connectionString =
-            @"Server=.\SQLEXPRESS;Database=QuanLyDuongSatV2;Trusted_Connection=True;TrustServerCertificate=True;";
+            @"Server=DESKTOP-F8TMCM4;Initial Catalog=QuanLyDuongSatV2;Integrated Security=True;Trust Server Certificate=True";
 
         public static void SetConnectionString(string connStr)
         {

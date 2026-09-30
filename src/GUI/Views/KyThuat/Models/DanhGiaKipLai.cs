@@ -224,14 +224,24 @@ namespace GUI.Views.KyThuat.Models
         };
     }
 
-    // Muc trong ComboBox chon nguoi cho mot vi tri
+    // Mot nguoi doi chieu cho mot vi tri tren mot chang: muc trong ComboBox chon
+    // nguoi (du dieu kien) hoac dong trong danh sach "Da an" (khong du dieu kien)
     public class UngVienKip
     {
         public NhanVienHienThi NhanVien { get; init; } = null!;
         public List<DieuKienUngVien> DieuKien { get; init; } = new();
 
+        // So gio nghi tu ca truoc toi gio nhan ban chang nay; null = khong co ca truoc
+        public decimal? SoGioNghi { get; init; }
+
+        // R10: thuoc depot o mot dau chang (true) / khong (false) / khong ro ga dong quan (null)
+        public bool? CungDepot => DieuKien.FirstOrDefault(d => d.TenDieuKien == DanhGiaKipLai.DkDonVi)?.Dat;
+
         public bool CoLoi => DieuKien.Any(d => d.LaLoi);
         public bool CoCanhBao => DieuKien.Any(d => d.Dat == false && d.MucDo == MucDoVanDe.CanhBao);
+
+        // Ly do khong du dieu kien (cac dieu kien vi pham)
+        public string LyDoKhongDuDieuKien => string.Join("; ", DieuKien.Where(d => d.LaLoi).Select(d => d.MoTa));
 
         public string MaNVCode => NhanVien.MaNVCode;
         public string HoTen => NhanVien.HoTen;
@@ -246,15 +256,29 @@ namespace GUI.Views.KyThuat.Models
                 var loi = DieuKien.FirstOrDefault(d => d.LaLoi);
                 if (loi != null) return loi.GiaTri;
                 var canhBao = DieuKien.FirstOrDefault(d => d.Dat == false && d.MucDo == MucDoVanDe.CanhBao);
-                if (canhBao != null) return canhBao.GiaTri;
-                string nghi = DieuKien.FirstOrDefault(d => d.TenDieuKien == DanhGiaKipLai.DkNghi)?.GiaTri ?? "";
-                return nghi.StartsWith("Nghỉ") ? $"Phù hợp · {nghi.ToLower()}" : "Phù hợp";
+                if (canhBao != null)
+                    return canhBao.TenDieuKien == DanhGiaKipLai.DkHanKham ? $"Hạn khám {canhBao.GiaTri.ToLower()}" : canhBao.GiaTri;
+                string nghi = SoGioNghi.HasValue ? $"nghỉ {SoGioNghi:0.0} giờ" : "không có ca trước";
+                return CungDepot == false ? $"Khác depot · {nghi}" : $"Phù hợp · {nghi}";
             }
         }
 
-        public string MauTomTat => CoLoi ? "#B91C1C" : CoCanhBao ? "#B45309" : "#15803D";
+        public string MauTomTat => CoLoi ? "#B91C1C" : CoCanhBao ? "#B45309" : CungDepot == false ? "#64748B" : "#15803D";
 
         public override string ToString() => $"{NhanVien.MaNVCode} · {NhanVien.HoTen}";
+    }
+
+    // Danh sach chon nguoi cho mot vi tri tren mot chang: chi nguoi du dieu kien
+    // duoc chon; nguoi khong du dieu kien bi an, giu kem ly do de xem
+    public class DanhSachUngVien
+    {
+        public List<UngVienKip> DuDieuKien { get; init; } = new();
+        public List<UngVienKip> BiAn { get; init; } = new();
+
+        // Nguoi dung dau danh sach da xep - dung cho "Goi y kip"
+        public UngVienKip? GoiY => DuDieuKien.FirstOrDefault();
+
+        public UngVienKip? Tim(int maNhanVien) => DuDieuKien.FirstOrDefault(u => u.NhanVien.MaNhanVien == maNhanVien);
     }
 
     public static class DanhGiaKipLai
@@ -554,21 +578,50 @@ namespace GUI.Views.KyThuat.Models
             return ketQua;
         }
 
-        // Danh sach ung vien cho mot vi tri: dung chuc danh, chua nghi viec; nguoi dat len truoc
-        public static List<UngVienKip> LayUngVien(DuLieuNhanSu dl, string vaiTro, ChuyenTauNhanSu chuyen,
-                                                  int maGaNhan, int maGaGiao, int? maPhanCongBoQua)
+        // -----------------------------------------------------------------
+        // Danh sach chon nguoi cho mot vi tri tren mot chang (29/09):
+        //   - chi gom nguoi dung chuc danh, chua nghi viec va KHONG vi pham dieu
+        //     kien nao (R3 R4 R6 R7 R8) -> phan cong xong khong the ra ca vi pham;
+        //   - xep: khong canh bao truoc -> thuoc depot o dau chang -> nghi lau
+        //     nhat (khong co ca truoc = nghi du) -> ma NV;
+        //   - nguoi khong du dieu kien bi an, giu kem ly do ("Da an N nguoi").
+        // -----------------------------------------------------------------
+        public static DanhSachUngVien LayUngVien(DuLieuNhanSu dl, string vaiTro, ChuyenTauNhanSu chuyen,
+                                                 int maGaNhan, int maGaGiao, int? maPhanCongBoQua)
         {
             string chucDanh = QuyTacKipLai.ChucDanhYeuCau(vaiTro);
-            return dl.NhanVien
+            var tatCa = dl.NhanVien
                 .Where(n => n.TrangThai != NhanVienHienThi.DaNghiViec
                             && string.Equals(n.ChucDanh.Trim(), chucDanh, StringComparison.OrdinalIgnoreCase))
-                .Select(n => new UngVienKip
-                {
-                    NhanVien = n,
-                    DieuKien = DoiChieu(dl, n, vaiTro, chuyen, maGaNhan, maGaGiao, maPhanCongBoQua)
-                })
-                .OrderBy(u => u.CoLoi).ThenBy(u => u.CoCanhBao).ThenBy(u => u.NhanVien.MaNVCode)
+                .Select(n => TaoUngVien(dl, n, vaiTro, chuyen, maGaNhan, maGaGiao, maPhanCongBoQua))
                 .ToList();
+
+            return new DanhSachUngVien
+            {
+                DuDieuKien = tatCa.Where(u => !u.CoLoi)
+                                  .OrderBy(u => u.CoCanhBao)
+                                  .ThenBy(u => u.CungDepot switch { true => 0, null => 1, _ => 2 })
+                                  .ThenByDescending(u => u.SoGioNghi ?? decimal.MaxValue)
+                                  .ThenBy(u => u.MaNVCode, StringComparer.Ordinal)
+                                  .ToList(),
+                BiAn = tatCa.Where(u => u.CoLoi)
+                            .OrderBy(u => u.MaNVCode, StringComparer.Ordinal)
+                            .ToList()
+            };
+        }
+
+        // Doi chieu mot nguoi cho mot vi tri tren mot chang (ca nguoi dang trong kip dang sua)
+        public static UngVienKip TaoUngVien(DuLieuNhanSu dl, NhanVienHienThi nv, string vaiTro, ChuyenTauNhanSu chuyen,
+                                            int maGaNhan, int maGaGiao, int? maPhanCongBoQua)
+        {
+            DateTime gioNhan = chuyen.GioNhanBan(maGaNhan);
+            var truoc = dl.CaTruoc(nv.MaNhanVien, chuyen, gioNhan, maPhanCongBoQua);
+            return new UngVienKip
+            {
+                NhanVien = nv,
+                DieuKien = DoiChieu(dl, nv, vaiTro, chuyen, maGaNhan, maGaGiao, maPhanCongBoQua),
+                SoGioNghi = truoc == null ? null : QuyTacKipLai.SoGio(truoc.GioBanGiao, gioNhan)
+            };
         }
     }
 }

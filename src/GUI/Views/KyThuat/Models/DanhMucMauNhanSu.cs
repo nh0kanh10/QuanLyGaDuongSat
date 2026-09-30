@@ -5,7 +5,11 @@ namespace GUI.Views.KyThuat.Models
     // (giai doan DUNG GIAO DIEN - chua co Repository cho schema nhansu).
     //
     // Bam seed trong tailieu\script_tao_csdl_v2.sql:
-    //   - 13 nhan vien NV_001..NV_013 (MaNhanVien 1..13), 4 kip, 11 lan kiem tra
+    //   - 13 nhan vien (MaNhanVien 1..13), 4 kip, 11 lan kiem tra
+    //   - MaNVCode doi tu NV_001..NV_013 sang ma theo chuc danh (LT_/PL_/TT_...,
+    //     quy uoc giao dien 29/09 - MaNhanVienTheoChucDanh); seed can sua theo
+    //     khi noi CSDL (bang doi ma: CLAUDE.md muc 5.8)
+    //   - Kip 3 (SE19), 4 (NA1), 5 (SE3) da thay nguoi de khong con ca vi pham
     //   - 8 chuyen tau (MaChuyenTau 1..8 theo thu tu INSERT) kem lich dung ga
     //   - Ga: MaGa theo thu tu INSERT cua hatang.Ga
     // Ngay gio tinh tuong doi theo hom nay giong @NgayNay / @HomQua / @NgayMai.
@@ -134,36 +138,39 @@ namespace GUI.Views.KyThuat.Models
         };
 
         // ---------------------------------------------------------------------
-        // Nhan vien (nhansu.NhanVien). NV_001..NV_013 trung seed; nguoi thuoc
-        // kip dang thuc hien de DANG_LAM cho khop R13 (seed de SAN_SANG).
+        // Nhan vien (nhansu.NhanVien). MaNhanVien 1..13 trung seed (ma NV da
+        // doi theo chuc danh); nguoi thuoc kip dang thuc hien de DANG_LAM cho
+        // khop R13 (seed de SAN_SANG).
         // ---------------------------------------------------------------------
         public static List<NhanVienHienThi> LayNhanVien() => new()
         {
-            NV(1,  "NV_001", "Nguyễn Văn An",     "0901234567", "Lái tàu",    "D19E", new DateTime(2027, 12, 31), "Đội lái tàu Hà Nội", NhanVienHienThi.DangLam, 400),
-            NV(2,  "NV_002", "Trần Đình Bình",    "0902345678", "Phụ lái",    "D19E", new DateTime(2027, 12, 31), "Đội lái tàu Hà Nội", NhanVienHienThi.DangLam, 400),
-            NV(3,  "NV_003", "Lê Văn Cường",      "0903456789", "Trưởng tàu", null,   new DateTime(2027, 12, 31), "Đoàn tiếp viên Hà Nội", NhanVienHienThi.DangLam, 400),
-            NV(4,  "NV_004", "Phạm Minh Dũng",    "0904567890", "Nhân viên khám xe", null, new DateTime(2027, 12, 31), "Trạm Giáp Bát", NhanVienHienThi.SanSang, 400),
-            NV(5,  "NV_005", "Hoàng Thị Mai",     "0905678901", "Nhân viên bán vé",  null, new DateTime(2027, 12, 31), "Ga Hà Nội", NhanVienHienThi.SanSang, 400),
-            NV(6,  "NV_006", "Vũ Tiến Đạt",       "0906789012", "Lái tàu",    "D19E", HomNay.AddDays(15),         "Đội lái tàu Hà Nội", NhanVienHienThi.SanSang, 380),
-            NV(7,  "NV_007", "Phan Văn Hùng",     "0907123456", "Lái tàu",    "D19E", new DateTime(2027, 10, 15), "Đội lái tàu Sài Gòn", NhanVienHienThi.DangLam, 380),
-            NV(8,  "NV_008", "Đặng Thế Anh",      "0908234567", "Phụ lái",    "D19E", new DateTime(2027, 9, 20),  "Đội lái tàu Sài Gòn", NhanVienHienThi.DangLam, 380),
-            NV(9,  "NV_009", "Bùi Xuân Khoa",     "0909345678", "Trưởng tàu", null,   new DateTime(2028, 1, 10),  "Đoàn tiếp viên Phương Nam", NhanVienHienThi.DangLam, 380),
-            NV(10, "NV_010", "Lê Đình Chiến",     "0910456789", "Lái tàu",    "D19E", new DateTime(2027, 6, 30),  "Đội lái tàu Vinh", NhanVienHienThi.SanSang, 380),
-            NV(11, "NV_011", "Phạm Thành Long",   "0911567890", "Phụ lái",    "D19E", new DateTime(2027, 8, 12),  "Đội lái tàu Vinh", NhanVienHienThi.SanSang, 380),
-            NV(12, "NV_012", "Ngô Tất Tố",        "0912678901", "Lái tàu",    "D13E", new DateTime(2027, 11, 25), "Đội lái tàu Hà Nội", NhanVienHienThi.SanSang, 380),
-            NV(13, "NV_013", "Hoàng Trọng Nghĩa", "0913789012", "Phụ lái",    "D13E", new DateTime(2027, 12, 5),  "Đội lái tàu Hà Nội", NhanVienHienThi.SanSang, 380),
+            NV(1,  "LT_001", "Nguyễn Văn An",     "0901234567", "Lái tàu",    "D19E", new DateTime(2027, 12, 31), "Đội lái tàu Hà Nội", NhanVienHienThi.DangLam, 400),
+            NV(2,  "PL_001", "Trần Đình Bình",    "0902345678", "Phụ lái",    "D19E", new DateTime(2027, 12, 31), "Đội lái tàu Hà Nội", NhanVienHienThi.DangLam, 400),
+            NV(3,  "TT_001", "Lê Văn Cường",      "0903456789", "Trưởng tàu", null,   new DateTime(2027, 12, 31), "Đoàn tiếp viên Hà Nội", NhanVienHienThi.DangLam, 400),
+            NV(4,  "KX_001", "Phạm Minh Dũng",    "0904567890", "Nhân viên khám xe", null, new DateTime(2027, 12, 31), "Trạm Giáp Bát", NhanVienHienThi.SanSang, 400),
+            NV(5,  "BV_001", "Hoàng Thị Mai",     "0905678901", "Nhân viên bán vé",  null, new DateTime(2027, 12, 31), "Ga Hà Nội", NhanVienHienThi.SanSang, 400),
+            NV(6,  "LT_002", "Vũ Tiến Đạt",       "0906789012", "Lái tàu",    "D19E", HomNay.AddDays(15),         "Đội lái tàu Hà Nội", NhanVienHienThi.SanSang, 380),
+            NV(7,  "LT_003", "Phan Văn Hùng",     "0907123456", "Lái tàu",    "D19E", new DateTime(2027, 10, 15), "Đội lái tàu Sài Gòn", NhanVienHienThi.DangLam, 380),
+            NV(8,  "PL_002", "Đặng Thế Anh",      "0908234567", "Phụ lái",    "D19E", new DateTime(2027, 9, 20),  "Đội lái tàu Sài Gòn", NhanVienHienThi.DangLam, 380),
+            NV(9,  "TT_002", "Bùi Xuân Khoa",     "0909345678", "Trưởng tàu", null,   new DateTime(2028, 1, 10),  "Đoàn tiếp viên Phương Nam", NhanVienHienThi.DangLam, 380),
+            NV(10, "LT_004", "Lê Đình Chiến",     "0910456789", "Lái tàu",    "D19E", new DateTime(2027, 6, 30),  "Đội lái tàu Vinh", NhanVienHienThi.SanSang, 380),
+            NV(11, "PL_003", "Phạm Thành Long",   "0911567890", "Phụ lái",    "D19E", new DateTime(2027, 8, 12),  "Đội lái tàu Vinh", NhanVienHienThi.SanSang, 380),
+            NV(12, "LT_005", "Ngô Tất Tố",        "0912678901", "Lái tàu",    "D13E", new DateTime(2027, 11, 25), "Đội lái tàu Hà Nội", NhanVienHienThi.SanSang, 380),
+            NV(13, "PL_004", "Hoàng Trọng Nghĩa", "0913789012", "Phụ lái",    "D13E", new DateTime(2027, 12, 5),  "Đội lái tàu Hà Nội", NhanVienHienThi.SanSang, 380),
 
             // --- Bo sung mau ---
-            NV(14, "NV_014", "Đỗ Minh Tuấn",      "0914890123", "Lái tàu",    "D19E", new DateTime(2027, 3, 15),  "Đội lái tàu Đà Nẵng", NhanVienHienThi.SanSang, 300),
-            NV(15, "NV_015", "Trịnh Văn Hải",     "0915901234", "Phụ lái",    "D19E", new DateTime(2027, 5, 20),  "Đội lái tàu Đà Nẵng", NhanVienHienThi.SanSang, 300),
-            NV(16, "NV_016", "Nguyễn Thị Hạnh",   "0916012345", "Trưởng tàu", null,   new DateTime(2027, 4, 2),   "Đoàn tiếp viên Đà Nẵng", NhanVienHienThi.SanSang, 300),
-            NV(17, "NV_017", "Lương Văn Thành",   "0917123456", "Trưởng tàu", null,   new DateTime(2027, 8, 1),   "Đoàn tiếp viên Hà Nội", NhanVienHienThi.SanSang, 260),
-            NV(18, "NV_018", "Phạm Quang Huy",    "0918234567", "Phụ lái",    "D19E", HomNay.AddDays(-10),        "Đội lái tàu Hà Nội", NhanVienHienThi.SanSang, 260),
-            NV(19, "NV_019", "Mai Xuân Trường",   "0919345678", "Lái tàu",    "D19E", new DateTime(2027, 2, 10),  "Đội lái tàu Sài Gòn", NhanVienHienThi.SanSang, 200),
-            NV(20, "NV_020", "Cao Văn Lực",       "0920456789", "Phụ lái",    "D19E", new DateTime(2027, 7, 18),  "Đội lái tàu Sài Gòn", NhanVienHienThi.SanSang, 200),
-            NV(21, "NV_021", "Trần Thị Thu",      "0921567890", "Tiếp viên",  null,   new DateTime(2027, 5, 30),  "Đoàn tiếp viên Hà Nội", NhanVienHienThi.SanSang, 150),
-            NV(22, "NV_022", "Vũ Thị Hoa",        "0922678901", "Tiếp viên",  null,   new DateTime(2027, 1, 12),  "Đoàn tiếp viên Phương Nam", NhanVienHienThi.NghiNgoi, 150),
-            NV(23, "NV_023", "Hồ Văn Nam",        "0923789012", "Lái tàu",    "D13E", new DateTime(2026, 12, 1),  "Đội lái tàu Vinh", NhanVienHienThi.DaNghiViec, 900)
+            NV(14, "LT_006", "Đỗ Minh Tuấn",      "0914890123", "Lái tàu",    "D19E", new DateTime(2027, 3, 15),  "Đội lái tàu Đà Nẵng", NhanVienHienThi.SanSang, 300),
+            NV(15, "PL_005", "Trịnh Văn Hải",     "0915901234", "Phụ lái",    "D19E", new DateTime(2027, 5, 20),  "Đội lái tàu Đà Nẵng", NhanVienHienThi.SanSang, 300),
+            NV(16, "TT_003", "Nguyễn Thị Hạnh",   "0916012345", "Trưởng tàu", null,   new DateTime(2027, 4, 2),   "Đoàn tiếp viên Đà Nẵng", NhanVienHienThi.SanSang, 300),
+            NV(17, "TT_004", "Lương Văn Thành",   "0917123456", "Trưởng tàu", null,   new DateTime(2027, 8, 1),   "Đoàn tiếp viên Hà Nội", NhanVienHienThi.SanSang, 260),
+            NV(18, "PL_006", "Phạm Quang Huy",    "0918234567", "Phụ lái",    "D19E", HomNay.AddDays(-10),        "Đội lái tàu Hà Nội", NhanVienHienThi.SanSang, 260),
+            NV(19, "LT_007", "Mai Xuân Trường",   "0919345678", "Lái tàu",    "D19E", new DateTime(2027, 2, 10),  "Đội lái tàu Sài Gòn", NhanVienHienThi.SanSang, 200),
+            NV(20, "PL_007", "Cao Văn Lực",       "0920456789", "Phụ lái",    "D19E", new DateTime(2027, 7, 18),  "Đội lái tàu Sài Gòn", NhanVienHienThi.SanSang, 200),
+            NV(21, "TV_001", "Trần Thị Thu",      "0921567890", "Tiếp viên",  null,   new DateTime(2027, 5, 30),  "Đoàn tiếp viên Hà Nội", NhanVienHienThi.SanSang, 150),
+            NV(22, "TV_002", "Vũ Thị Hoa",        "0922678901", "Tiếp viên",  null,   new DateTime(2027, 1, 12),  "Đoàn tiếp viên Phương Nam", NhanVienHienThi.NghiNgoi, 150),
+            NV(23, "LT_008", "Hồ Văn Nam",        "0923789012", "Lái tàu",    "D13E", new DateTime(2026, 12, 1),  "Đội lái tàu Vinh", NhanVienHienThi.DaNghiViec, 900),
+            // Truong tau Ha Noi thay Bui Xuan Khoa o kip NA1 (seed: trung gio SE4)
+            NV(24, "TT_005", "Đinh Văn Quý",      "0924890123", "Trưởng tàu", null,   new DateTime(2027, 10, 20), "Đoàn tiếp viên Hà Nội", NhanVienHienThi.SanSang, 120)
         };
 
         private static NhanVienHienThi NV(int ma, string code, string hoTen, string sdt, string chucDanh, string? bang,
@@ -184,16 +191,21 @@ namespace GUI.Views.KyThuat.Models
         public static readonly IReadOnlyList<string> HangBangLaiGoiY = new[] { "D19E", "D13E" };
 
         // ---------------------------------------------------------------------
-        // Kip lai (nhansu.PhanCongKipLai). 4 kip dau trung seed.
+        // Kip lai (nhansu.PhanCongKipLai). 4 kip dau theo seed, rieng truong tau
+        // kip 3 va kip 4 da thay: seed de Le Van Cuong (TT_001) o ca SE1 lan SE19,
+        // Bui Xuan Khoa (TT_002) o ca SE4 lan NA1 -> trung khung gio (bai E4).
+        // Du lieu mau khong con ca vi pham; ca do chi xuat hien khi co viec xay
+        // ra sau luc phan (khong dat kiem tra, sua ho so).
         // ---------------------------------------------------------------------
         public static List<PhanCongKipHienThi> LayPhanCong() => new()
         {
-            Kip(1, 1, 1, 2, 3,   "HNI", "VIN", PhanCongKipHienThi.DangThucHien),
-            Kip(2, 4, 7, 8, 9,   "SGO", "NTR", PhanCongKipHienThi.DangThucHien),
-            Kip(3, 5, 10, 11, 3, "HNI", "VIN", PhanCongKipHienThi.DaPhanCong),
-            Kip(4, 6, 12, 13, 9, "HNI", "VIN", PhanCongKipHienThi.DaPhanCong),
-            // Bo sung mau: kip SE3 cho NV_006 - nguoi seed da ghi kiem tra khong dat cho SE3
-            Kip(5, 3, 6, 2, 17,  "HNI", "VIN", PhanCongKipHienThi.DaPhanCong)
+            Kip(1, 1, 1, 2, 3,    "HNI", "VIN", PhanCongKipHienThi.DangThucHien),
+            Kip(2, 4, 7, 8, 9,    "SGO", "NTR", PhanCongKipHienThi.DangThucHien),
+            Kip(3, 5, 10, 11, 17, "HNI", "VIN", PhanCongKipHienThi.DaPhanCong),   // seed: truong tau 3
+            Kip(4, 6, 12, 13, 24, "HNI", "VIN", PhanCongKipHienThi.DaPhanCong),   // seed: truong tau 9
+            // Bo sung mau: kip SE3. Vu Tien Dat (LT_002) khong dat kiem tra SE3 (seed)
+            // nen lai tau da thay bang Nguyen Van An (LT_001); phieu khong dat van giu trong so.
+            Kip(5, 3, 1, 2, 17,   "HNI", "VIN", PhanCongKipHienThi.DaPhanCong)
         };
 
         private static PhanCongKipHienThi Kip(int ma, int maChuyen, int lai, int phu, int truong,
