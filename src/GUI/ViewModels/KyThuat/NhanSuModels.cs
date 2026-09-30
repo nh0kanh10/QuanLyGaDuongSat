@@ -1,4 +1,5 @@
 ﻿using GUI.Helpers;
+using System.Text.RegularExpressions;
 namespace GUI.ViewModels.KyThuat
 {
     // =========================================================================
@@ -56,6 +57,73 @@ namespace GUI.ViewModels.KyThuat
 
         public static decimal SoGio(DateTime tu, DateTime den)
             => Math.Round((decimal)(den - tu).TotalHours, 1, MidpointRounding.AwayFromZero);
+    }
+
+    // -------------------------------------------------------------------------
+    // MA NHAN VIEN THEO CHUC DANH (quy uoc giao dien 29/09 - CSDL chi rang buoc
+    // MaNVCode VARCHAR(20) NOT NULL UNIQUE).
+    // Dang TIENTO_SSS: LT_001 lai tau, PL_001 phu lai, TT_001 truong tau ...;
+    // so thu tu dem rieng tung tien to, khong dung lai ma da cap.
+    // Doi chuc danh -> cap ma moi (kip, kiem tra, tai khoan noi bang MaNhanVien
+    // nen khong anh huong).
+    // -------------------------------------------------------------------------
+    public static class MaNhanVienTheoChucDanh
+    {
+        public const string TienToKhac = "NV";
+
+        // Thu tu trong bang = thu tu hien thi (to tau truoc)
+        private static readonly (string ChucDanh, string TienTo)[] Bang =
+        {
+            ("Lái tàu", "LT"), ("Phụ lái", "PL"), ("Trưởng tàu", "TT"), ("Tiếp viên", "TV"),
+            ("Nhân viên khám xe", "KX"), ("Nhân viên bán vé", "BV")
+        };
+
+        private static readonly Regex DangMa = new(@"^([A-Z]{2})_(\d{3,9})$");
+
+        public const string MoTaQuyUoc =
+            "LT lái tàu · PL phụ lái · TT trưởng tàu · TV tiếp viên · KX khám xe · BV bán vé · NV chức danh khác";
+
+        private static int ViTri(string? chucDanh)
+        {
+            string cd = chucDanh?.Trim() ?? string.Empty;
+            for (int i = 0; i < Bang.Length; i++)
+                if (string.Equals(Bang[i].ChucDanh, cd, StringComparison.OrdinalIgnoreCase)) return i;
+            return -1;
+        }
+
+        public static string TienTo(string? chucDanh)
+        {
+            int i = ViTri(chucDanh);
+            return i >= 0 ? Bang[i].TienTo : TienToKhac;
+        }
+
+        // Sap xep theo chuc danh: lai tau, phu lai, truong tau, tiep vien, kham xe, ban ve, khac
+        public static int ThuTu(string? chucDanh)
+        {
+            int i = ViTri(chucDanh);
+            return i >= 0 ? i : Bang.Length;
+        }
+
+        // Ma dung dang va dung tien to cua chuc danh
+        public static bool KhopChucDanh(string? ma, string? chucDanh)
+        {
+            var m = DangMa.Match(ma ?? string.Empty);
+            return m.Success && m.Groups[1].Value == TienTo(chucDanh);
+        }
+
+        // Ma ke tiep = so lon nhat da cap cua tien to + 1
+        public static string MaKeTiep(string? chucDanh, IEnumerable<string> maDaCap)
+        {
+            string tienTo = TienTo(chucDanh);
+            int lonNhat = 0;
+            foreach (string ma in maDaCap)
+            {
+                var m = DangMa.Match(ma ?? string.Empty);
+                if (m.Success && m.Groups[1].Value == tienTo && int.TryParse(m.Groups[2].Value, out int so) && so > lonNhat)
+                    lonNhat = so;
+            }
+            return $"{tienTo}_{lonNhat + 1:000}";
+        }
     }
 
     public enum MucDoVanDe { NghiemTrong = 0, CanhBao = 1, LuuY = 2 }
