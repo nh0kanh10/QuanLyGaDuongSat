@@ -214,9 +214,11 @@ namespace GUI.Views.KyThuat
             string trangThai = LayTag(cboTrangThaiLoc) ?? "DANG_CONG_TAC";
             bool hanKham = chkHanKhamLoc.IsChecked == true;
 
+            // Ma NV theo chuc danh (LT_, PL_, TT_ ...) -> xep theo chuc danh (to tau truoc) roi theo ma
             var ds = DuLieu.NhanVien
                 .Where(nv => KhopBoLocNhanVien(nv, tuKhoa, chucDanh, donVi, trangThai, hanKham))
-                .OrderBy(nv => nv.MaNVCode)
+                .OrderBy(nv => MaNhanVienTheoChucDanh.ThuTu(nv.ChucDanh))
+                .ThenBy(nv => nv.MaNVCode, StringComparer.Ordinal)
                 .ToList();
 
             dgNhanVien.ItemsSource = ds;
@@ -493,6 +495,11 @@ namespace GUI.Views.KyThuat
             _nhanVienTam[nv.MaNhanVien] = nv;
             SauKhiLuuNhanVien(nv);
 
+            // Doi chuc danh -> da cap ma moi theo chuc danh
+            string doiMa = dangChon.MaNVCode != nv.MaNVCode
+                ? $"Mã nhân viên đổi từ {dangChon.MaNVCode} sang {nv.MaNVCode} theo chức danh mới ({nv.ChucDanh.ToLower()}).\n"
+                : string.Empty;
+
             // Thay doi ho so lam nguoi nay khong con du dieu kien o kip chua nhan ban
             var kipAnhHuong = _tinhTrangChuyen.SelectMany(t => t.Kip)
                 .Where(k => k.LaDaPhanCong && k.VanDe.Any(v => v.MaNhanVien == nv.MaNhanVien && v.MucDo == MucDoVanDe.NghiemTrong))
@@ -501,7 +508,7 @@ namespace GUI.Views.KyThuat
             if (kipAnhHuong.Count > 0)
             {
                 ThongBaoDialog.CanhBao(
-                    $"Đã cập nhật hồ sơ {nv.MaNVCode} — {nv.HoTen}.\n\n" +
+                    $"Đã cập nhật hồ sơ {nv.MaNVCode} — {nv.HoTen}.\n{doiMa}\n" +
                     $"Với hồ sơ mới, {nv.HoTen} không đủ điều kiện ở {kipAnhHuong.Count} kíp chưa nhận ban:\n" +
                     string.Join("\n", kipAnhHuong.Select(k => $"• {k.NhanChuyen} · {k.TenKip} ({k.PhanCong.Chang})")) +
                     "\n\nVào tab Phân công kíp lái để thay người. Hồ sơ chưa ghi vào CSDL.",
@@ -510,7 +517,7 @@ namespace GUI.Views.KyThuat
             else
             {
                 ThongBaoDialog.ThanhCong(
-                    $"Đã cập nhật hồ sơ {nv.MaNVCode} — {nv.HoTen}.\n\nThay đổi đang hiển thị trên màn hình, chưa ghi vào CSDL.",
+                    $"Đã cập nhật hồ sơ {nv.MaNVCode} — {nv.HoTen}.\n{doiMa}\nThay đổi đang hiển thị trên màn hình, chưa ghi vào CSDL.",
                     "Cập nhật hồ sơ nhân viên");
             }
         }

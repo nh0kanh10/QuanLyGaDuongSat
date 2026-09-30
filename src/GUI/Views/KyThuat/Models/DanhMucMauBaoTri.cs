@@ -39,7 +39,7 @@ namespace GUI.Views.KyThuat.Models
 
         // ---------------------------------------------------------------------
         // Nguoi kham (phanquyen.TaiKhoan). Seed chi co nv_dung (MaTaiKhoan 2) la
-        // nhan vien kham xe (NV_004, DonViChuQuan "Trạm Giáp Bát"); 2 tai khoan
+        // nhan vien kham xe (KX_001 - seed NV_004, DonViChuQuan "Trạm Giáp Bát"); 2 tai khoan
         // con lai la bo sung mau.
         // ---------------------------------------------------------------------
         public static readonly IReadOnlyList<TaiKhoanMau> NguoiKham = new[]
