@@ -268,6 +268,9 @@ namespace GUI.Views.Pages
             var pnl = pnlNlSoLieu;
             pnl.Children.Clear();
             ThemDongThongSo(pnl, "Số lít trả nạp", $"{nl.SoLitTraNap:N2} lít");
+            ThemDongThongSo(pnl, "Thành tiền (chi phí)", nl.SoLitTraNap > 0
+                ? $"{nl.ChiPhi:N0} đ · {nl.ChiPhi / nl.SoLitTraNap:N0} đ/lít"
+                : $"{nl.ChiPhi:N0} đ");
             ThemDongThongSo(pnl, "Mức nạp so với bồn", nl.DungTichBonDauLit > 0
                 ? $"{nl.TyLeBon:N1}% của {nl.DungTichBonDauLit:N0} lít"
                 : "—");

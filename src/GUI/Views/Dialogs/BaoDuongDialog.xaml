@@ -128,6 +128,13 @@
                              VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"
                              ToolTip="Hạng mục đã làm, vật tư thay thế, lưu ý kỹ thuật"/>
                     <TextBlock Style="{StaticResource KtLoiTruong}"/>
+
+                    <TextBlock Text="Chi phí bảo dưỡng (VNĐ)" Style="{StaticResource KtNhanTruong}" Margin="0,6,0,0"/>
+                    <TextBox x:Name="txtChiPhi" MaxLength="12" TextChanged="TruongNhap_TextChanged"
+                             ToolTip="Chi phí vật tư + nhân công cho lần bảo dưỡng này (tự gợi ý theo cấp, có thể sửa)"/>
+                    <TextBlock x:Name="txtLoiChiPhi" Style="{StaticResource KtLoiTruong}"/>
+                    <TextBlock Text="Gợi ý theo cấp là số tham khảo, chưa đối chiếu đơn giá vật tư/nhân công thực tế."
+                               Style="{StaticResource KtGoiY}" Margin="0,2,0,4"/>
                 </StackPanel>
 
                 <!-- ====== XEM TRƯỚC ====== -->

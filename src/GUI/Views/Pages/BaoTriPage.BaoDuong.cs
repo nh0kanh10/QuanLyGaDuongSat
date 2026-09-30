@@ -267,6 +267,7 @@ namespace GUI.Views.Pages
             ThemDongThongSo(pnl, "Loại phương tiện", bd.NhanLoai);
             ThemDongThongSo(pnl, "Phương tiện", $"{bd.SoHieuPhuongTien} · {bd.MoTaPhuongTien}");
             ThemDongThongSo(pnl, "Km tại thời điểm", $"{bd.SoKmTaiThoiDiem:N1} km");
+            ThemDongThongSo(pnl, "Chi phí bảo dưỡng", bd.ChiPhi > 0 ? $"{bd.ChiPhi:N0} đ" : "Không ghi");
             if (bd.LaDauMay && pt != null)
                 ThemDongThongSo(pnl, "Đã chạy kể từ phiếu này", $"{Math.Max(0, pt.SoKmTichLuy - bd.SoKmTaiThoiDiem):N0} km");
             ThemDongThongSo(pnl, "Số ngày kể từ phiếu này", $"{Math.Max(0, (DateTime.Now - bd.ThoiDiemHoanThanh).Days):N0} ngày");
