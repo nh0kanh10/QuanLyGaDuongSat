@@ -1,0 +1,166 @@
+<Window x:Class="GUI.Views.Dialogs.DoiGheDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Đổi Chỗ Ngồi Cùng Chuyến Tàu"
+        Width="680"
+        Height="620"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        FontFamily="Segoe UI">
+
+    <Grid Margin="16">
+        <Border Background="#FFFFFF" 
+                BorderBrush="#003B73" 
+                BorderThickness="1.5" 
+                CornerRadius="8">
+            <Border.Effect>
+                <DropShadowEffect Color="#0F172A" BlurRadius="28" ShadowDepth="6" Opacity="0.35"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="42"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header Bar -->
+                <Grid Grid.Row="0" Background="#003B73" MouseLeftButtonDown="Header_MouseLeftButtonDown" Cursor="SizeAll">
+                    <Border CornerRadius="7,7,0,0" Background="#003B73"/>
+                    <Grid Margin="14,0,10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ui:SymbolIcon Symbol="ArrowRepeatAll24" FontSize="16" Foreground="#38BDF8" Margin="0,0,8,0"/>
+                            <TextBlock Text="ĐỔI CHỖ NGỒI CÙNG CHUYẾN TÀU" FontWeight="Bold" FontSize="13" Foreground="#FFFFFF"/>
+                        </StackPanel>
+
+                        <Button Grid.Column="1" Click="BtnDong_Click" 
+                                Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                            <ui:SymbolIcon Symbol="Dismiss24" FontSize="14" Foreground="#94A3B8"/>
+                        </Button>
+                    </Grid>
+                </Grid>
+
+                <!-- Nội dung chính -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,12">
+                    <StackPanel>
+                        <!-- Thông tin vé hiện tại -->
+                        <Border Background="#F0F9FF" BorderBrush="#BAE6FD" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,12">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="VÉ HIỆN TẠI: " FontSize="11" FontWeight="Bold" Foreground="#0369A1"/>
+                                        <TextBlock x:Name="lblMaVeCode" Text="TK_123456" FontSize="12" FontWeight="Bold" FontFamily="Consolas" Foreground="#003B73"/>
+                                        <TextBlock Text=" (PNR: " FontSize="11" Foreground="#64748B" Margin="6,0,0,0"/>
+                                        <TextBlock x:Name="lblMaPNR" Text="ABCDEF" FontSize="11" FontWeight="SemiBold" FontFamily="Consolas" Foreground="#0284C7"/>
+                                        <TextBlock Text=")" FontSize="11" Foreground="#64748B"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" x:Name="lblHanhKhach" Text="HK: NGUYỄN VĂN A" FontSize="11" FontWeight="Bold" Foreground="#0F172A"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Hành trình:" FontSize="10" Foreground="#64748B"/>
+                                        <TextBlock x:Name="lblHanhTrinh" Text="Hà Nội ➔ Sài Gòn" FontSize="12" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Mác tàu:" FontSize="10" Foreground="#64748B"/>
+                                        <TextBlock x:Name="lblMacTau" Text="SE1 (19:30)" FontSize="12" FontWeight="SemiBold" Foreground="#003B73"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                        <TextBlock Text="Chỗ hiện tại:" FontSize="10" Foreground="#64748B" HorizontalAlignment="Right"/>
+                                        <TextBlock x:Name="lblChoHienTai" Text="Toa 03 - Ghế 14" FontSize="12" FontWeight="Bold" Foreground="#B91C1C" HorizontalAlignment="Right"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Bước 1: Chọn Toa xe muốn đổi -->
+                        <TextBlock Text="1. CHỌN TOA XE MUỐN CHUYỂN ĐẾN:" FontSize="11" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6"/>
+                        <ComboBox x:Name="cboToaXe" Height="30" FontSize="11" VerticalContentAlignment="Center" Margin="0,0,0,12"
+                                  SelectionChanged="CboToaXe_SelectionChanged"/>
+
+                        <!-- Bước 2: Chọn Chỗ ngồi mới -->
+                        <Grid Margin="0,0,0,6">
+                            <TextBlock Text="2. CHỌN GHẾ NGỒI MỚI:" FontSize="11" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Border Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="3" Width="14" Height="14" Margin="0,0,4,0"/>
+                                <TextBlock Text="Còn chỗ" FontSize="10" Foreground="#15803D" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <Border Background="#CBD5E1" BorderBrush="#94A3B8" BorderThickness="1" CornerRadius="3" Width="14" Height="14" Margin="0,0,4,0"/>
+                                <TextBlock Text="Đã bán" FontSize="10" Foreground="#64748B" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <Border Background="#003B73" CornerRadius="3" Width="14" Height="14" Margin="0,0,4,0"/>
+                                <TextBlock Text="Đang chọn" FontSize="10" Foreground="#003B73" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" MinHeight="160" MaxHeight="220" Padding="8" Margin="0,0,0,12">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <WrapPanel x:Name="pnlDanhSachGhe" Orientation="Horizontal" HorizontalAlignment="Center"/>
+                            </ScrollViewer>
+                        </Border>
+
+                        <!-- Bước 3: So sánh & Chênh lệch chi phí -->
+                        <Border Background="#FEFCE8" BorderBrush="#FEF08A" BorderThickness="1" CornerRadius="6" Padding="12,10">
+                            <StackPanel>
+                                <TextBlock Text="3. ĐỐI SOÁT &amp; CHÊNH LỆCH CHI PHÍ ĐỔI CHỖ:" FontSize="11" FontWeight="Bold" Foreground="#A16207" Margin="0,0,0,6"/>
+                                <Grid Margin="0,0,0,3">
+                                    <TextBlock Text="Giá vé chỗ cũ:" FontSize="11" Foreground="#64748B"/>
+                                    <TextBlock x:Name="lblGiaVeCu" Text="0 VNĐ" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,3">
+                                    <TextBlock Text="Giá vé chỗ mới:" FontSize="11" Foreground="#64748B"/>
+                                    <TextBlock x:Name="lblGiaVeMoi" Text="0 VNĐ" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Separator Margin="0,4" Background="#FEF08A"/>
+                                <Grid>
+                                    <TextBlock x:Name="lblTieuDeChenhLech" Text="Chênh lệch phụ thu:" FontSize="12" FontWeight="Bold" Foreground="#003B73"/>
+                                    <TextBlock x:Name="lblChenhLech" Text="0 VNĐ" FontSize="13" FontWeight="Bold" Foreground="#15803D" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Footer Buttons -->
+                <Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="16,10">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="#64748B" Margin="0,0,6,0"/>
+                            <TextBlock Text="Chỗ cũ sẽ được giải phóng ngay khi xác nhận đổi." FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Click="BtnDong_Click" Style="{StaticResource DesktopButton}" Margin="0,0,8,0" Padding="16,6">
+                                <TextBlock Text="Hủy Bỏ"/>
+                            </Button>
+                            <Button x:Name="btnXacNhanDoiGhe" Click="BtnXacNhanDoiGhe_Click" Style="{StaticResource PrimaryDesktopButton}" Padding="18,6" IsEnabled="False">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Checkmark24" FontSize="14" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Xác Nhận Đổi Ghế (F12)"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

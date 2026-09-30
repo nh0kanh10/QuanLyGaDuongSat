@@ -25,6 +25,7 @@ namespace DAL.Repositories
             }
         }
 
+        // TECH_DEBT: Ghi nhận kiểm toán hệ thống tầng ứng dụng (hiện kiểm toán thay đổi dữ liệu bảng Ga/KhuGian được kích hoạt tự động qua SQL Server Triggers)
         public int GhiNhatKy(string hanhDong, string tenBang, string khoaChinh, string? duLieuCu = null, string? duLieuMoi = null, int? maTaiKhoan = null)
         {
             var p = new[]

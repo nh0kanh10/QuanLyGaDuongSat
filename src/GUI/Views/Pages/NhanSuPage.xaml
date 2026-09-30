@@ -1,0 +1,1148 @@
+﻿<Page x:Class="GUI.Views.Pages.NhanSuPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      Title="Nhân Sự &amp; Kíp Lái">
+
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GUI;component/Resources/Styles/KyThuatPageStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="DongNhanVienStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                <EventSetter Event="MouseDoubleClick" Handler="DongNhanVien_MouseDoubleClick"/>
+            </Style>
+            <Style x:Key="DongKipStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                <EventSetter Event="MouseDoubleClick" Handler="DongKip_MouseDoubleClick"/>
+            </Style>
+            <Style x:Key="DongHangChoStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                <EventSetter Event="MouseDoubleClick" Handler="DongHangCho_MouseDoubleClick"/>
+            </Style>
+
+            <!-- Icon trong nút: cùng màu chữ của nút (xám đi khi nút bị khóa) -->
+            <Style x:Key="NsIconNut" TargetType="ui:SymbolIcon">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Margin" Value="0,0,5,0"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+            </Style>
+
+            <!-- Tiêu đề mục trong panel hồ sơ: chữ đậm + gạch chân mảnh -->
+            <Style x:Key="NsTieuDeMuc" TargetType="Border">
+                <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <Setter Property="Padding" Value="0,0,0,3"/>
+                <Setter Property="Margin" Value="0,12,0,2"/>
+            </Style>
+            <Style x:Key="NsChuTieuDeMuc" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="Foreground" Value="#003B73"/>
+            </Style>
+
+            <!-- Số đếm trên dải tiêu đề -->
+            <Style x:Key="NsNhanDem" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Foreground" Value="#475569"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="NsSoDem" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="Foreground" Value="#334155"/>
+                <Setter Property="Margin" Value="6,0,0,0"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="NsVachNgan" TargetType="Border">
+                <Setter Property="Width" Value="1"/>
+                <Setter Property="Height" Value="20"/>
+                <Setter Property="Background" Value="#E2E8F0"/>
+                <Setter Property="Margin" Value="12,0"/>
+            </Style>
+
+            <!-- Chữ phụ nhỏ trong ô lưới -->
+            <Style x:Key="NsChuPhu" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="10"/>
+                <Setter Property="Foreground" Value="#64748B"/>
+                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            </Style>
+
+            <!-- Vùng nghỉ tối thiểu sau ca (biểu đồ ca trực) -->
+            <DrawingBrush x:Key="NsNenNghi" TileMode="Tile" Viewport="0,0,6,6" ViewportUnits="Absolute">
+                <DrawingBrush.Drawing>
+                    <DrawingGroup>
+                        <GeometryDrawing Brush="#F1F5F9" Geometry="M0,0 L6,0 6,6 0,6Z"/>
+                        <GeometryDrawing Geometry="M0,6 L6,0">
+                            <GeometryDrawing.Pen>
+                                <Pen Brush="#94A3B8" Thickness="1"/>
+                            </GeometryDrawing.Pen>
+                        </GeometryDrawing>
+                    </DrawingGroup>
+                </DrawingBrush.Drawing>
+            </DrawingBrush>
+
+            <!-- Một vấn đề cần xử lý (VanDeNhanSu) -->
+            <DataTemplate x:Key="NsMauVanDe">
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="84"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Width="7" Height="7" Fill="{Binding MauMucDo}" Margin="0,4,7,0" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Column="1" Text="{Binding NhanMucDo}" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{Binding MauMucDo}"/>
+                    <TextBlock Grid.Column="2" FontSize="11" Foreground="#0F172A" TextWrapping="Wrap">
+                        <Run Text="{Binding DoiTuong, Mode=OneWay}" FontWeight="SemiBold"/><Run Text=" — "/><Run Text="{Binding NoiDung, Mode=OneWay}"/>
+                    </TextBlock>
+                </Grid>
+            </DataTemplate>
+
+            <!-- Ô thành viên kíp trong lưới (ThanhVienKip): họ tên + tình trạng -->
+            <DataTemplate x:Key="NsMauThanhVien">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding HoTen}" FontSize="11" FontWeight="SemiBold" Foreground="#0F172A"
+                               TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding TrangThaiNgan}" FontSize="10" Foreground="{Binding MauTrangThai}"
+                               TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Page.Resources>
+
+    <Grid Background="#F8FAFC">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ================================================================= -->
+        <!-- 1. DẢI TIÊU ĐỀ + VIỆC CẦN XỬ LÝ                                   -->
+        <!-- ================================================================= -->
+        <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="0,0,0,1" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="34" Height="34" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1"
+                            CornerRadius="3" Margin="0,0,10,0">
+                        <ui:SymbolIcon Symbol="PeopleTeam24" FontSize="18" Foreground="#003B73"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="NHÂN SỰ &amp; KÍP LÁI" FontSize="13" FontWeight="Bold" Foreground="#003B73"/>
+                        <TextBlock Text="Hồ sơ · Kíp lái theo chặng · Kiểm tra lên ban · Ca trực"
+                                   FontSize="11" Foreground="#64748B"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Nhãn thay đổi tạm (chưa ghi CSDL) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" Margin="12,0,16,0">
+                    <Border x:Name="bdThayDoiTam" Visibility="Collapsed"
+                            Background="#FFFBEB" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="3" Padding="10,3,4,3"
+                            ToolTip="Hồ sơ, kíp, kết quả kiểm tra vừa lập / sửa chỉ lưu trên màn hình, chưa ghi vào CSDL">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="txtThayDoiTam" Text="0 thay đổi tạm" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="#92400E" VerticalAlignment="Center"/>
+                            <Button Click="BtnHuyThayDoiTam_Click" Style="{StaticResource DesktopButton}"
+                                    Height="22" Margin="8,0,0,0" Padding="8,0"
+                                    ToolTip="Bỏ toàn bộ thay đổi tạm, hiển thị lại dữ liệu gốc">
+                                <TextBlock Text="Hoàn tác" FontSize="10" FontWeight="SemiBold" Foreground="#92400E"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Việc cần xử lý: bấm để chuyển tab kèm bộ lọc -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource KtNutThe}" Tag="THIEU_KIP" Click="Dem_Click"
+                            ToolTip="Chuyến đang / sắp chạy chưa có kíp phủ trọn hành trình · bấm để xem">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Chuyến thiếu kíp" Style="{StaticResource NsNhanDem}"/>
+                            <TextBlock x:Name="txtDemThieuKip" Text="0" Style="{StaticResource NsSoDem}"/>
+                        </StackPanel>
+                    </Button>
+                    <Border Style="{StaticResource NsVachNgan}"/>
+                    <Button Style="{StaticResource KtNutThe}" Tag="KIP_LOI" Click="Dem_Click"
+                            ToolTip="Kíp chưa nhận ban đang có lỗi: trùng chuyến, không đạt kiểm tra, sai bằng lái, hết hạn khám · bấm để xem">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Kíp cần xử lý" Style="{StaticResource NsNhanDem}"/>
+                            <TextBlock x:Name="txtDemKipLoi" Text="0" Style="{StaticResource NsSoDem}"/>
+                        </StackPanel>
+                    </Button>
+                    <Border Style="{StaticResource NsVachNgan}"/>
+                    <Button Style="{StaticResource KtNutThe}" Tag="CHO_KIEM_TRA" Click="Dem_Click"
+                            ToolTip="Số người trong kíp chưa nhận ban mà chưa có kết quả kiểm tra lên ban · bấm để xem">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Chờ kiểm tra" Style="{StaticResource NsNhanDem}"/>
+                            <TextBlock x:Name="txtDemChoKiemTra" Text="0" Style="{StaticResource NsSoDem}"/>
+                        </StackPanel>
+                    </Button>
+                    <Border Style="{StaticResource NsVachNgan}"/>
+                    <Button Style="{StaticResource KtNutThe}" Tag="HAN_KHAM" Click="Dem_Click"
+                            ToolTip="Nhân viên đang công tác có hạn khám sức khỏe đã hết hoặc còn không quá 30 ngày · bấm để xem">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Hạn khám ≤ 30 ngày" Style="{StaticResource NsNhanDem}"/>
+                            <TextBlock x:Name="txtDemHanKham" Text="0" Style="{StaticResource NsSoDem}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ================================================================= -->
+        <!-- 2. THÂN TAB                                                       -->
+        <!-- ================================================================= -->
+        <TabControl Grid.Row="1" x:Name="tabNhanSu" Margin="12,8,12,12" SelectionChanged="TabNhanSu_SelectionChanged"
+                    Background="Transparent" BorderThickness="0">
+
+            <!-- ============================================================= -->
+            <!-- TAB 1: HỒ SƠ NHÂN VIÊN                                        -->
+            <!-- ============================================================= -->
+            <TabItem Style="{StaticResource KtTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="ContactCard24" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Hồ Sơ Nhân Viên" VerticalAlignment="Center"/>
+                        <Border Background="#E2E8F0" CornerRadius="8" Padding="6,1" Margin="6,0,0,0">
+                            <TextBlock x:Name="txtBadgeNhanVien" Text="0" FontSize="10" FontWeight="Bold" Foreground="#334155"/>
+                        </Border>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <Grid Margin="0,8,0,0" TextElement.FontWeight="Normal" TextElement.FontSize="12" TextElement.Foreground="#0F172A">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource KtToolbar}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*" MinWidth="90" MaxWidth="220"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="Tra cứu:" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Grid.Column="1" x:Name="txtTimNhanVien" TextChanged="BoLocNhanVien_Changed"
+                                     ToolTip="Tìm theo mã nhân viên (gõ LT_, PL_, TT_ ... để lọc theo chức danh), họ tên (gõ không dấu cũng được), số điện thoại hoặc đơn vị"/>
+
+                            <ComboBox Grid.Column="2" x:Name="cboChucDanhLoc" Width="150" Margin="8,0,0,0"
+                                      SelectionChanged="BoLocNhanVien_Changed" ToolTip="Lọc theo chức danh">
+                                <ComboBoxItem Content="Tất cả chức danh" Tag="ALL" IsSelected="True"/>
+                                <ComboBoxItem Content="Lái tàu" Tag="Lái tàu"/>
+                                <ComboBoxItem Content="Phụ lái" Tag="Phụ lái"/>
+                                <ComboBoxItem Content="Trưởng tàu" Tag="Trưởng tàu"/>
+                                <ComboBoxItem Content="Tiếp viên" Tag="Tiếp viên"/>
+                                <ComboBoxItem Content="Chức danh khác" Tag="KHAC"/>
+                            </ComboBox>
+
+                            <ComboBox Grid.Column="3" x:Name="cboDonViLoc" Width="170" Margin="8,0,0,0"
+                                      SelectionChanged="BoLocNhanVien_Changed" ToolTip="Lọc theo đơn vị chủ quản (depot / đoàn)"/>
+
+                            <ComboBox Grid.Column="4" x:Name="cboTrangThaiLoc" Width="150" Margin="8,0,0,0"
+                                      SelectionChanged="BoLocNhanVien_Changed" ToolTip="Lọc theo trạng thái hồ sơ">
+                                <ComboBoxItem Content="Đang công tác" Tag="DANG_CONG_TAC" IsSelected="True"/>
+                                <ComboBoxItem Content="Sẵn sàng" Tag="SAN_SANG"/>
+                                <ComboBoxItem Content="Đang làm nhiệm vụ" Tag="DANG_LAM"/>
+                                <ComboBoxItem Content="Nghỉ ngơi" Tag="NGHI_NGOI"/>
+                                <ComboBoxItem Content="Đã nghỉ việc" Tag="DA_NGHI_VIEC"/>
+                                <ComboBoxItem Content="Tất cả trạng thái" Tag="ALL"/>
+                            </ComboBox>
+
+                            <CheckBox Grid.Column="5" x:Name="chkHanKhamLoc" Content="Hạn khám ≤ 30 ngày" FontSize="11"
+                                      Margin="10,0,0,0" VerticalAlignment="Center"
+                                      Checked="BoLocNhanVien_Changed" Unchecked="BoLocNhanVien_Changed"/>
+
+                            <StackPanel Grid.Column="7" Orientation="Horizontal">
+                                <Button x:Name="btnThemNhanVien" Click="BtnThemNhanVien_Click"
+                                        Style="{StaticResource PrimaryDesktopButton}" ToolTip="Thêm hồ sơ nhân viên (F2)">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="PersonAdd24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Thêm Mới"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="btnSuaNhanVien" Click="BtnSuaNhanVien_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}" ToolTip="Sửa hồ sơ đang chọn (nhấp đúp vào dòng)">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Edit24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Sửa"/>
+                                    </StackPanel>
+                                </Button>
+                                <Border Width="1" Background="#CBD5E1" Margin="2,4,8,4"/>
+                                <Button Click="BtnXoaLocNhanVien_Click" Style="{StaticResource DesktopButton}" Margin="0"
+                                        ToolTip="Xóa toàn bộ điều kiện lọc (Esc)">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Dismiss24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Xóa Lọc"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="420"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="330" MinWidth="290" MaxWidth="400"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Danh sách nhân viên -->
+                        <Border Grid.Column="0" Style="{StaticResource KtCard}">
+                            <Grid>
+                                <DataGrid x:Name="dgNhanVien" HeadersVisibility="Column" BorderThickness="0"
+                                          RowStyle="{StaticResource DongNhanVienStyle}"
+                                          SelectionChanged="DgNhanVien_SelectionChanged">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="Mã NV" Width="74">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding MaNVCode}" FontWeight="Bold" FontSize="11" Foreground="#0F172A"/>
+                                                        <Ellipse x:Name="chamTam" Width="6" Height="6" Fill="#F59E0B" Margin="5,0,0,0"
+                                                                 VerticalAlignment="Center" Visibility="Collapsed"
+                                                                 ToolTip="Thay đổi tạm, chưa ghi CSDL"/>
+                                                    </StackPanel>
+                                                    <DataTemplate.Triggers>
+                                                        <DataTrigger Binding="{Binding LaThayDoiTam}" Value="True">
+                                                            <Setter TargetName="chamTam" Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </DataTemplate.Triggers>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTextColumn Header="Họ và Tên" Width="*" MinWidth="120" Binding="{Binding HoTen}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <DataGridTextColumn Header="Chức Danh" Width="100" Binding="{Binding ChucDanh}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="11"/>
+                                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                                    <Setter Property="ToolTip" Value="{Binding ChucDanh}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <DataGridTextColumn Header="Bằng Lái" Width="72" Binding="{Binding NhanBangLai}"
+                                                            HeaderStyle="{StaticResource DataGridHeaderCenter}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="11"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <DataGridTextColumn Header="Đơn Vị Chủ Quản" Width="132" Binding="{Binding DonViChuQuan}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="11"/>
+                                                    <Setter Property="Foreground" Value="#475569"/>
+                                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                                    <Setter Property="ToolTip" Value="{Binding DonViChuQuan}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <DataGridTemplateColumn Header="Hạn Khám" Width="90"
+                                                                HeaderStyle="{StaticResource DataGridHeaderCenter}">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding HanKhamSucKhoe, StringFormat=dd/MM/yyyy}" FontSize="11"
+                                                               Foreground="{Binding MauHanKham}" HorizontalAlignment="Center"
+                                                               ToolTip="{Binding MoTaHanKham}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTemplateColumn Header="Trạng Thái" Width="146">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Rectangle Width="7" Height="7" Fill="{Binding MauTrangThai}" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="{Binding NhanTrangThai}" FontSize="11" Foreground="{Binding MauTrangThai}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <TextBlock x:Name="txtTrongNhanVien" Visibility="Collapsed"
+                                           Text="Không có nhân viên nào khớp điều kiện lọc."
+                                           FontSize="11" Foreground="#94A3B8" FontStyle="Italic"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Hồ sơ chi tiết -->
+                        <Border Grid.Column="2" Style="{StaticResource KtCard}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,9">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock x:Name="txtHsTen" Text="HỒ SƠ NHÂN VIÊN" FontSize="13" FontWeight="Bold"
+                                                       Foreground="#003B73" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock x:Name="txtHsPhuDe" Text="Chọn một nhân viên để xem hồ sơ" FontSize="11"
+                                                       Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock x:Name="txtHsMa" Text="" FontSize="11" FontWeight="SemiBold" Foreground="#475569"
+                                                       VerticalAlignment="Center"/>
+                                            <Button x:Name="btnSuaHoSo" Click="BtnSuaNhanVien_Click" IsEnabled="False"
+                                                    Style="{StaticResource DesktopButton}" Height="24" Width="28" Padding="0" Margin="8,0,0,0"
+                                                    ToolTip="Sửa hồ sơ này">
+                                                <ui:SymbolIcon Symbol="Edit24" Style="{StaticResource NsIconNut}" Margin="0" FontSize="13"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12,0,12,10">
+                                    <StackPanel>
+                                        <TextBlock x:Name="txtHsTrong" Text="Chưa chọn nhân viên."
+                                                   FontSize="11" Foreground="#94A3B8" FontStyle="Italic" Margin="0,10,0,0"/>
+
+                                        <StackPanel x:Name="pnlHoSo" Visibility="Collapsed">
+                                            <!-- Cảnh báo về điều kiện hành nghề / phân công -->
+                                            <StackPanel x:Name="pnlHsCanhBao" Margin="0,10,0,0"/>
+
+                                            <Border Style="{StaticResource NsTieuDeMuc}">
+                                                <TextBlock Text="THÔNG TIN CHUNG" Style="{StaticResource NsChuTieuDeMuc}"/>
+                                            </Border>
+                                            <StackPanel x:Name="pnlHsThongTin"/>
+
+                                            <Border Style="{StaticResource NsTieuDeMuc}">
+                                                <TextBlock Text="ĐIỀU KIỆN HÀNH NGHỀ" Style="{StaticResource NsChuTieuDeMuc}"/>
+                                            </Border>
+                                            <StackPanel x:Name="pnlHsDieuKien"/>
+
+                                            <Border Style="{StaticResource NsTieuDeMuc}">
+                                                <TextBlock x:Name="txtHsTieuDeKip" Text="KÍP ĐẢM NHẬN" Style="{StaticResource NsChuTieuDeMuc}"/>
+                                            </Border>
+                                            <TextBlock x:Name="txtHsKipTrong" Text="Chưa được phân công kíp nào."
+                                                       FontSize="11" Foreground="#94A3B8" FontStyle="Italic" Margin="0,4,0,0"/>
+                                            <ItemsControl x:Name="icHsKip">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Style="{StaticResource KtNutThe}" Click="HsKip_Click"
+                                                                ToolTip="Mở kíp này ở tab Phân công kíp lái">
+                                                            <Border BorderBrush="#F1F5F9" BorderThickness="0,0,0,1" Padding="0,5">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <StackPanel>
+                                                                        <TextBlock FontSize="11" Foreground="#0F172A">
+                                                                            <Run Text="{Binding NhanChuyen, Mode=OneWay}" FontWeight="Bold" Foreground="#003B73"/><Run Text=" · "/><Run Text="{Binding TenVaiTro, Mode=OneWay}"/>
+                                                                        </TextBlock>
+                                                                        <TextBlock Text="{Binding MoTa}" Style="{StaticResource NsChuPhu}"/>
+                                                                    </StackPanel>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding NhanTrangThai}" FontSize="10" FontWeight="SemiBold"
+                                                                               Foreground="{Binding MauTrangThai}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                                </Grid>
+                                                            </Border>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <Border Style="{StaticResource NsTieuDeMuc}">
+                                                <TextBlock x:Name="txtHsTieuDeKiemTra" Text="KIỂM TRA LÊN BAN" Style="{StaticResource NsChuTieuDeMuc}"/>
+                                            </Border>
+                                            <TextBlock x:Name="txtHsKiemTraTrong" Text="Chưa có lần kiểm tra nào."
+                                                       FontSize="11" Foreground="#94A3B8" FontStyle="Italic" Margin="0,4,0,0"/>
+                                            <ItemsControl x:Name="icHsKiemTra">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="#F1F5F9" BorderThickness="0,0,0,1" Padding="0,5">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <StackPanel>
+                                                                    <TextBlock FontSize="11" Foreground="#0F172A">
+                                                                        <Run Text="{Binding ThoiDiemKiemTra, StringFormat='HH:mm dd/MM/yyyy', Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding NhanChuyen, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                                    </TextBlock>
+                                                                    <TextBlock Style="{StaticResource NsChuPhu}">
+                                                                        <Run Text="Cồn "/><Run Text="{Binding NongDoConMgL, StringFormat='0.00', Mode=OneWay}"/><Run Text=" mg/L · nghỉ "/><Run Text="{Binding SoGioNghiTruocCa, StringFormat='0.0', Mode=OneWay}"/><Run Text=" giờ"/>
+                                                                    </TextBlock>
+                                                                </StackPanel>
+                                                                <TextBlock Grid.Column="1" Text="{Binding NhanKetLuan}" FontSize="10" FontWeight="SemiBold"
+                                                                           Foreground="{Binding MauKetLuan}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ============================================================= -->
+            <!-- TAB 2: PHÂN CÔNG KÍP LÁI THEO CHẶNG                           -->
+            <!-- ============================================================= -->
+            <TabItem Style="{StaticResource KtTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="PeopleTeam24" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Phân Công Kíp Lái" VerticalAlignment="Center"/>
+                        <Border x:Name="bdBadgeKip" Background="#E2E8F0" CornerRadius="8" Padding="6,1" Margin="6,0,0,0">
+                            <TextBlock x:Name="txtBadgeKip" Text="0" FontSize="10" FontWeight="Bold" Foreground="#334155"/>
+                        </Border>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <Grid Margin="0,8,0,0" TextElement.FontWeight="Normal" TextElement.FontSize="12" TextElement.Foreground="#0F172A">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="290" MinWidth="260"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Danh sách chuyến -->
+                    <Border Grid.Column="0" Style="{StaticResource KtCard}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="10,6">
+                                <Grid>
+                                    <TextBlock Text="CHUYẾN TÀU" Style="{StaticResource KtSectionHeader}" Margin="0"
+                                               VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="cboLocChuyen" Width="166" HorizontalAlignment="Right"
+                                              SelectionChanged="CboLocChuyen_SelectionChanged" ToolTip="Lọc danh sách chuyến">
+                                        <ComboBoxItem Content="Chưa kết thúc" Tag="ACTIVE" IsSelected="True"/>
+                                        <ComboBoxItem Content="Thiếu kíp" Tag="THIEU"/>
+                                        <ComboBoxItem Content="Có kíp cần xử lý" Tag="LOI"/>
+                                        <ComboBoxItem Content="Tất cả chuyến" Tag="ALL"/>
+                                    </ComboBox>
+                                </Grid>
+                            </Border>
+                            <DataGrid Grid.Row="1" x:Name="dgChuyen" HeadersVisibility="Column" BorderThickness="0" RowHeight="42"
+                                      SelectionChanged="DgChuyen_SelectionChanged">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Chuyến" Width="66">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Chuyen.SoHieuMacTau}" FontSize="12" FontWeight="Bold" Foreground="#003B73"/>
+                                                    <TextBlock Text="{Binding Chuyen.NgayXuatPhat, StringFormat=dd/MM}" Style="{StaticResource NsChuPhu}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Giờ Đi" Width="70">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Chuyen.GioXuatPhatKH, StringFormat=HH:mm}" FontSize="11" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Chuyen.NhanTrangThai}" FontSize="10"
+                                                               Foreground="{Binding Chuyen.MauTrangThai}" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Kíp Lái" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel VerticalAlignment="Center" ToolTip="{Binding NhanPhuKip}">
+                                                    <TextBlock Text="{Binding NhanPhuKip}" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{Binding MauPhuKip}" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Chuyen.HanhTrinh}" Style="{StaticResource NsChuPhu}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <TextBlock Grid.Row="1" x:Name="txtTrongChuyen" Visibility="Collapsed"
+                                       Text="Không có chuyến nào khớp bộ lọc." FontSize="11" Foreground="#94A3B8"
+                                       FontStyle="Italic" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Chi tiết chuyến -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*" MinHeight="120"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Thông tin chuyến + sơ đồ hành trình -->
+                        <Border Grid.Row="0" Style="{StaticResource KtCard}" Padding="12,8,12,6" Margin="0,0,0,8">
+                            <StackPanel>
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Name="txtCtMac" Text="—" FontSize="15" FontWeight="Bold" Foreground="#003B73"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="txtCtHanhTrinh" Text="" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"
+                                                   Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="txtCtTrangThai" Text="" FontSize="11" FontWeight="SemiBold"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBlock x:Name="txtCtThongTin" Text="Chọn một chuyến ở danh sách bên trái." FontSize="11"
+                                           Foreground="#475569" TextWrapping="Wrap" Margin="0,2,0,0"/>
+
+                                <Canvas x:Name="cvHanhTrinh" Height="70" Margin="0,6,0,0" ClipToBounds="True"
+                                        Background="Transparent" SizeChanged="CvHanhTrinh_SizeChanged"/>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <Rectangle Width="14" Height="9" Fill="#DBEAFE" Stroke="#60A5FA" StrokeThickness="1" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Đã phân công" Style="{StaticResource NsChuPhu}" Margin="0,0,12,0"/>
+                                    <Rectangle Width="14" Height="9" Fill="#2563EB" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Đang thực hiện" Style="{StaticResource NsChuPhu}" Margin="0,0,12,0"/>
+                                    <Rectangle Width="14" Height="9" Fill="#E2E8F0" Stroke="#94A3B8" StrokeThickness="1" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Đã bàn giao" Style="{StaticResource NsChuPhu}" Margin="0,0,12,0"/>
+                                    <Rectangle Width="14" Height="9" Fill="#FEF2F2" Stroke="#F87171" StrokeThickness="1"
+                                               StrokeDashArray="3,2" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Chưa có kíp — bấm vào để phân công" Style="{StaticResource NsChuPhu}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Thao tác trên kíp -->
+                        <Border Grid.Row="1" Style="{StaticResource KtToolbar}">
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="btnThemKip" Click="BtnThemKip_Click" IsEnabled="False"
+                                        Style="{StaticResource PrimaryDesktopButton}" ToolTip="Phân công kíp cho một chặng của chuyến (F2)">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Add24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Thêm Kíp"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="btnSuaKip" Click="BtnSuaKip_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}" ToolTip="Đổi chặng hoặc thay người (chỉ khi kíp chưa nhận ban)">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="PersonSwap24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Sửa / Thay Người"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="btnHuyKip" Click="BtnHuyKip_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}" ToolTip="Hủy phân công kíp chưa nhận ban">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Delete24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Hủy Kíp"/>
+                                    </StackPanel>
+                                </Button>
+                                <Border Width="1" Background="#CBD5E1" Margin="2,4,8,4"/>
+                                <Button x:Name="btnKiemTraKip" Click="BtnKiemTraKip_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}" ToolTip="Ghi kết quả đo nồng độ cồn và giờ nghỉ trước ca">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="HeartPulse24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Kiểm Tra Lên Ban"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="btnNhanBan" Click="BtnNhanBan_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}" ToolTip="Xác nhận kíp nhận ban (cả 3 người đạt kiểm tra, kíp không còn lỗi)">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="PersonArrowRight24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Nhận Ban"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="btnBanGiao" Click="BtnBanGiao_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}" Margin="0" ToolTip="Xác nhận kíp đã bàn giao tại ga bàn giao">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="PersonArrowLeft24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Bàn Giao"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Các kíp của chuyến -->
+                        <Border Grid.Row="2" Style="{StaticResource KtCard}">
+                            <Grid>
+                                <DataGrid x:Name="dgKip" HeadersVisibility="Column" BorderThickness="0" RowHeight="42"
+                                          RowStyle="{StaticResource DongKipStyle}"
+                                          SelectionChanged="DgKip_SelectionChanged">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="Kíp" Width="46" HeaderStyle="{StaticResource DataGridHeaderCenter}">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding SoThuTu}" FontSize="12" FontWeight="Bold" Foreground="#0F172A"/>
+                                                        <Ellipse x:Name="chamTam" Width="6" Height="6" Fill="#F59E0B" Margin="4,0,0,0"
+                                                                 VerticalAlignment="Center" Visibility="Collapsed"
+                                                                 ToolTip="Thay đổi tạm, chưa ghi CSDL"/>
+                                                    </StackPanel>
+                                                    <DataTemplate.Triggers>
+                                                        <DataTrigger Binding="{Binding LaThayDoiTam}" Value="True">
+                                                            <Setter TargetName="chamTam" Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </DataTemplate.Triggers>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Chặng · Giờ Nhận → Giao" Width="*" MinWidth="150">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding PhanCong.Chang}" FontSize="11" FontWeight="SemiBold"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding PhanCong.KhungGio}" Style="{StaticResource NsChuPhu}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Lái Tàu" Width="124">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ContentPresenter Content="{Binding LaiTau}" ContentTemplate="{StaticResource NsMauThanhVien}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Phụ Lái" Width="124">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ContentPresenter Content="{Binding PhuLai}" ContentTemplate="{StaticResource NsMauThanhVien}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Trưởng Tàu" Width="124">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ContentPresenter Content="{Binding TruongTau}" ContentTemplate="{StaticResource NsMauThanhVien}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Tình Trạng" Width="136">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding TinhTrang}" FontSize="11" FontWeight="SemiBold"
+                                                                   Foreground="{Binding MauTinhTrang}" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding PhanCong.NhanTrangThai}" Style="{StaticResource NsChuPhu}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <TextBlock x:Name="txtTrongKip" Visibility="Collapsed" Margin="0,30,0,0"
+                                           Text="Chuyến chưa có kíp nào. Bấm &quot;Thêm Kíp&quot; (F2) hoặc bấm vào đoạn trống trên sơ đồ."
+                                           FontSize="11" Foreground="#94A3B8" FontStyle="Italic"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Vấn đề cần xử lý của chuyến -->
+                        <Border Grid.Row="3" Style="{StaticResource KtCard}" Margin="0,8,0,0" Padding="12,7,12,6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock x:Name="txtTieuDeVanDe" Text="VẤN ĐỀ CẦN XỬ LÝ" Style="{StaticResource KtSectionHeader}" Margin="0,0,0,5"/>
+                                <ScrollViewer Grid.Row="1" MaxHeight="96" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel>
+                                        <TextBlock x:Name="txtKhongVanDe" Text="Không có vấn đề nào." FontSize="11" Foreground="#15803D"
+                                                   Visibility="Collapsed"/>
+                                        <ItemsControl x:Name="icVanDe" ItemTemplate="{StaticResource NsMauVanDe}"/>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ============================================================= -->
+            <!-- TAB 3: KIỂM TRA LÊN BAN                                       -->
+            <!-- ============================================================= -->
+            <TabItem Style="{StaticResource KtTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="HeartPulse24" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Kiểm Tra Lên Ban" VerticalAlignment="Center"/>
+                        <Border x:Name="bdBadgeKiemTra" Background="#E2E8F0" CornerRadius="8" Padding="6,1" Margin="6,0,0,0">
+                            <TextBlock x:Name="txtBadgeKiemTra" Text="0" FontSize="10" FontWeight="Bold" Foreground="#334155"/>
+                        </Border>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <Grid Margin="0,8,0,0" TextElement.FontWeight="Normal" TextElement.FontSize="12" TextElement.Foreground="#0F172A">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="2*" MinHeight="110"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="3*" MinHeight="110"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Hàng chờ nhận ban -->
+                    <Border Grid.Row="0" Style="{StaticResource KtToolbar}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="KÍP CHỜ NHẬN BAN" Style="{StaticResource KtSectionHeader}" Margin="0"/>
+                                <TextBlock Text="kíp đã phân công, xếp theo giờ nhận ban" FontSize="11" Foreground="#64748B" Margin="10,0,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button x:Name="btnGhiKiemTra" Click="BtnGhiKiemTra_Click" IsEnabled="False"
+                                        Style="{StaticResource PrimaryDesktopButton}" ToolTip="Ghi kết quả kiểm tra cho kíp đang chọn (F2)">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="HeartPulse24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Ghi Kết Quả Kiểm Tra"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="btnThayNguoi" Click="BtnThayNguoi_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}" ToolTip="Thay người không đạt / vướng lỗi phân công">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="PersonSwap24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Thay Người"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="btnNhanBanHangCho" Click="BtnNhanBanHangCho_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}" Margin="0" ToolTip="Xác nhận kíp nhận ban">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="PersonArrowRight24" Style="{StaticResource NsIconNut}"/>
+                                        <TextBlock Text="Nhận Ban"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{StaticResource KtCard}">
+                        <Grid>
+                            <DataGrid x:Name="dgHangCho" HeadersVisibility="Column" BorderThickness="0" RowHeight="42"
+                                      RowStyle="{StaticResource DongHangChoStyle}"
+                                      SelectionChanged="DgHangCho_SelectionChanged">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Nhận Ban" Width="84">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding PhanCong.GioNhanBan, StringFormat=HH:mm}" FontSize="12" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding PhanCong.GioNhanBan, StringFormat=dd/MM/yyyy}" Style="{StaticResource NsChuPhu}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Chuyến · Chặng" Width="*" MinWidth="140">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                        <Run Text="{Binding NhanChuyen, Mode=OneWay}" Foreground="#003B73"/><Run Text=" · "/><Run Text="{Binding TenKip, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding PhanCong.Chang}" Style="{StaticResource NsChuPhu}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Lái Tàu" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ContentPresenter Content="{Binding LaiTau}" ContentTemplate="{StaticResource NsMauThanhVien}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Phụ Lái" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ContentPresenter Content="{Binding PhuLai}" ContentTemplate="{StaticResource NsMauThanhVien}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Trưởng Tàu" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ContentPresenter Content="{Binding TruongTau}" ContentTemplate="{StaticResource NsMauThanhVien}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Tình Trạng" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding TinhTrang}" FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{Binding MauTinhTrang}" VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <TextBlock x:Name="txtTrongHangCho" Visibility="Collapsed" Text="Không có kíp nào chờ nhận ban."
+                                       FontSize="11" Foreground="#94A3B8" FontStyle="Italic"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Sổ kiểm tra lên ban -->
+                    <Border Grid.Row="2" Style="{StaticResource KtToolbar}" Margin="0,10,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*" MinWidth="110" MaxWidth="220"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="SỔ KIỂM TRA LÊN BAN" Style="{StaticResource KtSectionHeader}"
+                                       Margin="0,0,16,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Tra cứu:" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Grid.Column="2" x:Name="txtTimKiemTra" TextChanged="BoLocKiemTra_Changed"
+                                     ToolTip="Tìm theo số phiếu, mã nhân viên, họ tên hoặc mác tàu"/>
+                            <TextBlock Grid.Column="3" Text="Kết luận:" Style="{StaticResource FieldLabel}" Margin="12,0,6,0"/>
+                            <ComboBox Grid.Column="4" x:Name="cboKetLuanKiemTra" Width="150" SelectionChanged="BoLocKiemTra_Changed">
+                                <ComboBoxItem Content="Tất cả" Tag="ALL" IsSelected="True"/>
+                                <ComboBoxItem Content="Đủ điều kiện" Tag="DAT"/>
+                                <ComboBoxItem Content="Không đủ điều kiện" Tag="KHONG_DAT"/>
+                            </ComboBox>
+                            <Button Grid.Column="6" Click="BtnXoaLocKiemTra_Click" Style="{StaticResource DesktopButton}" Margin="0"
+                                    ToolTip="Xóa điều kiện lọc (Esc)">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Dismiss24" Style="{StaticResource NsIconNut}"/>
+                                    <TextBlock Text="Xóa Lọc"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="3" Style="{StaticResource KtCard}">
+                        <Grid>
+                            <DataGrid x:Name="dgKiemTra" HeadersVisibility="Column" BorderThickness="0">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Số Phiếu" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding MaPhieu}" FontWeight="Bold" FontSize="11"/>
+                                                    <Ellipse x:Name="chamTam" Width="6" Height="6" Fill="#F59E0B" Margin="5,0,0,0"
+                                                             VerticalAlignment="Center" Visibility="Collapsed"
+                                                             ToolTip="Thay đổi tạm, chưa ghi CSDL"/>
+                                                </StackPanel>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding LaThayDoiTam}" Value="True">
+                                                        <Setter TargetName="chamTam" Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Thời Điểm" Width="112"
+                                                        Binding="{Binding ThoiDiemKiemTra, StringFormat='HH:mm dd/MM/yyyy'}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="11"/>
+                                                <Setter Property="Foreground" Value="#475569"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="Mã NV" Width="70" Binding="{Binding MaNVCode}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="11"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="Họ và Tên" Width="*" MinWidth="120" Binding="{Binding HoTen}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="Chức Danh" Width="86" Binding="{Binding ChucDanh}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="11"/>
+                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="Chuyến" Width="86" Binding="{Binding NhanChuyen}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="11"/>
+                                                <Setter Property="Foreground" Value="#003B73"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTemplateColumn Header="Nồng Độ Cồn" Width="118" HeaderStyle="{StaticResource DataGridHeaderRight}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding NongDoConMgL, StringFormat={}{0:0.00} mg/L}" FontSize="11"
+                                                           FontWeight="SemiBold" Foreground="{Binding MauNongDoCon}"
+                                                           HorizontalAlignment="Right" Margin="0,0,4,0"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Nghỉ Trước Ca" Width="122" HeaderStyle="{StaticResource DataGridHeaderRight}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding SoGioNghiTruocCa, StringFormat={}{0:0.0} giờ}" FontSize="11"
+                                                           FontWeight="SemiBold" Foreground="{Binding MauGioNghi}"
+                                                           HorizontalAlignment="Right" Margin="0,0,4,0"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Kết Luận" Width="140">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ToolTip="{Binding LyDoKhongDat}">
+                                                    <Rectangle Width="7" Height="7" Fill="{Binding MauKetLuan}" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="{Binding NhanKetLuan}" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{Binding MauKetLuan}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <TextBlock x:Name="txtTrongKiemTra" Visibility="Collapsed" Text="Không có lần kiểm tra nào khớp điều kiện lọc."
+                                       FontSize="11" Foreground="#94A3B8" FontStyle="Italic"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ============================================================= -->
+            <!-- TAB 4: LỊCH CA TRỰC                                           -->
+            <!-- ============================================================= -->
+            <TabItem Style="{StaticResource KtTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="CalendarLtr24" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Lịch Ca Trực" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <Grid Margin="0,8,0,0" TextElement.FontWeight="Normal" TextElement.FontSize="12" TextElement.Foreground="#0F172A">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource KtToolbar}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0" x:Name="cboDonViLich" Width="180" SelectionChanged="BoLocLich_Changed"
+                                      ToolTip="Lọc theo đơn vị chủ quản"/>
+                            <ComboBox Grid.Column="1" x:Name="cboChucDanhLich" Width="150" Margin="8,0,0,0"
+                                      SelectionChanged="BoLocLich_Changed" ToolTip="Lọc theo chức danh">
+                                <ComboBoxItem Content="Cả tổ tàu" Tag="ALL" IsSelected="True"/>
+                                <ComboBoxItem Content="Lái tàu" Tag="Lái tàu"/>
+                                <ComboBoxItem Content="Phụ lái" Tag="Phụ lái"/>
+                                <ComboBoxItem Content="Trưởng tàu" Tag="Trưởng tàu"/>
+                            </ComboBox>
+                            <CheckBox Grid.Column="2" x:Name="chkChiCoCa" Content="Chỉ người có ca trong 3 ngày" FontSize="11"
+                                      Margin="10,0,0,0" VerticalAlignment="Center"
+                                      Checked="BoLocLich_Changed" Unchecked="BoLocLich_Changed"/>
+
+                            <StackPanel Grid.Column="4" Orientation="Horizontal">
+                                <TextBlock x:Name="txtKhoangNgay" Text="" FontSize="11" FontWeight="SemiBold" Foreground="#334155"
+                                           VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <Button Click="BtnNgayTruoc_Click" Style="{StaticResource DesktopButton}" Padding="8,0"
+                                        ToolTip="Lùi 1 ngày">
+                                    <ui:SymbolIcon Symbol="ChevronLeft24" Style="{StaticResource NsIconNut}" Margin="0"/>
+                                </Button>
+                                <Button Click="BtnHomNay_Click" Style="{StaticResource DesktopButton}" ToolTip="Về hôm nay">
+                                    <TextBlock Text="Hôm Nay"/>
+                                </Button>
+                                <Button Click="BtnNgaySau_Click" Style="{StaticResource DesktopButton}" Padding="8,0" Margin="0"
+                                        ToolTip="Tiến 1 ngày">
+                                    <ui:SymbolIcon Symbol="ChevronRight24" Style="{StaticResource NsIconNut}" Margin="0"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{StaticResource KtCard}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Canvas Grid.Row="0" x:Name="cvLichTieuDe" Height="36" ClipToBounds="True"/>
+
+                            <ScrollViewer Grid.Row="1" x:Name="svLich" VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled" SizeChanged="SvLich_SizeChanged">
+                                <Canvas x:Name="cvLich" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            </ScrollViewer>
+                            <TextBlock Grid.Row="1" x:Name="txtLichTrong" Visibility="Collapsed"
+                                       Text="Không có nhân viên nào khớp bộ lọc." FontSize="11" Foreground="#94A3B8"
+                                       FontStyle="Italic" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                            <!-- Chú giải -->
+                            <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="12,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <Rectangle Width="18" Height="10" Fill="#E2E8F0" Stroke="#94A3B8" StrokeThickness="1" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Đã bàn giao" Style="{StaticResource NsChuPhu}" Margin="0,0,14,0"/>
+                                    <Rectangle Width="18" Height="10" Fill="#2563EB" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Đang thực hiện" Style="{StaticResource NsChuPhu}" Margin="0,0,14,0"/>
+                                    <Rectangle Width="18" Height="10" Fill="#DBEAFE" Stroke="#60A5FA" StrokeThickness="1" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Đã phân công" Style="{StaticResource NsChuPhu}" Margin="0,0,14,0"/>
+                                    <Rectangle Width="18" Height="10" Fill="{StaticResource NsNenNghi}" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Nghỉ tối thiểu 8 giờ sau ca" Style="{StaticResource NsChuPhu}" Margin="0,0,14,0"/>
+                                    <Rectangle Width="18" Height="10" Fill="#FEF2F2" Stroke="#DC2626" StrokeThickness="1.5" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Vi phạm (trùng chuyến, nghỉ chưa đủ, không đạt kiểm tra)" Style="{StaticResource NsChuPhu}"
+                                               Margin="0,0,14,0"/>
+                                    <Rectangle Width="2" Height="12" Fill="#DC2626" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Hiện tại" Style="{StaticResource NsChuPhu}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Page>

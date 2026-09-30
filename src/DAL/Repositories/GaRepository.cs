@@ -73,8 +73,12 @@ namespace DAL.Repositories
 
         public int Xoa(int maGa)
         {
-            return DatabaseHelper.ExecuteNonQuery("DELETE FROM hatang.Ga WHERE MaGa=@id",
-                new[] { new SqlParameter("@id", maGa) });
+            string sql = @"UPDATE hatang.Ga 
+                           SET DangKhaiThac = 0, 
+                               NgayCapNhat = SYSUTCDATETIME(), 
+                               NguoiCapNhat = 'admin' 
+                           WHERE MaGa = @id";
+            return DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@id", maGa) });
         }
 
         public DataTable LayDuongRayTheoGa(int maGa)
@@ -89,36 +93,18 @@ namespace DAL.Repositories
         public DataTable LayKhuGianTheoGa(int maGa)
         {
             string sql = @"
-                IF OBJECT_ID('hatang.DuongNgang', 'U') IS NOT NULL
-                BEGIN
-                    SELECT kg.MaKhuGian, kg.MaGaDau, kg.MaGaCuoi, kg.CuLyKm, kg.TocDoToiDaKhach, 
-                           kg.TocDoToiDaHang, kg.DoDocPermil, kg.CanDauMayDay, kg.TrangThai,
-                           g1.TenGa AS TenGaDau, g2.TenGa AS TenGaCuoi, 
-                           g1.MaGaCode AS MaGaDauCode, g2.MaGaCode AS MaGaCuoiCode,
-                           CASE WHEN kg.MaGaCuoi = @maGa THEN N'Khu gian phía Bắc' ELSE N'Khu gian phía Nam' END AS HuongTuyen,
-                           ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian), 0) AS SoDuongNgang,
-                           ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian AND dn.LaDiemDen = 1), 0) AS SoDiemDen
-                    FROM hatang.KhuGian kg
-                    JOIN hatang.Ga g1 ON kg.MaGaDau = g1.MaGa
-                    JOIN hatang.Ga g2 ON kg.MaGaCuoi = g2.MaGa
-                    WHERE kg.MaGaDau = @maGa OR kg.MaGaCuoi = @maGa
-                    ORDER BY kg.MaGaDau;
-                END
-                ELSE
-                BEGIN
-                    SELECT kg.MaKhuGian, kg.MaGaDau, kg.MaGaCuoi, kg.CuLyKm, kg.TocDoToiDaKhach, 
-                           kg.TocDoToiDaHang, kg.DoDocPermil, kg.CanDauMayDay, kg.TrangThai,
-                           g1.TenGa AS TenGaDau, g2.TenGa AS TenGaCuoi, 
-                           g1.MaGaCode AS MaGaDauCode, g2.MaGaCode AS MaGaCuoiCode,
-                           CASE WHEN kg.MaGaCuoi = @maGa THEN N'Khu gian phía Bắc' ELSE N'Khu gian phía Nam' END AS HuongTuyen,
-                           0 AS SoDuongNgang,
-                           0 AS SoDiemDen
-                    FROM hatang.KhuGian kg
-                    JOIN hatang.Ga g1 ON kg.MaGaDau = g1.MaGa
-                    JOIN hatang.Ga g2 ON kg.MaGaCuoi = g2.MaGa
-                    WHERE kg.MaGaDau = @maGa OR kg.MaGaCuoi = @maGa
-                    ORDER BY kg.MaGaDau;
-                END";
+                SELECT kg.MaKhuGian, kg.MaGaDau, kg.MaGaCuoi, kg.CuLyKm, kg.TocDoToiDaKhach, 
+                       kg.TocDoToiDaHang, kg.DoDocPermil, kg.CanDauMayDay, kg.TrangThai,
+                       g1.TenGa AS TenGaDau, g2.TenGa AS TenGaCuoi, 
+                       g1.MaGaCode AS MaGaDauCode, g2.MaGaCode AS MaGaCuoiCode,
+                       CASE WHEN kg.MaGaCuoi = @maGa THEN N'Khu gian phía Bắc' ELSE N'Khu gian phía Nam' END AS HuongTuyen,
+                       ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian), 0) AS SoDuongNgang,
+                       ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian AND dn.LaDiemDen = 1), 0) AS SoDiemDen
+                FROM hatang.KhuGian kg
+                JOIN hatang.Ga g1 ON kg.MaGaDau = g1.MaGa
+                JOIN hatang.Ga g2 ON kg.MaGaCuoi = g2.MaGa
+                WHERE kg.MaGaDau = @maGa OR kg.MaGaCuoi = @maGa
+                ORDER BY kg.MaGaDau";
             return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@maGa", maGa) });
         }
 
