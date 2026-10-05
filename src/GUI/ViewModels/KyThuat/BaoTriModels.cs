@@ -123,6 +123,11 @@ namespace GUI.ViewModels.KyThuat
         public string GhiChuKyThuat { get; set; } = "";
         public DateTime ThoiDiemKham { get; set; }
 
+        // Chi phi kham xe / sua chua phat sinh (VND) - khong co cot rieng trong CSDL,
+        // them tren giao dien de phuc vu tab "Chi phi & Hieu qua" (F7). Cho phep = 0
+        // (kham dinh ky khong phat sinh chi phi khac phuc).
+        public decimal ChiPhi { get; set; }
+
         // --- Cot JOIN de hien thi ---
         public string SoHieuMacTau { get; set; } = "";
         public DateTime NgayXuatPhat { get; set; }
@@ -234,6 +239,10 @@ namespace GUI.ViewModels.KyThuat
     public static class DinhMucNhienLieu
     {
         public const decimal HeSoQuyDoi = 10_000m;
+
+        // Don gia dau DO tham khao (VND/lit) - du lieu mau de tinh "Thanh tien" trong
+        // dialog cap nhien lieu, CHUA doi chieu gia thi truong / hop dong cung cap thuc te.
+        public const decimal DonGiaMacDinhVndLit = 21_000m;
         public const decimal NguongSatDinhMuc = 90m;      // % dinh muc: tu day tro len coi la "sat dinh muc"
         public const decimal ThangHienThiToiDa = 150m;    // thanh tien do ve tu 0 den 150% dinh muc
 
@@ -306,6 +315,10 @@ namespace GUI.ViewModels.KyThuat
         public bool CanhBaoVuotMuc { get; set; }
         public int? MaNguoiCap { get; set; }
         public DateTime ThoiDiemBomDau { get; set; }
+
+        // Thanh tien = so lit x don gia/lit (VND) - don gia la du lieu mau, khong co cot
+        // rieng trong CSDL. Them de phuc vu tab "Chi phi & Hieu qua" (F7).
+        public decimal ChiPhi { get; set; }
 
         // --- Cot JOIN de hien thi ---
         public string SoHieuDauMay { get; set; } = "";
@@ -422,6 +435,18 @@ namespace GUI.ViewModels.KyThuat
 
         public static string[] CapCua(string loaiPhuongTien)
             => loaiPhuongTien == "DAU_MAY" ? new[] { "R1", "R2" } : new[] { "D1", "D2" };
+
+        // Chi phi binh quan THAM KHAO theo cap bao duong (VND), dung lam gia tri de xuat
+        // trong dialog va de du phong chi phi ky toi o tab "Chi phi & Hieu qua" (F7).
+        // Chua doi chieu don gia vat tu / nhan cong thuc te - chi mo phong R2 > R1, D2 > D1.
+        public static decimal ChiPhiThamKhao(string cap) => cap switch
+        {
+            "R1" => 8_000_000m,
+            "R2" => 25_000_000m,
+            "D1" => 5_000_000m,
+            "D2" => 15_000_000m,
+            _ => 0m
+        };
 
         public static bool LaCapCao(string cap) => cap is "R2" or "D2";
 
@@ -570,6 +595,10 @@ namespace GUI.ViewModels.KyThuat
         public string GhiChuKyThuat { get; set; } = "";
         public int? MaNguoiThucHien { get; set; }
         public DateTime ThoiDiemHoanThanh { get; set; }
+
+        // Chi phi bao duong (VND) - du lieu mau/tham khao, khong co cot rieng trong CSDL.
+        // Them de phuc vu tab "Chi phi & Hieu qua" (F7).
+        public decimal ChiPhi { get; set; }
 
         // --- Cot JOIN de hien thi ---
         public string SoHieuPhuongTien { get; set; } = "";

@@ -24,6 +24,10 @@ namespace GUI.Views.Dialogs
         private readonly DateTime _thoiDiem;
         private bool _dangKhoiTao;
 
+        // Khi lap moi va nguoi dung chua tu go chi phi: tu dien lai gia tri de xuat moi lan doi cap
+        private bool _chiPhiTuDong = true;
+        private bool _dangTuDienChiPhi;
+
         public BaoDuongHienThi? KetQua { get; private set; }
 
         public BaoDuongDialog(BaoDuongHienThi? banGoc, IReadOnlyList<BaoDuongHienThi> toanBoLichSu,
@@ -37,6 +41,7 @@ namespace GUI.Views.Dialogs
             _thoiDiem = banGoc?.ThoiDiemHoanThanh ?? DateTime.Now;
 
             ONhapSoThucHelper.Gan(txtSoKm, 1, coDinhSoLe: false);
+            ONhapSoThucHelper.Gan(txtChiPhi, 0, coDinhSoLe: false);
             cboNguoi.ItemsSource = DanhMucMauBaoTri.NguoiBaoDuong;
 
             if (banGoc == null)
@@ -93,6 +98,8 @@ namespace GUI.Views.Dialogs
             txtSoKm.Text = bd.SoKmTaiThoiDiem.ToString("0.#", FormatHelper.TechnicalCulture);
             cboNguoi.SelectedItem = DanhMucMauBaoTri.TimNguoiKham(bd.MaNguoiThucHien ?? 0);
             txtGhiChu.Text = bd.GhiChuKyThuat;
+            txtChiPhi.Text = bd.ChiPhi.ToString("0", FormatHelper.TechnicalCulture);
+            _chiPhiTuDong = false;      // dang sua: giu dung chi phi da luu, khong tu doi theo cap
         }
 
         // =====================================================================
@@ -152,7 +159,15 @@ namespace GUI.Views.Dialogs
 
             var lichSu = LichSuCua(pt, boQuaBanGoc: false);
             var chuY = ChuKyBaoDuong.CapCanChuY(ChuKyBaoDuong.TinhTienDo(pt, lichSu));
-            ChonCap(chuY?.Cap ?? ChuKyBaoDuong.CapCua(pt.LoaiPhuongTien)[0]);
+            string capGoiY = chuY?.Cap ?? ChuKyBaoDuong.CapCua(pt.LoaiPhuongTien)[0];
+            ChonCap(capGoiY);
+
+            if (_chiPhiTuDong)
+            {
+                _dangTuDienChiPhi = true;
+                txtChiPhi.Text = ChuKyBaoDuong.ChiPhiThamKhao(capGoiY).ToString("0", FormatHelper.TechnicalCulture);
+                _dangTuDienChiPhi = false;
+            }
 
             bool cu = _dangKhoiTao;
             _dangKhoiTao = true;
@@ -168,13 +183,24 @@ namespace GUI.Views.Dialogs
         {
             if (_dangKhoiTao) return;
             txtLoiCap.Text = "";
+            if (_chiPhiTuDong && CapDangChon != null)
+            {
+                _dangTuDienChiPhi = true;
+                txtChiPhi.Text = ChuKyBaoDuong.ChiPhiThamKhao(CapDangChon).ToString("0", FormatHelper.TechnicalCulture);
+                _dangTuDienChiPhi = false;
+            }
             CapNhatXemTruoc();
         }
 
         private void TruongNhap_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (_dangKhoiTao) return;
-            txtLoiSoKm.Text = "";
+            if (sender == txtSoKm) txtLoiSoKm.Text = "";
+            if (sender == txtChiPhi)
+            {
+                txtLoiChiPhi.Text = "";
+                if (!_dangTuDienChiPhi) _chiPhiTuDong = false;    // nguoi dung da tu sua, khong tu doi theo cap nua
+            }
             CapNhatXemTruoc();
         }
 
@@ -299,7 +325,7 @@ namespace GUI.Views.Dialogs
 
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
-            if (!KiemTraHopLe(out var pt, out string cap, out decimal soKm, out var nguoi)) return;
+            if (!KiemTraHopLe(out var pt, out string cap, out decimal soKm, out var nguoi, out decimal chiPhi)) return;
 
             var kq = _banGoc?.SaoChep() ?? new BaoDuongHienThi { ThoiDiemHoanThanh = _thoiDiem };
             kq.GanPhuongTien(pt);
@@ -308,13 +334,15 @@ namespace GUI.Views.Dialogs
             kq.MaNguoiThucHien = nguoi.MaTaiKhoan;
             kq.TenNguoiThucHien = nguoi.HoTenHienThi;
             kq.GhiChuKyThuat = txtGhiChu.Text.Trim();
+            kq.ChiPhi = chiPhi;
             kq.LaThayDoiTam = true;
 
             KetQua = kq;
             DialogResult = true;
         }
 
-        private bool KiemTraHopLe(out PhuongTienBaoDuong pt, out string cap, out decimal soKm, out TaiKhoanMau nguoi)
+        private bool KiemTraHopLe(out PhuongTienBaoDuong pt, out string cap, out decimal soKm, out TaiKhoanMau nguoi,
+                                  out decimal chiPhi)
         {
             bool hopLe = true;
             Control? oLoiDauTien = null;
@@ -364,6 +392,16 @@ namespace GUI.Views.Dialogs
             nguoi = (cboNguoi.SelectedItem as TaiKhoanMau)!;
             if (nguoi == null)
                 BaoLoi(txtLoiNguoi, "Vui lòng chọn người thực hiện.", cboNguoi);
+
+            // Chi phi bao duong (khong co cot CSDL - du lieu mau/tham khao)
+            chiPhi = 0m;
+            decimal? cp = ONhapSoThucHelper.Lay(txtChiPhi);
+            if (!cp.HasValue)
+                BaoLoi(txtLoiChiPhi, "Chi phí không hợp lệ (nhập 0 nếu không có).", txtChiPhi);
+            else if (cp < 0)
+                BaoLoi(txtLoiChiPhi, "Chi phí không được âm.", txtChiPhi);
+            else
+                chiPhi = cp.Value;
 
             if (!hopLe) oLoiDauTien?.Focus();
             return hopLe;

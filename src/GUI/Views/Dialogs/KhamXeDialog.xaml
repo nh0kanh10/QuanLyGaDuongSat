@@ -135,6 +135,12 @@
                                   Margin="0,0,0,4" Checked="HangMuc_Changed" Unchecked="HangMuc_Changed"/>
                     </WrapPanel>
 
+                    <TextBlock Text="Chi phí khám xe / sửa chữa phát sinh (VNĐ)" Style="{StaticResource KtNhanTruong}"/>
+                    <TextBox x:Name="txtChiPhi" MaxLength="12" TextChanged="TruongNhap_TextChanged"
+                             ToolTip="Chi phí kiểm tra định kỳ (thường nhỏ) hoặc chi phí khắc phục khi không đạt. Để 0 nếu không phát sinh."/>
+                    <TextBlock x:Name="txtLoiChiPhi" Style="{StaticResource KtLoiTruong}"/>
+                    <TextBlock Text="Dữ liệu mẫu/tham khảo, chưa nối kế toán chi phí thực tế." Style="{StaticResource KtGoiY}" Margin="0,2,0,10"/>
+
                     <Grid Margin="0,0,0,4">
                         <TextBlock x:Name="txtNhanGhiChu" Text="Ghi chú kỹ thuật" Style="{StaticResource KtNhanTruong}"
                                    VerticalAlignment="Bottom"/>

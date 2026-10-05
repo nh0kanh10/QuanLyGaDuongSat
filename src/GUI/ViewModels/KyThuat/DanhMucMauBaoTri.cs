@@ -120,26 +120,26 @@ namespace GUI.ViewModels.KyThuat
             return new List<BaoDuongHienThi>
             {
                 TaoLanBaoDuong(1, "DAU_MAY:2", "R1", 120_000m, 2, HomNay.AddDays(-40).AddHours(16),
-                               "Bảo dưỡng định kỳ cấp R1 hoàn thành đạt chuẩn."),                          // seed
+                               "Bảo dưỡng định kỳ cấp R1 hoàn thành đạt chuẩn.", 7_600_000m),               // seed
                 TaoLanBaoDuong(2, "DAU_MAY:1", "R1",  80_000m, 2, HomNay.AddDays(-150).AddHours(15),
-                               "Thay lọc dầu bôi trơn, kiểm tra hệ thống hãm và cát chống trượt."),
+                               "Thay lọc dầu bôi trơn, kiểm tra hệ thống hãm và cát chống trượt.", 8_200_000m),
                 TaoLanBaoDuong(3, "DAU_MAY:3", "R1",  50_500m, 5, HomNay.AddDays(-300).AddHours(10),
-                               "Kiểm tra bộ truyền động, bôi trơn ổ trục trước mùa khai thác đèo Hải Vân."),
+                               "Kiểm tra bộ truyền động, bôi trơn ổ trục trước mùa khai thác đèo Hải Vân.", 8_900_000m),
                 TaoLanBaoDuong(4, "DAU_MAY:2", "R1",  70_000m, 2, HomNay.AddDays(-400).AddHours(9),
-                               "R1 định kỳ, thay dầu động cơ."),
+                               "R1 định kỳ, thay dầu động cơ.", 7_800_000m),
                 TaoLanBaoDuong(5, "TOA_XE:1",  "D1",  38_200m, 2, HomNay.AddDays(-30).AddHours(14),
-                               "Kiểm tra giá chuyển hướng, thay má phanh guốc."),
+                               "Kiểm tra giá chuyển hướng, thay má phanh guốc.", 4_800_000m),
                 TaoLanBaoDuong(6, "TOA_XE:2",  "D2",  61_500m, 4, HomNay.AddDays(-100).AddHours(11),
-                               "Bảo dưỡng cấp D2: điều hòa, hệ thống điện toa, toàn bộ ghế."),
+                               "Bảo dưỡng cấp D2: điều hòa, hệ thống điện toa, toàn bộ ghế.", 16_500_000m),
                 TaoLanBaoDuong(7, "TOA_XE:3",  "D1",  45_200m, 2, HomNay.AddDays(-75).AddHours(8),
-                               "Kiểm tra móc nối, đầu đấm; vệ sinh két nước."),
+                               "Kiểm tra móc nối, đầu đấm; vệ sinh két nước.", 5_100_000m),
                 TaoLanBaoDuong(8, "TOA_XE:4",  "D1",  52_800m, 4, HomNay.AddDays(-170).AddHours(13),
-                               "D1 định kỳ. Lưu ý cửa khoang 3 kẹt, đã căn chỉnh.")
+                               "D1 định kỳ. Lưu ý cửa khoang 3 kẹt, đã căn chỉnh.", 5_400_000m)
             };
         }
 
         private static BaoDuongHienThi TaoLanBaoDuong(int ma, string khoaPhuongTien, string cap, decimal soKm,
-                                                      int maNguoi, DateTime thoiDiem, string ghiChu)
+                                                      int maNguoi, DateTime thoiDiem, string ghiChu, decimal chiPhi)
         {
             var bd = new BaoDuongHienThi
             {
@@ -149,7 +149,8 @@ namespace GUI.ViewModels.KyThuat
                 MaNguoiThucHien = maNguoi,
                 TenNguoiThucHien = TimNguoiKham(maNguoi)?.HoTenHienThi ?? "",
                 ThoiDiemHoanThanh = thoiDiem,
-                GhiChuKyThuat = ghiChu
+                GhiChuKyThuat = ghiChu,
+                ChiPhi = chiPhi
             };
 
             var pt = TimPhuongTien(khoaPhuongTien);
@@ -168,19 +169,19 @@ namespace GUI.ViewModels.KyThuat
         {
             return new List<KhamXeHienThi>
             {
-                // Seed: SE1 dat chuan
+                // Seed: SE1 dat chuan - kham dinh ky, chi phi thap
                 TaoBienBan(1, 1, 2, 5.0m, 0.12m, true, true,
-                           "Đạt chuẩn an toàn kỹ thuật xuất bến.", HomNay.AddHours(6).AddMinutes(-50)),
-                // Seed: SE3 ap luc ham yeu
+                           "Đạt chuẩn an toàn kỹ thuật xuất bến.", HomNay.AddHours(6).AddMinutes(-50), 300_000m),
+                // Seed: SE3 ap luc ham yeu - phat sinh chi phi khac phuc
                 TaoBienBan(2, 3, 2, 4.5m, 0.28m, true, true,
-                           "Áp lực hãm yếu không đạt chuẩn 4.8 bar.", HomNay.AddHours(9)),
+                           "Áp lực hãm yếu không đạt chuẩn 4.8 bar.", HomNay.AddHours(9), 3_500_000m),
                 // Bo sung mau
                 TaoBienBan(3, 2, 4, 5.1m, 0.15m, true, true,
-                           "Đạt. Đã thay gioăng ống hãm nối toa 5 – 6.", HomQua.AddHours(18).AddMinutes(5)),
+                           "Đạt. Đã thay gioăng ống hãm nối toa 5 – 6.", HomQua.AddHours(18).AddMinutes(5), 850_000m),
                 TaoBienBan(4, 4, 4, 4.9m, 0.20m, true, true,
-                           "Đạt ngưỡng tối thiểu. Theo dõi van hãm toa 7 ở ga dọc đường.", HomQua.AddHours(18).AddMinutes(15)),
+                           "Đạt ngưỡng tối thiểu. Theo dõi van hãm toa 7 ở ga dọc đường.", HomQua.AddHours(18).AddMinutes(15), 300_000m),
                 TaoBienBan(5, 5, 2, 5.2m, 0.10m, true, false,
-                           "Két vệ sinh toa 3, toa 5 chưa xả – chờ tổ vệ sinh depot.", HomNay.AddHours(17).AddMinutes(30))
+                           "Két vệ sinh toa 3, toa 5 chưa xả – chờ tổ vệ sinh depot.", HomNay.AddHours(17).AddMinutes(30), 300_000m)
             };
         }
 
@@ -224,12 +225,13 @@ namespace GUI.ViewModels.KyThuat
             var dm = TimDauMay(maDauMay);
             if (dm != null) nl.GanDauMay(dm);
             nl.TinhLaiSuatTieuHao();
+            nl.ChiPhi = nl.SoLitTraNap * DinhMucNhienLieu.DonGiaMacDinhVndLit;
             return nl;
         }
 
         private static KhamXeHienThi TaoBienBan(int ma, int maDoanTau, int maNguoiKham,
                                                 decimal apLuc, decimal sutAp, bool nuoc, bool veSinh,
-                                                string ghiChu, DateTime thoiDiem)
+                                                string ghiChu, DateTime thoiDiem, decimal chiPhi = 0m)
         {
             var bb = new KhamXeHienThi
             {
@@ -242,7 +244,8 @@ namespace GUI.ViewModels.KyThuat
                 GhiChuKyThuat = ghiChu,
                 // Khong de thoi diem kham nam o tuong lai khi mo app luc sang som
                 ThoiDiemKham = thoiDiem > LucNap ? LucNap.AddMinutes(-15 * ma) : thoiDiem,
-                TenNguoiKham = TimNguoiKham(maNguoiKham)?.HoTenHienThi ?? ""
+                TenNguoiKham = TimNguoiKham(maNguoiKham)?.HoTenHienThi ?? "",
+                ChiPhi = chiPhi
             };
 
             var dt = TimDoanTau(maDoanTau);
