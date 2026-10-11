@@ -884,13 +884,23 @@ namespace GUI.Views.Pages
 
             ChayAnToan(() =>
             {
-                _dangNapDuLieu = true;
-                NapDanhSachChuyenTau();
-                _dangNapDuLieu = false;
-
-                ChonLaiTheoTag(cboChuyenTauLapTau, maDangChon.ToString());
+                NapLaiDanhSachChuyenTauGiuChon(maDangChon);
                 HienThiChuyenTauLapTau();
             }, "nạp lại danh sách chuyến tàu");
+        }
+
+        // Nap lai danh sach chuyen (dung chung cho tab 3 va tab 4) ma van giu chuyen dang chon o ca hai tab.
+        // Truoc day chi chon lai o tab 3 -> o chuyen tau tab 4 bi trong, o toa van giu toa cua lan truoc.
+        private void NapLaiDanhSachChuyenTauGiuChon(int maChuyenLapTau)
+        {
+            string tagSoDo = LayTagDangChon(cboChuyenTauSoDo) ?? "";
+
+            _dangNapDuLieu = true;
+            NapDanhSachChuyenTau();
+            _dangNapDuLieu = false;
+
+            ChonLaiTheoTag(cboChuyenTauLapTau, maChuyenLapTau.ToString());
+            ChonLaiTheoTag(cboChuyenTauSoDo, tagSoDo);   // kich hoat nap lai toa + so do ghe
         }
 
         // --- Lap tau keo - tha (ghi CSDL qua LapTauService) ---
@@ -942,10 +952,7 @@ namespace GUI.Views.Pages
             ChayAnToan(() =>
             {
                 NapChiSoTongQuan();
-                _dangNapDuLieu = true;
-                NapDanhSachChuyenTau();
-                _dangNapDuLieu = false;
-                ChonLaiTheoTag(cboChuyenTauLapTau, ma.ToString());
+                NapLaiDanhSachChuyenTauGiuChon(ma);
                 HienThiChuyenTauLapTau();
                 NapDanhSachDauMay();
             }, "nạp lại đoàn tàu sau khi lưu");
