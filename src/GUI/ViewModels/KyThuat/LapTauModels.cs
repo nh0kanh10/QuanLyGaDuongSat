@@ -58,7 +58,7 @@ namespace GUI.ViewModels.KyThuat
             $"Chiều dài: {ChieuDaiM:N1} m · {SoTruc} trục\n" +
             $"Tự trọng {TuTrongTan:N1} t + tải trọng {TaiTrongTan:N1} t = {TongTrongLuongTan:N1} t\n" +
             $"Tải trọng trục: {TaiTrongTrucTan:N2} t/trục" +
-            (VuotTaiTrongTruc ? $" (vượt ngưỡng {QuyTacLapTau.TaiTrongTrucToiDaTan:N1} t)" : "") +
+            (VuotTaiTrongTruc ? $" (vượt ngưỡng giả định {QuyTacLapTau.TaiTrongTrucToiDaTan:N1} t)" : "") +
             (LaToaHang ? "" : $"\nSức chứa tham khảo: {SucChua} chỗ") +
             (CoPhamViRieng ? $"\nChạy từ {GaNoiCode} đến {GaCatCode} (cắt / nối dọc đường)" : "") +
             (GhiChu.Length > 0 ? $"\n{GhiChu}" : "");

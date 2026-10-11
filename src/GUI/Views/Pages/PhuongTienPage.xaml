@@ -1107,7 +1107,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <!-- Tải trọng trục khi chở đầy, so với ngưỡng tham khảo 14 t/trục -->
+                                        <!-- Tải trọng trục khi chở đầy, so với ngưỡng giả định 14 t/trục (QuyTacLapTau) -->
                                         <DataGridTemplateColumn Header="Tải Trọng Trục (chở đầy)" Width="*" MinWidth="130"
                                                                 HeaderStyle="{StaticResource DataGridHeaderCenter}">
                                             <DataGridTemplateColumn.CellTemplate>
