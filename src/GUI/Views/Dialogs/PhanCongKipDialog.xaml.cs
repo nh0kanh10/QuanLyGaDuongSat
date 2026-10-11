@@ -1,4 +1,5 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using BUS.Services;
+using DTO.NhanSu;
 using GUI.Helpers;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,12 +22,16 @@ namespace GUI.Views.Dialogs
     // khi doi chang ma khong con du dieu kien thi bi bo chon, phai chon nguoi
     // thay. Nut "Goi y kip" (Ctrl+G) dien nguoi dung dau danh sach da xep.
     // Bang doi chieu ben phai hien day du dieu kien cua nguoi da chon.
+    //
+    // Tu 11/10: luu goi ham _luu (NhanSuService.LuuKip chay lai cung bo luat trong giao
+    // dich, co khoa) - loi (vd nguoi khac vua phan mat nguoi do) thi bao va giu dialog mo.
     // =========================================================================
     public partial class PhanCongKipDialog : Window
     {
         private readonly DuLieuNhanSu _duLieu;
         private readonly ChuyenTauNhanSu _chuyen;
         private readonly PhanCongKipHienThi? _banGoc;   // null = kip moi
+        private readonly Func<PhanCongKipHienThi, string?> _luu;
         private readonly string? _vaiTroThay;           // mo tu "Thay nguoi"
         private readonly bool _dangKhoiTao;
         private bool _dangNapUngVien;
@@ -41,7 +46,8 @@ namespace GUI.Views.Dialogs
         public PhanCongKipHienThi? KetQua { get; private set; }
 
         public PhanCongKipDialog(DuLieuNhanSu duLieu, ChuyenTauNhanSu chuyen, PhanCongKipHienThi? banGoc,
-                                 int? maGaNhanMacDinh, int? maGaGiaoMacDinh, string? vaiTroThay = null)
+                                 int? maGaNhanMacDinh, int? maGaGiaoMacDinh, Func<PhanCongKipHienThi, string?> luu,
+                                 string? vaiTroThay = null)
         {
             _dangKhoiTao = true;
             InitializeComponent();
@@ -49,6 +55,7 @@ namespace GUI.Views.Dialogs
             _duLieu = duLieu;
             _chuyen = chuyen;
             _banGoc = banGoc;
+            _luu = luu;
             _vaiTroThay = vaiTroThay;
 
             txtChuyen.Text = chuyen.TenHienThi;
@@ -321,20 +328,11 @@ namespace GUI.Views.Dialogs
             CapNhatDoiChieu();
         }
 
+        // R11 - cung ham voi NhanSuService.LuuKip
         private string? KiemTraChang()
         {
             if (GaNhan == null || GaGiao == null) return "Chọn ga nhận ban và ga bàn giao.";
-
-            int i1 = _chuyen.ViTri(GaNhan.MaGa), i2 = _chuyen.ViTri(GaGiao.MaGa);
-            if (i1 >= i2) return "Ga bàn giao phải nằm sau ga nhận ban trên hành trình.";
-
-            var chong = _duLieu.KipCuaChuyen(_chuyen.MaChuyenTau)
-                               .Where(p => p.MaPhanCong != _banGoc?.MaPhanCong)
-                               .FirstOrDefault(p => p.ViTriNhan < i2 && i1 < p.ViTriGiao);
-            if (chong != null)
-                return $"Chặng chồng lên kíp {_duLieu.SoThuTuKip(chong)} ({chong.Chang}). Mỗi đoạn hành trình chỉ do một kíp đảm nhận.";
-
-            return null;
+            return DanhGiaKipLai.KiemTraChang(_duLieu, _chuyen, GaNhan.MaGa, GaGiao.MaGa, _banGoc?.MaPhanCong);
         }
 
         private void CapNhatDoiChieu()
@@ -495,11 +493,20 @@ namespace GUI.Views.Dialogs
             var kq = _banGoc?.SaoChep() ?? new PhanCongKipHienThi
             {
                 MaChuyenTau = _chuyen.MaChuyenTau,
-                TrangThai = PhanCongKipHienThi.DaPhanCong
+                TrangThai = PhanCongKipHienThi.DaPhanCong,
+                Chuyen = _chuyen
             };
             kq.MaGaNhanBan = GaNhan!.MaGa;
             kq.MaGaBanGiao = GaGiao!.MaGa;
             for (int i = 0; i < 3; i++) kq.GanNhanVien(QuyTacKipLai.CacVaiTro[i], chon[i].NhanVien.MaNhanVien);
+
+            string? loi = _luu(kq);
+            if (loi != null)
+            {
+                ThongBaoDialog.CanhBao(loi + "\n\nĐóng hộp này rồi chọn lại, hoặc Hủy và nạp lại (F5) để xem dữ liệu mới nhất.",
+                                       "Chưa lưu được kíp", this);
+                return;
+            }
 
             KetQua = kq;
             DialogResult = true;

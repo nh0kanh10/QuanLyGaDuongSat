@@ -1,4 +1,5 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using BUS.Services;
+using DTO.NhanSu;
 using GUI.Helpers;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,24 +36,32 @@ namespace GUI.Views.Dialogs
 
         private readonly DuLieuNhanSu _duLieu;
         private readonly PhanCongKipHienThi _kip;
+        private readonly Func<List<KiemTraLenBanHienThi>, string?> _luu;
         private readonly List<DongNhap> _dong = new();
 
         public List<KiemTraLenBanHienThi> KetQua { get; } = new();
 
-        public KiemTraLenBanDialog(DuLieuNhanSu duLieu, PhanCongKipHienThi kip, int soThuTuKip)
+        // luu: NhanSuService.GhiKiemTra (11/10) - loi thi bao va giu dialog mo
+        public KiemTraLenBanDialog(DuLieuNhanSu duLieu, PhanCongKipHienThi kip, int soThuTuKip,
+                                   Func<List<KiemTraLenBanHienThi>, string?> luu)
         {
             InitializeComponent();
             _duLieu = duLieu;
             _kip = kip;
+            _luu = luu;
 
             var ct = kip.Chuyen;
             txtTieuDe.Text = $"KIỂM TRA ĐIỀU KIỆN LÊN BAN — {ct.SoHieuMacTau} · KÍP {soThuTuKip}";
             txtTieuDePhu.Text = $"{kip.Chang} · {kip.KhungGio} · đo nồng độ cồn và đối chiếu giờ nghỉ trước khi nhận lệnh lái tàu";
 
-            double phutConLai = (kip.GioNhanBan - duLieu.BayGio).TotalMinutes;
+            // Q4: chi ghi tu 3 gio truoc gio nhan ban
+            DateTime tuLuc = NhanSuService.GhiKiemTraTuLuc(kip);
+            bool quaSom = DateTime.Now < tuLuc;
+            double phutConLai = (kip.GioNhanBan - DateTime.Now).TotalMinutes;
             txtGioNhanBan.Text = $"Nhận ban {kip.GioNhanBan:HH:mm dd/MM} tại {kip.TenGaNhanBan} · " +
-                                 (phutConLai >= 0 ? $"còn {DinhDangThoiLuong(phutConLai)}" : $"đã qua {DinhDangThoiLuong(-phutConLai)}");
-            txtGioNhanBan.Foreground = Mau(phutConLai >= 0 ? "#334155" : "#B45309");
+                                 (phutConLai >= 0 ? $"còn {DinhDangThoiLuong(phutConLai)}" : $"đã qua {DinhDangThoiLuong(-phutConLai)}") +
+                                 (quaSom ? $" · chỉ ghi kết quả từ {tuLuc:HH:mm dd/MM} ({QuyTacKipLai.SoGioDoSomNhat} giờ trước giờ nhận ban)" : "");
+            txtGioNhanBan.Foreground = Mau(phutConLai >= 0 && !quaSom ? "#334155" : "#B45309");
 
             TaoBang();
             CapNhatKetLuan();
@@ -328,6 +337,13 @@ namespace GUI.Views.Dialogs
             {
                 txtLoi.Text = string.Join(" · ", loi) + ".";
                 oLoi?.Focus();
+                return;
+            }
+
+            string? loiLuu = _luu(ketQua);
+            if (loiLuu != null)
+            {
+                ThongBaoDialog.CanhBao(loiLuu, "Chưa ghi được kết quả kiểm tra", this);
                 return;
             }
 

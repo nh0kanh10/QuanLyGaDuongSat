@@ -390,15 +390,17 @@ IF (SELECT COUNT(*) FROM nhansu.NhanVien) <> 41
 --       SE1 Hà Nội → Vinh : tàu đã qua Vinh (có giờ đi thực tế ở Lăng Cô) → HOAN_THANH
 --       SE4 Sài Gòn → Nha Trang : tàu đã rời Nha Trang → HOAN_THANH
 --       SE19 / NA1 : trưởng tàu gốc (TT_001 / TT_002) đang đi SE1 / SE4 cùng khung giờ → thay TT_004 / TT_005 (như giao diện)
-UPDATE k SET TrangThai = 'HOAN_THANH'
-FROM nhansu.PhanCongKipLai k
-WHERE k.MaChuyenTau IN (@CtSE1, @CtSE4);
-
+--     Thay trưởng tàu TRƯỚC khi đổi trạng thái kíp SE1 / SE4: từ migration V20261011_1500 trigger trùng giờ xét cả
+--     trưởng tàu, đổi trạng thái kíp SE1 lúc TT_001 còn ở SE19 sẽ bị trigger chặn.
 UPDATE k SET MaTruongTau = (SELECT MaNhanVien FROM nhansu.NhanVien WHERE MaNVCode = 'TT_004')
 FROM nhansu.PhanCongKipLai k WHERE k.MaChuyenTau = @CtSE19;
 
 UPDATE k SET MaTruongTau = (SELECT MaNhanVien FROM nhansu.NhanVien WHERE MaNVCode = 'TT_005')
 FROM nhansu.PhanCongKipLai k WHERE k.MaChuyenTau = @CtNA1;
+
+UPDATE k SET TrangThai = 'HOAN_THANH'
+FROM nhansu.PhanCongKipLai k
+WHERE k.MaChuyenTau IN (@CtSE1, @CtSE4);
 
 --     Thêm 10 kíp. Lái tàu / phụ lái đổi ở ga có depot; trưởng tàu đi suốt chuyến.
 --     Trạng thái theo giờ đi thực tế đã ghi trong lịch dừng của A Bá:

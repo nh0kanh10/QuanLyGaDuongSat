@@ -89,7 +89,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
-                        <TextBlock Text="Nhập tay theo máy đo (không nối thiết bị). Giai đoạn giao diện: chưa ghi vào CSDL."
+                        <TextBlock Text="Nhập tay theo máy đo (không nối thiết bị). Lưu sẽ ghi vào CSDL, không sửa / xoá được sau khi ghi."
                                    FontSize="10" Foreground="#64748B" VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal">

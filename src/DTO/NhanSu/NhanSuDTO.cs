@@ -1,12 +1,14 @@
-﻿using GUI.Helpers;
-using System.Text.RegularExpressions;
-namespace GUI.ViewModels.KyThuat
+namespace DTO.NhanSu
 {
     // =========================================================================
     // Cac lop HIEN THI cua phan he Nhan su, To tau & Phan cong ca truc.
-    // Ten thuoc tinh trung ten cot schema nhansu (script_tao_csdl_v2.sql) de
-    // sau nay doc DataRow that khong phai doi binding.
-    // Quy tac R1..R13: PHAN_TICH_NHAN_SU_KIP_LAI.md §3.
+    // Ten thuoc tinh trung ten cot schema nhansu (script_tao_csdl_v2.sql).
+    // Quy tac R1..R15: PHAN_TICH_NHAN_SU_KIP_LAI.md §3. Bo luat: BUS/Services/DanhGiaKipLai.cs.
+    //
+    // 11/10 (back-end): chuyen tu GUI/ViewModels/KyThuat/NhanSuModels.cs sang DTO de
+    // Repository tra ve va Service chay lai luat truoc khi ghi. Bo moi cho tra cuu du lieu
+    // mau tinh (DanhMucMauNhanSu): kip / phieu kiem tra noi toi chuyen tau qua thuoc tinh
+    // gan luc dung anh chup du lieu (NhanSuRepository.LayDuLieu).
     // =========================================================================
 
     public static class QuyTacKipLai
@@ -22,10 +24,19 @@ namespace GUI.ViewModels.KyThuat
         // Quy uoc giao dien (R8)
         public const int SoNgayNhacHanKham = 30;
 
+        // Quyet dinh 11/10 (Q4): phieu kiem tra len ban chi ghi tu 3 gio truoc gio nhan ban
+        public const int SoGioDoSomNhat = 3;
+
         public const string LaiTau = "LAI_TAU";
         public const string PhuLai = "PHU_LAI";
         public const string TruongTau = "TRUONG_TAU";
         public static readonly string[] CacVaiTro = { LaiTau, PhuLai, TruongTau };
+
+        // Chuc danh goi y cho dialog ho so (cot ChucDanh la chu tu do)
+        public static readonly IReadOnlyList<string> ChucDanhGoiY = new[]
+        {
+            "Lái tàu", "Phụ lái", "Trưởng tàu", "Tiếp viên", "Nhân viên khám xe", "Nhân viên bán vé"
+        };
 
         public static bool DuDieuKienLenBan(decimal nongDoCon, decimal soGioNghi)
             => nongDoCon == NongDoConChoPhep && soGioNghi >= SoGioNghiToiThieu;
@@ -46,6 +57,8 @@ namespace GUI.ViewModels.KyThuat
         public static bool LaChucDanhToTau(string? chucDanh)
             => chucDanh is "Lái tàu" or "Phụ lái" or "Trưởng tàu";
 
+        public static bool LaChucDanhBanLai(string? chucDanh) => chucDanh is "Lái tàu" or "Phụ lái";
+
         // R3: y het trigger trg_PhanCongKipLai_CheckTrungGio (xet ca khung gio chuyen)
         public static bool TrungKhungGio(ChuyenTauNhanSu a, ChuyenTauNhanSu b)
         {
@@ -59,71 +72,19 @@ namespace GUI.ViewModels.KyThuat
             => Math.Round((decimal)(den - tu).TotalHours, 1, MidpointRounding.AwayFromZero);
     }
 
-    // -------------------------------------------------------------------------
-    // MA NHAN VIEN THEO CHUC DANH (quy uoc giao dien 29/09 - CSDL chi rang buoc
-    // MaNVCode VARCHAR(20) NOT NULL UNIQUE).
-    // Dang TIENTO_SSS: LT_001 lai tau, PL_001 phu lai, TT_001 truong tau ...;
-    // so thu tu dem rieng tung tien to, khong dung lai ma da cap.
-    // Doi chuc danh -> cap ma moi (kip, kiem tra, tai khoan noi bang MaNhanVien
-    // nen khong anh huong).
-    // -------------------------------------------------------------------------
-    public static class MaNhanVienTheoChucDanh
+    // Ten cac dieu kien doi chieu khi phan cong (hang cua bang doi chieu, thu tu hien thi)
+    public static class DieuKienKip
     {
-        public const string TienToKhac = "NV";
+        public const string ChucDanh = "Chức danh";
+        public const string BangLai = "Bằng lái – đầu máy";
+        public const string HanKham = "Hạn khám sức khỏe";
+        public const string Trung = "Trùng chuyến khác";
+        public const string Nghi = "Nghỉ giữa hai ca";
+        public const string KiemTra = "Kiểm tra lên ban";
+        public const string DonVi = "Đơn vị – chặng";
+        public const string TrangThai = "Trạng thái hồ sơ";
 
-        // Thu tu trong bang = thu tu hien thi (to tau truoc)
-        private static readonly (string ChucDanh, string TienTo)[] Bang =
-        {
-            ("Lái tàu", "LT"), ("Phụ lái", "PL"), ("Trưởng tàu", "TT"), ("Tiếp viên", "TV"),
-            ("Nhân viên khám xe", "KX"), ("Nhân viên bán vé", "BV")
-        };
-
-        private static readonly Regex DangMa = new(@"^([A-Z]{2})_(\d{3,9})$");
-
-        public const string MoTaQuyUoc =
-            "LT lái tàu · PL phụ lái · TT trưởng tàu · TV tiếp viên · KX khám xe · BV bán vé · NV chức danh khác";
-
-        private static int ViTri(string? chucDanh)
-        {
-            string cd = chucDanh?.Trim() ?? string.Empty;
-            for (int i = 0; i < Bang.Length; i++)
-                if (string.Equals(Bang[i].ChucDanh, cd, StringComparison.OrdinalIgnoreCase)) return i;
-            return -1;
-        }
-
-        public static string TienTo(string? chucDanh)
-        {
-            int i = ViTri(chucDanh);
-            return i >= 0 ? Bang[i].TienTo : TienToKhac;
-        }
-
-        // Sap xep theo chuc danh: lai tau, phu lai, truong tau, tiep vien, kham xe, ban ve, khac
-        public static int ThuTu(string? chucDanh)
-        {
-            int i = ViTri(chucDanh);
-            return i >= 0 ? i : Bang.Length;
-        }
-
-        // Ma dung dang va dung tien to cua chuc danh
-        public static bool KhopChucDanh(string? ma, string? chucDanh)
-        {
-            var m = DangMa.Match(ma ?? string.Empty);
-            return m.Success && m.Groups[1].Value == TienTo(chucDanh);
-        }
-
-        // Ma ke tiep = so lon nhat da cap cua tien to + 1
-        public static string MaKeTiep(string? chucDanh, IEnumerable<string> maDaCap)
-        {
-            string tienTo = TienTo(chucDanh);
-            int lonNhat = 0;
-            foreach (string ma in maDaCap)
-            {
-                var m = DangMa.Match(ma ?? string.Empty);
-                if (m.Success && m.Groups[1].Value == tienTo && int.TryParse(m.Groups[2].Value, out int so) && so > lonNhat)
-                    lonNhat = so;
-            }
-            return $"{tienTo}_{lonNhat + 1:000}";
-        }
+        public static readonly string[] ThuTu = { ChucDanh, BangLai, HanKham, Trung, Nghi, KiemTra, DonVi, TrangThai };
     }
 
     public enum MucDoVanDe { NghiemTrong = 0, CanhBao = 1, LuuY = 2 }
@@ -147,7 +108,7 @@ namespace GUI.ViewModels.KyThuat
 
     // -------------------------------------------------------------------------
     // GA, DIEM DUNG, CHUYEN TAU (tham chieu: hatang.Ga, vanhanh.LichDungGa,
-    // vanhanh.ChuyenTau JOIN MacTauMau, DoanTau, DauMay, DongDauMay)
+    // vanhanh.ChuyenTau JOIN MacTauMau, DoanTau, DauMay, DongDauMay) - chi doc
     // -------------------------------------------------------------------------
     public record GaNhanSu(int MaGa, string MaGaCode, string TenGa)
     {
@@ -253,12 +214,13 @@ namespace GUI.ViewModels.KyThuat
         public string TrangThai { get; set; } = SanSang;
         public DateTime NgayTao { get; set; }
 
-        public bool LaThayDoiTam { get; set; }
+        // ROWVERSION (migration V20261011_1500): ban ghi luc mo dialog, null = them moi
+        public byte[]? PhienBan { get; set; }
 
         public string TenHienThi => $"{MaNVCode} · {HoTen}";
         public override string ToString() => TenHienThi;
 
-        public bool LaBanLaiMay => ChucDanh is "Lái tàu" or "Phụ lái";
+        public bool LaBanLaiMay => QuyTacKipLai.LaChucDanhBanLai(ChucDanh);
         public bool LaToTau => QuyTacKipLai.LaChucDanhToTau(ChucDanh);
         public string NhanBangLai => string.IsNullOrEmpty(HangBangLai) ? "—" : HangBangLai;
 
@@ -318,13 +280,15 @@ namespace GUI.ViewModels.KyThuat
         public int MaGaBanGiao { get; set; }
         public string TrangThai { get; set; } = DaPhanCong;
 
-        public bool LaThayDoiTam { get; set; }
+        // ROWVERSION (migration V20261011_1500), null = kip moi
+        public byte[]? PhienBan { get; set; }
 
-        // Chuyen tau la du lieu tham chieu tinh (khi noi CSDL: JOIN vanhanh.ChuyenTau)
-        public ChuyenTauNhanSu Chuyen => DanhMucMauNhanSu.TimChuyen(MaChuyenTau)!;
+        // Chuyen tau cua kip - gan khi dung anh chup du lieu (DuLieuNhanSu) hoac khi
+        // dialog tao kip moi tren chuyen dang chon
+        public ChuyenTauNhanSu Chuyen { get; set; } = null!;
 
-        public string TenGaNhanBan => DanhMucMauNhanSu.TimGa(MaGaNhanBan)?.TenGa ?? "?";
-        public string TenGaBanGiao => DanhMucMauNhanSu.TimGa(MaGaBanGiao)?.TenGa ?? "?";
+        public string TenGaNhanBan => Chuyen?.DiemDung(MaGaNhanBan)?.TenGa ?? "?";
+        public string TenGaBanGiao => Chuyen?.DiemDung(MaGaBanGiao)?.TenGa ?? "?";
         public string Chang => $"{TenGaNhanBan} → {TenGaBanGiao}";
 
         public DateTime GioNhanBan => Chuyen.GioNhanBan(MaGaNhanBan);
@@ -333,6 +297,8 @@ namespace GUI.ViewModels.KyThuat
 
         public int ViTriNhan => Chuyen.ViTri(MaGaNhanBan);
         public int ViTriGiao => Chuyen.ViTri(MaGaBanGiao);
+
+        public IEnumerable<int> CacThanhVien => new[] { MaLaiTau, MaPhuLai, MaTruongTau };
 
         public int MaNhanVienTheoVaiTro(string vaiTro) => vaiTro switch
         {
@@ -385,8 +351,6 @@ namespace GUI.ViewModels.KyThuat
         public decimal SoGioNghiTruocCa { get; set; }
         public DateTime ThoiDiemKiemTra { get; set; }
 
-        public bool LaThayDoiTam { get; set; }
-
         // Cot tinh toan PERSISTED
         public bool DuDieuKien => QuyTacKipLai.DuDieuKienLenBan(NongDoConMgL, SoGioNghiTruocCa);
 
@@ -402,17 +366,12 @@ namespace GUI.ViewModels.KyThuat
             ChucDanh = nv?.ChucDanh ?? "";
         }
 
-        public string MaPhieu => MaKiemTra > 0 ? $"KT-{MaKiemTra:0000}" : $"KT-M{-MaKiemTra:00}";
+        // Chuyen cua phieu (JOIN vanhanh.ChuyenTau + MacTauMau luc doc)
+        public string SoHieuMacTau { get; set; } = "?";
+        public DateTime NgayXuatPhatChuyen { get; set; }
 
-        public string SoHieuMacTau => DanhMucMauNhanSu.TimChuyen(MaChuyenTau)?.SoHieuMacTau ?? "?";
-        public string NhanChuyen
-        {
-            get
-            {
-                var ct = DanhMucMauNhanSu.TimChuyen(MaChuyenTau);
-                return ct == null ? "?" : $"{ct.SoHieuMacTau} · {ct.NgayXuatPhat:dd/MM}";
-            }
-        }
+        public string MaPhieu => $"KT-{MaKiemTra:0000}";
+        public string NhanChuyen => SoHieuMacTau == "?" ? "?" : $"{SoHieuMacTau} · {NgayXuatPhatChuyen:dd/MM}";
 
         public bool ConDat => NongDoConMgL == QuyTacKipLai.NongDoConChoPhep;
         public bool NghiDu => SoGioNghiTruocCa >= QuyTacKipLai.SoGioNghiToiThieu;

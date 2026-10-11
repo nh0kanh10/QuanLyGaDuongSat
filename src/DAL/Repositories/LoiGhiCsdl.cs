@@ -20,8 +20,8 @@ namespace DAL.Repositories
     }
 
     // =========================================================================
-    // Bo dich loi SQL cho cac bang cua phan he Phuong tien (phuongtien.*, vanhanh.DoanTau,
-    // vanhanh.ChiTietDoanTau). UNIQUE / CHECK khong dat ten trong script goc nen ten rang
+    // Bo dich loi SQL cho cac bang cua Dat: Phuong tien (phuongtien.*, vanhanh.DoanTau,
+    // vanhanh.ChiTietDoanTau) va Nhan su (nhansu.*, tu 11/10). UNIQUE / CHECK khong dat ten trong script goc nen ten rang
     // buoc do SQL Server tu sinh (UQ__DauMay__...) -> nhan dien theo ten bang + ten cot.
     //
     // KE_HOACH §2.5 du kien SqlLoiHelper dung chung (viec nen cua A Ba, chua co). Khi co thi
@@ -75,15 +75,18 @@ namespace DAL.Repositories
                         return "Hai toa trùng thứ tự móc nối trong đoàn tàu.";
                     if (bang.EndsWith("DoanTau", StringComparison.OrdinalIgnoreCase))
                         return "Chuyến tàu này vừa được người khác lập đoàn tàu. Hãy nạp lại rồi lập lại.";
+                    if (bang.EndsWith("NhanVien", StringComparison.OrdinalIgnoreCase))
+                        return $"Mã nhân viên {giaTri} đã được cấp cho người khác. Vui lòng lưu lại để hệ thống cấp mã mới.";
                     return $"Dữ liệu bị trùng ({giaTri}).";
 
                 // --- CHECK / FOREIGN KEY ---
                 case 547:
                     return DichRangBuoc(rangBuoc, cot, tin);
 
-                // --- Trigger RAISERROR / THROW: thong diep da la tieng Viet ---
+                // --- Trigger RAISERROR / THROW: thong diep da la tieng Viet. Trigger co ROLLBACK thi
+                //     SQL Server noi them loi 3609 ("The transaction ended in the trigger") -> chi lay loi dau.
                 case 50000:
-                    return tin;
+                    return ex.Errors.Count > 0 ? ex.Errors[0].Message : tin;
 
                 case 1205:
                 case 1222:
@@ -136,6 +139,13 @@ namespace DAL.Repositories
                     "FK_CTDoanTau_DoanTau" => "Đoàn tàu không tồn tại.",
                     "FK_CTDoanTau_GaNoi" => "Ga nối toa không tồn tại.",
                     "FK_CTDoanTau_GaCat" => "Ga cắt toa không tồn tại.",
+                    "FK_KipLai_ChuyenTau" => "Chuyến tàu của kíp không tồn tại.",
+                    "FK_KipLai_LaiTau" or "FK_KipLai_PhuLai" or "FK_KipLai_TruongTau"
+                        => laXoa ? "Nhân viên đang có trong kíp lái, không xoá được (chuyển sang \"Đã nghỉ việc\")."
+                                 : "Nhân viên trong kíp không tồn tại.",
+                    "FK_KipLai_GaNhan" or "FK_KipLai_GaBanGiao" => "Ga nhận ban / bàn giao không tồn tại.",
+                    "FK_KiemTra_NhanVien" => laXoa ? "Nhân viên đã có phiếu kiểm tra lên ban, không xoá được." : "Nhân viên không tồn tại.",
+                    "FK_KiemTra_ChuyenTau" => "Chuyến tàu của phiếu kiểm tra không tồn tại.",
                     _ => laXoa ? "Bản ghi đang được dữ liệu khác tham chiếu, không xoá được."
                                : "Dữ liệu tham chiếu không tồn tại."
                 };
@@ -143,6 +153,8 @@ namespace DAL.Repositories
 
             if (rangBuoc.Equals("CK_CTDoanTau_GaNoiKhacGaCat", StringComparison.OrdinalIgnoreCase))
                 return "Một toa không thể nối và cắt ở cùng một ga.";
+            if (rangBuoc.Equals("CK_KipLai_KhacNhanVien", StringComparison.OrdinalIgnoreCase))
+                return "Lái tàu, phụ lái và trưởng tàu phải là ba người khác nhau.";
 
             // CHECK do SQL Server tu dat ten: nhan dien theo cot
             return cot switch
@@ -156,6 +168,8 @@ namespace DAL.Repositories
                 "TongChieuDaiM" => "Đoàn tàu dài tối đa 450 m.",
                 "TongTrongLuongTan" => "Trọng lượng đoàn tàu phải lớn hơn 0.",
                 "ThuTuNoi" => "Thứ tự móc nối phải từ 1 trở lên.",
+                "NongDoConMgL" => "Nồng độ cồn không được âm.",
+                "SoGioNghiTruocCa" => "Số giờ nghỉ trước ca không được âm.",
                 _ => $"Dữ liệu vi phạm ràng buộc {(rangBuoc.Length > 0 ? rangBuoc : "của CSDL")}."
             };
         }

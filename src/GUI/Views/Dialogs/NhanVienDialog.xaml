@@ -166,7 +166,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
-                        <TextBlock Text="Giai đoạn giao diện: hồ sơ chỉ hiển thị trên màn hình, chưa ghi vào CSDL."
+                        <TextBlock Text="Lưu sẽ ghi vào CSDL (kèm nhật ký). Mã chính thức cấp khi lưu."
                                    FontSize="10" Foreground="#64748B" VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
