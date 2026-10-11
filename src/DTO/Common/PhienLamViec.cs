@@ -155,6 +155,11 @@ namespace DTO.Common
         // day du Dat cong bo truoc 01/11 roi them migration INSERT vao phanquyen.Quyen.
         public const string SuaHaTang = "INFRA_EDIT";
         public const string SoatVe = "TICKET_CHECK";
+
+        // Phan he Phuong tien (Dat, Sprint 1). Sprint 3 them vao phanquyen.Quyen + gan vai tro
+        // (de xuat SRS: LAP_TAU, QUAN_LY). Truoc do phien mac dinh mo het quyen nen van dung duoc.
+        public const string QuanLyPhuongTien = "VEHICLE_EDIT";      // them / sua dau may, toa xe
+        public const string LapDoanTau = "TRAIN_FORMATION_EDIT";    // lap / sua doan tau
     }
 
     // =========================================================================

@@ -202,7 +202,7 @@
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
-                        <TextBlock Text="Giai đoạn giao diện: thay đổi chỉ hiển thị trên màn hình, chưa ghi vào CSDL."
+                        <TextBlock Text="Lưu sẽ ghi thẳng vào CSDL (kèm nhật ký hệ thống). Số hiệu không sửa được sau khi tạo."
                                    FontSize="10" Foreground="#64748B" VerticalAlignment="Center"/>
                     </StackPanel>
 
