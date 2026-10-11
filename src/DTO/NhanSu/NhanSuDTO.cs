@@ -217,6 +217,29 @@ namespace DTO.NhanSu
         // ROWVERSION (migration V20261011_1500): ban ghi luc mo dialog, null = them moi
         public byte[]? PhienBan { get; set; }
 
+        // Tai khoan dang nhap (phanquyen.TaiKhoan.MaNhanVien, chi doc - chuan bi Quan tri Sprint 3).
+        // MaNhanVien khong UNIQUE ben TaiKhoan -> lay tai khoan dang hoat dong, dang nhap gan nhat.
+        public string? TenDangNhap { get; set; }
+        public bool TaiKhoanHoatDong { get; set; }
+        public DateTime? LanDangNhapCuoi { get; set; }
+        public int SoTaiKhoan { get; set; }
+
+        public bool CoTaiKhoan => TenDangNhap != null;
+
+        public string NhanTaiKhoan
+        {
+            get
+            {
+                if (!CoTaiKhoan) return "Chưa có tài khoản";
+                string nhan = $"{TenDangNhap} · {(TaiKhoanHoatDong ? "đang hoạt động" : "đã khóa")}";
+                nhan += LanDangNhapCuoi is DateTime lan ? $" · đăng nhập {lan:HH:mm dd/MM/yyyy}" : " · chưa đăng nhập";
+                if (SoTaiKhoan > 1) nhan += $" (+{SoTaiKhoan - 1} tài khoản khác)";
+                return nhan;
+            }
+        }
+
+        public string MauTaiKhoan => !CoTaiKhoan ? "#94A3B8" : TaiKhoanHoatDong ? "#15803D" : "#B91C1C";
+
         public string TenHienThi => $"{MaNVCode} · {HoTen}";
         public override string ToString() => TenHienThi;
 

@@ -329,6 +329,7 @@ namespace GUI.Views.Pages
             ThemDongThongSo(pnlHsThongTin, "Chức danh", nv.ChucDanh);
             ThemDongThongSo(pnlHsThongTin, "Đơn vị chủ quản", nv.DonViChuQuan);
             ThemDongThongSo(pnlHsThongTin, "Trạng thái", nv.NhanTrangThai, nv.MauTrangThai);
+            ThemDongThongSo(pnlHsThongTin, "Tài khoản", nv.NhanTaiKhoan, nv.MauTaiKhoan);
             ThemDongThongSo(pnlHsThongTin, "Ngày lập hồ sơ", nv.NgayTao.ToString("dd/MM/yyyy"), laDongCuoi: true);
 
             // --- Dieu kien hanh nghe ---

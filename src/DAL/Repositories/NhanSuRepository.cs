@@ -40,11 +40,16 @@ namespace DAL.Repositories
 
             var hangBang = LayHangBangLai(gd);
 
-            // --- Nhan vien ---
+            // --- Nhan vien + tai khoan dang nhap (neu co) ---
             var nhanVien = PhienGiaoDich.TruyVan(gd, @"
-                SELECT MaNhanVien, MaNVCode, HoTen, SoDienThoai, ChucDanh, HangBangLai, HanKhamSucKhoe,
-                       DonViChuQuan, TrangThai, NgayTao, PhienBan
-                FROM nhansu.NhanVien")
+                SELECT nv.MaNhanVien, nv.MaNVCode, nv.HoTen, nv.SoDienThoai, nv.ChucDanh, nv.HangBangLai, nv.HanKhamSucKhoe,
+                       nv.DonViChuQuan, nv.TrangThai, nv.NgayTao, nv.PhienBan,
+                       tk.TenDangNhap, tk.DangHoatDong, tk.LanDangNhapCuoi, ISNULL(tk.SoTaiKhoan, 0) AS SoTaiKhoan
+                FROM nhansu.NhanVien nv
+                OUTER APPLY (SELECT TOP 1 t.TenDangNhap, t.DangHoatDong, t.LanDangNhapCuoi, COUNT(*) OVER () AS SoTaiKhoan
+                             FROM phanquyen.TaiKhoan t
+                             WHERE t.MaNhanVien = nv.MaNhanVien
+                             ORDER BY t.DangHoatDong DESC, t.LanDangNhapCuoi DESC) tk")
                 .Rows.Cast<DataRow>().Select(DocNhanVien).ToList();
 
             // --- Chuyen tau trong cua so + dau may chinh (dong may) ---
@@ -297,7 +302,11 @@ namespace DAL.Repositories
             DonViChuQuan = Chuoi(r, "DonViChuQuan"),
             TrangThai = Chuoi(r, "TrangThai"),
             NgayTao = Convert.ToDateTime(r["NgayTao"]),
-            PhienBan = (byte[])r["PhienBan"]
+            PhienBan = (byte[])r["PhienBan"],
+            TenDangNhap = r["TenDangNhap"] == DBNull.Value ? null : Chuoi(r, "TenDangNhap"),
+            TaiKhoanHoatDong = r["DangHoatDong"] != DBNull.Value && Convert.ToBoolean(r["DangHoatDong"]),
+            LanDangNhapCuoi = r["LanDangNhapCuoi"] == DBNull.Value ? null : Convert.ToDateTime(r["LanDangNhapCuoi"]),
+            SoTaiKhoan = Convert.ToInt32(r["SoTaiKhoan"])
         };
 
         private static SqlParameter[] ThamSoNhanVien(NhanVienHienThi nv) => new[]
