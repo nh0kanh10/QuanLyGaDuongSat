@@ -129,23 +129,6 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Nhãn báo có thay đổi tạm trên giao diện (chưa ghi CSDL) -->
-                <Border Grid.Column="1" x:Name="bdThayDoiTam" Visibility="Collapsed"
-                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="12,0,12,0"
-                        Background="#FFFBEB" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="14" Padding="10,4,4,4"
-                        ToolTip="Các thêm / sửa / phương án lập tàu hiện chỉ lưu trên màn hình, chưa ghi vào CSDL">
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="7" Height="7" Fill="#F59E0B" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="txtThayDoiTam" Text="0 thay đổi tạm" FontSize="11" FontWeight="SemiBold"
-                                   Foreground="#92400E" VerticalAlignment="Center"/>
-                        <Button Click="BtnHuyThayDoiTam_Click" Style="{StaticResource DesktopButton}"
-                                Height="22" Margin="8,0,0,0" Padding="8,0"
-                                ToolTip="Bỏ toàn bộ thay đổi tạm, hiển thị lại dữ liệu gốc từ CSDL">
-                            <TextBlock Text="Hoàn tác" FontSize="10" FontWeight="SemiBold" Foreground="#92400E"/>
-                        </Button>
-                    </StackPanel>
-                </Border>
-
                 <!-- Chỉ số tổng quan -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
@@ -887,24 +870,19 @@
                                        TextTrimming="CharacterEllipsis"/>
 
                             <StackPanel Grid.Column="3" Orientation="Horizontal">
-                                <!-- Hiện khi tab đang hiển thị phương án kéo-thả thay cho dữ liệu CSDL -->
-                                <Border x:Name="bdPhuongAnMoPhong" Visibility="Collapsed" Margin="10,0,8,0"
-                                        Background="#FFFBEB" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="14"
-                                        Padding="10,2,3,2" VerticalAlignment="Center">
+                                <!-- Hiện khi chuyến đang chạy / đã xong / đã hủy: đoàn tàu chỉ xem, không sửa -->
+                                <Border x:Name="bdChiXem" Visibility="Collapsed" Margin="10,0,8,0"
+                                        Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="14"
+                                        Padding="10,3,10,3" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
-                                        <Ellipse Width="7" Height="7" Fill="#F59E0B" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                                        <TextBlock x:Name="txtPhuongAnMoPhong" Text="Đang xem phương án kéo–thả" FontSize="11"
-                                                   FontWeight="SemiBold" Foreground="#92400E" VerticalAlignment="Center"/>
-                                        <Button Click="BtnBoPhuongAn_Click" Style="{StaticResource DesktopButton}"
-                                                Height="22" Margin="8,0,0,0" Padding="8,0"
-                                                ToolTip="Bỏ phương án mô phỏng, hiển thị lại đoàn tàu trong CSDL">
-                                            <TextBlock Text="Bỏ phương án" FontSize="10"/>
-                                        </Button>
+                                        <Ellipse Width="7" Height="7" Fill="#64748B" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="txtChiXem" Text="Chỉ xem" FontSize="11"
+                                                   FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
                                 <Button x:Name="btnLapTauKeoTha" Click="BtnLapTauKeoTha_Click"
                                         Style="{StaticResource PrimaryDesktopButton}"
-                                        ToolTip="Mở màn hình mô phỏng lập tàu bằng kéo – thả toa xe (F2)">
+                                        ToolTip="Lập / sửa đoàn tàu bằng kéo – thả toa xe, lưu vào CSDL (F2)">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="ArrowSwap24" FontSize="12" Margin="0,0,5,0" Foreground="#FFFFFF"/>
                                         <TextBlock Text="Lập Tàu Kéo – Thả"/>
@@ -1013,6 +991,9 @@
                                     </StackPanel>
                                 </Border>
 
+                                <TextBlock Grid.Row="1" x:Name="txtTrongBienChe" Visibility="Collapsed" Margin="16"
+                                           Text="Chuyến này chưa lập đoàn tàu." FontSize="11" Foreground="#64748B"
+                                           TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 <DataGrid Grid.Row="1" x:Name="dgBienCheToa" BorderThickness="0">
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn Header="TT" Width="52" HeaderStyle="{StaticResource DataGridHeaderCenter}">
@@ -1027,7 +1008,7 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
-                                        <DataGridTextColumn Header="Nhãn Hiệu Toa" Width="110" Binding="{Binding NhanHieuToa}">
+                                        <DataGridTextColumn Header="Số Hiệu Toa" Width="100" Binding="{Binding NhanHieuToa}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="FontWeight" Value="SemiBold"/>
@@ -1116,7 +1097,7 @@
                                         </DataGridTextColumn>
 
                                         <DataGridTextColumn Header="Sức Chứa" Width="85"
-                                                            Binding="{Binding SucChua, StringFormat={}{0} chỗ}"
+                                                            Binding="{Binding NhanSucChua}"
                                                             HeaderStyle="{StaticResource DataGridHeaderRight}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
@@ -1126,26 +1107,26 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <!-- Tỷ lệ lấp đầy -->
-                                        <DataGridTemplateColumn Header="Tỷ Lệ Lấp Đầy" Width="*" MinWidth="100"
+                                        <!-- Tải trọng trục khi chở đầy, so với ngưỡng tham khảo 14 t/trục -->
+                                        <DataGridTemplateColumn Header="Tải Trọng Trục (chở đầy)" Width="*" MinWidth="130"
                                                                 HeaderStyle="{StaticResource DataGridHeaderCenter}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel VerticalAlignment="Center" Margin="2,0">
                                                         <Grid>
-                                                            <TextBlock Text="{Binding NhanLapDay}" FontSize="10" FontWeight="SemiBold"
+                                                            <TextBlock Text="{Binding NhanTaiTrongTruc}" FontSize="10" FontWeight="SemiBold"
                                                                        Foreground="#0F172A" HorizontalAlignment="Left"/>
-                                                            <TextBlock Text="{Binding PhanTramLapDay, StringFormat={}{0:N0}%}" FontSize="10"
-                                                                       FontWeight="Bold" Foreground="{Binding MauLapDay}" HorizontalAlignment="Right"/>
+                                                            <TextBlock Text="{Binding PhanTramTruc, StringFormat={}{0:N0}%}" FontSize="10"
+                                                                       FontWeight="Bold" Foreground="{Binding MauTruc}" HorizontalAlignment="Right"/>
                                                         </Grid>
                                                         <Grid Height="5" Margin="0,3,0,0">
                                                             <Border CornerRadius="3" Background="#E2E8F0"/>
                                                             <Grid>
                                                                 <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="{Binding PhanDaBan}"/>
-                                                                    <ColumnDefinition Width="{Binding PhanConTrong}"/>
+                                                                    <ColumnDefinition Width="{Binding PhanTruc}"/>
+                                                                    <ColumnDefinition Width="{Binding PhanTrucConLai}"/>
                                                                 </Grid.ColumnDefinitions>
-                                                                <Border Grid.Column="0" CornerRadius="3" Background="{Binding MauLapDay}"/>
+                                                                <Border Grid.Column="0" CornerRadius="3" Background="{Binding MauTruc}"/>
                                                             </Grid>
                                                         </Grid>
                                                     </StackPanel>

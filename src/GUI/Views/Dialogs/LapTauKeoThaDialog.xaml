@@ -330,7 +330,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="VehicleSubway24" FontSize="17" Foreground="#FFFFFF" Margin="0,0,9,0"/>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="MÔ PHỎNG LẬP TÀU KÉO – THẢ" Foreground="#FFFFFF" FontSize="12" FontWeight="Bold"/>
+                            <TextBlock Text="LẬP ĐOÀN TÀU KÉO – THẢ" Foreground="#FFFFFF" FontSize="12" FontWeight="Bold"/>
                             <TextBlock x:Name="txtTieuDePhu" Text="" Foreground="#BFDBFE" FontSize="10"/>
                         </StackPanel>
                     </StackPanel>
@@ -347,37 +347,46 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="Đầu máy kéo chính:" Style="{StaticResource FieldLabel}"/>
-                <ComboBox Grid.Column="1" x:Name="cboDauMay" Width="310" DisplayMemberPath="NhanHienThi"
+                <TextBlock Grid.Column="0" Text="Đầu máy kéo:" Style="{StaticResource FieldLabel}"/>
+                <ComboBox Grid.Column="1" x:Name="cboDauMay" Width="245" DisplayMemberPath="NhanHienThi"
+                          ToolTip="{Binding SelectedItem.NhanHienThi, RelativeSource={RelativeSource Self}}"
                           SelectionChanged="CboDauMay_SelectionChanged"/>
 
-                <Border Grid.Column="2" x:Name="bdDuongTranh" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1"
+                <TextBlock Grid.Column="2" Text="Máy đẩy:" Style="{StaticResource FieldLabel}" Margin="12,0,6,0"
+                           ToolTip="Đầu máy đẩy hỗ trợ qua khu gian dốc (đèo Khe Nét, Hải Vân). Tùy chọn."/>
+                <ComboBox Grid.Column="3" x:Name="cboDauMayDay" Width="245" DisplayMemberPath="NhanHienThi"
+                          ToolTip="{Binding SelectedItem.NhanHienThi, RelativeSource={RelativeSource Self}}"
+                          SelectionChanged="CboDauMay_SelectionChanged"/>
+
+                <Border Grid.Column="4" x:Name="bdDuongTranh" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1"
                         CornerRadius="3" Padding="9,4" Margin="10,0,10,0" VerticalAlignment="Center"
-                        ToolTip="Đường tránh ngắn nhất trên các ga tàu dừng của hành trình. Đoàn tàu phải lọt đường này để tránh / nhường tàu.">
+                        ToolTip="Đoàn tàu phải lọt đường ray ở MỌI ga dừng: đường điều độ đã gán cho điểm dừng, chưa gán thì đường tránh dài nhất của ga (tối đa 450 m). Đây là giới hạn nhỏ nhất trên hành trình.">
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="Ruler24" FontSize="12" Foreground="#475569" Margin="0,0,6,0"/>
-                        <TextBlock Text="Đường tránh ngắn nhất: " FontSize="11" Foreground="#475569"/>
+                        <TextBlock Text="Giới hạn dài: " FontSize="11" Foreground="#475569"/>
                         <TextBlock x:Name="txtDuongTranh" Text="—" FontSize="11" FontWeight="Bold" Foreground="#0F172A"/>
                     </StackPanel>
                 </Border>
 
-                <StackPanel Grid.Column="4" Orientation="Horizontal">
+                <StackPanel Grid.Column="6" Orientation="Horizontal">
                     <Button Style="{StaticResource DesktopButton}" Click="BtnTuDongSapXep_Click"
                             ToolTip="Xếp toa khách theo hạng (AN → BN → NML → NC), dồn toa hàng về cuối đoàn. Toa nối / cắt dọc đường xếp thành nhóm ở cuối đoàn theo thứ tự ga.">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="ArrowSort24" FontSize="12" Foreground="#003B73" Margin="0,0,5,0"/>
-                            <TextBlock Text="Tự Động Sắp Xếp"/>
+                            <TextBlock Text="Sắp Xếp"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource DesktopButton}" Click="BtnThaoHet_Click"
                             ToolTip="Tháo toàn bộ toa về bãi">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="ArrowUndo24" FontSize="12" Foreground="#64748B" Margin="0,0,5,0"/>
-                            <TextBlock Text="Tháo Hết Toa"/>
+                            <TextBlock Text="Tháo Hết"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource DesktopButton}" Margin="0" Click="BtnDatLai_Click"
@@ -669,7 +678,7 @@
                                         <TextBlock x:Name="txtDemBai" Text="0 toa" FontSize="10" FontWeight="Bold" Foreground="#334155"/>
                                     </Border>
                                 </StackPanel>
-                                <TextBlock Text="Đội toa trong CSDL + toa mẫu mô phỏng  ·  nhấp đúp để móc vào cuối đoàn"
+                                <TextBlock Text="Toa sẵn sàng, không thuộc đoàn tàu khác trong khung giờ chuyến  ·  nhấp đúp để móc vào cuối đoàn"
                                            FontSize="10" Foreground="#64748B" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
@@ -780,7 +789,7 @@
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
-                        <TextBlock Text="Giai đoạn giao diện: phương án chỉ hiển thị trên tab Lập Đoàn Tàu, chưa ghi vào CSDL."
+                        <TextBlock Text="Xác nhận sẽ ghi đoàn tàu vào CSDL. Đổi thành phần đoàn tàu thì phải duyệt an toàn lại."
                                    FontSize="10" Foreground="#64748B" VerticalAlignment="Center"/>
                     </StackPanel>
 

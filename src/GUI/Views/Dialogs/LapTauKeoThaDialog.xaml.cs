@@ -11,26 +11,26 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using BUS.Services;
-using GUI.Views.Dialogs;
+using DTO.PhuongTien;
 using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
 
 namespace GUI.Views.Dialogs
 {
     // =========================================================================
-    // MO PHONG LAP TAU KEO - THA (SRS Nhom 3)
+    // LAP DOAN TAU KEO - THA (SRS Nhom 3) - vanhanh.DoanTau + ChiTietDoanTau
     //
     // - Keo toa tu bai vao doan tau, keo trong doan de doi thu tu moc noi,
     //   keo nguoc xuong bai (hoac nhap dup / bam X) de thao toa.
-    // - CAT / NOI TOA DOC DUONG: chuyen co lich dung ga trung gian thi hien thanh
-    //   hanh trinh. Chon mot ga = xem doan tau khi roi ga do; keo toa vao = noi
-    //   tai ga do, keo toa ra = cat tai ga do. Moi toa mang pham vi chay
+    // - CAT / NOI TOA DOC DUONG: chuyen co lich dung ga trung gian (vanhanh.LichDungGa)
+    //   thi hien thanh hanh trinh. Chon mot ga = xem doan tau khi roi ga do; keo toa
+    //   vao = noi tai ga do, keo toa ra = cat tai ga do. Moi toa mang pham vi chay
     //   (MaGaNoi -> MaGaCat), null = chay suot.
-    // - Sau moi thay doi, chay lai bang kiem tra an toan tren TUNG CHANG: dau may,
-    //   so toa, chieu dai vs duong tranh, trong luong vs suc keo, tai trong truc,
-    //   thu tu xep toa hang, tac nghiep cat / noi (thoi gian do, vi tri nhom toa).
-    //
-    // Giai doan dung giao dien: ket qua chi tra ve cho trang goi hien thi,
-    // khong ghi vanhanh.DoanTau / vanhanh.ChiTietDoanTau.
+    // - Dau may keo chinh + dau may day (tuy chon).
+    // - Sau moi thay doi, chay lai BO LUAT BUS.Services.QuyTacLapTau (cung bo Service
+    //   kiem lai khi luu): dau may, so toa, chieu dai tung ga dung, suc keo, tai trong
+    //   truc, toa hang, toa ban / bao duong, tac nghiep cat / noi.
+    // - Xac nhan: goi ham luu cua trang (LapTauService.LuuPhuongAn). Service tu choi
+    //   (nguoi khac vua sua, chuyen da chay...) thi hien ly do va giu nguyen man hinh.
     // =========================================================================
     public partial class LapTauKeoThaDialog : Window
     {
@@ -42,6 +42,9 @@ namespace GUI.Views.Dialogs
         private readonly ObservableCollection<ToaLapTau> _baiToa = new();
         private readonly ICollectionView? _boLocBai;
         private readonly DauMayLapTau? _dauMayBanDau;
+        private readonly List<DauMayLapTau> _dsDauMayDay;
+        private readonly DauMayLapTau _dauMayDayBanDau;
+        private readonly decimal _gioiHanChieuDaiChung;   // nho nhat tren cac ga dung (khong co lich dung: 450 m)
         private readonly bool _dangKhoiTao;
         private bool _coThayDoi;
 
@@ -56,7 +59,7 @@ namespace GUI.Views.Dialogs
         private KeoThaAdorner? _bongKeo;
         private bool _dangKeo;
 
-        public KetQuaLapTau? KetQua { get; private set; }
+        public KetQuaLuuLapTauDTO? KetQua { get; private set; }
 
         public LapTauKeoThaDialog(ThongTinLapTau dauVao)
         {
@@ -69,18 +72,28 @@ namespace GUI.Views.Dialogs
             Width = Math.Min(Width, vung.Width - 8);
             Height = Math.Min(Height, vung.Height - 8);
 
-            txtTieuDePhu.Text = dauVao.TenChuyen;
-            if (dauVao.DuongTranhNganNhatM is > 0)
+            var bc = dauVao.BoiCanh;
+            txtTieuDePhu.Text = bc.TenChuyen;
+
+            // Gioi han chieu dai nho nhat tren cac ga dung (QuyTacLapTau kiem tung ga)
+            if (bc.HanhTrinh.Count > 0)
             {
-                txtDuongTranh.Text = $"{dauVao.DuongTranhNganNhatM:N0} m";
+                var gioiHanTungGa = bc.HanhTrinh
+                    .Select(d => (Ga: d, GioiHan: QuyTacLapTau.GioiHanChieuDaiTaiGa(d).GioiHanM))
+                    .ToList();
+                var gaHanChe = gioiHanTungGa.MinBy(x => x.GioiHan);
+                _gioiHanChieuDaiChung = gaHanChe.GioiHan;
+                bool moiGaNhuNhau = gioiHanTungGa.All(x => x.GioiHan == _gioiHanChieuDaiChung);
+                txtDuongTranh.Text = $"{_gioiHanChieuDaiChung:N0} m · {(moiGaNhuNhau ? "mọi ga" : gaHanChe.Ga.MaGaCode)}";
             }
             else
             {
-                txtDuongTranh.Text = "chưa có dữ liệu";
-                bdDuongTranh.ToolTip = "Hành trình chưa có dữ liệu đường tránh tại các ga dừng. " +
-                    $"Chiều dài đoàn tàu được đối chiếu với giới hạn {DanhMucMauPhuongTien.ChieuDaiDoanTauToiDaM:N0} m của hệ thống.";
+                _gioiHanChieuDaiChung = QuyTacLapTau.ChieuDaiToiDaM;
+                txtDuongTranh.Text = $"{_gioiHanChieuDaiChung:N0} m";
+                bdDuongTranh.ToolTip = "Chuyến chưa có lịch dừng ga: chiều dài đoàn tàu đối chiếu với giới hạn " +
+                    $"{QuyTacLapTau.ChieuDaiToiDaM:N0} m của hệ thống.";
             }
-            txtSoToaGioiHan.Text = $" / {DanhMucMauPhuongTien.SoToaToiDa} toa";
+            txtSoToaGioiHan.Text = $" / {QuyTacLapTau.SoToaToiDa} toa";
 
             // Hanh trinh: can it nhat 1 ga trung gian moi co cho cat / noi
             _hanhTrinh = dauVao.HanhTrinh.Count >= 3 ? dauVao.HanhTrinh : new List<DiemDungLapTau>();
@@ -95,12 +108,19 @@ namespace GUI.Views.Dialogs
                     : "Chuyến không có ga dừng trung gian: đoàn tàu chạy suốt, không cắt / nối toa dọc đường.";
             }
 
-            // Dau may: uu tien may dang chi dinh cho chuyen, neu khong thi may san sang dau tien
+            // Dau may: uu tien may dang luu cho chuyen, neu khong thi may san sang, khong ban chuyen khac
             cboDauMay.ItemsSource = dauVao.DanhSachDauMay;
-            _dauMayBanDau = dauVao.DanhSachDauMay.FirstOrDefault(d => d.SoHieu == dauVao.SoHieuDauMayDangChon)
-                         ?? dauVao.DanhSachDauMay.FirstOrDefault(d => d.TrangThai == "SAN_SANG")
+            _dauMayBanDau = dauVao.DanhSachDauMay.FirstOrDefault(d => d.MaDauMay == bc.MaDauMayChinh)
+                         ?? dauVao.DanhSachDauMay.FirstOrDefault(d => d.TrangThai == "SAN_SANG" && d.GhiChuBan.Length == 0)
                          ?? dauVao.DanhSachDauMay.FirstOrDefault();
             cboDauMay.SelectedItem = _dauMayBanDau;
+
+            // May day (tuy chon): muc dau = khong dung
+            _dsDauMayDay = new List<DauMayLapTau> { DauMayLapTau.KhongDung() };
+            _dsDauMayDay.AddRange(dauVao.DanhSachDauMay);
+            cboDauMayDay.ItemsSource = _dsDauMayDay;
+            _dauMayDayBanDau = _dsDauMayDay.FirstOrDefault(d => !d.LaKhongDung && d.MaDauMay == bc.MaDauMayDay) ?? _dsDauMayDay[0];
+            cboDauMayDay.SelectedItem = _dauMayDayBanDau;
 
             icDoanTau.ItemsSource = _doanTau;
 
@@ -189,8 +209,6 @@ namespace GUI.Views.Dialogs
 
         private string TenDoan(int tu, int den)
             => CoHanhTrinh ? $"{_hanhTrinh[tu].MaGaCode} → {_hanhTrinh[den].MaGaCode}" : "";
-
-        private string TenChang(ChangTinhToan c) => TenDoan(c.TuViTri, c.DenViTri);
 
         private void Ga_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -629,6 +647,7 @@ namespace GUI.Views.Dialogs
         {
             NapPhuongAnBanDau();
             cboDauMay.SelectedItem = _dauMayBanDau;
+            cboDauMayDay.SelectedItem = _dauMayDayBanDau;
             _coThayDoi = false;
             CapNhatSauThayDoi(danhDauThayDoi: false);
         }
@@ -681,116 +700,32 @@ namespace GUI.Views.Dialogs
         }
 
         // =====================================================================
-        // CHANG + TAC NGHIEP CAT / NOI
+        // KIEM TRA PHUONG AN: bo luat BUS.Services.QuyTacLapTau (cung bo luat
+        // LapTauService chay lai trong giao dich truoc khi ghi CSDL)
         // =====================================================================
 
-        // Mot chang: cac khu doan lien tiep co cung bo toa (cung thu tu)
-        private sealed class ChangTinhToan
+        private PhuongAnLapTauDTO TaoPhuongAn() => new()
         {
-            public int TuViTri { get; init; }
-            public int DenViTri { get; set; }
-            public List<ToaLapTau> Toa { get; init; } = new();
-            public decimal ChieuDai { get; init; }      // ke ca dau may
-            public decimal TrongLuong { get; init; }    // toan tai, chua tinh dau may
-            public int SucChua { get; init; }
-        }
-
-        // Tac nghiep tai mot ga trung gian: cat nhom toa khoi doan den, noi nhom toa vao doan roi ga
-        private sealed class TacNghiepTaiGa
-        {
-            public DiemDungLapTau Ga { get; init; } = null!;
-            public List<ToaLapTau> Cat { get; init; } = new();
-            public List<ToaLapTau> Noi { get; init; } = new();
-            public ViTriNhom ViTriCat { get; init; }
-            public ViTriNhom ViTriNoi { get; init; }
-
-            public bool DungViTri => ViTriCat != ViTriNhom.Sai && ViTriNoi != ViTriNhom.Sai;
-            public bool CoLoi => !Ga.DuThoiGianCatNoi || !DungViTri;
-        }
-
-        private enum ViTriNhom { Khong, Cuoi, Dau, Sai }
-
-        private List<ChangTinhToan> TinhCacChang(DauMayLapTau? dm)
-        {
-            var ds = new List<ChangTinhToan>();
-            for (int k = 0; k < SoDoan; k++)
+            MaChuyenTau = _dauVao.BoiCanh.MaChuyenTau,
+            PhienBan = _dauVao.BoiCanh.PhienBan,
+            MaDauMayChinh = (cboDauMay.SelectedItem as DauMayLapTau)?.MaDauMay,
+            MaDauMayDay = cboDauMayDay.SelectedItem is DauMayLapTau day && !day.LaKhongDung ? day.MaDauMay : null,
+            DanhSachToa = _doanTau.Select(t => new ToaTrongDoanDTO
             {
-                var toa = ToaTrongDoan(k);
-                if (ds.Count > 0 && ds[^1].Toa.SequenceEqual(toa))
-                {
-                    ds[^1].DenViTri = k + 1;
-                    continue;
-                }
+                MaToaXe = t.MaToaXe,
+                MaGaNoi = t.MaGaNoi,
+                MaGaCat = t.MaGaCat
+            }).ToList()
+        };
 
-                ds.Add(new ChangTinhToan
-                {
-                    TuViTri = k,
-                    DenViTri = k + 1,
-                    Toa = toa,
-                    ChieuDai = (dm?.ChieuDaiM ?? 0m) + toa.Sum(t => t.ChieuDaiM),
-                    TrongLuong = toa.Sum(t => t.TongTrongLuongTan),
-                    SucChua = toa.Where(t => !t.LaToaHang).Sum(t => t.SucChua)
-                });
-            }
-            return ds;
-        }
+        private KetQuaKiemTraLapTauDTO KiemTraHienTai() => QuyTacLapTau.KiemTra(_dauVao.BoiCanh, TaoPhuongAn());
 
-        private List<TacNghiepTaiGa> TinhTacNghiep()
-        {
-            var ds = new List<TacNghiepTaiGa>();
-            if (!CoHanhTrinh) return ds;
+        // Gioi han chieu dai cua khu doan k: nho hon cua ga dau va ga cuoi khu doan
+        private decimal GioiHanChieuDaiKhuDoan(int k)
+            => CoHanhTrinh ? Math.Min(_hanhTrinh[k].GioiHanChieuDaiM, _hanhTrinh[k + 1].GioiHanChieuDaiM) : _gioiHanChieuDaiChung;
 
-            for (int k = 1; k < SoDoan; k++)
-            {
-                var cat = _doanTau.Where(t => ViTriCat(t) == k).ToList();
-                var noi = _doanTau.Where(t => ViTriNoi(t) == k).ToList();
-                if (cat.Count == 0 && noi.Count == 0) continue;
-
-                ds.Add(new TacNghiepTaiGa
-                {
-                    Ga = _hanhTrinh[k],
-                    Cat = cat,
-                    Noi = noi,
-                    ViTriCat = XacDinhViTriNhom(ToaTrongDoan(k - 1), cat),
-                    ViTriNoi = XacDinhViTriNhom(ToaTrongDoan(k), noi)
-                });
-            }
-            return ds;
-        }
-
-        // Nhom toa cat / noi phai lien khoi va nam o cuoi doan hoac ngay sau dau may
-        private static ViTriNhom XacDinhViTriNhom(List<ToaLapTau> doan, List<ToaLapTau> nhom)
-        {
-            var viTri = nhom.Select(t => doan.IndexOf(t)).Where(i => i >= 0).OrderBy(i => i).ToList();
-            if (viTri.Count == 0) return ViTriNhom.Khong;
-            if (viTri[^1] - viTri[0] + 1 != viTri.Count) return ViTriNhom.Sai;
-            if (viTri[^1] == doan.Count - 1) return ViTriNhom.Cuoi;
-            if (viTri[0] == 0) return ViTriNhom.Dau;
-            return ViTriNhom.Sai;
-        }
-
-        private static string NhanThayDoi(TacNghiepTaiGa tn)
-        {
-            var phan = new List<string>();
-            if (tn.Cat.Count > 0) phan.Add($"−{tn.Cat.Count}");
-            if (tn.Noi.Count > 0) phan.Add($"+{tn.Noi.Count}");
-            return string.Join(" ", phan);
-        }
-
-        private static string MoTaCatNoi(List<TacNghiepTaiGa> ds)
-            => string.Join(" · ", ds.Select(tn => $"{tn.Ga.MaGaCode} {NhanThayDoi(tn)}"));
-
-        private static string DanhSachSoHieu(IEnumerable<ToaLapTau> ds) => string.Join(", ", ds.Select(t => t.SoHieu));
-
-        // =====================================================================
-        // TONG HOP + KIEM TRA AN TOAN
-        // =====================================================================
-
-        private decimal GioiHanChieuDai()
-        {
-            decimal toiDa = DanhMucMauPhuongTien.ChieuDaiDoanTauToiDaM;
-            return _dauVao.DuongTranhNganNhatM is > 0 ? Math.Min(_dauVao.DuongTranhNganNhatM.Value, toiDa) : toiDa;
-        }
+        private string DanhSachSoHieu(IEnumerable<int> maToa)
+            => string.Join(", ", maToa.Select(m => _doanTau.FirstOrDefault(t => t.MaToaXe == m)?.SoHieu ?? $"#{m}"));
 
         private void CapNhatSauThayDoi(bool danhDauThayDoi = true)
         {
@@ -800,33 +735,33 @@ namespace GUI.Views.Dialogs
 
             var dm = cboDauMay.SelectedItem as DauMayLapTau;
 
-            // --- The dau may ---
+            // --- The dau may (may day hien o o chon tren thanh cong cu) ---
             txtDauMaySoHieu.Text = dm?.SoHieu ?? "Chưa chọn";
             txtDauMayDong.Text = dm != null ? $"DÒNG {dm.MaDongCode}" : "";
             txtDauMayThongSo.Text = dm != null ? $"{dm.ChieuDaiM:N1} m · kéo {dm.SucKeoTan:N0} t" : "";
 
-            var cacChang = TinhCacChang(dm);
-            var tacNghiep = TinhTacNghiep();
+            var kq = KiemTraHienTai();
+            var khuDoanXem = kq.KhuDoan[Math.Min(_viTriXem, kq.KhuDoan.Count - 1)];
             var toaXem = ToaTrongDoan(_viTriXem);
 
             CapNhatTheToa();
-            CapNhatHanhTrinh(dm, tacNghiep);
+            CapNhatHanhTrinh(kq);
             CapNhatTieuDe(toaXem.Count);
             CapNhatTrangThaiBai();
 
             // --- So lieu cua khu doan dang xem ---
-            int soToa = toaXem.Count;
+            int soToa = khuDoanXem.SoToa;
             int soToaHang = toaXem.Count(t => t.LaToaHang);
-            decimal chieuDai = (dm?.ChieuDaiM ?? 0m) + toaXem.Sum(t => t.ChieuDaiM);
-            decimal trongLuong = toaXem.Sum(t => t.TongTrongLuongTan);
-            decimal gioiHanDai = GioiHanChieuDai();
+            decimal chieuDai = khuDoanXem.ChieuDaiM;
+            decimal trongLuong = khuDoanXem.TrongLuongTan;
+            decimal gioiHanDai = GioiHanChieuDaiKhuDoan(_viTriXem);
 
             txtSoToa.Text = soToa.ToString();
-            txtSoToa.Foreground = MauChu(soToa > DanhMucMauPhuongTien.SoToaToiDa ? "#B91C1C" : "#0F172A");
+            txtSoToa.Foreground = MauChu(soToa > QuyTacLapTau.SoToaToiDa ? "#B91C1C" : "#0F172A");
             txtSoToaPhu.Text = soToa == 0
                 ? (_doanTau.Count == 0 ? "Chưa móc nối toa nào" : "Không còn toa nào trên đoạn này")
                 : $"{soToa - soToaHang} toa khách · {soToaHang} toa hàng" +
-                  (cacChang.Count > 1 ? $" · lớn nhất {cacChang.Max(c => c.Toa.Count)}" : "");
+                  (kq.Chang.Count > 1 ? $" · lớn nhất {kq.SoToaLonNhat}" : "");
 
             txtChieuDai.Text = $"{chieuDai:N1} m";
             txtChieuDaiGioiHan.Text = $"/ {gioiHanDai:N0} m";
@@ -854,7 +789,7 @@ namespace GUI.Views.Dialogs
                                              .Select(g => $"{g.Key} ×{g.Count()}"));
 
             // --- Kiem tra an toan ---
-            var hangMuc = KiemTraAnToan(dm, cacChang, tacNghiep);
+            var hangMuc = kq.HangMuc.Select(HangMucAnToanHienThi.TuDTO).ToList();
             icHangMucAnToan.ItemsSource = hangMuc;
             CapNhatKetLuan(hangMuc);
         }
@@ -883,33 +818,34 @@ namespace GUI.Views.Dialogs
         }
 
         // Thanh hanh trinh: ga dang chon, so toa cat / noi tai ga, so toa tung khu doan
-        private void CapNhatHanhTrinh(DauMayLapTau? dm, List<TacNghiepTaiGa> tacNghiep)
+        private void CapNhatHanhTrinh(KetQuaKiemTraLapTauDTO kq)
         {
             if (!CoHanhTrinh) return;
 
-            decimal gioiHanDai = GioiHanChieuDai();
-            int toiDa = DanhMucMauPhuongTien.SoToaToiDa;
-            int phutToiThieu = DanhMucMauPhuongTien.SoPhutDoToiThieuCatNoi;
+            int phutToiThieu = QuyTacLapTau.SoPhutDoToiThieuCatNoi;
 
             foreach (var ga in _hanhTrinh)
             {
                 int k = ga.ViTri;
-                var tn = tacNghiep.FirstOrDefault(x => x.Ga == ga);
+                var tn = kq.TacNghiep.FirstOrDefault(x => x.ViTri == k);
+                bool vuotDai = kq.GaVuotChieuDai.Contains(k);
 
                 ga.DangChon = k == _viTriXem;
-                ga.NhanThayDoi = tn != null ? NhanThayDoi(tn) : "";
-                ga.CoLoiTaiGa = tn?.CoLoi == true;
+                ga.NhanThayDoi = tn?.NhanThayDoi ?? "";
+                ga.CoLoiTaiGa = tn?.CoLoi == true || vuotDai;
 
                 var dong = new List<string> { $"{ga.TenGa} ({ga.MaGaCode}) — ga dừng {k + 1}/{_hanhTrinh.Count}" };
-                dong.Add(ga.LaGaDau ? $"Xuất phát {ga.GioDiKeHoach:HH:mm}"
-                       : ga.LaGaCuoi ? $"Về đích {ga.GioDenKeHoach:HH:mm}"
-                       : $"Đến {ga.GioDenKeHoach:HH:mm} · đi {ga.GioDiKeHoach:HH:mm} · đỗ {ga.SoPhutDo} phút");
+                dong.Add(ga.LaGaDau ? $"Xuất phát {ga.GioDiKeHoach:HH:mm dd/MM}"
+                       : ga.LaGaCuoi ? $"Về đích {ga.GioDenKeHoach:HH:mm dd/MM}"
+                       : $"Đến {ga.GioDenKeHoach:HH:mm dd/MM} · đi {ga.GioDiKeHoach:HH:mm} · đỗ {ga.SoPhutDo} phút");
+                dong.Add($"Giới hạn dài tại ga: {ga.GioiHanChieuDaiM:N0} m ({ga.NguonGioiHan})");
+                if (vuotDai) dong.Add("⚠ Đoàn tàu dài hơn đường ray tại ga này");
 
                 if (tn != null)
                 {
                     if (tn.Cat.Count > 0) dong.Add($"Cắt {tn.Cat.Count} toa: {DanhSachSoHieu(tn.Cat)}");
                     if (tn.Noi.Count > 0) dong.Add($"Nối {tn.Noi.Count} toa: {DanhSachSoHieu(tn.Noi)}");
-                    if (!ga.DuThoiGianCatNoi) dong.Add($"⚠ Đỗ {ga.SoPhutDo} phút, dưới {phutToiThieu} phút cần cho cắt / nối");
+                    if (!tn.DuThoiGian) dong.Add($"⚠ Đỗ {ga.SoPhutDo} phút, dưới {phutToiThieu} phút cần cho cắt / nối");
                     if (!tn.DungViTri) dong.Add("⚠ Nhóm toa cắt / nối phải liền khối ở cuối đoàn hoặc ngay sau đầu máy");
                 }
 
@@ -919,16 +855,12 @@ namespace GUI.Views.Dialogs
                 }
                 else
                 {
-                    var toa = ToaTrongDoan(k);
-                    decimal dai = (dm?.ChieuDaiM ?? 0m) + toa.Sum(t => t.ChieuDaiM);
-                    decimal nang = toa.Sum(t => t.TongTrongLuongTan);
-
-                    ga.NhanDoanSau = $"{toa.Count} toa";
+                    var kd = kq.KhuDoan[k];
+                    ga.NhanDoanSau = $"{kd.SoToa} toa";
                     ga.DoanSauDangChon = k == _viTriXem;
-                    ga.DoanSauCoLoi = toa.Count == 0 || toa.Count > toiDa || dai > gioiHanDai ||
-                                      (dm != null && dm.SucKeoTan > 0 && nang > dm.SucKeoTan);
+                    ga.DoanSauCoLoi = kd.CoLoi;
 
-                    dong.Add($"Đoạn {TenDoan(k, k + 1)}: {toa.Count} toa · {dai:N1} m · {nang:N1} t");
+                    dong.Add($"Đoạn {kd.Ten}: {kd.SoToa} toa · {kd.ChieuDaiM:N1} m · {kd.TrongLuongTan:N1} t");
                     dong.Add("Bấm để xem đoàn tàu khi rời ga này");
                 }
 
@@ -966,164 +898,6 @@ namespace GUI.Views.Dialogs
             txtTieuDeChieuDai.Text = $"CHIỀU DÀI · {doan}";
             txtTieuDeTrongLuong.Text = $"TRỌNG LƯỢNG KÉO · {doan}";
             txtTieuDeSucChua.Text = $"SỨC CHỨA · {doan}";
-        }
-
-        private List<HangMucAnToanHienThi> KiemTraAnToan(DauMayLapTau? dm, List<ChangTinhToan> cacChang,
-                                                         List<TacNghiepTaiGa> tacNghiep)
-        {
-            var ds = new List<HangMucAnToanHienThi>();
-            int n = _doanTau.Count;
-            bool nhieuChang = cacChang.Count > 1;
-
-            // 1. Dau may keo chinh
-            const string tenDauMay = "Đầu máy kéo chính";
-            if (dm == null)
-                ds.Add(HangMucAnToanHienThi.Loi(tenDauMay, "Chưa chọn đầu máy kéo cho đoàn tàu."));
-            else if (dm.TrangThai == "BAO_DUONG")
-                ds.Add(HangMucAnToanHienThi.Loi(tenDauMay, $"{dm.SoHieu} đang bảo dưỡng, không được đưa vào vận dụng."));
-            else if (dm.TrangThai == "DANG_CHAY")
-                ds.Add(HangMucAnToanHienThi.CanhBao(tenDauMay, $"{dm.SoHieu} đang vận dụng ở chuyến khác. Cần đối chiếu lịch để tránh trùng giờ."));
-            else
-                ds.Add(HangMucAnToanHienThi.Dat(tenDauMay, $"{dm.SoHieu} (dòng {dm.MaDongCode}) sẵn sàng, sức kéo {dm.SucKeoTan:N0} tấn."));
-
-            // 2. So toa (CK TongSoToa 1..20) - ap cho doan tau tren tung chang
-            const string tenSoToa = "Số toa trong đoàn";
-            int toiDa = DanhMucMauPhuongTien.SoToaToiDa;
-            var changDongNhat = cacChang.MaxBy(c => c.Toa.Count)!;
-            var changRong = cacChang.Where(c => c.Toa.Count == 0).ToList();
-            var changVuot = cacChang.Where(c => c.Toa.Count > toiDa).ToList();
-            if (n == 0)
-                ds.Add(HangMucAnToanHienThi.Loi(tenSoToa, "Chưa móc nối toa nào vào đầu máy."));
-            else if (changRong.Count > 0)
-                ds.Add(HangMucAnToanHienThi.Loi(tenSoToa,
-                    $"Đoạn {string.Join(", ", changRong.Select(TenChang))} không còn toa nào. Đoàn tàu phải có ít nhất 1 toa trên mọi khu đoạn."));
-            else if (changVuot.Count > 0)
-                ds.Add(HangMucAnToanHienThi.Loi(tenSoToa, nhieuChang
-                    ? $"Đoạn {string.Join(", ", changVuot.Select(c => $"{TenChang(c)} ({c.Toa.Count} toa)"))} vượt giới hạn {toiDa} toa của một đoàn tàu."
-                    : $"Biên chế {n} toa, vượt giới hạn {toiDa} toa của một đoàn tàu."));
-            else
-                ds.Add(HangMucAnToanHienThi.Dat(tenSoToa, nhieuChang
-                    ? $"Lớn nhất {changDongNhat.Toa.Count} toa (đoạn {TenChang(changDongNhat)}), trong giới hạn 1–{toiDa} toa."
-                    : $"Biên chế {n} toa, trong giới hạn 1–{toiDa} toa."));
-
-            // 3. Chieu dai vs duong tranh ngan nhat - chang dai nhat
-            const string tenChieuDai = "Chiều dài đoàn tàu vs đường tránh";
-            var changDai = cacChang.MaxBy(c => c.ChieuDai)!;
-            var (datDai, thongDiepDai) = PhuongTienService.DoiChieuChieuDaiDuongTranh(changDai.ChieuDai, GioiHanChieuDai());
-            string ghiChuNguon = _dauVao.DuongTranhNganNhatM is > 0 ? "" : " (Hành trình chưa có dữ liệu đường tránh, đối chiếu giới hạn hệ thống.)";
-            string moDauDai = nhieuChang
-                ? $"Đoạn dài nhất {TenChang(changDai)}: {changDai.ChieuDai:N1} m kể cả đầu máy."
-                : $"Dài {changDai.ChieuDai:N1} m kể cả đầu máy.";
-            ds.Add(datDai
-                ? HangMucAnToanHienThi.Dat(tenChieuDai, $"{moDauDai} {thongDiepDai}{ghiChuNguon}")
-                : HangMucAnToanHienThi.Loi(tenChieuDai, $"{moDauDai} {thongDiepDai}{ghiChuNguon}"));
-
-            // 4. Trong luong keo vs suc keo dau may - chang nang nhat
-            const string tenSucKeo = "Trọng lượng kéo vs sức kéo";
-            var changNang = cacChang.MaxBy(c => c.TrongLuong)!;
-            var (datSucKeo, _, thongDiepSucKeo) = PhuongTienService.DoiChieuSucKeo(changNang.TrongLuong, dm?.SucKeoTan);
-            string moDauSucKeo = nhieuChang
-                ? $"Đoạn nặng nhất {TenChang(changNang)}: kéo {changNang.TrongLuong:N1} tấn toàn tải."
-                : $"Kéo {changNang.TrongLuong:N1} tấn toàn tải.";
-            if (dm == null)
-                ds.Add(HangMucAnToanHienThi.CanhBao(tenSucKeo, thongDiepSucKeo));
-            else
-                ds.Add(datSucKeo
-                    ? HangMucAnToanHienThi.Dat(tenSucKeo, $"{moDauSucKeo} {thongDiepSucKeo}")
-                    : HangMucAnToanHienThi.Loi(tenSucKeo, $"{moDauSucKeo} {thongDiepSucKeo}"));
-
-            if (n == 0) return ds;
-
-            // 5. Tai trong truc tung toa
-            const string tenTruc = "Tải trọng trục";
-            decimal nguongTruc = DanhMucMauPhuongTien.TaiTrongTrucToiDaTan;
-            var toaVuot = _doanTau.Where(t => t.VuotTaiTrongTruc).ToList();
-            if (toaVuot.Count > 0)
-                ds.Add(HangMucAnToanHienThi.Loi(tenTruc,
-                    $"{string.Join(", ", toaVuot.Select(t => $"{t.SoHieu} ({t.TaiTrongTrucTan:N2} t)"))} vượt ngưỡng {nguongTruc:N1} t/trục khi chở đầy."));
-            else
-                ds.Add(HangMucAnToanHienThi.Dat(tenTruc,
-                    $"Lớn nhất {_doanTau.Max(t => t.TaiTrongTrucTan):N2} t/trục, dưới ngưỡng {nguongTruc:N1} t/trục."));
-
-            // 6. Thu tu xep toa hang - kiem tra tren tung chang
-            const string tenThuTu = "Thứ tự xếp toa";
-            var changSaiThuTu = cacChang
-                .Select(c => (Chang: c, KetQua: KiemTraToaHang(c.Toa)))
-                .FirstOrDefault(x => !x.KetQua.Dat);
-            if (changSaiThuTu.Chang != null)
-            {
-                string tienTo = nhieuChang ? $"Đoạn {TenChang(changSaiThuTu.Chang)}: " : "";
-                ds.Add(HangMucAnToanHienThi.Loi(tenThuTu, tienTo + changSaiThuTu.KetQua.MoTa));
-            }
-            else
-            {
-                var changNhieuHangNhat = cacChang.MaxBy(c => c.Toa.Count(t => t.LaToaHang))!;
-                ds.Add(HangMucAnToanHienThi.Dat(tenThuTu, KiemTraToaHang(changNhieuHangNhat.Toa).MoTa));
-            }
-
-            // 7. Tac nghiep cat / noi toa doc duong
-            if (tacNghiep.Count > 0)
-            {
-                const string tenCatNoi = "Cắt / nối toa dọc đường";
-                int phutToiThieu = DanhMucMauPhuongTien.SoPhutDoToiThieuCatNoi;
-                var loi = new List<string>();
-                var dong = new List<string>();
-
-                foreach (var tn in tacNghiep)
-                {
-                    var ga = tn.Ga;
-                    var phan = new List<string>();
-                    if (tn.Cat.Count > 0)
-                        phan.Add($"cắt {tn.Cat.Count} toa " + (tn.ViTriCat == ViTriNhom.Dau ? "ngay sau đầu máy" : "ở cuối đoàn"));
-                    if (tn.Noi.Count > 0)
-                        phan.Add($"nối {tn.Noi.Count} toa " + (tn.ViTriNoi == ViTriNhom.Dau ? "ngay sau đầu máy" : "vào cuối đoàn"));
-                    dong.Add($"{ga.MaGaCode} (đỗ {ga.SoPhutDo}'): {string.Join(", ", phan)}");
-
-                    if (!ga.DuThoiGianCatNoi)
-                        loi.Add($"{ga.TenGa} chỉ đỗ {ga.SoPhutDo} phút, cần ít nhất {phutToiThieu} phút để dồn toa, nối ống gió và thử hãm.");
-                    if (tn.ViTriCat == ViTriNhom.Sai)
-                        loi.Add($"Tại {ga.MaGaCode}: toa cắt ({DanhSachSoHieu(tn.Cat)}) phải liền khối ở cuối đoàn hoặc ngay sau đầu máy.");
-                    if (tn.ViTriNoi == ViTriNhom.Sai)
-                        loi.Add($"Tại {ga.MaGaCode}: toa nối ({DanhSachSoHieu(tn.Noi)}) phải xếp liền khối ở cuối đoàn hoặc ngay sau đầu máy, không chen giữa đoàn.");
-                }
-
-                ds.Add(loi.Count > 0
-                    ? HangMucAnToanHienThi.Loi(tenCatNoi, string.Join("\n", loi))
-                    : HangMucAnToanHienThi.Dat(tenCatNoi,
-                        $"{string.Join(" · ", dong)}. Toa nối dọc đường cần khám xe, thử hãm tại ga nối."));
-            }
-
-            return ds;
-        }
-
-        // Toa hang phai lien khoi o dau hoac cuoi doan, khong xen giua toa khach
-        private static (bool Dat, string MoTa) KiemTraToaHang(List<ToaLapTau> doan)
-        {
-            int n = doan.Count;
-            var viTriHang = Enumerable.Range(0, n).Where(i => doan[i].LaToaHang).ToList();
-
-            if (viTriHang.Count == 0) return (true, "Đoàn tàu chỉ gồm toa khách.");
-            if (viTriHang.Count == n) return (true, "Đoàn tàu hàng thuần, không có toa khách.");
-
-            bool lienKhoi = viTriHang[^1] - viTriHang[0] + 1 == viTriHang.Count;
-            bool oDauHoacCuoi = viTriHang[0] == 0 || viTriHang[^1] == n - 1;
-
-            if (lienKhoi && oDauHoacCuoi)
-            {
-                string noi = viTriHang[0] == 0 ? "ngay sau đầu máy" : "ở cuối đoàn";
-                return (true, $"Toa hàng xếp liền khối {noi}, không xen giữa toa khách.");
-            }
-
-            var toaXen = viTriHang
-                .Where(i => Enumerable.Range(0, i).Any(j => !doan[j].LaToaHang) &&
-                            Enumerable.Range(i + 1, n - i - 1).Any(j => !doan[j].LaToaHang))
-                .Select(i => doan[i].SoHieu)
-                .ToList();
-
-            string moTa = toaXen.Count > 0
-                ? $"Toa hàng {string.Join(", ", toaXen)} đang xen giữa các toa khách."
-                : "Toa hàng đang bị tách thành nhiều cụm.";
-            return (false, $"{moTa} Cần dồn toa hàng thành một khối ở đầu hoặc cuối đoàn.");
         }
 
         private void CapNhatKetLuan(List<HangMucAnToanHienThi> hangMuc)
@@ -1182,8 +956,6 @@ namespace GUI.Views.Dialogs
 
         private void BtnXacNhan_Click(object sender, RoutedEventArgs e)
         {
-            var dm = cboDauMay.SelectedItem as DauMayLapTau;
-
             if (_doanTau.Count == 0)
             {
                 ThongBaoDialog.CanhBao("Đoàn tàu chưa có toa nào. Hãy kéo toa từ bãi vào đoàn trước khi xác nhận.",
@@ -1191,46 +963,37 @@ namespace GUI.Views.Dialogs
                 return;
             }
 
-            var cacChang = TinhCacChang(dm);
-            var tacNghiep = TinhTacNghiep();
-            var hangMuc = KiemTraAnToan(dm, cacChang, tacNghiep);
-            var loi = hangMuc.Where(h => h.MucDo == "LOI").ToList();
-
+            var kq = KiemTraHienTai();
+            var loi = kq.HangMuc.Where(h => h.MucDo == MucDoKiemTra.Loi).ToList();
             if (loi.Count > 0)
             {
                 ThongBaoDialog.CanhBao(
                     $"Chưa thể xác nhận lập tàu vì còn {loi.Count} hạng mục không đạt:\n\n" +
-                    string.Join("\n", loi.Select(h => $"• {h.TenHangMuc}")) +
+                    string.Join("\n", loi.Select(h => $"• {h.Ten}")) +
                     "\n\nHãy điều chỉnh đoàn tàu theo gợi ý ở bảng kiểm tra an toàn.",
                     "Đoàn tàu chưa đạt", this);
                 return;
             }
 
-            var changDai = cacChang.MaxBy(c => c.ChieuDai)!;
-            var changNang = cacChang.MaxBy(c => c.TrongLuong)!;
-
-            KetQua = new KetQuaLapTau
+            // Ghi CSDL: Service kiem lai toan bo trong giao dich (nguoi khac vua sua, chuyen vua chay...)
+            (KetQuaLuuLapTauDTO? KetQua, string? Loi) ketQuaLuu;
+            Mouse.OverrideCursor = Cursors.Wait;
+            try
             {
-                DauMay = dm,
-                DanhSachToa = _doanTau.ToList(),
-                SoToaLonNhat = cacChang.Max(c => c.Toa.Count),
-                TongChieuDaiM = changDai.ChieuDai,
-                TongTrongLuongTan = changNang.TrongLuong,
-                TongSucChua = cacChang.Max(c => c.SucChua),
-                ChangDaiNhat = TenChang(changDai),
-                ChangNangNhat = TenChang(changNang),
-                CacChang = cacChang.Select(c => new ChangThanhPhan
-                {
-                    TuGa = CoHanhTrinh ? _hanhTrinh[c.TuViTri].MaGaCode : "",
-                    DenGa = CoHanhTrinh ? _hanhTrinh[c.DenViTri].MaGaCode : "",
-                    SoToa = c.Toa.Count,
-                    ChieuDaiM = c.ChieuDai,
-                    TrongLuongTan = c.TrongLuong,
-                    SucChua = c.SucChua
-                }).ToList(),
-                MoTaCatNoi = MoTaCatNoi(tacNghiep),
-                HangMuc = hangMuc
-            };
+                ketQuaLuu = _dauVao.Luu(TaoPhuongAn());
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
+
+            if (ketQuaLuu.Loi != null)
+            {
+                ThongBaoDialog.CanhBao(ketQuaLuu.Loi, "Chưa lưu được phương án lập tàu", this);
+                return;
+            }
+
+            KetQua = ketQuaLuu.KetQua;
             DialogResult = true;
         }
 

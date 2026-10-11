@@ -1,46 +1,48 @@
 ﻿using GUI.ViewModels.KyThuat;
 using GUI.Helpers;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using BUS.Services;
 using DTO.Common;
+using DTO.PhuongTien;
 
 namespace GUI.Views.Dialogs
 {
     // =========================================================================
-    // DIALOG THEM MOI / CAP NHAT HO SO DAU MAY
+    // DIALOG THEM MOI / CAP NHAT HO SO DAU MAY (phuongtien.DauMay)
     //
-    // Giai doan dung giao dien: dialog chi kiem tra du lieu nhap va tra ve
-    // doi tuong DauMayHienThi, trang goi se tu cap nhat danh sach tren man hinh.
-    // Rang buoc kiem tra bam theo phuongtien.DauMay trong script CSDL.
+    // - Kiem tra nhap lieu bang CUNG ham voi Service (PhuongTienService.KiemTraDauMay)
+    //   de bao loi ngay canh tung o.
+    // - Bam Luu: goi ham luu cua trang (PhuongTienService.ThemDauMay / CapNhatDauMay).
+    //   Service tu choi (trung so hieu, luat trang thai, nguoi khac vua sua...) thi hien
+    //   ly do va GIU NGUYEN dialog de nguoi dung sua tiep.
+    // - Khi sua: khoa so hieu va dong may (Service cung chan).
     // =========================================================================
     public partial class DauMayDialog : Window
     {
-        private static readonly Regex MauSoHieu = new(@"^[A-Z0-9]+-[0-9]+$");
-
         private readonly DauMayHienThi? _banGoc;          // null = them moi
-        private readonly HashSet<string> _soHieuDaCo;     // de bao trung khoa UNIQUE SoHieuDauMay
+        private readonly Func<DauMayHienThi, string?> _luu;
         private readonly bool _dangKhoiTao;
 
         public DauMayHienThi? KetQua { get; private set; }
 
-        public DauMayDialog(DauMayHienThi? banGoc, IEnumerable<string> soHieuDaCo, IEnumerable<string> danhSachXiNghiep)
+        // luu: ghi vao CSDL, tra ve null neu thanh cong, nguoc lai la thong diep loi
+        public DauMayDialog(DauMayHienThi? banGoc, IReadOnlyList<DongDauMayMau> dongDauMay,
+                            IEnumerable<string> danhSachXiNghiep, Func<DauMayHienThi, string?> luu)
         {
             _dangKhoiTao = true;
             InitializeComponent();
 
             _banGoc = banGoc;
-            _soHieuDaCo = new HashSet<string>(soHieuDaCo, StringComparer.OrdinalIgnoreCase);
+            _luu = luu;
 
-            SmartNumberFormatHelper.AttachIntegerSmall(txtNamSanXuat, 1970, DateTime.Now.Year);
+            SmartNumberFormatHelper.AttachIntegerSmall(txtNamSanXuat, PhuongTienService.NamSanXuatNhoNhat, DateTime.Now.Year);
             SmartNumberFormatHelper.AttachIntegerThousandSeparated(txtSoKm, 0, 99_999_999);
 
-            cboDongMay.ItemsSource = DanhMucMauPhuongTien.DongDauMay;
+            cboDongMay.ItemsSource = dongDauMay;
             cboXiNghiep.ItemsSource = danhSachXiNghiep
-                .Concat(DanhMucMauPhuongTien.XiNghiepDauMay)
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .Distinct()
                 .OrderBy(x => x)
@@ -49,7 +51,7 @@ namespace GUI.Views.Dialogs
             if (banGoc == null)
                 KhoiTaoThemMoi();
             else
-                KhoiTaoCapNhat(banGoc);
+                KhoiTaoCapNhat(banGoc, dongDauMay);
 
             _dangKhoiTao = false;
             CapNhatXemTruoc();
@@ -68,28 +70,29 @@ namespace GUI.Views.Dialogs
             txtTieuDePhu.Text = "Khai báo hồ sơ đầu máy mới vào đội phương tiện";
             txtNutLuu.Text = "Thêm Đầu Máy";
 
-            cboDongMay.SelectedIndex = 0;
+            cboDongMay.SelectedIndex = cboDongMay.Items.Count > 0 ? 0 : -1;
             cboXiNghiep.SelectedIndex = cboXiNghiep.Items.Count > 0 ? 0 : -1;
             txtNamSanXuat.Text = DateTime.Now.Year.ToString();
             txtSoKm.Text = "0";
             rdoSanSang.IsChecked = true;
 
             // Goi y san tien to theo dong may de nguoi dung chi can go phan so
-            txtSoHieu.Text = $"{DanhMucMauPhuongTien.DongDauMay[0].MaDongCode}-";
+            if (cboDongMay.SelectedItem is DongDauMayMau dong) txtSoHieu.Text = $"{dong.MaDongCode}-";
         }
 
-        private void KhoiTaoCapNhat(DauMayHienThi dm)
+        private void KhoiTaoCapNhat(DauMayHienThi dm, IReadOnlyList<DongDauMayMau> dongDauMay)
         {
             txtTieuDe.Text = $"CẬP NHẬT HỒ SƠ ĐẦU MÁY — {dm.SoHieuDauMay}";
-            txtTieuDePhu.Text = "Số hiệu là khóa định danh nên không sửa sau khi đã tạo";
+            txtTieuDePhu.Text = "Số hiệu và dòng máy là định danh nên không sửa sau khi đã tạo";
             txtNutLuu.Text = "Lưu Thay Đổi";
 
             txtSoHieu.Text = dm.SoHieuDauMay;
-            txtSoHieu.IsReadOnly = true;
-            txtSoHieu.Background = (Brush)new BrushConverter().ConvertFrom("#F1F5F9")!;
-            txtSoHieu.Foreground = (Brush)new BrushConverter().ConvertFrom("#475569")!;
+            KhoaO(txtSoHieu);
 
-            cboDongMay.SelectedItem = DanhMucMauPhuongTien.TimDongDauMay(dm.MaDongCode) ?? DanhMucMauPhuongTien.DongDauMay[0];
+            cboDongMay.SelectedItem = dongDauMay.FirstOrDefault(d => d.MaDongDauMay == dm.MaDongDauMay);
+            cboDongMay.IsEnabled = false;
+            cboDongMay.ToolTip = "Không đổi dòng máy của đầu máy đã có (tiền tố số hiệu, bằng lái của kíp đều theo dòng máy).";
+
             cboXiNghiep.Text = dm.DonViQuanLy;
             txtNamSanXuat.Text = dm.NamSanXuat > 0 ? dm.NamSanXuat.ToString() : DateTime.Now.Year.ToString();
             txtSoKm.Text = dm.SoKmTichLuy.ToString("N0", FormatHelper.TechnicalCulture);
@@ -100,6 +103,13 @@ namespace GUI.Views.Dialogs
                 case "BAO_DUONG": rdoBaoDuong.IsChecked = true; break;
                 default: rdoSanSang.IsChecked = true; break;
             }
+        }
+
+        private static void KhoaO(TextBox o)
+        {
+            o.IsReadOnly = true;
+            o.Background = (Brush)new BrushConverter().ConvertFrom("#F1F5F9")!;
+            o.Foreground = (Brush)new BrushConverter().ConvertFrom("#475569")!;
         }
 
         // =====================================================================
@@ -159,40 +169,41 @@ namespace GUI.Views.Dialogs
                 ThemDongThongSo("Chiều dài", $"{dong.ChieuDaiM:N1} m", laDongCuoi: true);
             }
 
-            // --- Tien do bao duong ---
+            // --- Tien do bao duong: chu ky tu lan bao duong gan nhat (dau may moi: tu 0 km) ---
             decimal soKm = LaySoKm();
-            var (cap, moc, tyLe, mucCanhBao) = PhuongTienService.TinhTienDoBaoDuong(soKm);
-            var mau = (SolidColorBrush)new BrushConverter().ConvertFrom(DauMayHienThi.LayMauTheoMucCanhBao(mucCanhBao))!;
+            var tienDo = PhuongTienService.TinhTienDoBaoDuong(soKm, _banGoc?.KmBaoDuongR1GanNhat, _banGoc?.KmBaoDuongR2GanNhat);
+            var mau = (SolidColorBrush)new BrushConverter().ConvertFrom(DauMayHienThi.LayMauTheoMucCanhBao(tienDo.MucCanhBao))!;
 
-            txtCapKeTiep.Text = $"Cấp kế tiếp: {cap} · mốc {moc:N0} km";
-            txtTyLeBaoDuong.Text = $"{tyLe:N1}%";
+            double phanTram = Math.Min(100.0, (double)tienDo.TyLePhanTram);
+            txtCapKeTiep.Text = $"Cấp cần chú ý: {tienDo.Cap} · mốc {tienDo.MocKm:N0} km";
+            txtTyLeBaoDuong.Text = $"{tienDo.TyLePhanTram:N1}%";
             txtTyLeBaoDuong.Foreground = mau;
             bdVachBaoDuong.Background = mau;
-            colDaChay.Width = new GridLength((double)tyLe, GridUnitType.Star);
-            colConLai.Width = new GridLength(100 - (double)tyLe, GridUnitType.Star);
+            colDaChay.Width = new GridLength(phanTram, GridUnitType.Star);
+            colConLai.Width = new GridLength(100 - phanTram, GridUnitType.Star);
 
-            decimal conLai = moc - soKm;
-            txtMoTaBaoDuong.Text = mucCanhBao switch
+            string tuLan = tienDo.CoLichSu ? "kể từ lần bảo dưỡng gần nhất" : "chưa có lịch sử bảo dưỡng, tính từ 0 km";
+            txtMoTaBaoDuong.Text = tienDo.MucCanhBao switch
             {
-                "QUA_HAN" => "Đã vượt mốc đại tu Ro (300,000 km).",
-                "KHAN_CAP" => $"Khẩn cấp: chỉ còn {conLai:N0} km tới mốc {cap}.",
-                "CANH_BAO" => $"Cảnh báo: còn {conLai:N0} km tới mốc {cap}.",
-                _ => $"Bình thường: còn {conLai:N0} km tới mốc {cap}."
+                "QUA_HAN" => $"Quá hạn {tienDo.Cap}: {tienDo.MoTaConLai} ({tuLan}).",
+                "SAP_TOI" => $"Sắp tới hạn {tienDo.Cap}: {tienDo.MoTaConLai} ({tuLan}).",
+                _ => $"Bình thường: {tienDo.MoTaConLai} tới mốc {tienDo.Cap} ({tuLan})."
             };
 
             // --- Tuoi khai thac ---
-            txtTuoiKhaiThac.Text = int.TryParse(txtNamSanXuat.Text, out int nam) && nam >= 1970 && nam <= DateTime.Now.Year
+            txtTuoiKhaiThac.Text = int.TryParse(txtNamSanXuat.Text, out int nam) &&
+                                   nam >= PhuongTienService.NamSanXuatNhoNhat && nam <= DateTime.Now.Year
                 ? $"{DateTime.Now.Year - nam} năm"
                 : "—";
 
-            // --- Goi y chuyen trang thai khi sat / qua moc bao duong ---
-            bool canDuaVaoXuong = mucCanhBao is "QUA_HAN" or "KHAN_CAP";
+            // --- Goi y chuyen trang thai khi sat / qua han bao duong ---
+            bool canDuaVaoXuong = tienDo.MucCanhBao is "QUA_HAN" or "SAP_TOI";
             if (canDuaVaoXuong && rdoBaoDuong.IsChecked != true)
             {
                 bdGoiYTrangThai.Visibility = Visibility.Visible;
-                txtGoiYTrangThai.Text = mucCanhBao == "QUA_HAN"
-                    ? "Đầu máy đã vượt mốc đại tu. Nên chuyển sang trạng thái Bảo dưỡng trước khi vận dụng."
-                    : $"Đầu máy sắp tới mốc bảo dưỡng {cap}. Cân nhắc đưa vào xưởng.";
+                txtGoiYTrangThai.Text = tienDo.MucCanhBao == "QUA_HAN"
+                    ? $"Đầu máy đã quá hạn bảo dưỡng {tienDo.Cap}. Nên chuyển sang trạng thái Bảo dưỡng trước khi vận dụng."
+                    : $"Đầu máy sắp tới hạn bảo dưỡng {tienDo.Cap}. Cân nhắc đưa vào xưởng.";
             }
             else
             {
@@ -235,82 +246,78 @@ namespace GUI.Views.Dialogs
 
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
-            if (!KiemTraHopLe(out var dong, out string soHieu, out string xiNghiep, out int nam, out decimal soKm))
-                return;
+            var dong = cboDongMay.SelectedItem as DongDauMayMau;
+            bool namHopLe = int.TryParse(txtNamSanXuat.Text.Trim(), out int nam);
 
             var kq = _banGoc?.SaoChep() ?? new DauMayHienThi();
-
-            kq.SoHieuDauMay = soHieu;
-            kq.MaDongCode = dong.MaDongCode;
-            kq.NhaSanXuat = dong.NhaSanXuat;
-            kq.CongSuatHP = dong.CongSuatHP;
-            kq.TocDoToiDaKmh = dong.TocDoToiDaKmh;
-            kq.SucKeoToiDaTan = dong.SucKeoToiDaTan;
-            kq.DungTichBonDauLit = dong.DungTichBonDauLit;
-            kq.TrongLuongTan = dong.TrongLuongTan;
-            kq.ChieuDaiM = dong.ChieuDaiM;
-            kq.DonViQuanLy = xiNghiep;
-            kq.NamSanXuat = nam;
-            kq.TuoiKhaiThac = DateTime.Now.Year - nam;
-            kq.SoKmTichLuy = soKm;
+            kq.SoHieuDauMay = _banGoc?.SoHieuDauMay ?? txtSoHieu.Text.Trim().ToUpperInvariant();
+            kq.DonViQuanLy = cboXiNghiep.Text.Trim();
+            kq.NamSanXuat = namHopLe ? nam : 0;
+            kq.SoKmTichLuy = LaySoKm();
             kq.TrangThai = rdoDangChay.IsChecked == true ? "DANG_CHAY"
                          : rdoBaoDuong.IsChecked == true ? "BAO_DUONG"
                          : "SAN_SANG";
-            kq.TinhLaiTienDoBaoDuong();
+            if (dong != null)
+            {
+                kq.MaDongDauMay = dong.MaDongDauMay;
+                kq.MaDongCode = dong.MaDongCode;
+                kq.NhaSanXuat = dong.NhaSanXuat;
+                kq.CongSuatHP = dong.CongSuatHP;
+                kq.TocDoToiDaKmh = dong.TocDoToiDaKmh;
+                kq.SucKeoToiDaTan = dong.SucKeoToiDaTan;
+                kq.DungTichBonDauLit = dong.DungTichBonDauLit;
+                kq.TrongLuongTan = dong.TrongLuongTan;
+                kq.ChieuDaiM = dong.ChieuDaiM;
+            }
 
+            // Cung bo kiem tra voi Service: bao loi canh tung o
+            var dsLoi = PhuongTienService.KiemTraDauMay(kq.ToET(), dong?.MaDongCode, laThemMoi: _banGoc == null);
+            if (!namHopLe)
+                dsLoi.Insert(0, new LoiNhapLieuDTO("NamSanXuat", $"Năm sản xuất phải từ {PhuongTienService.NamSanXuatNhoNhat} đến {DateTime.Now.Year}."));
+            if (HienLoi(dsLoi)) return;
+
+            string? loi = _luu(kq);
+            if (loi != null)
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa lưu được hồ sơ đầu máy", this);
+                return;
+            }
+
+            kq.TuoiKhaiThac = DateTime.Now.Year - kq.NamSanXuat;
+            kq.TinhLaiTienDoBaoDuong();
             KetQua = kq;
             DialogResult = true;
         }
 
-        private bool KiemTraHopLe(out DongDauMayMau dong, out string soHieu, out string xiNghiep, out int nam, out decimal soKm)
+        // Hien loi canh tung o; tra ve true neu co loi
+        private bool HienLoi(List<LoiNhapLieuDTO> dsLoi)
         {
-            bool hopLe = true;
+            txtLoiSoHieu.Text = txtLoiDongMay.Text = txtLoiXiNghiep.Text = txtLoiNamSanXuat.Text = txtLoiSoKm.Text = "";
             Control? oLoiDauTien = null;
 
-            void BaoLoi(TextBlock tbLoi, string thongDiep, Control o)
+            foreach (var l in dsLoi)
             {
-                tbLoi.Text = thongDiep;
-                hopLe = false;
+                (TextBlock? tb, Control? o) = l.Truong switch
+                {
+                    "SoHieu" => (txtLoiSoHieu, (Control)txtSoHieu),
+                    "DongMay" => (txtLoiDongMay, cboDongMay),
+                    "XiNghiep" => (txtLoiXiNghiep, cboXiNghiep),
+                    "NamSanXuat" => (txtLoiNamSanXuat, txtNamSanXuat),
+                    "SoKm" => (txtLoiSoKm, txtSoKm),
+                    _ => ((TextBlock?)null, (Control?)null)
+                };
+
+                if (tb == null)
+                {
+                    ThongBaoDialog.CanhBao(l.ThongDiep, "Dữ liệu chưa hợp lệ", this);
+                    return true;
+                }
+                if (tb.Text.Length == 0) tb.Text = l.ThongDiep;
                 oLoiDauTien ??= o;
             }
 
-            // So hieu (UNIQUE, VARCHAR(20))
-            soHieu = txtSoHieu.Text.Trim().ToUpperInvariant();
-            if (_banGoc == null)
-            {
-                if (soHieu.Length == 0 || soHieu.EndsWith("-"))
-                    BaoLoi(txtLoiSoHieu, "Vui lòng nhập đầy đủ số hiệu đầu máy.", txtSoHieu);
-                else if (!MauSoHieu.IsMatch(soHieu))
-                    BaoLoi(txtLoiSoHieu, "Số hiệu phải có dạng DÒNG-SỐ, ví dụ D19E-904.", txtSoHieu);
-                else if (_soHieuDaCo.Contains(soHieu))
-                    BaoLoi(txtLoiSoHieu, $"Số hiệu {soHieu} đã tồn tại (trùng khóa UNIQUE SoHieuDauMay).", txtSoHieu);
-            }
-
-            // Dong dau may (khoa ngoai MaDongDauMay)
-            dong = (cboDongMay.SelectedItem as DongDauMayMau)!;
-            if (dong == null)
-                BaoLoi(txtLoiDongMay, "Vui lòng chọn dòng đầu máy.", cboDongMay);
-
-            // Xi nghiep (NVARCHAR(50) NOT NULL)
-            xiNghiep = cboXiNghiep.Text.Trim();
-            if (xiNghiep.Length == 0)
-                BaoLoi(txtLoiXiNghiep, "Vui lòng chọn hoặc nhập xí nghiệp quản lý.", cboXiNghiep);
-            else if (xiNghiep.Length > 50)
-                BaoLoi(txtLoiXiNghiep, $"Tên xí nghiệp tối đa 50 ký tự (đang có {xiNghiep.Length}).", cboXiNghiep);
-            else
-                txtLoiXiNghiep.Text = "";
-
-            // Nam san xuat (CHECK NamSanXuat >= 1970)
-            if (!int.TryParse(txtNamSanXuat.Text.Trim(), out nam) || nam < 1970 || nam > DateTime.Now.Year)
-                BaoLoi(txtLoiNamSanXuat, $"Năm sản xuất phải từ 1970 đến {DateTime.Now.Year}.", txtNamSanXuat);
-
-            // So km (DECIMAL(9,1), >= 0)
-            soKm = LaySoKm();
-            if (soKm < 0 || soKm > 99_999_999m)
-                BaoLoi(txtLoiSoKm, "Số km không hợp lệ.", txtSoKm);
-
-            if (!hopLe) oLoiDauTien?.Focus();
-            return hopLe;
+            oLoiDauTien?.Focus();
+            return dsLoi.Count > 0;
         }
 
         private void BtnHuy_Click(object sender, RoutedEventArgs e)

@@ -1,13 +1,16 @@
 ﻿using GUI.Helpers;
+using BUS.Services;
+using DTO.PhuongTien;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace GUI.ViewModels.KyThuat
 {
     // =========================================================================
-    // Cac lop phuc vu man hinh MO PHONG LAP TAU KEO - THA.
-    // Chi ton tai tren giao dien, tuong ung vanhanh.DoanTau + vanhanh.ChiTietDoanTau
-    // khi noi CSDL that.
+    // Cac lop HIEN THI cua man hinh LAP TAU KEO - THA.
+    // Du lieu lay tu LapTauService.LayBoiCanh (vanhanh.DoanTau + ChiTietDoanTau,
+    // LichDungGa, DauMay, ToaXe). Moi luat an toan nam o BUS.Services.QuyTacLapTau;
+    // cac lop nay chi giu trang thai keo - tha va thuoc tinh de binding.
     // =========================================================================
 
     // -------------------------------------------------------------------------
@@ -15,6 +18,7 @@ namespace GUI.ViewModels.KyThuat
     // -------------------------------------------------------------------------
     public class ToaLapTau : INotifyPropertyChanged
     {
+        public int MaToaXe { get; set; }
         public string SoHieu { get; set; } = "";
         public string LoaiCode { get; set; } = "";
         public string TenLoai { get; set; } = "";
@@ -29,9 +33,6 @@ namespace GUI.ViewModels.KyThuat
         public string MauVien { get; set; } = "#CBD5E1";
         public string MauChu { get; set; } = "#475569";
 
-        // Toa lay tu danh muc mau (khong co trong CSDL)
-        public bool LaDuLieuMau { get; set; }
-
         // Dong ghi chu nguon goc hien o cuoi tooltip
         public string GhiChu { get; set; } = "";
 
@@ -44,9 +45,9 @@ namespace GUI.ViewModels.KyThuat
 
         public decimal TongTrongLuongTan => TuTrongTan + TaiTrongTan;
 
-        public decimal TaiTrongTrucTan => SoTruc > 0 ? Math.Round(TongTrongLuongTan / SoTruc, 2) : 0m;
+        public decimal TaiTrongTrucTan => PhuongTienService.TinhTaiTrongTruc(TuTrongTan, TaiTrongTan, SoTruc);
 
-        public bool VuotTaiTrongTruc => TaiTrongTrucTan > DanhMucMauPhuongTien.TaiTrongTrucToiDaTan;
+        public bool VuotTaiTrongTruc => TaiTrongTrucTan > QuyTacLapTau.TaiTrongTrucToiDaTan;
 
         public string MoTaNgan => $"{ChieuDaiM:N1} m · {TongTrongLuongTan:N1} t";
 
@@ -57,14 +58,13 @@ namespace GUI.ViewModels.KyThuat
             $"Chiều dài: {ChieuDaiM:N1} m · {SoTruc} trục\n" +
             $"Tự trọng {TuTrongTan:N1} t + tải trọng {TaiTrongTan:N1} t = {TongTrongLuongTan:N1} t\n" +
             $"Tải trọng trục: {TaiTrongTrucTan:N2} t/trục" +
-            (VuotTaiTrongTruc ? $" (vượt ngưỡng {DanhMucMauPhuongTien.TaiTrongTrucToiDaTan:N1} t)" : "") +
-            (LaToaHang ? "" : $"\nSức chứa: {SucChua} chỗ") +
+            (VuotTaiTrongTruc ? $" (vượt ngưỡng {QuyTacLapTau.TaiTrongTrucToiDaTan:N1} t)" : "") +
+            (LaToaHang ? "" : $"\nSức chứa tham khảo: {SucChua} chỗ") +
             (CoPhamViRieng ? $"\nChạy từ {GaNoiCode} đến {GaCatCode} (cắt / nối dọc đường)" : "") +
             (GhiChu.Length > 0 ? $"\n{GhiChu}" : "");
 
         // ---------------------------------------------------------------------
-        // Pham vi chay tren hanh trinh (cat / noi toa doc duong).
-        // De xuat 2 cot NULL cho vanhanh.ChiTietDoanTau: MaGaNoi, MaGaCat.
+        // Pham vi chay tren hanh trinh (vanhanh.ChiTietDoanTau.MaGaNoi / MaGaCat).
         // null = noi tu ga dau / chay toi ga cuoi cua chuyen (chay suot).
         // GaNoiCode / GaCatCode chi de hien thi (ma ga, ke ca khi chay suot).
         // ---------------------------------------------------------------------
@@ -141,70 +141,25 @@ namespace GUI.ViewModels.KyThuat
             return ban;
         }
 
-        // Tao tu dong doi toa xe (phuongtien.ToaXe)
-        public static ToaLapTau TuToaXe(ToaXeHienThi tx)
+        // Tao tu toa xe trong doi (phuongtien.ToaXe + ChungLoaiToa)
+        public static ToaLapTau TuToaXe(ToaXeLapTauDTO tx)
         {
             var cl = DanhMucMauPhuongTien.TimChungLoai(tx.MaChungLoaiCode);
             return new ToaLapTau
             {
+                MaToaXe = tx.MaToaXe,
                 SoHieu = tx.SoHieuToaXe,
                 LoaiCode = tx.MaChungLoaiCode,
                 TenLoai = string.IsNullOrWhiteSpace(tx.TenMoTa) ? cl.TenMoTa : tx.TenMoTa,
-                ChieuDaiM = tx.ChieuDaiChuanM > 0 ? tx.ChieuDaiChuanM : cl.ChieuDaiChuanM,
-                SoTruc = tx.SoTruc > 0 ? tx.SoTruc : cl.SoTruc,
+                ChieuDaiM = tx.ChieuDaiM,
+                SoTruc = tx.SoTruc,
                 TuTrongTan = tx.TuTrongTan,
                 TaiTrongTan = tx.TaiTrongToiDaTan,
                 SucChua = cl.SucChuaThamKhao,
-                LaToaHang = cl.LaToaHang,
+                LaToaHang = QuyTacLapTau.LaToaHang(tx.MaChungLoaiCode),
                 MauNen = cl.MauNen,
                 MauVien = cl.MauVien,
                 MauChu = cl.MauChu
-            };
-        }
-
-        // Tao tu dong bien che toa khach cua chuyen (vantai.ToaXeKhach).
-        // Bang nay khong co tu trong/tai trong nen lay gia tri tham khao theo chung loai.
-        // Nhan "Toa 1 (AN)" se sai khi doi thu tu, nen dat so hieu theo ma bien che: AN-K01.
-        public static ToaLapTau TuBienChe(ToaBienCheHienThi b)
-        {
-            var cl = DanhMucMauPhuongTien.TimChungLoai(b.LoaiToa);
-            return new ToaLapTau
-            {
-                SoHieu = b.MaToaXeKhach > 0 ? $"{b.LoaiToa}-K{b.MaToaXeKhach:00}" : b.NhanHieuToa,
-                GhiChu = $"Biên chế hiện tại của chuyến: {b.NhanHieuToa}",
-                LoaiCode = b.LoaiToa,
-                TenLoai = cl.TenMoTa,
-                ChieuDaiM = b.ChieuDaiToaM > 0 ? b.ChieuDaiToaM : cl.ChieuDaiChuanM,
-                SoTruc = cl.SoTruc,
-                TuTrongTan = cl.TuTrongMacDinhTan,
-                TaiTrongTan = cl.TaiTrongMacDinhTan,
-                SucChua = b.SucChua > 0 ? b.SucChua : cl.SucChuaThamKhao,
-                LaToaHang = cl.LaToaHang,
-                MauNen = cl.MauNen,
-                MauVien = cl.MauVien,
-                MauChu = cl.MauChu
-            };
-        }
-
-        // Tao tu danh muc mau
-        public static ToaLapTau TuMau(string soHieu, string maCode)
-        {
-            var cl = DanhMucMauPhuongTien.TimChungLoai(maCode);
-            return new ToaLapTau
-            {
-                SoHieu = soHieu,
-                LoaiCode = cl.MaChungLoaiCode,
-                TenLoai = cl.TenMoTa,
-                ChieuDaiM = cl.ChieuDaiChuanM,
-                SoTruc = cl.SoTruc,
-                TuTrongTan = cl.TuTrongMacDinhTan,
-                TaiTrongTan = cl.TaiTrongMacDinhTan,
-                SucChua = cl.SucChuaThamKhao,
-                LaToaHang = cl.LaToaHang,
-                MauNen = cl.MauNen,
-                MauVien = cl.MauVien,
-                MauChu = cl.MauChu,
-                LaDuLieuMau = true
             };
         }
 
@@ -215,10 +170,11 @@ namespace GUI.ViewModels.KyThuat
     }
 
     // -------------------------------------------------------------------------
-    // Dau may co the chon lam may keo chinh
+    // Dau may co the chon lam may keo chinh / may day
     // -------------------------------------------------------------------------
     public class DauMayLapTau
     {
+        public int MaDauMay { get; set; }
         public string SoHieu { get; set; } = "";
         public string MaDongCode { get; set; } = "";
         public string DonViQuanLy { get; set; } = "";
@@ -226,6 +182,11 @@ namespace GUI.ViewModels.KyThuat
         public decimal SucKeoTan { get; set; }
         public decimal ChieuDaiM { get; set; }
         public decimal TrongLuongTan { get; set; }
+
+        // "bận SE1" khi dau may thuoc chuyen khac chong khung gio chuyen dang lap
+        public string GhiChuBan { get; set; } = "";
+
+        public bool LaKhongDung => MaDauMay == 0;
 
         public string NhanTrangThai => TrangThai switch
         {
@@ -235,19 +196,37 @@ namespace GUI.ViewModels.KyThuat
             _ => TrangThai
         };
 
-        // So hieu da chua ma dong (D19E-901) nen khong lap lai ma dong cho gon
-        public string NhanHienThi => $"{SoHieu}  ·  kéo {SucKeoTan:N0} tấn  ·  {NhanTrangThai}";
+        // So hieu da chua ma dong (D19E-901) nen khong lap lai ma dong cho gon.
+        // Viet ngan de o chon tren thanh cong cu (rong 245) van thay "bận SE1".
+        public string NhanHienThi => LaKhongDung
+            ? "— Không dùng máy đẩy —"
+            : $"{SoHieu} · {SucKeoTan:N0} t · {(GhiChuBan.Length > 0 ? GhiChuBan : NhanTrangThai)}";
 
-        public static DauMayLapTau TuDauMay(DauMayHienThi dm) => new()
+        // Muc dau tien cua o chon may day
+        public static DauMayLapTau KhongDung() => new() { MaDauMay = 0 };
+
+        public static DauMayLapTau TuDTO(DauMayLapTauDTO dm, BoiCanhLapTauDTO bc)
         {
-            SoHieu = dm.SoHieuDauMay,
-            MaDongCode = dm.MaDongCode,
-            DonViQuanLy = dm.DonViQuanLy,
-            TrangThai = dm.TrangThai,
-            SucKeoTan = dm.SucKeoToiDaTan,
-            ChieuDaiM = dm.ChieuDaiM,
-            TrongLuongTan = dm.TrongLuongTan
-        };
+            var ban = dm.ChuyenKhac
+                .Where(c => QuyTacLapTau.ChuyenConHieuLuc(c.TrangThai) &&
+                            QuyTacLapTau.ChongGio(c.GioXuatPhatKH, c.GioVeDichKH, bc.GioXuatPhatKH, bc.GioVeDichKH))
+                .Select(c => c.SoHieuMacTau)
+                .Distinct()
+                .ToList();
+
+            return new DauMayLapTau
+            {
+                MaDauMay = dm.MaDauMay,
+                SoHieu = dm.SoHieuDauMay,
+                MaDongCode = dm.MaDongCode,
+                DonViQuanLy = dm.DonViQuanLy,
+                TrangThai = dm.TrangThai,
+                SucKeoTan = dm.SucKeoToiDaTan,
+                ChieuDaiM = dm.ChieuDaiM,
+                TrongLuongTan = dm.TrongLuongTan,
+                GhiChuBan = ban.Count > 0 ? $"bận {string.Join(", ", ban)}" : ""
+            };
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -267,9 +246,13 @@ namespace GUI.ViewModels.KyThuat
         public bool LaGaDau { get; init; }
         public bool LaGaCuoi { get; init; }
 
+        // Gioi han chieu dai doan tau tai ga (duong dieu do gan / duong tranh dai nhat)
+        public decimal GioiHanChieuDaiM { get; init; }
+        public string NguonGioiHan { get; init; } = "";
+
         public int SoPhutDo => (int)Math.Round((GioDiKeHoach - GioDenKeHoach).TotalMinutes);
 
-        public bool DuThoiGianCatNoi => SoPhutDo >= DanhMucMauPhuongTien.SoPhutDoToiThieuCatNoi;
+        public bool DuThoiGianCatNoi => SoPhutDo >= QuyTacLapTau.SoPhutDoToiThieuCatNoi;
 
         public string NhanGio => LaGaDau ? $"đi {GioDiKeHoach:HH:mm}"
                                : LaGaCuoi ? $"đến {GioDenKeHoach:HH:mm}"
@@ -308,23 +291,25 @@ namespace GUI.ViewModels.KyThuat
         private bool _doanSauDangChon;
         public bool DoanSauDangChon { get => _doanSauDangChon; set => Dat(ref _doanSauDangChon, value); }
 
-        // ngayChay: 00:00 ngay tau chay ga dau; phut trong lich mau tinh tu moc nay
-        public static List<DiemDungLapTau> TaoHanhTrinh(LichDungMau lich, DateTime ngayChay)
-        {
-            var ds = lich.DiemDung.OrderBy(d => d.ThuTuDung).ToList();
-            return ds.Select((d, i) => new DiemDungLapTau
+        public static List<DiemDungLapTau> TaoHanhTrinh(IReadOnlyList<DiemDungHanhTrinhDTO> lich)
+            => lich.Select((d, i) =>
             {
-                ViTri = i,
-                MaGa = d.Ga.MaGa,
-                MaGaCode = d.Ga.MaGaCode,
-                TenGa = d.Ga.TenGa,
-                ThuTuDung = d.ThuTuDung,
-                GioDenKeHoach = ngayChay.AddMinutes(d.PhutDen),
-                GioDiKeHoach = ngayChay.AddMinutes(d.PhutDi),
-                LaGaDau = i == 0,
-                LaGaCuoi = i == ds.Count - 1
+                var (gioiHan, nguon) = QuyTacLapTau.GioiHanChieuDaiTaiGa(d);
+                return new DiemDungLapTau
+                {
+                    ViTri = i,
+                    MaGa = d.MaGa,
+                    MaGaCode = d.MaGaCode,
+                    TenGa = d.TenGa,
+                    ThuTuDung = d.ThuTuDung,
+                    GioDenKeHoach = d.GioDenKeHoach,
+                    GioDiKeHoach = d.GioDiKeHoach,
+                    LaGaDau = i == 0,
+                    LaGaCuoi = i == lich.Count - 1,
+                    GioiHanChieuDaiM = gioiHan,
+                    NguonGioiHan = nguon
+                };
             }).ToList();
-        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -340,64 +325,22 @@ namespace GUI.ViewModels.KyThuat
     }
 
     // -------------------------------------------------------------------------
-    // Thanh phan doan tau tren mot chang (cac khu doan lien tiep co cung bo toa)
-    // -------------------------------------------------------------------------
-    public class ChangThanhPhan
-    {
-        public string TuGa { get; init; } = "";     // MaGaCode; rong = khong co lich dung ga
-        public string DenGa { get; init; } = "";
-        public int SoToa { get; init; }
-        public decimal ChieuDaiM { get; init; }
-        public decimal TrongLuongTan { get; init; }
-        public int SucChua { get; init; }
-
-        public string NhanChang => TuGa.Length > 0 ? $"{TuGa} → {DenGa}" : "Toàn hành trình";
-    }
-
-    // -------------------------------------------------------------------------
     // Du lieu dau vao cua dialog lap tau
     // -------------------------------------------------------------------------
     public class ThongTinLapTau
     {
-        public int MaChuyenTau { get; set; }
-        public string TenChuyen { get; set; } = "";
-        public decimal? DuongTranhNganNhatM { get; set; }
-        public string? SoHieuDauMayDangChon { get; set; }
+        public BoiCanhLapTauDTO BoiCanh { get; init; } = null!;
 
         // Cac ga dung theo thu tu; it hon 3 ga (khong co ga trung gian) thi khong cat / noi duoc
-        public List<DiemDungLapTau> HanhTrinh { get; set; } = new();
-        public string GhiChuHanhTrinh { get; set; } = "";
+        public List<DiemDungLapTau> HanhTrinh { get; init; } = new();
+        public string GhiChuHanhTrinh { get; init; } = "";
 
-        public List<DauMayLapTau> DanhSachDauMay { get; set; } = new();
-        public List<ToaLapTau> DoanTauBanDau { get; set; } = new();
-        public List<ToaLapTau> BaiToa { get; set; } = new();
-    }
+        public List<DauMayLapTau> DanhSachDauMay { get; init; } = new();
+        public List<ToaLapTau> DoanTauBanDau { get; init; } = new();
+        public List<ToaLapTau> BaiToa { get; init; } = new();
 
-    // -------------------------------------------------------------------------
-    // Ket qua tra ve khi bam "Xac nhan lap tau"
-    // -------------------------------------------------------------------------
-    public class KetQuaLapTau
-    {
-        public DauMayLapTau? DauMay { get; set; }
-
-        // Toan bo toa cua chuyen theo thu tu moc noi (ke ca toa chi chay mot phan hanh trinh)
-        public List<ToaLapTau> DanhSachToa { get; set; } = new();
-
-        // Gia tri LON NHAT tren cac chang - tuong ung DoanTau.TongSoToa / TongChieuDaiM /
-        // TongTrongLuongTan (CHECK <= 20 toa, <= 450 m ap cho doan tau o moi thoi diem)
-        public int SoToaLonNhat { get; set; }
-        public decimal TongChieuDaiM { get; set; }
-        public decimal TongTrongLuongTan { get; set; }
-        public int TongSucChua { get; set; }
-        public string ChangDaiNhat { get; set; } = "";
-        public string ChangNangNhat { get; set; } = "";
-
-        public List<ChangThanhPhan> CacChang { get; set; } = new();
-
-        // Tom tat tac nghiep doc duong: "NTR +5 · DAN −2"; rong = khong cat / noi
-        public string MoTaCatNoi { get; set; } = "";
-        public bool CoCatNoi => MoTaCatNoi.Length > 0;
-
-        public List<HangMucAnToanHienThi> HangMuc { get; set; } = new();
+        // Ghi phuong an vao CSDL (LapTauService.LuuPhuongAn). Tra ve null neu luu duoc,
+        // nguoc lai la thong diep loi de dialog hien va giu nguyen man hinh.
+        public Func<PhuongAnLapTauDTO, (KetQuaLuuLapTauDTO? KetQua, string? Loi)> Luu { get; init; } = null!;
     }
 }

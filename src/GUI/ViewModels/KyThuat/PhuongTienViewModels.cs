@@ -2,6 +2,8 @@
 using System.Data;
 using System.Windows;
 using BUS.Services;
+using DTO.PhuongTien;
+using ET.PhuongTien;
 using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
 
 namespace GUI.ViewModels.KyThuat
@@ -19,6 +21,7 @@ namespace GUI.ViewModels.KyThuat
     {
         public int MaDauMay { get; set; }
         public string SoHieuDauMay { get; set; } = "";
+        public int MaDongDauMay { get; set; }
         public string MaDongCode { get; set; } = "";
         public string NhaSanXuat { get; set; } = "";
         public string DonViQuanLy { get; set; } = "";
@@ -35,9 +38,15 @@ namespace GUI.ViewModels.KyThuat
         public int TuoiKhaiThac { get; set; }
         public decimal SoKmTichLuy { get; set; }
 
+        // So km o lan bao duong gan nhat (baotri.NhatKyBaoDuong): R1 = lan R1 hoac R2, R2 = lan R2.
+        // null = chua bao duong lan nao (tinh chu ky tu 0 km, khop man hinh Bao tri).
+        public decimal? KmBaoDuongR1GanNhat { get; set; }
+        public decimal? KmBaoDuongR2GanNhat { get; set; }
+
         public string TenMoTaDong => $"{MaDongCode} — {NhaSanXuat}";
 
         // --- Thong tin vach tien do bao duong tren DataGrid ---
+        public TienDoBaoDuongDauMay TienDoBaoDuong { get; private set; } = null!;
         public string NhanBaoDuong { get; set; } = "";
         public string MauChuBaoDuong { get; set; } = "#15803D";
 
@@ -51,6 +60,7 @@ namespace GUI.ViewModels.KyThuat
             {
                 MaDauMay = LayInt(r, "MaDauMay"),
                 SoHieuDauMay = LayChuoi(r, "SoHieuDauMay"),
+                MaDongDauMay = LayInt(r, "MaDongDauMay"),
                 MaDongCode = LayChuoi(r, "MaDongCode"),
                 NhaSanXuat = LayChuoi(r, "NhaSanXuat"),
                 DonViQuanLy = LayChuoi(r, "DonViQuanLy"),
@@ -63,22 +73,24 @@ namespace GUI.ViewModels.KyThuat
                 ChieuDaiM = LayDecimal(r, "ChieuDaiM"),
                 NamSanXuat = LayInt(r, "NamSanXuat"),
                 TuoiKhaiThac = LayInt(r, "TuoiKhaiThac"),
-                SoKmTichLuy = LayDecimal(r, "SoKmTichLuy")
+                SoKmTichLuy = LayDecimal(r, "SoKmTichLuy"),
+                KmBaoDuongR1GanNhat = LayDecimalNull(r, "KmBaoDuongR1GanNhat"),
+                KmBaoDuongR2GanNhat = LayDecimalNull(r, "KmBaoDuongR2GanNhat")
             };
 
             dm.TinhLaiTienDoBaoDuong();
             return dm;
         }
 
-        // Tinh lai cac thuoc tinh hien thi phu thuoc so km (goi sau khi them/sua tren giao dien)
+        // Tinh lai cac thuoc tinh hien thi phu thuoc so km
         public void TinhLaiTienDoBaoDuong()
         {
-            var (cap, _, tyLe, mucCanhBao) = PhuongTienService.TinhTienDoBaoDuong(SoKmTichLuy);
+            TienDoBaoDuong = PhuongTienService.TinhTienDoBaoDuong(SoKmTichLuy, KmBaoDuongR1GanNhat, KmBaoDuongR2GanNhat);
 
-            NhanBaoDuong = $"{cap} · {tyLe:N0}%";
-            MauChuBaoDuong = LayMauTheoMucCanhBao(mucCanhBao);
+            NhanBaoDuong = $"{TienDoBaoDuong.Cap} · {TienDoBaoDuong.TyLePhanTram:N0}%";
+            MauChuBaoDuong = LayMauTheoMucCanhBao(TienDoBaoDuong.MucCanhBao);
 
-            double phanTram = (double)tyLe;
+            double phanTram = Math.Min(100.0, (double)TienDoBaoDuong.TyLePhanTram);
             PhanDaChay = new GridLength(phanTram, GridUnitType.Star);
             PhanConLai = new GridLength(100 - phanTram, GridUnitType.Star);
         }
@@ -86,11 +98,23 @@ namespace GUI.ViewModels.KyThuat
         // Ban sao de dialog sua tren do, bam Huy thi ban goc khong bi anh huong
         public DauMayHienThi SaoChep() => (DauMayHienThi)MemberwiseClone();
 
+        // Ban ghi CSDL (phuongtien.DauMay) tuong ung
+        public DauMay ToET() => new()
+        {
+            MaDauMay = MaDauMay,
+            SoHieuDauMay = SoHieuDauMay,
+            MaDongDauMay = MaDongDauMay,
+            DonViQuanLy = DonViQuanLy,
+            NamSanXuat = NamSanXuat,
+            SoKmTichLuy = SoKmTichLuy,
+            TrangThai = TrangThai
+        };
+
+        // QUA_HAN | SAP_TOI | BINH_THUONG (PhuongTienService.TinhTienDoBaoDuong)
         public static string LayMauTheoMucCanhBao(string mucCanhBao) => mucCanhBao switch
         {
             "QUA_HAN" => "#B91C1C",
-            "KHAN_CAP" => "#DC2626",
-            "CANH_BAO" => "#B45309",
+            "SAP_TOI" => "#B45309",
             _ => "#15803D"
         };
 
@@ -102,6 +126,9 @@ namespace GUI.ViewModels.KyThuat
 
         internal static decimal LayDecimal(DataRow r, string cot)
             => r.Table.Columns.Contains(cot) && r[cot] != DBNull.Value ? Convert.ToDecimal(r[cot]) : 0m;
+
+        internal static decimal? LayDecimalNull(DataRow r, string cot)
+            => r.Table.Columns.Contains(cot) && r[cot] != DBNull.Value ? Convert.ToDecimal(r[cot]) : null;
     }
 
     // -------------------------------------------------------------------------
@@ -169,9 +196,20 @@ namespace GUI.ViewModels.KyThuat
         };
 
         public ToaXeHienThi SaoChep() => (ToaXeHienThi)MemberwiseClone();
+
+        // Ban ghi CSDL (phuongtien.ToaXe) tuong ung
+        public ToaXe ToET() => new()
+        {
+            MaToaXe = MaToaXe,
+            SoHieuToaXe = SoHieuToaXe,
+            MaChungLoai = MaChungLoai,
+            TuTrongTan = TuTrongTan,
+            TaiTrongToiDaTan = TaiTrongToiDaTan,
+            TrangThai = TrangThai
+        };
     }
 
-    // Mot the trong khung "Co cau chung loai toa" (so toa co cong ca toa them tam)
+    // Mot the trong khung "Co cau chung loai toa"
     public record ChungLoaiToaThongKe(
         string MaChungLoaiCode,
         string TenMoTa,
@@ -180,86 +218,60 @@ namespace GUI.ViewModels.KyThuat
         int SoToaTrongDoi);
 
     // -------------------------------------------------------------------------
-    // 3. TOA XE TRONG BIEN CHE MOT CHUYEN
+    // 3. TOA XE TRONG DOAN TAU CUA MOT CHUYEN (vanhanh.ChiTietDoanTau - toa that)
+    // Cot cuoi: tai trong truc khi cho day so voi nguong QuyTacLapTau.TaiTrongTrucToiDaTan.
+    // Ghe da ban nam o tab So do cho ngoi (toa ban ve vantai.ToaXeKhach chua noi voi
+    // toa that - hop dong §7.1 KE_HOACH_BACK_END.md).
     // -------------------------------------------------------------------------
     public class ToaBienCheHienThi
     {
-        public int MaToaXeKhach { get; set; }
+        public int MaToaXe { get; set; }
+        public int ThuTuToa { get; set; }
         public string NhanHieuToa { get; set; } = "";
         public string LoaiToa { get; set; } = "";
         public string TenLoaiToa { get; set; } = "";
-        public int ThuTuToa { get; set; }
-        public int SucChua { get; set; }
         public decimal ChieuDaiToaM { get; set; }
-        public int SoGheDaThietLap { get; set; }
-        public int SoGheDaBan { get; set; }
+        public string NhanSucChua { get; set; } = "";
+        public string TrangThai { get; set; } = "";
 
-        public decimal PhanTramLapDay { get; set; }
-        public string NhanLapDay { get; set; } = "";
-        public string MauLapDay { get; set; } = "#15803D";
-
-        public GridLength PhanDaBan { get; set; } = new(0, GridUnitType.Star);
-        public GridLength PhanConTrong { get; set; } = new(100, GridUnitType.Star);
-
-        // Pham vi chay cua toa (chi phuong an keo - tha co; bien che trong CSDL luon chay suot)
         public string PhamViChay { get; set; } = "Suốt hành trình";
         public bool CoPhamViRieng { get; set; }
 
-        public static ToaBienCheHienThi TuDongDuLieu(DataRow r)
+        public decimal TaiTrongTrucTan { get; set; }
+        public string NhanTaiTrongTruc { get; set; } = "";
+        public decimal PhanTramTruc { get; set; }
+        public string MauTruc { get; set; } = "#15803D";
+        public GridLength PhanTruc { get; set; } = new(0, GridUnitType.Star);
+        public GridLength PhanTrucConLai { get; set; } = new(100, GridUnitType.Star);
+
+        public static ToaBienCheHienThi TuToa(int thuTu, ToaXeLapTauDTO toa, string phamVi, bool coPhamViRieng)
         {
-            var toa = new ToaBienCheHienThi
+            var cl = DanhMucMauPhuongTien.TimChungLoai(toa.MaChungLoaiCode);
+            decimal truc = QuyTacLapTau.TaiTrongTruc(toa);
+            decimal nguong = QuyTacLapTau.TaiTrongTrucToiDaTan;
+            decimal phanTram = nguong > 0 ? Math.Round(truc / nguong * 100m, 1) : 0m;
+            double hienThi = Math.Min(100.0, (double)phanTram);
+
+            return new ToaBienCheHienThi
             {
-                MaToaXeKhach = DauMayHienThi.LayInt(r, "MaToaXeKhach"),
-                NhanHieuToa = DauMayHienThi.LayChuoi(r, "NhanHieuToa"),
-                LoaiToa = DauMayHienThi.LayChuoi(r, "LoaiToa"),
-                TenLoaiToa = DauMayHienThi.LayChuoi(r, "TenLoaiToa"),
-                ThuTuToa = DauMayHienThi.LayInt(r, "ThuTuToa"),
-                SucChua = DauMayHienThi.LayInt(r, "SucChua"),
-                ChieuDaiToaM = DauMayHienThi.LayDecimal(r, "ChieuDaiToaM"),
-                SoGheDaThietLap = DauMayHienThi.LayInt(r, "SoGheDaThietLap"),
-                SoGheDaBan = DauMayHienThi.LayInt(r, "SoGheDaBan")
+                MaToaXe = toa.MaToaXe,
+                ThuTuToa = thuTu,
+                NhanHieuToa = toa.SoHieuToaXe,
+                LoaiToa = toa.MaChungLoaiCode,
+                TenLoaiToa = cl.TenNgan,
+                ChieuDaiToaM = toa.ChieuDaiM,
+                NhanSucChua = QuyTacLapTau.LaToaHang(toa.MaChungLoaiCode) ? "Toa hàng" : $"{cl.SucChuaThamKhao} chỗ",
+                TrangThai = toa.TrangThai,
+                PhamViChay = phamVi,
+                CoPhamViRieng = coPhamViRieng,
+                TaiTrongTrucTan = truc,
+                NhanTaiTrongTruc = $"{toa.TongTrongLuongTan:N1} t · {truc:N2} t/trục",
+                PhanTramTruc = phanTram,
+                MauTruc = truc > nguong ? "#B91C1C" : phanTram >= 90m ? "#B45309" : "#15803D",
+                PhanTruc = new GridLength(hienThi, GridUnitType.Star),
+                PhanTrucConLai = new GridLength(100 - hienThi, GridUnitType.Star)
             };
-
-            // Mau so uu tien so ghe da thiet lap thuc te, neu chua co thi dung suc chua khai bao
-            int mauSo = toa.SoGheDaThietLap > 0 ? toa.SoGheDaThietLap : toa.SucChua;
-
-            toa.PhanTramLapDay = mauSo > 0
-                ? Math.Round((decimal)toa.SoGheDaBan / mauSo * 100m, 1)
-                : 0m;
-
-            toa.NhanLapDay = toa.SoGheDaThietLap > 0
-                ? $"{toa.SoGheDaBan}/{toa.SoGheDaThietLap} chỗ"
-                : "Chưa sinh ghế";
-
-            toa.MauLapDay = toa.PhanTramLapDay switch
-            {
-                >= 90m => "#B91C1C",
-                >= 70m => "#B45309",
-                >= 40m => "#1D4ED8",
-                _ => "#15803D"
-            };
-
-            double phanTram = (double)toa.PhanTramLapDay;
-            toa.PhanDaBan = new GridLength(phanTram, GridUnitType.Star);
-            toa.PhanConTrong = new GridLength(100 - phanTram, GridUnitType.Star);
-
-            return toa;
         }
-
-        // Dong bien che lay tu phuong an lap tau keo-tha: chua sinh ghe, chua ban ve
-        public static ToaBienCheHienThi TuToaLapTau(ToaLapTau t) => new()
-        {
-            NhanHieuToa = t.SoHieu,
-            LoaiToa = t.LoaiCode,
-            TenLoaiToa = DanhMucMauPhuongTien.TimChungLoai(t.LoaiCode).TenNgan,
-            ThuTuToa = t.ThuTu,
-            SucChua = t.SucChua,
-            ChieuDaiToaM = t.ChieuDaiM,
-            NhanLapDay = t.LaToaHang ? "Toa hàng" : "Mô phỏng",
-            MauLapDay = "#94A3B8",
-            PhamViChay = t.CoPhamViRieng ? t.NhanPhamVi : "Suốt hành trình",
-            CoPhamViRieng = t.CoPhamViRieng
-        };
     }
 
     // -------------------------------------------------------------------------
@@ -415,6 +427,14 @@ namespace GUI.ViewModels.KyThuat
             MucDo = "LOI",
             BieuTuong = SymbolRegular.DismissCircle24,
             MauSac = "#B91C1C"
+        };
+
+        // Hang muc tu bo luat BUS.Services.QuyTacLapTau
+        public static HangMucAnToanHienThi TuDTO(HangMucKiemTraDTO h) => h.MucDo switch
+        {
+            MucDoKiemTra.Loi => Loi(h.Ten, h.NoiDung),
+            MucDoKiemTra.CanhBao => CanhBao(h.Ten, h.NoiDung),
+            _ => Dat(h.Ten, h.NoiDung)
         };
     }
 }

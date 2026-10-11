@@ -44,6 +44,12 @@ scratch/
 *.ps1
 *.py
 
+## Ngoai le: script CSDL chung cua nhom (migration / seed / kiem tra) - DUOC day len Git
+!database/**/*.sql
+
+## Cau hinh rieng tung may (chuoi ket noi CSDL) - khong day len Git
+appsettings.Local.json
+
 ## Node.js & Temporary
 node_modules/
 q/
