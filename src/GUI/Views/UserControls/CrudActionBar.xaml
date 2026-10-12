@@ -42,8 +42,8 @@
                 </Button>
             </Grid>
 
-            <!-- Nút Xóa -->
-            <Border BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="0,6,0,0">
+            <!-- Nút Xóa (Đã được chuyển lên Header an toàn, ẩn ở chân form để tránh bấm nhầm) -->
+            <Border x:Name="bdXoa" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="0,6,0,0" Visibility="Collapsed">
                 <Button x:Name="btnXoa" 
                         Click="BtnXoa_Click" 
                         Style="{StaticResource DangerDesktopButton}"

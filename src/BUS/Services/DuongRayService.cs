@@ -28,9 +28,9 @@ namespace BUS.Services
                 return false;
             }
 
-            if (ray.ChieuDaiHuuDungM < 100)
+            if (ray.ChieuDaiHuuDungM < 100 || ray.ChieuDaiHuuDungM > 3000)
             {
-                error = "Chiều dài hữu dụng của đường ray phải tối thiểu 100 mét để đảm bảo an toàn dồn dịch đoàn tàu.";
+                error = "Chiều dài hữu dụng của đường ray phải từ 100 đến 3,000 mét.";
                 return false;
             }
 
@@ -45,15 +45,26 @@ namespace BUS.Services
                 ray.LoaiDuong = "DUONG_TRANH";
             }
 
+            if (ray.LoaiDuong == "CHINH_TUYEN" && _repo.KiemTraChinhTuyenTonTai(ray.MaGa))
+            {
+                error = "Mỗi ga đường sắt chỉ được phép có duy nhất 01 đường chính tuyến (CHINH_TUYEN). Vui lòng chọn phân loại 'Đường tránh' hoặc 'Bốc dỡ'.";
+                return false;
+            }
+
             if (string.IsNullOrWhiteSpace(ray.TrangThai))
             {
                 ray.TrangThai = "TRONG";
+            }
+            else if (ray.TrangThai == "CO_TAU")
+            {
+                error = "Đường ray mới tạo không được thiết lập trạng thái 'Đang có tàu'. Vui lòng chọn 'Trống' hoặc 'Bảo trì'.";
+                return false;
             }
 
             bool ok = _repo.Them(ray) > 0;
             if (!ok)
             {
-                error = "Lỗi cơ sở dữ liệu khi thêm mới đường ray.";
+                error = "Không thể lưu thông tin đường ray. Vui lòng thử lại.";
             }
             return ok;
         }
@@ -73,9 +84,9 @@ namespace BUS.Services
                 return false;
             }
 
-            if (ray.ChieuDaiHuuDungM < 100)
+            if (ray.ChieuDaiHuuDungM < 100 || ray.ChieuDaiHuuDungM > 3000)
             {
-                error = "Chiều dài hữu dụng của đường ray phải tối thiểu 100 mét.";
+                error = "Chiều dài hữu dụng của đường ray phải từ 100 đến 3,000 mét.";
                 return false;
             }
 
@@ -85,10 +96,16 @@ namespace BUS.Services
                 return false;
             }
 
+            if (ray.LoaiDuong == "CHINH_TUYEN" && _repo.KiemTraChinhTuyenTonTai(ray.MaGa, ray.MaDuongRay))
+            {
+                error = "Mỗi ga đường sắt chỉ được phép có duy nhất 01 đường chính tuyến (CHINH_TUYEN). Vui lòng chọn phân loại 'Đường tránh' hoặc 'Bốc dỡ'.";
+                return false;
+            }
+
             bool ok = _repo.CapNhat(ray) > 0;
             if (!ok)
             {
-                error = "Lỗi cơ sở dữ liệu khi cập nhật thông tin đường ray.";
+                error = "Không thể cập nhật thông tin đường ray. Vui lòng thử lại.";
             }
             return ok;
         }
@@ -102,10 +119,22 @@ namespace BUS.Services
                 return false;
             }
 
+            if (_repo.KiemTraDangCoTau(maDuongRay))
+            {
+                error = "Không thể xóa đường ray này vì đang có đoàn tàu hoạt động / chiếm dụng trên đường. Vui lòng giải phóng tàu trước khi xóa hạ tầng.";
+                return false;
+            }
+
+            if (_repo.KiemTraCoLichDung(maDuongRay))
+            {
+                error = "Không thể xóa đường ray này vì đã được xếp lịch dừng đón trả tàu trong kế hoạch chạy tàu.";
+                return false;
+            }
+
             bool ok = _repo.Xoa(maDuongRay) > 0;
             if (!ok)
             {
-                error = "Không thể xóa đường ray (có thể do ràng buộc lịch trình chạy tàu hoặc lỗi CSDL).";
+                error = "Không thể xóa đường ray này vì đang có tàu hoạt động hoặc đã được xếp lịch.";
             }
             return ok;
         }

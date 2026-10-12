@@ -398,5 +398,8 @@
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- Lớp phủ Backdrop làm tối nền (Dimming 50%) khi mở Dialog Modal -->
+        <Border x:Name="modalBackdropOverlay" Grid.RowSpan="5" Background="#80000000" Visibility="Collapsed"/>
     </Grid>
 </ui:FluentWindow>

@@ -1,0 +1,1029 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0" pages="10">
+  <diagram id="ad_mang_luoi_ga" name="1. Mạng Lưới Ga">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_mang_luoi_ga_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=1.5;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;fontColor=#000000;" value="Người Dùng: Cán Bộ Kỹ Thuật Hạ Tầng Ga" vertex="1">
+          <mxGeometry height="890" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=1.5;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;fontColor=#000000;" value="Hệ Thống: Hệ Thống Quản Lý Điều Hành Ga" vertex="1">
+          <mxGeometry height="890" width="510" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;sketch=1;curveFitting=1;jiggle=2;fontColor=#000000;fontStyle=1;fontFamily=Comic Sans MS;fontSize=13;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chọn chức năng Khai báo Ga mới / Cập nhật thông tin Ga" vertex="1">
+          <mxGeometry height="50" width="230" x="95" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhập thông tin ga: Mã hiệu ga, Tên ga, Km lý trình, Cấp kỹ thuật, Số đường đón gửi" vertex="1">
+          <mxGeometry height="55" width="260" x="80" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhấn nút &#39;Lưu Dữ Liệu&#39;" vertex="1">
+          <mxGeometry height="40" width="140" x="140" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Kiểm tra tính đầy đủ và tính hợp lệ của dữ liệu nhập (Lý trình trong phạm vi toàn tuyến)" vertex="1">
+          <mxGeometry height="50" width="240" x="650" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n6" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Dữ liệu&lt;br&gt;hợp lệ?" vertex="1">
+          <mxGeometry height="60" width="120" x="710" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Hiển thị cảnh báo lỗi định dạng dữ liệu" vertex="1">
+          <mxGeometry height="50" width="170" x="560" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Kiểm tra tính duy nhất của Mã hiệu ga trên toàn mạng lưới" vertex="1">
+          <mxGeometry height="50" width="240" x="650" y="465" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n9" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Mã hiệu ga&lt;br&gt;đã tồn tại?" vertex="1">
+          <mxGeometry height="60" width="120" x="710" y="545" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cảnh báo trùng lặp: Mã hiệu ga đã được sử dụng" vertex="1">
+          <mxGeometry height="50" width="170" x="470" y="375" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Lưu trữ hồ sơ nhà ga vào cơ sở dữ liệu hệ thống" vertex="1">
+          <mxGeometry height="50" width="240" x="650" y="635" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cập nhật thước đo lý trình tuyến Bắc - Nam và làm mới danh mục ga" vertex="1">
+          <mxGeometry height="50" width="240" x="650" y="715" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Thông báo lưu hồ sơ ga thành công" vertex="1">
+          <mxGeometry height="45" width="210" x="665" y="795" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_n14" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=2;sketch=1;curveFitting=1;jiggle=2;fontColor=#000000;fontStyle=1;fontFamily=Comic Sans MS;fontSize=13;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="755" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e1" edge="1" parent="1" source="ad_mang_luoi_ga_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e2" edge="1" parent="1" source="ad_mang_luoi_ga_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e3" edge="1" parent="1" source="ad_mang_luoi_ga_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e4" edge="1" parent="1" source="ad_mang_luoi_ga_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e5" edge="1" parent="1" source="ad_mang_luoi_ga_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e6" edge="1" parent="1" source="ad_mang_luoi_ga_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#000000;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n7" value="[Không hợp lệ]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="400" />
+              <mxPoint x="900" y="195.03" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e7" edge="1" parent="1" source="ad_mang_luoi_ga_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#CC0000;fontColor=#000000;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n3" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="195.03" />
+              <mxPoint x="450" y="242.48" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e8" edge="1" parent="1" source="ad_mang_luoi_ga_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#000000;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n8" value="[Hợp lệ]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e9" edge="1" parent="1" source="ad_mang_luoi_ga_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n9" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e10" edge="1" parent="1" source="ad_mang_luoi_ga_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#CC0000;fontColor=#000000;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n10" value="[Đã tồn tại]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e11" edge="1" parent="1" source="ad_mang_luoi_ga_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#CC0000;fontColor=#000000;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n3" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="554.97" y="242.48" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e12" edge="1" parent="1" source="ad_mang_luoi_ga_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#000000;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n11" value="[Duy nhất]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e13" edge="1" parent="1" source="ad_mang_luoi_ga_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e14" edge="1" parent="1" source="ad_mang_luoi_ga_n12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mang_luoi_ga_e15" edge="1" parent="1" source="ad_mang_luoi_ga_n13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=1.5;fontSize=13;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#000000;sketch=1;curveFitting=1;jiggle=2;" target="ad_mang_luoi_ga_n14" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ad_khu_gian" name="2. Phân Đoạn Khu Gian">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_khu_gian_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Người Dùng: Cán Bộ Quản Lý Cung Đường" vertex="1">
+          <mxGeometry height="880" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Hệ Thống: Hệ Thống Quản Lý Điều Hành Tuyến" vertex="1">
+          <mxGeometry height="880" width="510" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;sketch=1;curveFitting=1;jiggle=2;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;" value="Chọn Thêm mới / Cập nhật phân đoạn khu gian" vertex="1">
+          <mxGeometry height="50" width="210" x="105" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;" value="Chọn Ga đầu, Ga cuối, nhập Cự ly khu gian (Km), Vận tốc tối đa cho phép, Độ dốc kỹ thuật (‰)" vertex="1">
+          <mxGeometry height="55" width="260" x="80" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;" value="Nhấn &#39;Lưu Phân Đoạn&#39;" vertex="1">
+          <mxGeometry height="40" width="150" x="135" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;" value="Kiểm tra ràng buộc nghiệp vụ: Ga đầu khác Ga cuối và Cự ly khu gian &amp;gt; 0" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n6" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Thông số&lt;br&gt;hợp lệ?" vertex="1">
+          <mxGeometry height="60" width="120" x="520" y="375" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;" value="Cảnh báo sai ràng buộc ga kết nối hoặc cự ly" vertex="1">
+          <mxGeometry height="50" width="170" x="760" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n8" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Độ dốc&lt;br&gt;&amp;gt;= 15‰?" vertex="1">
+          <mxGeometry height="65" width="120" x="520" y="465" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;" value="Thiết lập cảnh báo đèo dốc nguy hiểm &amp;amp; Yêu cầu biên chế đầu máy đẩy" vertex="1">
+          <mxGeometry height="55" width="200" x="420" y="561" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;" value="Xác nhận phân đoạn địa hình bằng phẳng thông thường" vertex="1">
+          <mxGeometry height="55" width="190" x="670" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n11" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#dee2e6;strokeColor=#495057;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;fontSize=13;fontFamily=Comic Sans MS;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;" value="Lưu thông tin phân đoạn khu gian và đồng bộ danh mục vị trí đường ngang" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="705" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;" value="Thông báo lưu cấu hình phân đoạn thành công" vertex="1">
+          <mxGeometry height="45" width="210" x="475" y="785" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_n14" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;fontSize=13;fontFamily=Comic Sans MS;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e1" edge="1" parent="1" source="ad_khu_gian_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e2" edge="1" parent="1" source="ad_khu_gian_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e3" edge="1" parent="1" source="ad_khu_gian_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e4" edge="1" parent="1" source="ad_khu_gian_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e5" edge="1" parent="1" source="ad_khu_gian_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e6" edge="1" parent="1" source="ad_khu_gian_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n7" value="[Vi phạm]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e7" edge="1" parent="1" source="ad_khu_gian_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n3" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="845" y="242.47" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_khu_gian_e8" edge="1" parent="1" source="ad_khu_gian_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n8" value="[Hợp lệ]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e9" edge="1" parent="1" source="ad_khu_gian_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n9" value="[Dốc cao]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e10" edge="1" parent="1" source="ad_khu_gian_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n10" value="[Bằng phẳng]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e11" edge="1" parent="1" source="ad_khu_gian_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ad_khu_gian_n11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e12" edge="1" parent="1" source="ad_khu_gian_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="ad_khu_gian_n11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e13" edge="1" parent="1" source="ad_khu_gian_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e14" edge="1" parent="1" source="ad_khu_gian_n12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_khu_gian_e15" edge="1" parent="1" source="ad_khu_gian_n13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=13;fontFamily=Comic Sans MS;fontStyle=2;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_khu_gian_n14" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ad_lich_trinh" name="3. Kế Hoạch Lịch Trình">
+    <mxGraphModel dx="1611" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_lich_trinh_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=2;fontFamily=Segoe UI;fontSize=13;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Người Dùng: Điều Độ Viên Kế Hoạch Vận Tải" vertex="1">
+          <mxGeometry height="880" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=2;fontFamily=Segoe UI;fontSize=13;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Hệ Thống: Hệ Thống Quản Lý Lịch Trình Chạy Tàu" vertex="1">
+          <mxGeometry height="880" width="510" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;sketch=1;curveFitting=1;jiggle=2;fontSize=13;strokeWidth=2;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chọn Lập lịch trình chuyến tàu mới" vertex="1">
+          <mxGeometry height="50" width="210" x="105" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhập Mác tàu, Ngày khởi hành, Giờ xuất phát kế hoạch, Chỉ định đầu máy và số toa xe" vertex="1">
+          <mxGeometry height="55" width="260" x="80" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhấn &#39;Tạo Chuyến Tàu&#39;" vertex="1">
+          <mxGeometry height="40" width="160" x="130" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Kiểm tra tính sẵn sàng của Đầu máy trong khung giờ chạy tàu" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n6" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Đầu máy&lt;br&gt;trùng lịch?" vertex="1">
+          <mxGeometry height="60" width="120" x="520" y="375" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cảnh báo xung đột: Đầu máy đang phục vụ chuyến khác" vertex="1">
+          <mxGeometry height="50" width="170" x="720" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Kiểm tra tổng chiều dài đoàn tàu với chiều dài đường đón gửi tại các ga dừng" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="465" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n9" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Chiều dài tàu&lt;br&gt;&amp;lt;= 450m?" vertex="1">
+          <mxGeometry height="60" width="120" x="520" y="545" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cảnh báo an toàn: Chiều dài đoàn tàu vượt quá đường ga" vertex="1">
+          <mxGeometry height="50" width="170" x="720" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Lập kế hoạch chuyến tàu và thiết lập lộ trình các ga dừng đón trả khách" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="635" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tự động khởi tạo sơ đồ khoang vé và danh mục chỗ ngồi/giường nằm" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="715" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cập nhật bảng lịch trình và mở trạng thái bán vé" vertex="1">
+          <mxGeometry height="45" width="210" x="475" y="795" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_n14" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=2;sketch=1;curveFitting=1;jiggle=2;fontSize=13;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e1" edge="1" parent="1" source="ad_lich_trinh_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e2" edge="1" parent="1" source="ad_lich_trinh_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e3" edge="1" parent="1" source="ad_lich_trinh_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e4" edge="1" parent="1" source="ad_lich_trinh_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e5" edge="1" parent="1" source="ad_lich_trinh_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e6" edge="1" parent="1" source="ad_lich_trinh_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n7" value="[Trùng lịch]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e7" edge="1" parent="1" source="ad_lich_trinh_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#CC0000;fontColor=#343a40;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e8" edge="1" parent="1" source="ad_lich_trinh_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n8" value="[Sẵn sàng]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e9" edge="1" parent="1" source="ad_lich_trinh_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n9" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e10" edge="1" parent="1" source="ad_lich_trinh_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n10" value="[Vượt chuẩn]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e11" edge="1" parent="1" source="ad_lich_trinh_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#CC0000;fontColor=#343a40;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n3" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900.07" y="535.03" />
+              <mxPoint x="900.07" y="242.48" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e12" edge="1" parent="1" source="ad_lich_trinh_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n11" value="[Đạt chuẩn]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e13" edge="1" parent="1" source="ad_lich_trinh_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e14" edge="1" parent="1" source="ad_lich_trinh_n12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_lich_trinh_e15" edge="1" parent="1" source="ad_lich_trinh_n13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=13;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_lich_trinh_n14" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ad_bieu_do_chay_tau" name="4. Biểu Đồ Chạy Tàu">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_bieu_do_chay_tau_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=2;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Người Dùng: Điều Độ Viên Trung Tâm Điều Hành" vertex="1">
+          <mxGeometry height="850" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=2;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Hệ Thống: Hệ Thống Giám Sát Biểu Đồ Chạy Tàu" vertex="1">
+          <mxGeometry height="850" width="510" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;sketch=1;curveFitting=1;jiggle=2;strokeWidth=2;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chọn ngày chạy tàu và khu vực tuyến cần giám sát" vertex="1">
+          <mxGeometry height="50" width="210" x="105" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Yêu cầu hiển thị biểu đồ chạy tàu" vertex="1">
+          <mxGeometry height="40" width="170" x="125" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tải danh sách các chuyến tàu và mốc thời gian qua các ga trong ngày" vertex="1">
+          <mxGeometry height="50" width="240" x="567" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Vẽ lưới thời gian và trục tung danh mục ga theo cự ly thực tế" vertex="1">
+          <mxGeometry height="50" width="240" x="567" y="285" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Vẽ các đường chỉ thị hành trình chạy tàu theo mốc giờ kế hoạch" vertex="1">
+          <mxGeometry height="50" width="240" x="567" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Thực hiện thuật toán quét giao cắt đường đơn giữa các đoàn tàu" vertex="1">
+          <mxGeometry height="50" width="240" x="567" y="435" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n8" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Phát hiện&lt;br&gt;xung đột?" vertex="1">
+          <mxGeometry height="60" width="120" x="627" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Đánh dấu đốm cảnh báo đỏ tại điểm giao cắt nguy hiểm" vertex="1">
+          <mxGeometry height="50" width="170" x="430" y="605" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Kéo dời mốc giờ hoặc chỉ định ga tránh tàu cho đoàn tàu thứ cấp" vertex="1">
+          <mxGeometry height="50" width="240" x="90" y="605" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Xác nhận phương án điều độ" vertex="1">
+          <mxGeometry height="40" width="160" x="130" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tính toán lại đường hành trình và gỡ bỏ cảnh báo xung đột" vertex="1">
+          <mxGeometry height="60" width="180" x="430" y="673" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cập nhật phương án điều độ chính thức và gửi điện lệnh đến các ga" vertex="1">
+          <mxGeometry height="50" width="240" x="567" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_n14" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="672" y="840" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e1" edge="1" parent="1" source="ad_bieu_do_chay_tau_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e2" edge="1" parent="1" source="ad_bieu_do_chay_tau_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e3" edge="1" parent="1" source="ad_bieu_do_chay_tau_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e4" edge="1" parent="1" source="ad_bieu_do_chay_tau_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e5" edge="1" parent="1" source="ad_bieu_do_chay_tau_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e6" edge="1" parent="1" source="ad_bieu_do_chay_tau_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e7" edge="1" parent="1" source="ad_bieu_do_chay_tau_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e8" edge="1" parent="1" source="ad_bieu_do_chay_tau_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n9" value="[Có xung đột]">
+          <mxGeometry relative="1" x="-0.2208" y="5" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="515.03" y="545" />
+            </Array>
+            <mxPoint x="807" y="615" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e9" edge="1" parent="1" source="ad_bieu_do_chay_tau_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n10" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e10" edge="1" parent="1" source="ad_bieu_do_chay_tau_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e11" edge="1" parent="1" source="ad_bieu_do_chay_tau_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e12" edge="1" parent="1" source="ad_bieu_do_chay_tau_n12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="ad_bieu_do_chay_tau_n13" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="660" y="703.03" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e13" edge="1" parent="1" source="ad_bieu_do_chay_tau_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n13" value="[An toàn]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bieu_do_chay_tau_e14" edge="1" parent="1" source="ad_bieu_do_chay_tau_n13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bieu_do_chay_tau_n14" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ad_ban_ve" name="5. Bán Vé &amp; Quản Lý Chỗ">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_ban_ve_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Người Dùng: Nhân Viên Bán Vé / Hành Khách" vertex="1">
+          <mxGeometry height="810" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Hệ Thống: Hệ Thống Quản Lý Bán Vé &amp;amp; Chỗ Ngồi" vertex="1">
+          <mxGeometry height="810" width="510" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;sketch=1;curveFitting=1;jiggle=2;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="67" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chọn Ga đi, Ga đến, Ngày khởi hành và nhấn Tìm kiếm" vertex="1">
+          <mxGeometry height="50" width="210" x="105" y="128" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tra cứu các chuyến tàu phù hợp và hiển thị sơ đồ toa kèm tình trạng chỗ" vertex="1">
+          <mxGeometry height="50" width="240" x="445" y="128" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chọn vị trí ghế ngồi / giường nằm mong muốn" vertex="1">
+          <mxGeometry height="45" width="190" x="115" y="235" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tạm giữ chỗ đã chọn và bắt đầu đếm ngược thời hạn thanh toán (5 phút)" vertex="1">
+          <mxGeometry height="50" width="240" x="545" y="203" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhập thông tin hành khách: Họ tên, Số định danh CCCD, Đối tượng ưu đãi (Sinh viên, Người già...)" vertex="1">
+          <mxGeometry height="55" width="260" x="80" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Xác nhận thanh toán vé" vertex="1">
+          <mxGeometry height="40" width="170" x="125" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tính cước vé theo chặng và áp dụng chính sách giảm giá đối tượng" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n9" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Thời gian giữ&lt;br&gt;quá 5 phút?" vertex="1">
+          <mxGeometry height="60" width="120" x="520" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Hủy giữ chỗ, giải phóng vé về trạng thái còn trống" vertex="1">
+          <mxGeometry height="50" width="170" x="595" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Ghi nhận thanh toán thành công và cập nhật trạng thái chỗ sang Đã Bán" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Phát hành mã vé điện tử kèm mã QR bảo mật chống làm giả" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="In thẻ lên tàu / Xuất vé điện tử gửi hành khách" vertex="1">
+          <mxGeometry height="45" width="210" x="475" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_n14" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="775" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e1" edge="1" parent="1" source="ad_ban_ve_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="127" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_ban_ve_e2" edge="1" parent="1" source="ad_ban_ve_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e3" edge="1" parent="1" source="ad_ban_ve_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n4" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="190" />
+              <mxPoint x="210" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_ban_ve_e4" edge="1" parent="1" source="ad_ban_ve_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e5" edge="1" parent="1" source="ad_ban_ve_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" target="ad_ban_ve_n6" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="605" y="270" />
+              <mxPoint x="530" y="270" />
+              <mxPoint x="530" y="340" />
+              <mxPoint x="210" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_ban_ve_e6" edge="1" parent="1" source="ad_ban_ve_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e7" edge="1" parent="1" source="ad_ban_ve_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ad_ban_ve_n8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e8" edge="1" parent="1" source="ad_ban_ve_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n9" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e9" edge="1" parent="1" source="ad_ban_ve_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n10" value="[Quá hạn 5p]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e10" edge="1" parent="1" source="ad_ban_ve_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#CC0000;fontColor=#343a40;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.463;entryY=1.022;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;entryPerimeter=0;" target="ad_ban_ve_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e11" edge="1" parent="1" source="ad_ban_ve_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n11" value="[Đúng hạn &amp;amp; Đã TT]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e12" edge="1" parent="1" source="ad_ban_ve_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e13" edge="1" parent="1" source="ad_ban_ve_n12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_ban_ve_e14" edge="1" parent="1" source="ad_ban_ve_n13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_ban_ve_n14" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ad_soat_ve" name="6. Soát Vé &amp; Kiểm Soát Lên Tàu">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_soat_ve_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=40;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=3;fontFamily=Segoe UI;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Người Dùng: Nhân Viên Soát Vé / Cổng Kiểm Soát Tự Động" vertex="1">
+          <mxGeometry height="760" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=40;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=3;fontFamily=Segoe UI;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Hệ Thống: Hệ Thống Kiểm Soát Lên Tàu Điện Tử" vertex="1">
+          <mxGeometry height="760" width="510" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;fontSize=14;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Quét mã QR trên vé hoặc nhập mã vé / số CCCD" vertex="1">
+          <mxGeometry height="50" width="210" x="105" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tra cứu thông tin vé và đối chiếu với chuyến tàu hiện hành" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n4" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Tìm thấy&lt;br&gt;mã vé?" vertex="1">
+          <mxGeometry height="60" width="120" x="520" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Báo động: Vé không tồn tại trên hệ thống" vertex="1">
+          <mxGeometry height="50" width="170" x="720" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n6" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Đúng mác tàu,&lt;br&gt;ngày đi &amp;amp; ga đón?" vertex="1">
+          <mxGeometry height="65" width="140" x="510" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cảnh báo sai chuyến: Nhầm tàu hoặc sai ga đi" vertex="1">
+          <mxGeometry height="50" width="170" x="720" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n8" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Vé đã được&lt;br&gt;soát trước đó?" vertex="1">
+          <mxGeometry height="65" width="140" x="510" y="405" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cảnh báo đỏ: Vé đã sử dụng (Nguy cơ quay vòng vé)" vertex="1">
+          <mxGeometry height="50" width="170" x="720" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cập nhật trạng thái vé sang Đã Lên Tàu kèm thời điểm soát vé" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="505" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Phát tín hiệu đèn xanh và mở cổng kiểm soát tự động cho hành khách" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="585" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cập nhật danh sách hành khách thực tế đã lên tàu và số liệu thống kê ga" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="665" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_n13" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;fontSize=14;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="745" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e1" edge="1" parent="1" source="ad_soat_ve_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e2" edge="1" parent="1" source="ad_soat_ve_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e3" edge="1" parent="1" source="ad_soat_ve_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e4" edge="1" parent="1" source="ad_soat_ve_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n5" value="[Không thấy]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e5" edge="1" parent="1" source="ad_soat_ve_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n6" value="[Hợp lệ]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e6" edge="1" parent="1" source="ad_soat_ve_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n7" value="[Sai chuyến]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e7" edge="1" parent="1" source="ad_soat_ve_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n8" value="[Đúng chuyến]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e8" edge="1" parent="1" source="ad_soat_ve_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#CC0000;fontColor=#CC0000;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n9" value="[Đã soát rồi]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e9" edge="1" parent="1" source="ad_soat_ve_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#c92a2a;fontColor=#009900;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n10" value="[Chưa soát]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e10" edge="1" parent="1" source="ad_soat_ve_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e11" edge="1" parent="1" source="ad_soat_ve_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_soat_ve_e12" edge="1" parent="1" source="ad_soat_ve_n12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_soat_ve_n13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ad_hang_hoa" name="7. Vận Tải Hàng Hóa &amp; Xe Máy">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_hang_hoa_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Người Dùng: Nhân Viên Tiếp Nhận Hàng Hóa" vertex="1">
+          <mxGeometry height="830" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Hệ Thống: Hệ Thống Quản Lý Vận Tải Hàng Hóa" vertex="1">
+          <mxGeometry height="830" width="510" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;sketch=1;curveFitting=1;jiggle=2;strokeWidth=3;fontSize=14;fontStyle=1;fontFamily=Comic Sans MS;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chọn Lập Vận Đơn Mới" vertex="1">
+          <mxGeometry height="45" width="170" x="125" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhập người gửi, người nhận, ga gửi, ga nhận, loại hàng, trọng lượng và thể tích" vertex="1">
+          <mxGeometry height="55" width="260" x="80" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tính cước vận tải: So sánh giữa Trọng lượng thực tế và Trọng lượng thể tích quy đổi" vertex="1">
+          <mxGeometry height="55" width="240" x="460" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n5" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Hàng gửi là&lt;br&gt;Xe máy?" vertex="1">
+          <mxGeometry height="60" width="120" x="715" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Kiểm tra thực tế phương tiện và tiến hành rút sạch xăng bình chứa" vertex="1">
+          <mxGeometry height="50" width="260" x="80" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhập biển số xe và xác nhận &#39;Đã rút xăng an toàn PCCC&#39;" vertex="1">
+          <mxGeometry height="45" width="210" x="105" y="465" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n8" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Đã rút xăng&lt;br&gt;PCCC?" vertex="1">
+          <mxGeometry height="60" width="120" x="655" y="457.5" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Từ chối tiếp nhận: Vi phạm quy định an toàn PCCC" vertex="1">
+          <mxGeometry height="60" width="170" x="440" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Lưu hồ sơ vận đơn và tự động cấp mã vận chuyển dạng mã vạch" vertex="1">
+          <mxGeometry height="50" width="240" x="595" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Phân bổ kiện hàng / xe máy vào Toa Hành Lý của chuyến tàu chỉ định" vertex="1">
+          <mxGeometry height="50" width="240" x="595" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="In vận đơn gửi hàng và tem mã vạch dán kiện hàng" vertex="1">
+          <mxGeometry height="45" width="210" x="610" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_n13" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;fontSize=14;fontStyle=1;fontFamily=Comic Sans MS;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="700" y="815" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e1" edge="1" parent="1" source="ad_hang_hoa_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e2" edge="1" parent="1" source="ad_hang_hoa_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e3" edge="1" parent="1" source="ad_hang_hoa_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e4" edge="1" parent="1" source="ad_hang_hoa_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e5" edge="1" parent="1" source="ad_hang_hoa_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;exitX=0;exitY=0.5;exitDx=0;exitDy=0;sketch=1;curveFitting=1;jiggle=2;" value="[Là xe máy]">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e6" edge="1" parent="1" source="ad_hang_hoa_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n10" value="[Hàng thường]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="870" y="330" />
+              <mxPoint x="870" y="585" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e7" edge="1" parent="1" source="ad_hang_hoa_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e8" edge="1" parent="1" source="ad_hang_hoa_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e9" edge="1" parent="1" source="ad_hang_hoa_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n9" value="[Chưa rút xăng]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e10" edge="1" parent="1" source="ad_hang_hoa_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e11" edge="1" parent="1" source="ad_hang_hoa_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n10" value="[Đã rút xăng]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e12" edge="1" parent="1" source="ad_hang_hoa_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e13" edge="1" parent="1" source="ad_hang_hoa_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_hang_hoa_e14" edge="1" parent="1" source="ad_hang_hoa_n12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_hang_hoa_n13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ad_phuong_tien" name="8. Phương Tiện &amp; Lập Đoàn Tàu">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_phuong_tien_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Người Dùng: Cán Bộ Trực Ban Điều Động Bãi Dồn" vertex="1">
+          <mxGeometry height="850" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Hệ Thống: Hệ Thống Quản Lý Phương Tiện &amp;amp; Lập Đoàn Tàu" vertex="1">
+          <mxGeometry height="850" width="510" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;sketch=1;curveFitting=1;jiggle=2;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chọn chuyến tàu cần lập biên chế đoàn tàu" vertex="1">
+          <mxGeometry height="50" width="210" x="105" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="CiolVr5eEgSje5MadcZE-1" edge="1" parent="1" source="ad_phuong_tien_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#009900;" target="ad_phuong_tien_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chỉ định đầu máy kéo chính và chọn biên chế các toa xe từ bãi dồn ga" vertex="1">
+          <mxGeometry height="55" width="260" x="80" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Thực hiện thẩm định 4 tiêu chuẩn kỹ thuật an toàn đoàn tàu" vertex="1">
+          <mxGeometry height="55" width="240" x="460" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n5" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="1. Có đầu máy&lt;br&gt;chính hợp lệ?" vertex="1">
+          <mxGeometry height="60" width="140" x="510" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n6" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="2. Chiều dài tàu&lt;br&gt;&amp;lt;= Đường tránh ga?" vertex="1">
+          <mxGeometry height="65" width="160" x="500" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n7" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="3. Trọng lượng&lt;br&gt;&amp;lt;= Sức kéo đầu máy?" vertex="1">
+          <mxGeometry height="65" width="160" x="500" y="485" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n8" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="4. Số toa xe&lt;br&gt;&amp;lt;= 20 toa quy chuẩn?" vertex="1">
+          <mxGeometry height="65" width="160" x="500" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cảnh báo và khóa chức năng duyệt lập tàu" vertex="1">
+          <mxGeometry height="55" width="170" x="740" y="455" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tất cả tiêu chuẩn ĐẠT: Nhấn nút &#39;Xác Nhận Lập Đoàn Tàu&#39;" vertex="1">
+          <mxGeometry height="50" width="210" x="105" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Lưu hồ sơ đoàn tàu và đánh dấu trạng thái phương tiện đã nối đoàn" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Xuất Bản kê thành phần đoàn tàu bàn giao kíp lái" vertex="1">
+          <mxGeometry height="45" width="210" x="475" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_n13" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="825" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e1" edge="1" parent="1" source="ad_phuong_tien_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e2" edge="1" parent="1" source="ad_phuong_tien_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e3" edge="1" parent="1" source="ad_phuong_tien_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e4" edge="1" parent="1" source="ad_phuong_tien_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e5" edge="1" parent="1" source="ad_phuong_tien_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n9" value="[Không]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e6" edge="1" parent="1" source="ad_phuong_tien_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n6" value="[Đạt]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e7" edge="1" parent="1" source="ad_phuong_tien_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n9" value="[Vượt]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e8" edge="1" parent="1" source="ad_phuong_tien_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n7" value="[Đạt]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e9" edge="1" parent="1" source="ad_phuong_tien_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n9" value="[Quá tải]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e10" edge="1" parent="1" source="ad_phuong_tien_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n8" value="[Đạt]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e11" edge="1" parent="1" source="ad_phuong_tien_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n9" value="[Sai số toa]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e12" edge="1" parent="1" source="ad_phuong_tien_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n10" value="[Đạt chuẩn]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e13" edge="1" parent="1" source="ad_phuong_tien_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#CC0000;fontColor=#CC0000;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n3" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="825" y="170" />
+              <mxPoint x="390" y="170" />
+              <mxPoint x="390" y="242.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e14" edge="1" parent="1" source="ad_phuong_tien_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e15" edge="1" parent="1" source="ad_phuong_tien_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_phuong_tien_e16" edge="1" parent="1" source="ad_phuong_tien_n12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#009900;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_phuong_tien_n13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ad_bao_tri" name="9. Khám Xe &amp; An Toàn Kỹ Thuật">
+    <mxGraphModel dx="1611" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_bao_tri_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Người Dùng: Kỹ Thuật Viên Khám Xe Đầu Bãi" vertex="1">
+          <mxGeometry height="810" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=3;fontFamily=Comic Sans MS;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;" value="Hệ Thống: Hệ Thống Quản Lý Bảo Trì &amp;amp; An Toàn Kỹ Thuật" vertex="1">
+          <mxGeometry height="810" width="510" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;sketch=1;curveFitting=1;jiggle=2;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chọn phương tiện / đoàn tàu và mở biên bản khám xe kỹ thuật" vertex="1">
+          <mxGeometry height="50" width="210" x="105" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhập kết quả đo đạc thực tế" vertex="1">
+          <mxGeometry height="55" width="260" x="80" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#0b7285;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhấn &#39;Thẩm Định Biên Bản&#39;" vertex="1">
+          <mxGeometry height="40" width="160" x="130" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Thẩm định áp suất gió hệ thống hãm đoàn tàu&amp;nbsp;" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n6" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Áp suất hãm&lt;br&gt;đạt chuẩn?" vertex="1">
+          <mxGeometry height="60" width="120" x="520" y="375" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Kiểm tra độ sụt áp hãm và độ dày gờ bánh xe" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="465" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n8" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#333333;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Hệ thống hãm &amp;amp;&lt;br&gt;cơ khí đạt chuẩn?" vertex="1">
+          <mxGeometry height="60" width="140" x="510" y="545" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#c92a2a;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Đánh dấu Không Đạt: Chuyển diện dừng chạy chờ sửa chữa" vertex="1">
+          <mxGeometry height="55" width="170" x="720" y="462.5" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Xác nhận Đạt Yêu Cầu và cấp Giấy chứng nhận an toàn kỹ thuật phương tiện" vertex="1">
+          <mxGeometry height="60" width="240" x="460" y="635" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontColor=#2b43b6;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cập nhật nhật ký bảo dưỡng và thực hiện cấp phát nhiên liệu vận hành" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="726" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_n12" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;fontSize=14;fontFamily=Comic Sans MS;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="805" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e1" edge="1" parent="1" source="ad_bao_tri_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e2" edge="1" parent="1" source="ad_bao_tri_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e3" edge="1" parent="1" source="ad_bao_tri_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e4" edge="1" parent="1" source="ad_bao_tri_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e5" edge="1" parent="1" source="ad_bao_tri_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e6" edge="1" parent="1" source="ad_bao_tri_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n9" value="[Không đạt]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e7" edge="1" parent="1" source="ad_bao_tri_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n7" value="[Đạt 5.0 bar]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e8" edge="1" parent="1" source="ad_bao_tri_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e9" edge="1" parent="1" source="ad_bao_tri_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#c92a2a;fontColor=#c92a2a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n9" value="[Không đạt]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e10" edge="1" parent="1" source="ad_bao_tri_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#2b8a3e;fontColor=#2b8a3e;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n10" value="[Đạt chuẩn]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e11" edge="1" parent="1" source="ad_bao_tri_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bao_tri_e12" edge="1" parent="1" source="ad_bao_tri_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Comic Sans MS;fontStyle=3;strokeColor=#343a40;fontColor=#343a40;sketch=1;curveFitting=1;jiggle=2;" target="ad_bao_tri_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ad_nhan_su" name="10. Nhân Sự &amp; Kíp Lái">
+    <mxGraphModel dx="1611" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ad_nhan_su_lane_actor" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f8f9fa;strokeColor=#495057;strokeWidth=3;fontFamily=Segoe UI;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;fontColor=default;" value="Người Dùng: Điều Độ Viên Nhân Sự / Kíp Lái Tàu" vertex="1">
+          <mxGeometry height="670" width="370" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_lane_system" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=32;horizontal=1;fillColor=#f1f3f5;strokeColor=#495057;strokeWidth=3;fontFamily=Segoe UI;fontSize=14;fontStyle=1;collapsible=0;dropTarget=0;sketch=1;curveFitting=1;jiggle=2;fontColor=default;" value="Hệ Thống: Hệ Thống Quản Lý Nhân Sự &amp;amp; Kíp Lái" vertex="1">
+          <mxGeometry height="670" width="400" x="410" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n1" parent="1" style="ellipse;fillColor=#212529;strokeColor=none;sketch=1;curveFitting=1;jiggle=2;strokeWidth=3;fontSize=14;fontColor=default;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Chọn chuyến tàu và phân công nhân sự kíp lái (Lái chính, Phụ lái, Trưởng tàu)" vertex="1">
+          <mxGeometry height="50" width="210" x="105" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Kiểm tra điều kiện: Bằng lái đúng chủng loại đầu máy và thời gian nghỉ giữa 2 ca &amp;gt;= 8 giờ" vertex="1">
+          <mxGeometry height="50" width="240" x="490" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n4" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Đủ điều kiện&lt;br&gt;phân công?" vertex="1">
+          <mxGeometry height="60" width="120" x="550" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Cảnh báo vi phạm giãn cách ca hoặc bằng lái quá hạn" vertex="1">
+          <mxGeometry height="50" width="170" x="125" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Tiến hành đo kiểm tra nồng độ cồn trước giờ lên ban cho từng thành viên kíp lái" vertex="1">
+          <mxGeometry height="50" width="260" x="80" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e3fafc;strokeColor=#0c8599;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Nhập chỉ số nồng độ cồn đo được vào hệ thống" vertex="1">
+          <mxGeometry height="45" width="210" x="105" y="435" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n8" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9db;strokeColor=#f59f00;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" value="Nồng độ cồn&lt;br&gt;= 0.00 mg/L?" vertex="1">
+          <mxGeometry height="65" width="140" x="510" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fff5f5;strokeColor=#fa5252;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="CẢNH BÁO ĐỎ: Nồng độ cồn &amp;gt; 0! Đình chỉ lên ban và đổi nhân sự dự bị" vertex="1">
+          <mxGeometry height="55" width="170" x="580" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Xác nhận Đủ Điều Kiện Lên Ban cho toàn bộ thành viên kíp lái" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="505" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#edf2ff;strokeColor=#3b5bdb;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontColor=default;sketch=1;curveFitting=1;jiggle=2;fontStyle=1" value="Lưu biên bản kiểm tra sức khỏe và phát hành lệnh điều động kíp lái điện tử" vertex="1">
+          <mxGeometry height="50" width="240" x="460" y="583" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_n12" parent="1" style="ellipse;html=1;shape=endState;fillColor=#212529;strokeColor=#212529;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;fontSize=14;fontColor=default;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="659" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e1" edge="1" parent="1" source="ad_nhan_su_n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#009900;fontColor=default;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e2" edge="1" parent="1" source="ad_nhan_su_n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#009900;fontColor=default;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e3" edge="1" parent="1" source="ad_nhan_su_n3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#009900;fontColor=default;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e4" edge="1" parent="1" source="ad_nhan_su_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#c92a2a;fontColor=default;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n5" value="[Vi phạm điều kiện]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e5" edge="1" parent="1" source="ad_nhan_su_n5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#CC0000;fontColor=default;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e6" edge="1" parent="1" source="ad_nhan_su_n4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#009900;fontColor=default;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n6" value="[Đủ điều kiện ca]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e7" edge="1" parent="1" source="ad_nhan_su_n6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#009900;fontColor=default;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e8" edge="1" parent="1" source="ad_nhan_su_n7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#009900;fontColor=default;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n8" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="457.52" />
+              <mxPoint x="370" y="432.48" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ad_nhan_su_e9" edge="1" parent="1" source="ad_nhan_su_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#CC0000;fontColor=default;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n9" value="[Có cồn &amp;gt; 0]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e10" edge="1" parent="1" source="ad_nhan_su_n9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#CC0000;fontColor=default;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.726;entryY=-0.012;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;entryPerimeter=0;" target="ad_nhan_su_n2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e11" edge="1" parent="1" source="ad_nhan_su_n8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#2b8a3e;fontColor=default;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n10" value="[Nồng độ = 0.00]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e12" edge="1" parent="1" source="ad_nhan_su_n10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#009900;fontColor=default;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_nhan_su_e13" edge="1" parent="1" source="ad_nhan_su_n11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeWidth=3;fontSize=14;fontFamily=Segoe UI;fontStyle=3;strokeColor=#009900;fontColor=default;sketch=1;curveFitting=1;jiggle=2;" target="ad_nhan_su_n12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

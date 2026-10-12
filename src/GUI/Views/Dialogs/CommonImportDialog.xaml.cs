@@ -223,6 +223,13 @@ namespace GUI.Views.Dialogs
 
                 DanhGiaLaiDuLieu();
             }
+            catch (IOException)
+            {
+                ThongBaoDialog.Loi(
+                    "Tệp dữ liệu đang bị khóa độc quyền bởi một phần mềm khác.\n\n" +
+                    "Vui lòng lưu và đóng tệp trong Microsoft Excel (hoặc ứng dụng khác) rồi thử lại.",
+                    "Tệp Đang Bị Khóa");
+            }
             catch (Exception ex)
             {
                 ThongBaoDialog.Loi("Lỗi khi đọc tệp dữ liệu: " + ex.Message, "Lỗi Đọc Tệp");

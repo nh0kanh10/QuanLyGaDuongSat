@@ -13,6 +13,13 @@ namespace BUS.Services
 
         public DataTable LayTheoGa(int maGa) => _repo.LayTheoGa(maGa);
 
+        /// <summary>
+        /// Lấy danh sách ga liền kề (tối đa 2) chưa có khu gian nối với ga được chọn.
+        /// Dùng cho Smart UX: auto-filter ComboBox Ga Cuối.
+        /// </summary>
+        public DataTable LayGaLienKeChuaCoKhuGian(int maGa, int maKhuGianBoQua = 0)
+            => _repo.LayGaLienKeChuaCoKhuGian(maGa, maKhuGianBoQua);
+
         public bool Them(KhuGian kg, out string error)
         {
             error = "";
@@ -36,27 +43,46 @@ namespace BUS.Services
                 kg.MaGaCuoi = temp;
             }
 
-            if (kg.CuLyKm <= 0)
+            if (kg.CuLyKm <= 0 || kg.CuLyKm > 999.99m)
             {
-                error = "Cự ly phân đoạn khu gian phải lớn hơn 0 km.";
+                error = "Cự ly phân đoạn khu gian phải lớn hơn 0 và không vượt quá 999.99 km.";
                 return false;
             }
 
-            if (kg.TocDoToiDaKhach <= 0 || kg.TocDoToiDaHang <= 0)
+            if (kg.TocDoToiDaKhach < 10 || kg.TocDoToiDaKhach > 200)
             {
-                error = "Tốc độ tối đa cho phép phải là số nguyên dương lớn hơn 0 km/h.";
+                error = "Tốc độ tối đa tàu khách không hợp lệ (cho phép từ 10 đến 200 km/h).";
                 return false;
             }
 
-            if (kg.DoDocPermil < 0)
+            if (kg.TocDoToiDaHang < 10 || kg.TocDoToiDaHang > 150)
             {
-                error = "Độ dốc tối đa không thể là số âm.";
+                error = "Tốc độ tối đa tàu hàng không hợp lệ (cho phép từ 10 đến 150 km/h).";
+                return false;
+            }
+
+            if (kg.TocDoToiDaHang > kg.TocDoToiDaKhach)
+            {
+                error = "Tốc độ tối đa tàu hàng không được lớn hơn tốc độ tối đa tàu khách.";
+                return false;
+            }
+
+            if (kg.DoDocPermil < 0 || kg.DoDocPermil > 50.0m)
+            {
+                error = "Độ dốc tối đa phải từ 0.0‰ đến 50.0‰.";
                 return false;
             }
 
             if (_repo.KiemTraTonTai(kg.MaGaDau, kg.MaGaCuoi))
             {
                 error = "Phân đoạn khu gian giữa 2 ga này đã tồn tại trên mạng lưới đường sắt.";
+                return false;
+            }
+
+            // Ràng buộc nghiệp vụ đường sắt: khu gian chỉ nối 2 ga LIỀN KỀ theo lý trình
+            if (!_repo.KiemTraGaLienKe(kg.MaGaDau, kg.MaGaCuoi))
+            {
+                error = "Hai ga được chọn KHÔNG liền kề nhau trên tuyến (có ga khác nằm giữa). Khu gian chỉ được tạo giữa 2 ga liền kề theo lý trình.";
                 return false;
             }
 
@@ -82,21 +108,33 @@ namespace BUS.Services
                 return false;
             }
 
-            if (kg.CuLyKm <= 0)
+            if (kg.CuLyKm <= 0 || kg.CuLyKm > 999.99m)
             {
-                error = "Cự ly phân đoạn khu gian phải lớn hơn 0 km.";
+                error = "Cự ly phân đoạn khu gian phải lớn hơn 0 và không vượt quá 999.99 km.";
                 return false;
             }
 
-            if (kg.TocDoToiDaKhach <= 0 || kg.TocDoToiDaHang <= 0)
+            if (kg.TocDoToiDaKhach < 10 || kg.TocDoToiDaKhach > 200)
             {
-                error = "Tốc độ tối đa cho phép phải lớn hơn 0 km/h.";
+                error = "Tốc độ tối đa tàu khách không hợp lệ (cho phép từ 10 đến 200 km/h).";
                 return false;
             }
 
-            if (kg.DoDocPermil < 0)
+            if (kg.TocDoToiDaHang < 10 || kg.TocDoToiDaHang > 150)
             {
-                error = "Độ dốc tối đa không thể là số âm.";
+                error = "Tốc độ tối đa tàu hàng không hợp lệ (cho phép từ 10 đến 150 km/h).";
+                return false;
+            }
+
+            if (kg.TocDoToiDaHang > kg.TocDoToiDaKhach)
+            {
+                error = "Tốc độ tối đa tàu hàng không được lớn hơn tốc độ tối đa tàu khách.";
+                return false;
+            }
+
+            if (kg.DoDocPermil < 0 || kg.DoDocPermil > 50.0m)
+            {
+                error = "Độ dốc tối đa phải từ 0.0‰ đến 50.0‰.";
                 return false;
             }
 
@@ -113,7 +151,7 @@ namespace BUS.Services
             return ok;
         }
 
-        public bool Xoa(int maKhuGian, out string error)
+        public bool Xoa(int maKhuGian, out string error, bool xoaDuongNgangKemTheo = true)
         {
             error = "";
             if (maKhuGian <= 0)
@@ -122,12 +160,20 @@ namespace BUS.Services
                 return false;
             }
 
-            bool ok = _repo.Xoa(maKhuGian) > 0;
-            if (!ok)
+            try
             {
-                error = "Không thể xóa phân đoạn khu gian (đang có lịch trình chạy tàu hoặc đường ngang giao cắt liên kết).";
+                bool ok = _repo.Xoa(maKhuGian, xoaDuongNgangKemTheo) > 0;
+                if (!ok)
+                {
+                    error = "Không tìm thấy phân đoạn khu gian cần xóa trong CSDL.";
+                }
+                return ok;
             }
-            return ok;
+            catch (Exception ex)
+            {
+                error = $"Không thể xóa phân đoạn khu gian: {ex.Message}";
+                return false;
+            }
         }
     }
 }

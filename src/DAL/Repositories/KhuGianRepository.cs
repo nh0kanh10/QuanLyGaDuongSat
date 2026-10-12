@@ -82,10 +82,90 @@ namespace DAL.Repositories
             return DatabaseHelper.ExecuteNonQuery(sql, p);
         }
 
-        public int Xoa(int maKhuGian)
+        public int Xoa(int maKhuGian, bool xoaDuongNgangKemTheo = true)
         {
-            return DatabaseHelper.ExecuteNonQuery("DELETE FROM hatang.KhuGian WHERE MaKhuGian=@id",
-                new[] { new SqlParameter("@id", maKhuGian) });
+            if (xoaDuongNgangKemTheo)
+            {
+                string sql = @"
+                    BEGIN TRANSACTION;
+                    DELETE FROM hatang.DuongNgang WHERE MaKhuGian = @id;
+                    DELETE FROM hatang.KhuGian WHERE MaKhuGian = @id;
+                    COMMIT TRANSACTION;";
+                return DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@id", maKhuGian) });
+            }
+            else
+            {
+                return DatabaseHelper.ExecuteNonQuery("DELETE FROM hatang.KhuGian WHERE MaKhuGian=@id",
+                    new[] { new SqlParameter("@id", maKhuGian) });
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách ga liền kề (tối đa 2: 1 phía Bắc + 1 phía Nam theo lý trình)
+        /// mà chưa có khu gian nối với ga được chọn.
+        /// </summary>
+        public DataTable LayGaLienKeChuaCoKhuGian(int maGa, int maKhuGianBoQua = 0)
+        {
+            // CTE tìm ga ngay phía Bắc (lý trình nhỏ hơn gần nhất) và phía Nam (lý trình lớn hơn gần nhất)
+            // Sau đó loại ga đã tồn tại khu gian (trừ khu gian đang chỉnh sửa)
+            string sql = @"
+                WITH GaHienTai AS (
+                    SELECT MaGa, LyTrinhKm FROM hatang.Ga WHERE MaGa = @maGa
+                ),
+                GaLienKe AS (
+                    -- Ga liền kề phía Bắc (lý trình nhỏ hơn, gần nhất)
+                    SELECT TOP 1 g.MaGa, g.MaGaCode, g.TenGa, g.LyTrinhKm, N'Phía Bắc' AS Huong
+                    FROM hatang.Ga g, GaHienTai ht
+                    WHERE g.LyTrinhKm < ht.LyTrinhKm AND g.DangKhaiThac = 1
+                    ORDER BY g.LyTrinhKm DESC
+
+                    UNION ALL
+
+                    -- Ga liền kề phía Nam (lý trình lớn hơn, gần nhất)
+                    SELECT TOP 1 g.MaGa, g.MaGaCode, g.TenGa, g.LyTrinhKm, N'Phía Nam' AS Huong
+                    FROM hatang.Ga g, GaHienTai ht
+                    WHERE g.LyTrinhKm > ht.LyTrinhKm AND g.DangKhaiThac = 1
+                    ORDER BY g.LyTrinhKm ASC
+                )
+                SELECT lk.*
+                FROM GaLienKe lk
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM hatang.KhuGian kg
+                    WHERE ((kg.MaGaDau = @maGa AND kg.MaGaCuoi = lk.MaGa) 
+                        OR (kg.MaGaDau = lk.MaGa AND kg.MaGaCuoi = @maGa))
+                      AND kg.MaKhuGian <> @boQua
+                )
+                ORDER BY lk.LyTrinhKm";
+            var p = new[]
+            {
+                new SqlParameter("@maGa", maGa),
+                new SqlParameter("@boQua", maKhuGianBoQua)
+            };
+            return DatabaseHelper.ExecuteQuery(sql, p);
+        }
+
+        /// <summary>
+        /// Kiểm tra 2 ga có liền kề nhau theo lý trình không (không có ga nào nằm giữa).
+        /// </summary>
+        public bool KiemTraGaLienKe(int maGa1, int maGa2)
+        {
+            string sql = @"
+                DECLARE @km1 DECIMAL(10,2), @km2 DECIMAL(10,2);
+                SELECT @km1 = LyTrinhKm FROM hatang.Ga WHERE MaGa = @g1;
+                SELECT @km2 = LyTrinhKm FROM hatang.Ga WHERE MaGa = @g2;
+
+                -- Đếm số ga nằm giữa 2 ga (theo lý trình), nếu = 0 thì liền kề
+                SELECT COUNT(*) FROM hatang.Ga
+                WHERE DangKhaiThac = 1
+                  AND LyTrinhKm > CASE WHEN @km1 < @km2 THEN @km1 ELSE @km2 END
+                  AND LyTrinhKm < CASE WHEN @km1 < @km2 THEN @km2 ELSE @km1 END";
+            var p = new[]
+            {
+                new SqlParameter("@g1", maGa1),
+                new SqlParameter("@g2", maGa2)
+            };
+            var result = DatabaseHelper.ExecuteScalar(sql, p);
+            return result != null && Convert.ToInt32(result) == 0;
         }
 
         public bool KiemTraTonTai(int maGaDau, int maGaCuoi, int maKhuGianBoQua = 0)

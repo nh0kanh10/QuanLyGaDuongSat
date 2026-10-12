@@ -10,6 +10,18 @@ namespace GUI.Converters
         {
             if (value == null) return string.Empty;
             string val = value.ToString() ?? "";
+            string param = parameter?.ToString() ?? "";
+
+            if (param == "Short")
+            {
+                return val switch
+                {
+                    "HANG_1" => "Hạng I",
+                    "HANG_2" => "Hạng II",
+                    "HANG_3" => "Hạng III",
+                    _ => val
+                };
+            }
 
             return val switch
             {

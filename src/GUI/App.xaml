@@ -283,16 +283,18 @@
             </Style>
 
             <Style TargetType="DataGridRow">
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <Setter Property="BorderBrush" Value="#F1F5F9"/>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#EFF6FF"/>
+                        <Setter Property="Background" Value="#F8FAFC"/>
                     </Trigger>
                     <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Background" Value="#DBEAFE"/>
-                        <Setter Property="Foreground" Value="#002855"/>
+                        <Setter Property="Background" Value="#E2E8F0"/>
+                        <Setter Property="Foreground" Value="#0F172A"/>
                         <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="BorderBrush" Value="#003B73"/>
-                        <Setter Property="BorderThickness" Value="3,0,0,0"/>
+                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
@@ -319,8 +321,8 @@
                 </Setter>
                 <Style.Triggers>
                     <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Background" Value="#DBEAFE"/>
-                        <Setter Property="Foreground" Value="#002855"/>
+                        <Setter Property="Background" Value="#E2E8F0"/>
+                        <Setter Property="Foreground" Value="#0F172A"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>

@@ -53,12 +53,12 @@ namespace GUI.Profiles
 
         public List<string[]> CacDongDuLieuMau => new()
         {
-            new[] { "HN", "Hà Nội", "0.00", "Hà Nội", "HANG_1", "1", "1" },
+            new[] { "HNI", "Hà Nội", "0.00", "Hà Nội", "HANG_1", "1", "1" },
             new[] { "GBA", "Giáp Bát", "5.00", "Hà Nội", "HANG_2", "0", "1" },
-            new[] { "VDI", "Văn Điển", "8.90", "Hà Nội", "HANG_3", "0", "1" },
+            new[] { "VDN", "Văn Điển", "8.90", "Hà Nội", "HANG_3", "0", "1" },
             new[] { "PLY", "Phủ Lý", "56.00", "Hà Nam", "HANG_2", "1", "1" },
-            new[] { "NDI", "Nam Định", "87.00", "Nam Định", "HANG_2", "0", "1" },
-            new[] { "THO", "Thanh Hóa", "176.00", "Thanh Hóa", "HANG_1", "1", "1" },
+            new[] { "NDH", "Nam Định", "87.00", "Nam Định", "HANG_2", "0", "1" },
+            new[] { "THA", "Thanh Hóa", "176.00", "Thanh Hóa", "HANG_1", "1", "1" },
             new[] { "VIN", "Vinh", "319.00", "Nghệ An", "HANG_1", "1", "1" },
             new[] { "HUE", "Huế", "688.00", "Thừa Thiên Huế", "HANG_1", "1", "1" },
             new[] { "DAN", "Đà Nẵng", "791.00", "Đà Nẵng", "HANG_1", "1", "1" },
@@ -68,7 +68,7 @@ namespace GUI.Profiles
 
         public List<string>? GhiChuCotMau => new()
         {
-            "Mã Ga viết hoa không dấu (tối đa 10 ký tự, ví dụ: HN, SGO, DAN)",
+            "Mã Ga viết hoa không dấu (tối đa 10 ký tự, ví dụ: HNI, SGO, DAN)",
             "Tên đầy đủ của Ga đường sắt (ví dụ: Hà Nội, Sài Gòn)",
             "Lý trình tính từ Ga Hà Nội (Km 0.00)",
             "Tỉnh hoặc Thành phố trực thuộc Trung ương",
@@ -79,12 +79,12 @@ namespace GUI.Profiles
 
         public string NoiDungCsvMau => 
              @"Mã Ga,Tên Ga,Lý Trình (km),Tỉnh Thành,Phân Cấp,Cầu Quay,Đang Khai Thác
-             HN,Hà Nội,0.00,Hà Nội,HANG_1,1,1
+             HNI,Hà Nội,0.00,Hà Nội,HANG_1,1,1
              GBA,Giáp Bát,5.00,Hà Nội,HANG_2,0,1
-             VDI,Văn Điển,8.90,Hà Nội,HANG_3,0,1
+             VDN,Văn Điển,8.90,Hà Nội,HANG_3,0,1
              PLY,Phủ Lý,56.00,Hà Nam,HANG_2,1,1
-             NDI,Nam Định,87.00,Nam Định,HANG_2,0,1
-             THO,Thanh Hóa,176.00,Thanh Hóa,HANG_1,1,1
+             NDH,Nam Định,87.00,Nam Định,HANG_2,0,1
+             THA,Thanh Hóa,176.00,Thanh Hóa,HANG_1,1,1
              VIN,Vinh,319.00,Nghệ An,HANG_1,1,1
              HUE,Huế,688.00,Thừa Thiên Huế,HANG_1,1,1
              DAN,Đà Nẵng,791.00,Đà Nẵng,HANG_1,1,1

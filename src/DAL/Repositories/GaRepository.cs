@@ -81,6 +81,54 @@ namespace DAL.Repositories
             return DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@id", maGa) });
         }
 
+        /// <summary>
+        /// Xóa ga thông minh: Nếu ga chưa có bất kỳ dữ liệu liên kết nào (đường ray, khu gian, lịch trình...) thì xóa hẳn (Hard Delete).
+        /// Nếu đã có liên kết hạ tầng hoặc vận hành thì tự động chuyển sang Tạm ngừng khai thác (Soft Delete).
+        /// </summary>
+        public bool XoaThongMinh(int maGa, out bool daXoaVinhVien, out string thongBao)
+        {
+            daXoaVinhVien = false;
+            thongBao = string.Empty;
+
+            try
+            {
+                // 1. Thử xóa hoàn toàn (Hard Delete) nếu là ga mới chưa có ràng buộc khóa ngoại
+                string sqlDelete = "DELETE FROM hatang.Ga WHERE MaGa = @id";
+                int rows = DatabaseHelper.ExecuteNonQuery(sqlDelete, new[] { new SqlParameter("@id", maGa) });
+                if (rows > 0)
+                {
+                    daXoaVinhVien = true;
+                    thongBao = "Đã xóa hoàn toàn ga khỏi hệ thống.";
+                    return true;
+                }
+                thongBao = "Không tìm thấy dữ liệu ga cần xóa.";
+                return false;
+            }
+            catch (SqlException ex) when (ex.Number == 547)
+            {
+                // 2. Vi phạm khóa ngoại FK (có dữ liệu đường ray, khu gian, lịch trình...) -> Chuyển sang Tạm ngừng khai thác
+                string sqlSoft = @"UPDATE hatang.Ga 
+                                   SET DangKhaiThac = 0, 
+                                       NgayCapNhat = SYSUTCDATETIME(), 
+                                       NguoiCapNhat = 'admin' 
+                                   WHERE MaGa = @id";
+                int rows = DatabaseHelper.ExecuteNonQuery(sqlSoft, new[] { new SqlParameter("@id", maGa) });
+                if (rows > 0)
+                {
+                    daXoaVinhVien = false;
+                    thongBao = "Ga đã có dữ liệu hạ tầng hoặc vận hành nên đã được chuyển sang trạng thái 'Tạm ngừng khai thác' để bảo toàn dữ liệu.";
+                    return true;
+                }
+                thongBao = "Không thể cập nhật trạng thái ga.";
+                return false;
+            }
+            catch (Exception ex)
+            {
+                thongBao = ex.Message;
+                return false;
+            }
+        }
+
         public DataTable LayDuongRayTheoGa(int maGa)
         {
             string sql = @"SELECT MaDuongRay, SoHieuDuong, LoaiDuong, ChieuDaiHuuDungM, CoKeGa, TrangThai
@@ -132,6 +180,41 @@ namespace DAL.Repositories
                 new SqlParameter("@exclude", excludeMaGa)
             };
             object? res = DatabaseHelper.ExecuteScalar(sql, p);
+            return res != null && Convert.ToInt32(res) > 0;
+        }
+
+        public string? LayTenGaTheoLyTrinh(int maTuyen, decimal lyTrinhKm, int excludeMaGa = 0)
+        {
+            string sql = @"SELECT TOP 1 CONCAT(TenGa, N' (', MaGaCode, N')') FROM hatang.Ga 
+                           WHERE MaTuyen = @maTuyen AND ABS(LyTrinhKm - @km) < 0.001 AND (@exclude = 0 OR MaGa <> @exclude)";
+            var p = new[]
+            {
+                new SqlParameter("@maTuyen", maTuyen),
+                new SqlParameter("@km", lyTrinhKm),
+                new SqlParameter("@exclude", excludeMaGa)
+            };
+            object? res = DatabaseHelper.ExecuteScalar(sql, p);
+            return res?.ToString();
+        }
+
+        public bool KiemTraTenGaTonTai(int maTuyen, string tenGa, int excludeMaGa = 0)
+        {
+            string sql = @"SELECT COUNT(*) FROM hatang.Ga 
+                           WHERE MaTuyen = @maTuyen AND LOWER(LTRIM(RTRIM(TenGa))) = LOWER(@ten) AND (@exclude = 0 OR MaGa <> @exclude)";
+            var p = new[]
+            {
+                new SqlParameter("@maTuyen", maTuyen),
+                new SqlParameter("@ten", tenGa.Trim().ToLower()),
+                new SqlParameter("@exclude", excludeMaGa)
+            };
+            object? res = DatabaseHelper.ExecuteScalar(sql, p);
+            return res != null && Convert.ToInt32(res) > 0;
+        }
+
+        public bool KiemTraGaDangCoTau(int maGa)
+        {
+            string sql = @"SELECT COUNT(*) FROM hatang.DuongRayGa WHERE MaGa = @maGa AND TrangThai = 'CO_TAU'";
+            var res = DatabaseHelper.ExecuteScalar(sql, new[] { new SqlParameter("@maGa", maGa) });
             return res != null && Convert.ToInt32(res) > 0;
         }
     }

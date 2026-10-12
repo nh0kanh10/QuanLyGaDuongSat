@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using BUS.Services;
+using DTO.Common;
 using ET.HaTang;
 using GUI.Helpers;
 
@@ -61,17 +62,17 @@ namespace GUI.Profiles
 
         public List<string[]> CacDongDuLieuMau => new()
         {
-            new[] { "HN", "GBA", "5.00", "80", "60", "0.0", "0" },
-            new[] { "GBA", "VDI", "3.90", "80", "60", "0.0", "0" },
-            new[] { "VDI", "PLY", "47.10", "90", "70", "0.0", "0" },
-            new[] { "PLY", "NDI", "31.00", "90", "70", "0.0", "0" },
-            new[] { "NDI", "THO", "89.00", "90", "70", "0.0", "0" },
-            new[] { "THO", "VIN", "143.00", "90", "70", "0.0", "0" }
+            new[] { "HNI", "GBA", "5.00", "80", "60", "0.0", "0" },
+            new[] { "GBA", "VDN", "3.90", "80", "60", "0.0", "0" },
+            new[] { "VDN", "PLY", "47.10", "90", "70", "0.0", "0" },
+            new[] { "PLY", "NDH", "31.00", "90", "70", "0.0", "0" },
+            new[] { "NDH", "THA", "89.00", "90", "70", "0.0", "0" },
+            new[] { "THA", "VIN", "143.00", "90", "70", "0.0", "0" }
         };
 
         public List<string>? GhiChuCotMau => new()
         {
-            "Mã Ga điểm đầu hoặc Tên ga (ví dụ: HN hoặc Hà Nội)",
+            "Mã Ga điểm đầu hoặc Tên ga (ví dụ: HNI hoặc Hà Nội)",
             "Mã Ga điểm cuối hoặc Tên ga (ví dụ: GBA hoặc Giáp Bát)",
             "Khoảng cách thực tế giữa 2 ga (km, số thập phân)",
             "Tốc độ tối đa cho tàu khách (km/h, mặc định 80)",
@@ -82,12 +83,12 @@ namespace GUI.Profiles
 
         public string NoiDungCsvMau =>
             @"Mã Ga Đầu,Mã Ga Cuối,Cự Ly (km),Vmax Khách (km/h),Vmax Hàng (km/h),Độ Dốc (‰),Cần Máy Đẩy
-            HN,GBA,5.00,80,60,0.0,0
-            GBA,VDI,3.90,80,60,0.0,0
-            VDI,PLY,47.10,90,70,0.0,0
-            PLY,NDI,31.00,90,70,0.0,0
-            NDI,THO,89.00,90,70,0.0,0
-            THO,VIN,143.00,90,70,0.0,0";
+HNI,GBA,5.00,80,60,0.0,0
+GBA,VDN,3.90,80,60,0.0,0
+VDN,PLY,47.10,90,70,0.0,0
+PLY,NDH,31.00,90,70,0.0,0
+NDH,THA,89.00,90,70,0.0,0
+THA,VIN,143.00,90,70,0.0,0";
 
         public List<ImportColumnDefinition> CacCotPreview => new()
         {
@@ -102,8 +103,8 @@ namespace GUI.Profiles
 
         public List<SmartColumnTarget> CacCotMucTieu => new()
         {
-            new SmartColumnTarget("GaDauCode", new[] { "mã ga đầu", "ga đầu", "mã ga 1", "ga 1", "magadau", "magadaucode", "mã ga đi", "ga đi", "tên ga đầu" }, isRequired: true),
-            new SmartColumnTarget("GaCuoiCode", new[] { "mã ga cuối", "ga cuối", "mã ga 2", "ga 2", "magacuoi", "magacuoicode", "mã ga đến", "ga đến", "tên ga cuối" }, isRequired: true),
+            new SmartColumnTarget("GaDauCode", new[] { "mã ga đầu", "mã ga 1", "magadau", "magadaucode", "mã ga đi", "ga đầu", "ga 1", "ga đi", "tên ga đầu" }, isRequired: true),
+            new SmartColumnTarget("GaCuoiCode", new[] { "mã ga cuối", "mã ga 2", "magacuoi", "magacuoicode", "mã ga đến", "ga cuối", "ga 2", "ga đến", "tên ga cuối" }, isRequired: true),
             new SmartColumnTarget("CuLyKm", new[] { "cự ly (km)", "cự ly", "khoảng cách", "culy", "culykm", "km", "khoảng cách km" }),
             new SmartColumnTarget("TocDoKhach", new[] { "vmax khách (km/h)", "vmax khách", "tốc độ khách", "tocdokhach", "vmax" }),
             new SmartColumnTarget("TocDoHang", new[] { "vmax hàng (km/h)", "vmax hàng", "tốc độ hàng", "tocdohang" }),
@@ -168,6 +169,55 @@ namespace GUI.Profiles
             _setKhuGianTrongTep.Clear();
         }
 
+        private static readonly Dictionary<string, string> AliasGaCode = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "HN", "HNI" },
+            { "VDI", "VDN" },
+            { "NDI", "NDH" },
+            { "TH", "THA" },
+            { "SG", "SGO" },
+            { "DN", "DAN" },
+            { "ĐN", "DAN" }
+        };
+
+        private bool ThuTimThongTinGa(string input, out (int MaGa, string TenGa, decimal LyTrinh) info)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                info = default;
+                return false;
+            }
+
+            string clean = input.Trim();
+
+            // 1. Khớp theo Mã Code trực tiếp trong CSDL (ví dụ: HNI, GBA)
+            if (_dicGaByCode.TryGetValue(clean, out info)) return true;
+
+            // 2. Khớp theo Tên Ga trực tiếp trong CSDL (ví dụ: Hà Nội, Giáp Bát)
+            if (_dicGaByTen.TryGetValue(clean, out info)) return true;
+
+            // 3. Khớp qua Alias mã viết tắt thông dụng (ví dụ: HN -> HNI, VDI -> VDN, NDI -> NDH)
+            if (AliasGaCode.TryGetValue(clean, out var aliasCode) && _dicGaByCode.TryGetValue(aliasCode, out info))
+            {
+                return true;
+            }
+
+            // 4. Khớp tên không phân biệt dấu tiếng Việt
+            string noDiacritics = FormatHelper.RemoveDiacritics(clean).ToLowerInvariant();
+            foreach (var kvp in _dicGaByTen)
+            {
+                string tenNoDiacritics = FormatHelper.RemoveDiacritics(kvp.Key).ToLowerInvariant();
+                if (tenNoDiacritics == noDiacritics)
+                {
+                    info = kvp.Value;
+                    return true;
+                }
+            }
+
+            info = default;
+            return false;
+        }
+
         public ImportRowBase KiemTraVaPhanTichDongThongMinh(SmartRowData row, int soDong, bool choPhepCapNhat = false)
         {
             var item = new ImportKhuGianRow
@@ -192,7 +242,7 @@ namespace GUI.Profiles
             string tenGaDau = item.GaDauCode;
             decimal lyTrinhDau = 0m;
 
-            if (_dicGaByCode.TryGetValue(item.GaDauCode, out var gaDauInfo) || _dicGaByTen.TryGetValue(item.GaDauCode, out gaDauInfo))
+            if (ThuTimThongTinGa(item.GaDauCode, out var gaDauInfo))
             {
                 maGaDau = gaDauInfo.MaGa;
                 tenGaDau = gaDauInfo.TenGa;
@@ -211,7 +261,7 @@ namespace GUI.Profiles
             string tenGaCuoi = item.GaCuoiCode;
             decimal lyTrinhCuoi = 0m;
 
-            if (_dicGaByCode.TryGetValue(item.GaCuoiCode, out var gaCuoiInfo) || _dicGaByTen.TryGetValue(item.GaCuoiCode, out gaCuoiInfo))
+            if (ThuTimThongTinGa(item.GaCuoiCode, out var gaCuoiInfo))
             {
                 maGaCuoi = gaCuoiInfo.MaGa;
                 tenGaCuoi = gaCuoiInfo.TenGa;
