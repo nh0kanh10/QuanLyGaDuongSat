@@ -179,6 +179,7 @@
                                 </Grid.ColumnDefinitions>
                                 <Grid Grid.Column="0" Width="260">
                                     <ui:TextBox x:Name="txtTimKiem" 
+                                                MaxLength="100"
                                                 TextChanged="TxtTimKiem_TextChanged"
                                                 Height="28"
                                                 FontSize="11"

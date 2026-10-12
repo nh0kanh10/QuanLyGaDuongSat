@@ -189,7 +189,11 @@ namespace GUI.Views.Pages
 
             try
             {
-                string rawKw = txtTimKiem.Text.Trim();
+                string rawKw = txtTimKiem?.Text?.Trim() ?? "";
+                if (rawKw.Length > 100)
+                {
+                    rawKw = rawKw.Substring(0, 100);
+                }
                 string keywordSafe = EscapeLikeFilter(rawKw);
                 string filterStatus = "";
 
@@ -258,8 +262,21 @@ namespace GUI.Views.Pages
 
         private void TxtTimKiem_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (_isLoadingData) return;
-            ApplyFilter();
+            try
+            {
+                if (_isLoadingData) return;
+                if (txtTimKiem != null && txtTimKiem.Text.Length > 100)
+                {
+                    txtTimKiem.Text = txtTimKiem.Text.Substring(0, 100);
+                    txtTimKiem.CaretIndex = 100;
+                    return;
+                }
+                ApplyFilter();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[KhuGianPage.TxtTimKiem_TextChanged] Lỗi: {ex.Message}");
+            }
         }
 
         private void BtnXoaTimKiem_Click(object sender, RoutedEventArgs e)

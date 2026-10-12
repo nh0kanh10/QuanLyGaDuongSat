@@ -1986,65 +1986,91 @@ namespace GUI.Views.Pages
         {
             if (_cachedTable == null) return;
 
-            var conditions = new List<string>();
-
-            // 1. Tìm kiếm từ khóa đa năng (Tên ga, mã code, tỉnh thành, lý trình Km - có dấu & không dấu, an toàn ký tự đặc biệt)
-            string rawKw = txtTimKiem.Text.Trim();
-            if (!string.IsNullOrEmpty(rawKw))
+            try
             {
-                string kwSafe = EscapeLikeFilter(rawKw.ToLowerInvariant());
-                string kwUnaccent = EscapeLikeFilter(FormatHelper.RemoveDiacritics(rawKw).ToLowerInvariant());
+                var conditions = new List<string>();
 
-                conditions.Add($"(SearchIndex LIKE '%{kwSafe}%' OR SearchIndex LIKE '%{kwUnaccent}%')");
+                // 1. Tìm kiếm từ khóa đa năng (Tên ga, mã code, tỉnh thành, lý trình Km - có dấu & không dấu, an toàn ký tự đặc biệt)
+                string rawKw = txtTimKiem?.Text?.Trim() ?? "";
+                if (rawKw.Length > 100)
+                {
+                    rawKw = rawKw.Substring(0, 100);
+                }
+
+                if (!string.IsNullOrEmpty(rawKw))
+                {
+                    string kwSafe = EscapeLikeFilter(rawKw.ToLowerInvariant());
+                    string kwUnaccent = EscapeLikeFilter(FormatHelper.RemoveDiacritics(rawKw).ToLowerInvariant());
+
+                    conditions.Add($"(SearchIndex LIKE '%{kwSafe}%' OR SearchIndex LIKE '%{kwUnaccent}%')");
+                }
+
+                // 2. Lọc theo Phân Cấp Ga
+                if (cboLocHangGa != null && cboLocHangGa.SelectedIndex > 0)
+                {
+                    if (cboLocHangGa.SelectedIndex == 1) conditions.Add("HangGa = 'HANG_1'");
+                    else if (cboLocHangGa.SelectedIndex == 2) conditions.Add("HangGa = 'HANG_2'");
+                    else if (cboLocHangGa.SelectedIndex == 3) conditions.Add("HangGa = 'HANG_3'");
+                }
+
+                // 3. Lọc theo Khai Thác
+                if (cboLocKhaiThac != null && cboLocKhaiThac.SelectedIndex > 0)
+                {
+                    if (cboLocKhaiThac.SelectedIndex == 1) conditions.Add("DangKhaiThac = true");
+                    else if (cboLocKhaiThac.SelectedIndex == 2) conditions.Add("DangKhaiThac = false");
+                }
+
+                // 4. Lọc Cầu Quay
+                if (chkLocCauQuay != null && chkLocCauQuay.IsChecked == true)
+                {
+                    conditions.Add("CoCauQuay = true");
+                }
+
+                // Áp dụng 
+                _cachedTable.DefaultView.RowFilter = conditions.Count > 0 ? string.Join(" AND ", conditions) : "";
+
+                // Hiển thị nút "Hủy Bộ Lọc" nếu có bất kỳ điều kiện lọc nào đang chạy
+                bool isFiltering = conditions.Count > 0;
+                if (btnXoaTatCaLoc != null)
+                {
+                    btnXoaTatCaLoc.Visibility = isFiltering ? Visibility.Visible : Visibility.Collapsed;
+                }
+
+                _currentPage = 1;
+                ApplyPaging();
             }
-
-            // 2. Lọc theo Phân Cấp Ga
-            if (cboLocHangGa != null && cboLocHangGa.SelectedIndex > 0)
+            catch (Exception ex)
             {
-                if (cboLocHangGa.SelectedIndex == 1) conditions.Add("HangGa = 'HANG_1'");
-                else if (cboLocHangGa.SelectedIndex == 2) conditions.Add("HangGa = 'HANG_2'");
-                else if (cboLocHangGa.SelectedIndex == 3) conditions.Add("HangGa = 'HANG_3'");
+                System.Diagnostics.Debug.WriteLine($"[MangLuoiGaPage.ApplyAdvancedFilter] Lỗi: {ex.Message}");
             }
-
-            // 3. Lọc theo Khai Thác
-            if (cboLocKhaiThac != null && cboLocKhaiThac.SelectedIndex > 0)
-            {
-                if (cboLocKhaiThac.SelectedIndex == 1) conditions.Add("DangKhaiThac = true");
-                else if (cboLocKhaiThac.SelectedIndex == 2) conditions.Add("DangKhaiThac = false");
-            }
-
-            // 4. Lọc Cầu Quay
-            if (chkLocCauQuay != null && chkLocCauQuay.IsChecked == true)
-            {
-                conditions.Add("CoCauQuay = true");
-            }
-
-            // Áp dụng 
-            _cachedTable.DefaultView.RowFilter = conditions.Count > 0 ? string.Join(" AND ", conditions) : "";
-
-            // Hiển thị nút "Hủy Bộ Lọc" nếu có bất kỳ điều kiện lọc nào đang chạy
-            bool isFiltering = conditions.Count > 0;
-            if (btnXoaTatCaLoc != null)
-            {
-                btnXoaTatCaLoc.Visibility = isFiltering ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            _currentPage = 1;
-            ApplyPaging();
         }
 
         private void TxtTimKiem_TextChanged(object sender, TextChangedEventArgs e)
         {
-            bool coChu = !string.IsNullOrEmpty(txtTimKiem.Text);
-            if (btnXoaTimKiem != null)
+            try
             {
-                btnXoaTimKiem.Visibility = coChu ? Visibility.Visible : Visibility.Collapsed;
+                if (txtTimKiem != null && txtTimKiem.Text.Length > 100)
+                {
+                    txtTimKiem.Text = txtTimKiem.Text.Substring(0, 100);
+                    txtTimKiem.CaretIndex = 100;
+                    return;
+                }
+
+                bool coChu = !string.IsNullOrEmpty(txtTimKiem?.Text);
+                if (btnXoaTimKiem != null)
+                {
+                    btnXoaTimKiem.Visibility = coChu ? Visibility.Visible : Visibility.Collapsed;
+                }
+                if (txtWatermark != null)
+                {
+                    txtWatermark.Visibility = coChu ? Visibility.Collapsed : Visibility.Visible;
+                }
+                ApplyAdvancedFilter();
             }
-            if (txtWatermark != null)
+            catch (Exception ex)
             {
-                txtWatermark.Visibility = coChu ? Visibility.Collapsed : Visibility.Visible;
+                System.Diagnostics.Debug.WriteLine($"[MangLuoiGaPage.TxtTimKiem_TextChanged] Lỗi: {ex.Message}");
             }
-            ApplyAdvancedFilter();
         }
 
         private void BtnXoaTimKiem_Click(object sender, RoutedEventArgs e)

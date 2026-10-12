@@ -190,6 +190,7 @@
                                         <ui:SymbolIcon Grid.Column="0" Symbol="Search24" FontSize="13" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         <Grid Grid.Column="1">
                                             <TextBox x:Name="txtTimKiem" 
+                                                     MaxLength="100"
                                                      BorderThickness="0" Background="Transparent" 
                                                      VerticalContentAlignment="Center" FontSize="11" 
                                                      TextChanged="TxtTimKiem_TextChanged"
@@ -862,7 +863,7 @@
                                                       SelectionChanged="CboGa_SelectionChanged"/>
                                         </Grid>
 
-                                        <!-- Warning khi không có ga liền kề hợp lệ -->
+                                        <!-- canh báo khi không có ga liền kề hợp lệ -->
                                         <Border x:Name="pnlWarningGaLienKe" Visibility="Collapsed" 
                                                 Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="3" Padding="10,6" Margin="0,6,0,0">
                                             <StackPanel Orientation="Horizontal">
