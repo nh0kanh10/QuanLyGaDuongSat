@@ -451,7 +451,7 @@ namespace GUI.Views.Pages
                     dtDenTT = dtDenTT.Value.AddDays(1);
             }
 
-            // RÀNG BUỘC CHỐNG TRANH CHẤP ĐẦU MÁY (Time-Overlap Contention)
+            // RÀNG BUỘC CHỐNG TRANH CHẤP ĐẦU MÁY 
             if (cboDauMayChinh.SelectedValue != null && int.TryParse(cboDauMayChinh.SelectedValue.ToString(), out int maDauMay) && maDauMay > 0)
             {
                 if (!_chuyenTauService.KiemTraXungDotDauMay(maDauMay, dtDi, dtDen, _isAddingNew ? 0 : _selectedMaChuyenTau, out string thongBaoLoi))
@@ -602,9 +602,7 @@ namespace GUI.Views.Pages
             LoadData();
         }
 
-        // =========================================================================
-        // TAB 2: LỊCH TRÌNH DỪNG GA (SUB-ENTITY)
-        // =========================================================================
+        // lich trình dừng ga
 
         private void BtnMoFormThemDung_Click(object sender, RoutedEventArgs e)
         {
@@ -806,9 +804,7 @@ namespace GUI.Views.Pages
             // Handle tab switch if needed
         }
 
-        // =========================================================================
-        // PHÂN HỆ ĐOÀN TÀU & ĐẦU MÁY KÉO (Chống Tranh Chấp & Kiểm Tra Chiều Dài Ga)
-        // =========================================================================
+        // PHÂN HỆ ĐOÀN TÀU & ĐẦU MÁY KÉO
 
         private void LoadDanhSachDauMay(DateTime? gioDi, DateTime? gioDen, int? maChuyenTau)
         {
