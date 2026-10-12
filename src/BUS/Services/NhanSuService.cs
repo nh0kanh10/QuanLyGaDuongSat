@@ -16,6 +16,8 @@ namespace BUS.Services
     // Ghi : moi thao tac MOT giao dich:
     //         quyen -> mo giao dich -> khoa ung dung -> nap lai anh chup (gio may chu)
     //         -> kiem phien ban (ROWVERSION) -> chay lai luat -> ghi -> nhat ky -> COMMIT.
+    //       Ghi kip: truoc khi ghi doi chieu trung gio tren toan bang (KiemTraTrungGioToanBang,
+    //       cung dieu kien trigger) vi anh chup chi gom chuyen trong cua so ngay.
     //       Khoa "nhansu.PhanCong" tuan tu hoa moi thao tac lien quan kip (phan cong, kiem tra,
     //       nhan ban, ban giao, sua ho so): R4 nghi 8 gio, R6, R7, R8 khong co trong CSDL nen
     //       2 nguoi ghi cung luc se lot neu khong khoa. Thu tu lay khoa: PhanCong -> MaNhanVien.
@@ -331,6 +333,13 @@ namespace BUS.Services
                     && goc.MaGaNhanBan == pc.MaGaNhanBan && goc.MaGaBanGiao == pc.MaGaBanGiao)
                     return true;   // khong doi gi
 
+                string? trungGio = KiemTraTrungGioToanBang(pc, gd);
+                if (trungGio != null)
+                {
+                    loi = "Chưa lưu được kíp:\n\n" + trungGio;
+                    return false;
+                }
+
                 if (laMoi)
                 {
                     maPhanCong = _repo.ThemKip(pc, gd);
@@ -532,6 +541,15 @@ namespace BUS.Services
                     return false;
                 }
 
+                // Trigger trung gio chay ca khi chi doi trang thai
+                string? trungGio = KiemTraTrungGioToanBang(kip, gd);
+                if (trungGio != null)
+                {
+                    loi = $"{dong.NhanChuyen} · {dong.TenKip} ({kip.Chang}) chưa nhận ban được, kíp đang trùng giờ:\n\n" +
+                          $"{trungGio}\n\nHãy thay người rồi nhận ban.";
+                    return false;
+                }
+
                 if (_repo.DoiTrangThaiKip(maPhanCong, kip.PhienBan!, PhanCongKipHienThi.DaPhanCong,
                                           PhanCongKipHienThi.DangThucHien, gd) == 0)
                 {
@@ -571,6 +589,16 @@ namespace BUS.Services
                 string? loiGoc = KiemTraKipDangMo(kip, phienBan, PhanCongKipHienThi.DangThucHien, "bàn giao");
                 if (loiGoc != null) { loi = loiGoc; return false; }
 
+                // Kip dang thuc hien khong sua nguoi duoc; trung gio o day chi xay ra khi gio chuyen tau
+                // bi doi sau luc phan cong -> trigger se chan ca viec doi trang thai, bao ro de xu ly
+                string? trungGio = KiemTraTrungGioToanBang(kip!, gd);
+                if (trungGio != null)
+                {
+                    loi = $"Chưa bàn giao được: CSDL ghi nhận kíp này trùng giờ với kíp khác:\n\n{trungGio}\n\n" +
+                          "Giờ chuyến tàu có thể đã bị đổi sau khi phân công. Báo điều độ kiểm tra lại giờ chuyến.";
+                    return false;
+                }
+
                 if (_repo.DoiTrangThaiKip(maPhanCong, kip!.PhienBan!, PhanCongKipHienThi.DangThucHien,
                                           PhanCongKipHienThi.HoanThanh, gd) == 0)
                 {
@@ -607,6 +635,15 @@ namespace BUS.Services
             DateTime bayGio = _repo.LayGioMayChu(gd);
             var (tu, den) = CuaSo(bayGio);
             return _repo.LayDuLieu(tu, den, bayGio, gd);
+        }
+
+        // Doi chieu lan cuoi tren toan bang, cung dieu kien voi trigger trung gio, trong giao dich da
+        // khoa nhansu.PhanCong: anh chup chi gom chuyen trong cua so nen luat R3 co the sot kip o chuyen
+        // ngoai cua so. Co trung -> danh sach "• ..." ghi ro nguoi + chuyen; null = khong trung.
+        private string? KiemTraTrungGioToanBang(PhanCongKipHienThi kip, PhienGiaoDich gd)
+        {
+            var ds = _repo.TimKipTrungGio(kip, gd);
+            return ds.Count == 0 ? null : string.Join("\n", ds.Select(t => "• " + t.MoTa));
         }
 
         private string CapMa(string chucDanh, PhienGiaoDich gd)

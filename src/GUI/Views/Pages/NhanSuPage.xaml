@@ -547,13 +547,14 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Giờ Đi" Width="70">
+                                    <DataGridTemplateColumn Header="Giờ Đi" Width="94">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding Chuyen.GioXuatPhatKH, StringFormat=HH:mm}" FontSize="11" FontWeight="SemiBold"/>
-                                                    <TextBlock Text="{Binding Chuyen.NhanTrangThai}" FontSize="10"
-                                                               Foreground="{Binding Chuyen.MauTrangThai}" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Chuyen.NhanTrangThaiNgan}" FontSize="10"
+                                                               Foreground="{Binding Chuyen.MauTrangThaiHienThi}" TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding Chuyen.NhanTrangThaiDayDu}"/>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>

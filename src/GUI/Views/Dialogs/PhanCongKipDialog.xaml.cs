@@ -60,7 +60,7 @@ namespace GUI.Views.Dialogs
 
             txtChuyen.Text = chuyen.TenHienThi;
             txtChuyenPhu.Text = $"Đầu máy {chuyen.NhanDauMay} · xuất phát {chuyen.GioXuatPhatKH:HH:mm dd/MM} · " +
-                                $"về đích {chuyen.GioVeDichKH:HH:mm dd/MM} · {chuyen.NhanTrangThai.ToLower()}" +
+                                $"về đích {chuyen.GioVeDichKH:HH:mm dd/MM} · {chuyen.NhanTrangThaiDayDu.ToLower()}" +
                                 (chuyen.CoLichDungGa ? "" : " · chưa có lịch dừng ga");
 
             var diem = chuyen.LichDung;

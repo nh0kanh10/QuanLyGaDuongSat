@@ -97,10 +97,11 @@ namespace GUI.Views.Pages
             var ct = tt.Chuyen;
             txtCtMac.Text = ct.SoHieuMacTau;
             txtCtHanhTrinh.Text = ct.HanhTrinh;
-            txtCtTrangThai.Text = ct.NhanTrangThai;
-            txtCtTrangThai.Foreground = Mau(ct.MauTrangThai);
+            txtCtTrangThai.Text = ct.NhanTrangThaiDayDu;
+            txtCtTrangThai.Foreground = Mau(ct.MauTrangThaiHienThi);
             txtCtThongTin.Text = $"Ngày chạy {ct.NgayXuatPhat:dd/MM/yyyy} · xuất phát {ct.GioXuatPhatKH:HH:mm dd/MM} · " +
-                                 $"về đích {ct.GioVeDichKH:HH:mm dd/MM} · đầu máy {ct.NhanDauMay} · {ct.NhanLoaiTau.ToLower()}";
+                                 $"về đích {ct.GioVeDichKH:HH:mm dd/MM} · đầu máy {ct.NhanDauMay} · {ct.NhanLoaiTau.ToLower()}" +
+                                 (ct.QuaGioVeDich ? " · điều độ chưa ghi hoàn thành, kíp của chuyến vẫn được tính khi xét trùng giờ" : "");
 
             dgKip.ItemsSource = tt.Kip;
             var kip = tt.Kip.FirstOrDefault(k => k.PhanCong.MaPhanCong == maKipChon) ?? tt.Kip.FirstOrDefault();

@@ -149,6 +149,10 @@ namespace DTO.NhanSu
         public bool ConHieuLuc => TrangThai is not ("HOAN_THANH" or "DA_HUY");
         public bool DaXuatPhat => TrangThai is "DANG_CHAY" or "TRE_GIO";
 
+        // Chua ket thuc ma gio ve dich ke hoach da qua luc nap (dieu do chua ghi hoan thanh / huy):
+        // trigger trung gio van tinh kip cua chuyen nay nen trang van nap va danh dau
+        public bool QuaGioVeDich { get; init; }
+
         public string NhanLoaiTau => LoaiTau switch
         {
             "TAU_NHANH" => "Tàu khách nhanh",
@@ -176,6 +180,11 @@ namespace DTO.NhanSu
             "HOAN_THANH" or "DA_HUY" => "#64748B",
             _ => "#334155"
         };
+
+        // Nhan trang thai kem dau "qua gio ve dich" (o luoi chuyen chi du cho nhan ngan)
+        public string NhanTrangThaiDayDu => QuaGioVeDich ? $"{NhanTrangThai} · quá giờ về đích" : NhanTrangThai;
+        public string NhanTrangThaiNgan => QuaGioVeDich ? "Quá giờ về đích" : NhanTrangThai;
+        public string MauTrangThaiHienThi => QuaGioVeDich ? "#B45309" : MauTrangThai;
 
         public string NhanDauMay => SoHieuDauMay == null ? "Chưa lập đoàn tàu" : $"{SoHieuDauMay} ({MaDongDauMay})";
 
@@ -360,6 +369,19 @@ namespace DTO.NhanSu
         };
 
         public PhanCongKipHienThi SaoChep() => (PhanCongKipHienThi)MemberwiseClone();
+    }
+
+    // Kip trong CSDL trung gio voi kip sap ghi - doc tren TOAN BANG, cung dieu kien voi trigger
+    // trg_PhanCongKipLai_CheckTrungGio (NhanSuRepository.TimKipTrungGio). VaiTro = vi tri o kip
+    // sap ghi, VaiTroKipKia = vi tri o kip dang co.
+    public record KipTrungGioDTO(string VaiTro, string HoTen, string VaiTroKipKia, bool CungChuyen,
+                                 string SoHieuMacTau, DateTime GioXuatPhatKH, DateTime GioVeDichKH,
+                                 string TenGaNhanBan, string TenGaBanGiao)
+    {
+        public string MoTa => CungChuyen
+            ? $"{QuyTacKipLai.TenVaiTro(VaiTro)} {HoTen}: đã thuộc kíp {TenGaNhanBan} → {TenGaBanGiao} của chuyến này"
+            : $"{QuyTacKipLai.TenVaiTro(VaiTro)} {HoTen}: đang là {QuyTacKipLai.TenVaiTro(VaiTroKipKia).ToLower()} " +
+              $"chuyến {SoHieuMacTau} ({GioXuatPhatKH:HH:mm dd/MM} – {GioVeDichKH:HH:mm dd/MM}), khung giờ hai chuyến chồng nhau";
     }
 
     // -------------------------------------------------------------------------

@@ -20,9 +20,14 @@ namespace DAL.Repositories
     // =========================================================================
     public class NhanSuRepository
     {
-        // Chuyen nam trong cua so [tu, den) hoac dang chay / co kip dang thuc hien
+        // Chuyen nam trong cua so [tu, den) hoac dang chay / co kip dang thuc hien.
+        // 12/10: them chuyen CHUA KET THUC ma ke hoach da ve dich truoc cua so (dieu do chua ghi
+        // hoan thanh / huy) - trigger trung gio van tinh kip cua chuyen do, bo qua thi luat R3 / R4
+        // bao "khong trung" roi trigger chan luc luu. Chuyen bat dau sau @den ma chong gio voi
+        // chuyen trong cua so van co the sot -> Service doi chieu lai bang TimKipTrungGio truoc khi ghi.
         private const string DieuKienCuaSo = @"
             (ct.GioVeDichKH >= @tu AND ct.GioXuatPhatKH < @den)
+            OR (ct.TrangThai NOT IN ('HOAN_THANH', 'DA_HUY') AND ct.GioVeDichKH < @tu)
             OR ct.TrangThai IN ('DANG_CHAY', 'TRE_GIO')
             OR EXISTS (SELECT 1 FROM nhansu.PhanCongKipLai k0
                        WHERE k0.MaChuyenTau = ct.MaChuyenTau AND k0.TrangThai = 'DANG_THUC_HIEN')";
@@ -105,6 +110,7 @@ namespace DAL.Repositories
                     };
                 }
 
+                string trangThai = Chuoi(r, "TrangThai");
                 chuyenTau.Add(new ChuyenTauNhanSu
                 {
                     MaChuyenTau = ma,
@@ -113,7 +119,8 @@ namespace DAL.Repositories
                     NgayXuatPhat = Convert.ToDateTime(r["NgayXuatPhat"]),
                     GioXuatPhatKH = di,
                     GioVeDichKH = den2,
-                    TrangThai = Chuoi(r, "TrangThai"),
+                    TrangThai = trangThai,
+                    QuaGioVeDich = trangThai is not ("HOAN_THANH" or "DA_HUY") && den2 < bayGio,
                     GaDi = gaDi,
                     GaDen = gaDen,
                     SoHieuDauMay = r["SoHieuDauMay"] == DBNull.Value ? null : Chuoi(r, "SoHieuDauMay"),
@@ -229,6 +236,48 @@ namespace DAL.Repositories
         // =====================================================================
         // KIP LAI
         // =====================================================================
+
+        // Kip trong CSDL trung gio voi kip sap ghi (them / sua / doi trang thai). CUNG dieu kien voi
+        // trigger trg_PhanCongKipLai_CheckTrungGio (migration V20261011_1500) nhung doc tren toan bang,
+        // khong theo cua so anh chup: Service goi ngay truoc khi ghi de bao ro ten nguoi + chuyen
+        // thay vi cau chung cua trigger. Sua trigger thi sua ca cau nay.
+        public List<KipTrungGioDTO> TimKipTrungGio(PhanCongKipHienThi kip, PhienGiaoDich gd)
+            => PhienGiaoDich.TruyVan(gd, @"
+                SELECT n.VaiTro, nv.HoTen,
+                       CASE n.MaNhanVien WHEN k.MaLaiTau THEN 'LAI_TAU' WHEN k.MaPhuLai THEN 'PHU_LAI' ELSE 'TRUONG_TAU' END AS VaiTroKipKia,
+                       CASE WHEN k.MaChuyenTau = ct1.MaChuyenTau THEN 1 ELSE 0 END AS CungChuyen,
+                       mt.SoHieuMacTau, ct2.GioXuatPhatKH, ct2.GioVeDichKH,
+                       gn.TenGa AS TenGaNhanBan, gg.TenGa AS TenGaBanGiao
+                FROM (VALUES (@lt, 'LAI_TAU', 1), (@pl, 'PHU_LAI', 2), (@tt, 'TRUONG_TAU', 3)) n(MaNhanVien, VaiTro, ThuTu)
+                JOIN nhansu.PhanCongKipLai k ON k.MaPhanCong <> @id
+                                            AND n.MaNhanVien IN (k.MaLaiTau, k.MaPhuLai, k.MaTruongTau)
+                JOIN vanhanh.ChuyenTau ct1 ON ct1.MaChuyenTau = @ct
+                JOIN vanhanh.ChuyenTau ct2 ON ct2.MaChuyenTau = k.MaChuyenTau
+                JOIN vanhanh.MacTauMau mt ON mt.MaMacTau = ct2.MaMacTau
+                JOIN nhansu.NhanVien nv ON nv.MaNhanVien = n.MaNhanVien
+                JOIN hatang.Ga gn ON gn.MaGa = k.MaGaNhanBan
+                JOIN hatang.Ga gg ON gg.MaGa = k.MaGaBanGiao
+                WHERE ct1.TrangThai NOT IN ('HOAN_THANH', 'DA_HUY')
+                  AND ct2.TrangThai NOT IN ('HOAN_THANH', 'DA_HUY')
+                  AND (
+                        (k.MaChuyenTau <> ct1.MaChuyenTau
+                         AND (CASE WHEN ct1.GioXuatPhatKH > ct2.GioXuatPhatKH THEN ct1.GioXuatPhatKH ELSE ct2.GioXuatPhatKH END)
+                           < (CASE WHEN ct1.GioVeDichKH < ct2.GioVeDichKH THEN ct1.GioVeDichKH ELSE ct2.GioVeDichKH END))
+                     OR (k.MaChuyenTau = ct1.MaChuyenTau
+                         AND NOT (n.VaiTro = 'TRUONG_TAU' AND k.MaTruongTau = n.MaNhanVien))
+                      )
+                ORDER BY n.ThuTu, ct2.GioXuatPhatKH, k.MaPhanCong",
+                new SqlParameter("@id", kip.MaPhanCong),
+                new SqlParameter("@ct", kip.MaChuyenTau),
+                new SqlParameter("@lt", kip.MaLaiTau),
+                new SqlParameter("@pl", kip.MaPhuLai),
+                new SqlParameter("@tt", kip.MaTruongTau))
+               .Rows.Cast<DataRow>()
+               .Select(r => new KipTrungGioDTO(
+                   Chuoi(r, "VaiTro"), Chuoi(r, "HoTen"), Chuoi(r, "VaiTroKipKia"), Convert.ToInt32(r["CungChuyen"]) == 1,
+                   Chuoi(r, "SoHieuMacTau"), Convert.ToDateTime(r["GioXuatPhatKH"]), Convert.ToDateTime(r["GioVeDichKH"]),
+                   Chuoi(r, "TenGaNhanBan"), Chuoi(r, "TenGaBanGiao")))
+               .ToList();
 
         // Bang co trigger nen khong dung OUTPUT INSERTED (loi 334) -> SCOPE_IDENTITY()
         public int ThemKip(PhanCongKipHienThi kip, PhienGiaoDich gd)
