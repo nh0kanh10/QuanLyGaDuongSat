@@ -10,11 +10,12 @@ using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
 namespace GUI.Views.Pages
 {
     // =========================================================================
-    // PHAN HE BAO TRI KY THUAT & CANH BAO AN TOAN
+    // PHAN HE BAO TRI & SUA CHUA
     //   Tab 1: Bien ban kham xe ky thuat (baotri.KhamXeKyThuat)   - file nay
     //   Tab 2: Cap phat nhien lieu (baotri.NhatKyCapNhienLieu)    - BaoTriPage.NhienLieu.cs
     //   Tab 3: Bao duong dinh ky (baotri.NhatKyBaoDuong)          - BaoTriPage.BaoDuong.cs
     //   Tab 4: Canh bao an toan (tong hop 3 tab tren)              - BaoTriPage.CanhBao.cs
+    //   Tab 5: Chi phi & hieu qua theo tuyen (tong hop 3 tab tren) - BaoTriPage.ChiPhi.cs
     //
     // Giai doan dung giao dien: chua co Repository cho schema baotri nen du
     // lieu goc lay tu DanhMucMauBaoTri (trung seed data). Lap / sua bien ban
@@ -66,15 +67,17 @@ namespace GUI.Views.Pages
             LamMoiNhienLieu(giuDongChon: true);
             LamMoiBaoDuong(giuDongChon: true);
             LamMoiCanhBao();
+            LamMoiChiPhi();
             CapNhatNhanThayDoiTam();
         }
 
-        // Moi lan mo tab Canh bao thi tinh lai (thoi gian "con x gio" thay doi theo dong ho)
+        // Moi lan mo tab Canh bao / Chi phi thi tinh lai (thoi gian, chi phi du phong... thay doi theo dong ho / du lieu)
         private void TabBaoTri_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // SelectionChanged cua ComboBox / DataGrid ben trong cung noi bot len day
             if (!ReferenceEquals(e.OriginalSource, tabBaoTri) || _dangNapDuLieu) return;
             if (tabBaoTri.SelectedIndex == 3) LamMoiCanhBao();
+            if (tabBaoTri.SelectedIndex == 4) LamMoiChiPhi();
         }
 
         // Bam chi so tren dai tieu de: chuyen toi tab tuong ung kem bo loc phu hop
@@ -323,6 +326,10 @@ namespace GUI.Views.Pages
             icChiTietHangMuc.ItemsSource = bb.HangMuc;
             txtChiTietGhiChu.Text = string.IsNullOrWhiteSpace(bb.GhiChuKyThuat) ? "(Không có ghi chú)" : bb.GhiChuKyThuat;
 
+            pnlChiTietChiPhi.Children.Clear();
+            ThemDongThongSo(pnlChiTietChiPhi, "Chi phí khám xe / sửa chữa",
+                            bb.ChiPhi > 0 ? $"{bb.ChiPhi:N0} đ" : "Không phát sinh", laDongCuoi: true);
+
             // --- Thong tin doan tau ---
             var pnl = pnlChiTietDoanTau;
             pnl.Children.Clear();
@@ -498,6 +505,7 @@ namespace GUI.Views.Pages
             LamMoiNhienLieu(giuDongChon: true);
             LamMoiBaoDuong(giuDongChon: true);
             LamMoiCanhBao();
+            LamMoiChiPhi();
         }
 
         // =====================================================================
@@ -521,6 +529,7 @@ namespace GUI.Views.Pages
                 1 => txtTimCapDau,
                 2 => txtTimBaoDuong,
                 3 => txtTimCanhBao,
+                4 => txtTimTuyen,
                 _ => txtTimKhamXe
             };
             o.Focus();
@@ -554,6 +563,7 @@ namespace GUI.Views.Pages
                 case 1: BtnXoaLocCapDau_Click(this, new RoutedEventArgs()); break;
                 case 2: BtnXoaLocBaoDuong_Click(this, new RoutedEventArgs()); break;
                 case 3: BtnXoaLocCanhBao_Click(this, new RoutedEventArgs()); break;
+                case 4: BtnXoaLocTuyen_Click(this, new RoutedEventArgs()); break;
             }
         }
     }

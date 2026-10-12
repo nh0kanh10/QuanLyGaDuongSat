@@ -61,10 +61,11 @@
 
                     <StackPanel Grid.Row="0" Grid.Column="0">
                         <TextBlock Style="{StaticResource KtNhanTruong}">
-                            <Run Text="Mã nhân viên"/><Run Text=" *" Foreground="#DC2626"/>
+                            <Run Text="Mã nhân viên"/><Run Text="  · cấp theo chức danh" FontWeight="Normal" Foreground="#64748B"/>
                         </TextBlock>
-                        <TextBox x:Name="txtMa" MaxLength="20" TextChanged="TruongNhap_TextChanged"
-                                 ToolTip="MaNVCode, duy nhất, chỉ chữ không dấu, số, _ hoặc -"/>
+                        <TextBox x:Name="txtMa" MaxLength="20" IsReadOnly="True" Background="#F1F5F9"
+                                 TextChanged="TruongNhap_TextChanged"
+                                 ToolTip="Hệ thống tự cấp theo chức danh: LT lái tàu · PL phụ lái · TT trưởng tàu · TV tiếp viên · KX khám xe · BV bán vé · NV chức danh khác. Đổi chức danh thì cấp mã mới."/>
                         <TextBlock x:Name="txtLoiMa" Style="{StaticResource KtLoiTruong}"/>
                     </StackPanel>
 

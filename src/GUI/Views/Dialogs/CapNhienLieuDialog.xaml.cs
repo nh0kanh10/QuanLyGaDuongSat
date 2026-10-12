@@ -33,6 +33,7 @@ namespace GUI.Views.Dialogs
             ONhapSoThucHelper.Gan(txtSoLit, 2, coDinhSoLe: false);
             ONhapSoThucHelper.Gan(txtTanKeo, 2, coDinhSoLe: false);
             ONhapSoThucHelper.Gan(txtCuLy, 1, coDinhSoLe: false);
+            ONhapSoThucHelper.Gan(txtDonGia, 0, coDinhSoLe: false);
 
             cboDauMay.ItemsSource = DanhMucMauBaoTri.DauMay;
             cboNoiCap.ItemsSource = DanhMucMauBaoTri.NoiCapDau;
@@ -66,6 +67,7 @@ namespace GUI.Views.Dialogs
             cboDauMay.SelectedItem = maDauMay.HasValue ? DanhMucMauBaoTri.TimDauMay(maDauMay.Value) : null;
             cboNoiCap.SelectedIndex = 0;
             cboNguoiCap.SelectedIndex = 0;
+            txtDonGia.Text = DinhMucNhienLieu.DonGiaMacDinhVndLit.ToString("0", FormatHelper.TechnicalCulture);
         }
 
         private void KhoiTaoCapNhat(CapNhienLieuHienThi nl)
@@ -84,6 +86,10 @@ namespace GUI.Views.Dialogs
             txtSoLit.Text = nl.SoLitTraNap.ToString("0.##", FormatHelper.TechnicalCulture);
             txtTanKeo.Text = nl.TrongLuongKeoTan.ToString("0.##", FormatHelper.TechnicalCulture);
             txtCuLy.Text = nl.CuLyChayKm.ToString("0.#", FormatHelper.TechnicalCulture);
+
+            // Suy nguoc don gia tu chi phi da luu (phieu chi luu ChiPhi, khong luu rieng don gia)
+            decimal donGia = nl.SoLitTraNap > 0 ? Math.Round(nl.ChiPhi / nl.SoLitTraNap, 0) : DinhMucNhienLieu.DonGiaMacDinhVndLit;
+            txtDonGia.Text = donGia.ToString("0", FormatHelper.TechnicalCulture);
         }
 
         // =====================================================================
@@ -127,6 +133,7 @@ namespace GUI.Views.Dialogs
             if (sender == txtSoLit) txtLoiSoLit.Text = "";
             if (sender == txtTanKeo) txtLoiTanKeo.Text = "";
             if (sender == txtCuLy) txtLoiCuLy.Text = "";
+            if (sender == txtDonGia) txtLoiDonGia.Text = "";
 
             CapNhatXemTruoc();
         }
@@ -236,6 +243,12 @@ namespace GUI.Views.Dialogs
                 colBonConLai.Width = new GridLength(100, GridUnitType.Star);
             }
 
+            // --- Thanh tien = so lit x don gia ---
+            decimal? donGia = ONhapSoThucHelper.Lay(txtDonGia);
+            txtThanhTien.Text = soLit.HasValue && donGia.HasValue
+                ? $"{soLit.Value * donGia.Value:N0} đ"
+                : "—";
+
             // --- Thong tin dau may ---
             pnlDauMay.Children.Clear();
             if (dm != null)
@@ -299,7 +312,7 @@ namespace GUI.Views.Dialogs
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
             if (!KiemTraHopLe(out var dauMay, out string noiCap, out var nguoiCap,
-                              out decimal soLit, out decimal tanKeo, out decimal cuLy))
+                              out decimal soLit, out decimal tanKeo, out decimal cuLy, out decimal donGia))
                 return;
 
             var kq = _banGoc?.SaoChep() ?? new CapNhienLieuHienThi { ThoiDiemBomDau = DateTime.Now };
@@ -312,6 +325,7 @@ namespace GUI.Views.Dialogs
             kq.TrongLuongKeoTan = tanKeo;
             kq.CuLyChayKm = cuLy;
             kq.TinhLaiSuatTieuHao();
+            kq.ChiPhi = soLit * donGia;
             kq.LaThayDoiTam = true;
 
             KetQua = kq;
@@ -319,7 +333,7 @@ namespace GUI.Views.Dialogs
         }
 
         private bool KiemTraHopLe(out DauMayCapDau dauMay, out string noiCap, out TaiKhoanMau nguoiCap,
-                                  out decimal soLit, out decimal tanKeo, out decimal cuLy)
+                                  out decimal soLit, out decimal tanKeo, out decimal cuLy, out decimal donGia)
         {
             bool hopLe = true;
             Control? oLoiDauTien = null;
@@ -387,6 +401,16 @@ namespace GUI.Views.Dialogs
                 BaoLoi(txtLoiCuLy, "Tối đa 1 chữ số thập phân (DECIMAL(6,1)).", txtCuLy);
             else
                 cuLy = k.Value;
+
+            // Don gia / lit (khong co cot CSDL - du lieu mau de tinh Thanh tien)
+            donGia = DinhMucNhienLieu.DonGiaMacDinhVndLit;
+            decimal? dg = ONhapSoThucHelper.Lay(txtDonGia);
+            if (!dg.HasValue)
+                BaoLoi(txtLoiDonGia, "Vui lòng nhập đơn giá dầu.", txtDonGia);
+            else if (dg < 0)
+                BaoLoi(txtLoiDonGia, "Đơn giá không được âm.", txtDonGia);
+            else
+                donGia = dg.Value;
 
             // Suat tieu hao tinh ra phai vua cot DECIMAL(5,2)
             if (hopLe)

@@ -16,6 +16,13 @@
     <Resource Include="Resources\Images\**\*" />
   </ItemGroup>
 
+  <!-- Cau hinh ket noi CSDL: appsettings.json dung chung (len Git),
+       appsettings.Local.json rieng tung may (bi .gitignore loai). -->
+  <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="appsettings.Local.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>

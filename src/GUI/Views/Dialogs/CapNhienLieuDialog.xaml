@@ -159,6 +159,29 @@
                     <TextBlock x:Name="txtGoiYDoanTau" Style="{StaticResource KtGoiY}" Margin="0,-6,0,8"
                                Text="Chọn đoàn tàu để điền nhanh trọng lượng kéo."/>
 
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Đơn giá / lít (VNĐ)" Style="{StaticResource KtNhanTruong}"/>
+                            <TextBox x:Name="txtDonGia" MaxLength="9" TextChanged="TruongNhap_TextChanged"
+                                     ToolTip="Đơn giá dầu DO tham khảo, có thể sửa theo giá thực tế nơi cấp"/>
+                            <TextBlock x:Name="txtLoiDonGia" Style="{StaticResource KtLoiTruong}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Thành tiền (tự tính)" Style="{StaticResource KtNhanTruong}"/>
+                            <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3"
+                                    Height="30" Padding="9,0">
+                                <TextBlock x:Name="txtThanhTien" Text="—" FontSize="11" FontWeight="Bold" Foreground="#003B73"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="= số lít × đơn giá" Style="{StaticResource KtGoiY}" Margin="0,2,0,6"/>
+                        </StackPanel>
+                    </Grid>
+
                     <TextBlock Text="Thời điểm bơm dầu" Style="{StaticResource KtNhanTruong}"/>
                     <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3"
                             Height="30" Padding="9,0" Margin="0,0,0,4">

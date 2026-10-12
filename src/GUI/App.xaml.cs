@@ -46,6 +46,14 @@ namespace GUI
                 typeof(FrameworkElement),
                 new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.InvariantCulture.IetfLanguageTag)));
 
+            // Nạp cấu hình kết nối CSDL (appsettings.json + appsettings.Local.json)
+            // rồi bảo đảm nối được SQL Server trước khi mở cửa sổ đầu tiên.
+            // Trước đây chuỗi kết nối viết cứng trong DatabaseHelper nên mỗi máy
+            // phải sửa mã nguồn; DamBaoKetNoi() cũng chỉ được gọi trong
+            // PhuongTienPage mà app lại mở trang Mạng lưới Ga trước.
+            // (Phần Đạt thêm 08/10 — việc nền Sprint 1, KE_HOACH_BACK_END.md §4.1.)
+            GUI.Helpers.KetNoiCsdlHelper.DamBaoKetNoi();
+
             base.OnStartup(e);
 
             ApplicationThemeManager.Apply(ApplicationTheme.Light);

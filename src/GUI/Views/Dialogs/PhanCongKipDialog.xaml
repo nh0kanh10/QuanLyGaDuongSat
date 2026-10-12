@@ -19,6 +19,33 @@
                 <ResourceDictionary Source="/GUI;component/Resources/Styles/KyThuatPageStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- "Đã ẩn N người không đủ điều kiện" cạnh nhãn vị trí; di chuột để xem tên và lý do -->
+            <Style x:Key="NsDaAn" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="10"/>
+                <Setter Property="Foreground" Value="#64748B"/>
+                <Setter Property="Margin" Value="8,0,0,4"/>
+                <Setter Property="VerticalAlignment" Value="Bottom"/>
+                <Setter Property="Cursor" Value="Help"/>
+                <Setter Property="Visibility" Value="Collapsed"/>
+                <Setter Property="ToolTipService.InitialShowDelay" Value="100"/>
+                <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
+                <Setter Property="TextDecorations">
+                    <Setter.Value>
+                        <TextDecorationCollection>
+                            <TextDecoration Location="Underline" PenOffset="1">
+                                <TextDecoration.Pen>
+                                    <Pen Brush="#94A3B8" Thickness="1">
+                                        <Pen.DashStyle>
+                                            <DashStyle Dashes="2,2"/>
+                                        </Pen.DashStyle>
+                                    </Pen>
+                                </TextDecoration.Pen>
+                            </TextDecoration>
+                        </TextDecorationCollection>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <!-- Ứng viên cho một vị trí (UngVienKip). Dòng phụ chỉ hiện trong danh sách thả xuống. -->
             <DataTemplate x:Key="MauUngVien">
                 <Grid>
@@ -116,31 +143,66 @@
                         <TextBlock x:Name="txtThay" FontSize="11" Foreground="#0F172A" TextWrapping="Wrap"/>
                     </Border>
 
-                    <TextBlock Text="THÀNH VIÊN KÍP" Style="{StaticResource KtTieuDeMuc}"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="THÀNH VIÊN KÍP" Style="{StaticResource KtTieuDeMuc}" Margin="0" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Name="btnGoiYKip" Click="BtnGoiYKip_Click"
+                                Style="{StaticResource DesktopButton}" Height="24" Margin="0" Padding="8,0"
+                                ToolTip="Điền người phù hợp nhất vào các vị trí còn trống (Ctrl+G): không có cảnh báo, thuộc depot ở đầu chặng, nghỉ lâu nhất. Đủ 3 vị trí thì gợi ý lại cả kíp.">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Sparkle24" FontSize="12" Foreground="#003B73" Margin="0,0,4,0"/>
+                                <TextBlock Text="Gợi Ý Kíp" FontSize="11"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
 
-                    <TextBlock Style="{StaticResource KtNhanTruong}">
-                        <Run Text="Lái tàu"/><Run Text=" *" Foreground="#DC2626"/>
-                    </TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource KtNhanTruong}">
+                            <Run Text="Lái tàu"/><Run Text=" *" Foreground="#DC2626"/>
+                        </TextBlock>
+                        <TextBlock Grid.Column="1" x:Name="txtAnLaiTau" Style="{StaticResource NsDaAn}"/>
+                    </Grid>
                     <ComboBox x:Name="cboLaiTau" ItemTemplate="{StaticResource MauUngVien}" SelectionChanged="CboThanhVien_SelectionChanged"
                               MaxDropDownHeight="300"/>
                     <TextBlock x:Name="txtLoiLaiTau" Style="{StaticResource KtLoiTruong}"/>
 
-                    <TextBlock Style="{StaticResource KtNhanTruong}">
-                        <Run Text="Phụ lái"/><Run Text=" *" Foreground="#DC2626"/>
-                    </TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource KtNhanTruong}">
+                            <Run Text="Phụ lái"/><Run Text=" *" Foreground="#DC2626"/>
+                        </TextBlock>
+                        <TextBlock Grid.Column="1" x:Name="txtAnPhuLai" Style="{StaticResource NsDaAn}"/>
+                    </Grid>
                     <ComboBox x:Name="cboPhuLai" ItemTemplate="{StaticResource MauUngVien}" SelectionChanged="CboThanhVien_SelectionChanged"
                               MaxDropDownHeight="300"/>
                     <TextBlock x:Name="txtLoiPhuLai" Style="{StaticResource KtLoiTruong}"/>
 
-                    <TextBlock Style="{StaticResource KtNhanTruong}">
-                        <Run Text="Trưởng tàu"/><Run Text=" *" Foreground="#DC2626"/>
-                    </TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource KtNhanTruong}">
+                            <Run Text="Trưởng tàu"/><Run Text=" *" Foreground="#DC2626"/>
+                        </TextBlock>
+                        <TextBlock Grid.Column="1" x:Name="txtAnTruongTau" Style="{StaticResource NsDaAn}"/>
+                    </Grid>
                     <ComboBox x:Name="cboTruongTau" ItemTemplate="{StaticResource MauUngVien}" SelectionChanged="CboThanhVien_SelectionChanged"
                               MaxDropDownHeight="300"/>
                     <TextBlock x:Name="txtLoiTruongTau" Style="{StaticResource KtLoiTruong}"/>
 
                     <TextBlock Style="{StaticResource KtGoiY}" Margin="0,0,0,6"
-                               Text="Danh sách chỉ gồm người đúng chức danh, người đủ điều kiện xếp trước. Chữ đỏ là lý do không phân công được."/>
+                               Text="Mỗi ô chỉ gồm người đủ điều kiện cho chặng đã chọn, xếp theo: không cảnh báo, thuộc depot ở đầu chặng, nghỉ lâu nhất. Người vướng lịch, nghỉ chưa đủ 8 giờ, hết hạn khám, sai bằng lái hoặc không đạt kiểm tra bị ẩn; di chuột vào dòng &quot;Đã ẩn&quot; để xem lý do."/>
                 </StackPanel>
 
                 <!-- ====== ĐỐI CHIẾU ====== -->
@@ -158,7 +220,7 @@
                     </Border>
 
                     <TextBlock Style="{StaticResource KtGoiY}"
-                               Text="✓ đạt    ✗ vi phạm, không lưu được    ! cần lưu ý, vẫn lưu được    – không áp dụng / chưa có dữ liệu"/>
+                               Text="✓ đạt    ! cần lưu ý, vẫn phân công được    – không áp dụng / chưa có dữ liệu"/>
                 </StackPanel>
             </Grid>
 

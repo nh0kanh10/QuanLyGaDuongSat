@@ -34,6 +34,7 @@ namespace GUI.Views.Dialogs
 
             ONhapSoThucHelper.Gan(txtApLuc, 1);
             ONhapSoThucHelper.Gan(txtSutAp, 2);
+            ONhapSoThucHelper.Gan(txtChiPhi, 0, coDinhSoLe: false);
 
             cboDoanTau.ItemsSource = DanhMucMauBaoTri.DoanTau;
             cboNguoiKham.ItemsSource = DanhMucMauBaoTri.NguoiKham;
@@ -68,6 +69,7 @@ namespace GUI.Views.Dialogs
             // Kham lai thuong da xu ly xong phan phuc vu, nhung van de nguoi kham tu tick
             chkCapNuoc.IsChecked = false;
             chkXaVeSinh.IsChecked = false;
+            txtChiPhi.Text = "0";
         }
 
         private void KhoiTaoCapNhat(KhamXeHienThi bb)
@@ -87,6 +89,7 @@ namespace GUI.Views.Dialogs
             chkCapNuoc.IsChecked = bb.DaCapNuoc;
             chkXaVeSinh.IsChecked = bb.DaXaVeSinh;
             txtGhiChu.Text = bb.GhiChuKyThuat;
+            txtChiPhi.Text = bb.ChiPhi.ToString("0", FormatHelper.TechnicalCulture);
         }
 
         private static decimal? LaySo(TextBox tb) => ONhapSoThucHelper.Lay(tb);
@@ -102,6 +105,7 @@ namespace GUI.Views.Dialogs
             if (sender == txtApLuc) txtLoiApLuc.Text = "";
             if (sender == txtSutAp) txtLoiSutAp.Text = "";
             if (sender == txtGhiChu) txtLoiGhiChu.Text = "";
+            if (sender == txtChiPhi) txtLoiChiPhi.Text = "";
 
             CapNhatXemTruoc();
         }
@@ -263,7 +267,7 @@ namespace GUI.Views.Dialogs
 
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
-            if (!KiemTraHopLe(out var doanTau, out var nguoiKham, out decimal apLuc, out decimal sutAp))
+            if (!KiemTraHopLe(out var doanTau, out var nguoiKham, out decimal apLuc, out decimal sutAp, out decimal chiPhi))
                 return;
 
             var kq = _banGoc?.SaoChep() ?? new KhamXeHienThi { ThoiDiemKham = DateTime.Now };
@@ -276,13 +280,15 @@ namespace GUI.Views.Dialogs
             kq.DaCapNuoc = chkCapNuoc.IsChecked == true;
             kq.DaXaVeSinh = chkXaVeSinh.IsChecked == true;
             kq.GhiChuKyThuat = txtGhiChu.Text.Trim();
+            kq.ChiPhi = chiPhi;
             kq.LaThayDoiTam = true;
 
             KetQua = kq;
             DialogResult = true;
         }
 
-        private bool KiemTraHopLe(out DoanTauKhamXe doanTau, out TaiKhoanMau nguoiKham, out decimal apLuc, out decimal sutAp)
+        private bool KiemTraHopLe(out DoanTauKhamXe doanTau, out TaiKhoanMau nguoiKham, out decimal apLuc, out decimal sutAp,
+                                  out decimal chiPhi)
         {
             bool hopLe = true;
             Control? oLoiDauTien = null;
@@ -327,6 +333,16 @@ namespace GUI.Views.Dialogs
                 BaoLoi(txtLoiSutAp, "Chỉ ghi 2 chữ số thập phân (ví dụ 0.18), CSDL lưu DECIMAL(3,2).", txtSutAp);
             else
                 sutAp = s.Value;
+
+            // Chi phi: khong bat buoc, mac dinh 0, khong am
+            chiPhi = 0m;
+            decimal? cp = LaySo(txtChiPhi);
+            if (!cp.HasValue)
+                BaoLoi(txtLoiChiPhi, "Chi phí không hợp lệ (nhập 0 nếu không phát sinh).", txtChiPhi);
+            else if (cp < 0)
+                BaoLoi(txtLoiChiPhi, "Chi phí không được âm.", txtChiPhi);
+            else
+                chiPhi = cp.Value;
 
             // Khong dat thi phai ghi nguyen nhan / bien phap (quy uoc giao dien, CSDL cho phep NULL)
             if (hopLe && txtGhiChu.Text.Trim().Length == 0 &&

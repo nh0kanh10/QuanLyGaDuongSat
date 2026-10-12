@@ -1,12 +1,17 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DAL.Connection;
+using ET.PhuongTien;
 
 namespace DAL.Repositories
 {
     // =========================================================================
-    // PHAN HE QUAN LY PHUONG TIEN (Doan tau, Dau may, Toa xe & Ghe)
-    // Truy van CHI DOC phuc vu tang giao dien - khong chua nghiep vu ghi du lieu.
+    // PHAN HE QUAN LY PHUONG TIEN (Dau may, Toa xe, Doan tau & Ghe)
+    // Doc: danh sach / ly lich / thong ke. Ghi: them / sua dau may va toa xe.
+    // Lap doan tau (vanhanh.DoanTau + ChiTietDoanTau) nam o LapTauRepository.
+    //
+    // Cac ham ghi nhan PhienGiaoDich de Service gom kiem tra + ghi + nhat ky vao
+    // MOT giao dich. SqlException duoc dich sang LoiGhiCsdlException (tieng Viet).
     // =========================================================================
     public class PhuongTienRepository
     {
@@ -16,6 +21,9 @@ namespace DAL.Repositories
 
         public DataTable LayDanhSachDauMay(string? tuKhoa = null, string? donViQuanLy = null, string? trangThai = null)
         {
+            // KmBaoDuongR1GanNhat: km o lan R1 HOAC R2 gan nhat (R2 bao gom R1)
+            // KmBaoDuongR2GanNhat: km o lan R2 gan nhat
+            // -> PhuongTienService.TinhTienDoBaoDuong tinh theo chu ky tu lan gan nhat (khop Bao tri)
             string sql = @"
                 SELECT dm.MaDauMay,
                        dm.SoHieuDauMay,
@@ -33,6 +41,8 @@ namespace DAL.Repositories
                        ddm.TrongLuongTan,
                        ddm.ChieuDaiM,
                        DATEDIFF(YEAR, DATEFROMPARTS(dm.NamSanXuat, 1, 1), GETDATE()) AS TuoiKhaiThac,
+                       r1.SoKmTaiThoiDiem AS KmBaoDuongR1GanNhat,
+                       r2.SoKmTaiThoiDiem AS KmBaoDuongR2GanNhat,
                        ISNULL((SELECT COUNT(*)
                                FROM vanhanh.DoanTau dt
                                JOIN vanhanh.ChuyenTau ct ON dt.MaChuyenTau = ct.MaChuyenTau
@@ -47,6 +57,14 @@ namespace DAL.Repositories
                         ORDER BY ct.GioXuatPhatKH ASC) AS MacTauDangNhan
                 FROM phuongtien.DauMay dm
                 JOIN phuongtien.DongDauMay ddm ON dm.MaDongDauMay = ddm.MaDongDauMay
+                OUTER APPLY (SELECT TOP 1 bd.SoKmTaiThoiDiem
+                             FROM baotri.NhatKyBaoDuong bd
+                             WHERE bd.MaDauMay = dm.MaDauMay AND bd.CapBaoDuong IN ('R1', 'R2')
+                             ORDER BY bd.ThoiDiemHoanThanh DESC, bd.MaBaoDuong DESC) r1
+                OUTER APPLY (SELECT TOP 1 bd.SoKmTaiThoiDiem
+                             FROM baotri.NhatKyBaoDuong bd
+                             WHERE bd.MaDauMay = dm.MaDauMay AND bd.CapBaoDuong = 'R2'
+                             ORDER BY bd.ThoiDiemHoanThanh DESC, bd.MaBaoDuong DESC) r2
                 WHERE 1 = 1";
 
             var ps = new List<SqlParameter>();
@@ -86,6 +104,17 @@ namespace DAL.Repositories
             return DatabaseHelper.ExecuteQuery(sql);
         }
 
+        // Dong co nhieu dau may nhat dung dau: dialog them moi chon san dong pho bien nhat
+        public DataTable LayDanhSachDongDauMay()
+        {
+            string sql = @"SELECT ddm.MaDongDauMay, ddm.MaDongCode, ddm.NhaSanXuat, ddm.CongSuatHP, ddm.TocDoToiDaKmh,
+                                  ddm.SucKeoToiDaTan, ddm.DungTichBonDauLit, ddm.TrongLuongTan, ddm.ChieuDaiM
+                           FROM phuongtien.DongDauMay ddm
+                           ORDER BY (SELECT COUNT(*) FROM phuongtien.DauMay dm WHERE dm.MaDongDauMay = ddm.MaDongDauMay) DESC,
+                                    ddm.MaDongCode";
+            return DatabaseHelper.ExecuteQuery(sql);
+        }
+
         // Lich su van dung cua mot dau may (cac chuyen da/dang nhan keo)
         public DataTable LayLichSuVanDung(int maDauMay)
         {
@@ -109,6 +138,111 @@ namespace DAL.Repositories
                 WHERE dt.MaDauMayChinh = @id OR dt.MaDauMayDay = @id
                 ORDER BY ct.NgayXuatPhat DESC, ct.GioXuatPhatKH DESC";
             return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@id", maDauMay) });
+        }
+
+        public DauMay? LayDauMay(int maDauMay, PhienGiaoDich? gd = null)
+        {
+            DataTable dt = PhienGiaoDich.TruyVan(gd,
+                @"SELECT MaDauMay, SoHieuDauMay, MaDongDauMay, DonViQuanLy, NamSanXuat, SoKmTichLuy, TrangThai
+                  FROM phuongtien.DauMay WHERE MaDauMay = @id",
+                new SqlParameter("@id", maDauMay));
+            if (dt.Rows.Count == 0) return null;
+
+            DataRow r = dt.Rows[0];
+            return new DauMay
+            {
+                MaDauMay = Convert.ToInt32(r["MaDauMay"]),
+                SoHieuDauMay = r["SoHieuDauMay"].ToString() ?? "",
+                MaDongDauMay = Convert.ToInt32(r["MaDongDauMay"]),
+                DonViQuanLy = r["DonViQuanLy"].ToString() ?? "",
+                NamSanXuat = Convert.ToInt32(r["NamSanXuat"]),
+                SoKmTichLuy = Convert.ToDecimal(r["SoKmTichLuy"]),
+                TrangThai = r["TrangThai"].ToString() ?? ""
+            };
+        }
+
+        public bool SoHieuDauMayDaTonTai(string soHieu, PhienGiaoDich? gd = null)
+            => Convert.ToInt32(PhienGiaoDich.LayGiaTri(gd,
+                   "SELECT COUNT(*) FROM phuongtien.DauMay WHERE SoHieuDauMay = @sh",
+                   new SqlParameter("@sh", SqlDbType.VarChar, 20) { Value = soHieu })) > 0;
+
+        public string? LayMaDongCode(int maDongDauMay, PhienGiaoDich? gd = null)
+            => PhienGiaoDich.LayGiaTri(gd, "SELECT MaDongCode FROM phuongtien.DongDauMay WHERE MaDongDauMay = @id",
+                   new SqlParameter("@id", maDongDauMay)) as string;
+
+        // So km o lan bao duong R1 / R2 gan nhat (null = chua bao duong lan nao)
+        public decimal? LayKmBaoDuongGanNhat(int maDauMay, PhienGiaoDich? gd = null)
+        {
+            object? kq = PhienGiaoDich.LayGiaTri(gd,
+                @"SELECT MAX(SoKmTaiThoiDiem) FROM baotri.NhatKyBaoDuong
+                  WHERE MaDauMay = @id AND CapBaoDuong IN ('R1', 'R2')",
+                new SqlParameter("@id", maDauMay));
+            return kq is null or DBNull ? null : Convert.ToDecimal(kq);
+        }
+
+        // Cac chuyen CON HIEU LUC (chua hoan thanh / huy) dang dung dau may lam may keo hoac may day
+        public DataTable LayChuyenConHieuLucCuaDauMay(int maDauMay, PhienGiaoDich? gd = null)
+            => PhienGiaoDich.TruyVan(gd, @"
+                SELECT ct.MaChuyenTau, mt.SoHieuMacTau, ct.TrangThai, ct.GioXuatPhatKH, ct.GioVeDichKH,
+                       CASE WHEN dt.MaDauMayChinh = @id THEN 'KEO_CHINH' ELSE 'DAY' END AS VaiTro
+                FROM vanhanh.DoanTau dt
+                JOIN vanhanh.ChuyenTau ct ON ct.MaChuyenTau = dt.MaChuyenTau
+                JOIN vanhanh.MacTauMau mt ON mt.MaMacTau = ct.MaMacTau
+                WHERE (dt.MaDauMayChinh = @id OR dt.MaDauMayDay = @id)
+                  AND ct.TrangThai NOT IN ('HOAN_THANH', 'DA_HUY')
+                ORDER BY ct.GioXuatPhatKH",
+                new SqlParameter("@id", maDauMay));
+
+        public int ThemDauMay(DauMay dm, PhienGiaoDich gd)
+        {
+            try
+            {
+                return Convert.ToInt32(PhienGiaoDich.LayGiaTri(gd, @"
+                    INSERT INTO phuongtien.DauMay (SoHieuDauMay, MaDongDauMay, DonViQuanLy, NamSanXuat, SoKmTichLuy, TrangThai)
+                    VALUES (@sh, @dong, @dv, @nam, @km, @tt);
+                    SELECT CAST(SCOPE_IDENTITY() AS INT);",
+                    new SqlParameter("@sh", SqlDbType.VarChar, 20) { Value = dm.SoHieuDauMay },
+                    new SqlParameter("@dong", dm.MaDongDauMay),
+                    new SqlParameter("@dv", SqlDbType.NVarChar, 50) { Value = dm.DonViQuanLy },
+                    new SqlParameter("@nam", dm.NamSanXuat),
+                    new SqlParameter("@km", SqlDbType.Decimal) { Precision = 9, Scale = 1, Value = dm.SoKmTichLuy },
+                    new SqlParameter("@tt", SqlDbType.VarChar, 20) { Value = dm.TrangThai }));
+            }
+            catch (SqlException ex)
+            {
+                throw DichLoiSqlPhuongTien.Dich(ex);
+            }
+        }
+
+        // Ghi de co kiem tra: chi cap nhat khi ban ghi trong CSDL van y nhu luc nguoi dung mo
+        // dialog (goc). 0 dong = da co nguoi khac sua truoc -> Service bao "nap lai".
+        // So hieu va dong may khong doi khi sua (Service da chan).
+        public int CapNhatDauMay(DauMay moi, DauMay goc, PhienGiaoDich gd)
+        {
+            try
+            {
+                return PhienGiaoDich.ThucThi(gd, @"
+                    UPDATE phuongtien.DauMay
+                    SET DonViQuanLy = @dv, NamSanXuat = @nam, SoKmTichLuy = @km, TrangThai = @tt
+                    WHERE MaDauMay = @id
+                      AND SoHieuDauMay = @shGoc AND MaDongDauMay = @dongGoc AND DonViQuanLy = @dvGoc
+                      AND NamSanXuat = @namGoc AND SoKmTichLuy = @kmGoc AND TrangThai = @ttGoc",
+                    new SqlParameter("@id", moi.MaDauMay),
+                    new SqlParameter("@dv", SqlDbType.NVarChar, 50) { Value = moi.DonViQuanLy },
+                    new SqlParameter("@nam", moi.NamSanXuat),
+                    new SqlParameter("@km", SqlDbType.Decimal) { Precision = 9, Scale = 1, Value = moi.SoKmTichLuy },
+                    new SqlParameter("@tt", SqlDbType.VarChar, 20) { Value = moi.TrangThai },
+                    new SqlParameter("@shGoc", SqlDbType.VarChar, 20) { Value = goc.SoHieuDauMay },
+                    new SqlParameter("@dongGoc", goc.MaDongDauMay),
+                    new SqlParameter("@dvGoc", SqlDbType.NVarChar, 50) { Value = goc.DonViQuanLy },
+                    new SqlParameter("@namGoc", goc.NamSanXuat),
+                    new SqlParameter("@kmGoc", SqlDbType.Decimal) { Precision = 9, Scale = 1, Value = goc.SoKmTichLuy },
+                    new SqlParameter("@ttGoc", SqlDbType.VarChar, 20) { Value = goc.TrangThai });
+            }
+            catch (SqlException ex)
+            {
+                throw DichLoiSqlPhuongTien.Dich(ex);
+            }
         }
 
         // ---------------------------------------------------------------------
@@ -172,18 +306,105 @@ namespace DAL.Repositories
             return DatabaseHelper.ExecuteQuery(sql);
         }
 
+        public ToaXe? LayToaXe(int maToaXe, PhienGiaoDich? gd = null)
+        {
+            DataTable dt = PhienGiaoDich.TruyVan(gd,
+                @"SELECT MaToaXe, SoHieuToaXe, MaChungLoai, TuTrongTan, TaiTrongToiDaTan, TrangThai
+                  FROM phuongtien.ToaXe WHERE MaToaXe = @id",
+                new SqlParameter("@id", maToaXe));
+            if (dt.Rows.Count == 0) return null;
+
+            DataRow r = dt.Rows[0];
+            return new ToaXe
+            {
+                MaToaXe = Convert.ToInt32(r["MaToaXe"]),
+                SoHieuToaXe = r["SoHieuToaXe"].ToString() ?? "",
+                MaChungLoai = Convert.ToInt32(r["MaChungLoai"]),
+                TuTrongTan = Convert.ToDecimal(r["TuTrongTan"]),
+                TaiTrongToiDaTan = Convert.ToDecimal(r["TaiTrongToiDaTan"]),
+                TrangThai = r["TrangThai"].ToString() ?? ""
+            };
+        }
+
+        public bool SoHieuToaXeDaTonTai(string soHieu, PhienGiaoDich? gd = null)
+            => Convert.ToInt32(PhienGiaoDich.LayGiaTri(gd,
+                   "SELECT COUNT(*) FROM phuongtien.ToaXe WHERE SoHieuToaXe = @sh",
+                   new SqlParameter("@sh", SqlDbType.VarChar, 20) { Value = soHieu })) > 0;
+
+        public string? LayMaChungLoaiCode(int maChungLoai, PhienGiaoDich? gd = null)
+            => PhienGiaoDich.LayGiaTri(gd, "SELECT MaChungLoaiCode FROM phuongtien.ChungLoaiToa WHERE MaChungLoai = @id",
+                   new SqlParameter("@id", maChungLoai)) as string;
+
+        // Cac chuyen CON HIEU LUC co toa nay trong doan tau
+        public DataTable LayChuyenConHieuLucCuaToaXe(int maToaXe, PhienGiaoDich? gd = null)
+            => PhienGiaoDich.TruyVan(gd, @"
+                SELECT ct.MaChuyenTau, mt.SoHieuMacTau, ct.TrangThai, ct.GioXuatPhatKH, ct.GioVeDichKH, 'TOA' AS VaiTro
+                FROM vanhanh.ChiTietDoanTau ctdt
+                JOIN vanhanh.DoanTau dt ON dt.MaDoanTau = ctdt.MaDoanTau
+                JOIN vanhanh.ChuyenTau ct ON ct.MaChuyenTau = dt.MaChuyenTau
+                JOIN vanhanh.MacTauMau mt ON mt.MaMacTau = ct.MaMacTau
+                WHERE ctdt.MaToaXe = @id
+                  AND ct.TrangThai NOT IN ('HOAN_THANH', 'DA_HUY')
+                ORDER BY ct.GioXuatPhatKH",
+                new SqlParameter("@id", maToaXe));
+
+        public int ThemToaXe(ToaXe tx, PhienGiaoDich gd)
+        {
+            try
+            {
+                return Convert.ToInt32(PhienGiaoDich.LayGiaTri(gd, @"
+                    INSERT INTO phuongtien.ToaXe (SoHieuToaXe, MaChungLoai, TuTrongTan, TaiTrongToiDaTan, TrangThai)
+                    VALUES (@sh, @cl, @tu, @tai, @tt);
+                    SELECT CAST(SCOPE_IDENTITY() AS INT);",
+                    new SqlParameter("@sh", SqlDbType.VarChar, 20) { Value = tx.SoHieuToaXe },
+                    new SqlParameter("@cl", tx.MaChungLoai),
+                    new SqlParameter("@tu", SqlDbType.Decimal) { Precision = 5, Scale = 2, Value = tx.TuTrongTan },
+                    new SqlParameter("@tai", SqlDbType.Decimal) { Precision = 5, Scale = 2, Value = tx.TaiTrongToiDaTan },
+                    new SqlParameter("@tt", SqlDbType.VarChar, 20) { Value = tx.TrangThai }));
+            }
+            catch (SqlException ex)
+            {
+                throw DichLoiSqlPhuongTien.Dich(ex);
+            }
+        }
+
+        // Ghi de co kiem tra nhu CapNhatDauMay. So hieu va chung loai khong doi khi sua.
+        public int CapNhatToaXe(ToaXe moi, ToaXe goc, PhienGiaoDich gd)
+        {
+            try
+            {
+                return PhienGiaoDich.ThucThi(gd, @"
+                    UPDATE phuongtien.ToaXe
+                    SET TuTrongTan = @tu, TaiTrongToiDaTan = @tai, TrangThai = @tt
+                    WHERE MaToaXe = @id
+                      AND SoHieuToaXe = @shGoc AND MaChungLoai = @clGoc AND TuTrongTan = @tuGoc
+                      AND TaiTrongToiDaTan = @taiGoc AND TrangThai = @ttGoc",
+                    new SqlParameter("@id", moi.MaToaXe),
+                    new SqlParameter("@tu", SqlDbType.Decimal) { Precision = 5, Scale = 2, Value = moi.TuTrongTan },
+                    new SqlParameter("@tai", SqlDbType.Decimal) { Precision = 5, Scale = 2, Value = moi.TaiTrongToiDaTan },
+                    new SqlParameter("@tt", SqlDbType.VarChar, 20) { Value = moi.TrangThai },
+                    new SqlParameter("@shGoc", SqlDbType.VarChar, 20) { Value = goc.SoHieuToaXe },
+                    new SqlParameter("@clGoc", goc.MaChungLoai),
+                    new SqlParameter("@tuGoc", SqlDbType.Decimal) { Precision = 5, Scale = 2, Value = goc.TuTrongTan },
+                    new SqlParameter("@taiGoc", SqlDbType.Decimal) { Precision = 5, Scale = 2, Value = goc.TaiTrongToiDaTan },
+                    new SqlParameter("@ttGoc", SqlDbType.VarChar, 20) { Value = goc.TrangThai });
+            }
+            catch (SqlException ex)
+            {
+                throw DichLoiSqlPhuongTien.Dich(ex);
+            }
+        }
+
         // ---------------------------------------------------------------------
-        // 3. DOAN TAU (lap tau theo chuyen)
+        // 3. DANH SACH CHUYEN TAU (o chon chuyen cua tab Lap doan tau va So do cho ngoi)
         // ---------------------------------------------------------------------
 
-        // Danh sach chuyen tau kem thong so doan tau, dung cho ComboBox chon chuyen
         public DataTable LayDanhSachChuyenTauLapTau()
         {
             string sql = @"
                 SELECT ct.MaChuyenTau,
                        mt.SoHieuMacTau,
                        mt.LoaiTau,
-                       mt.MucUuTien,
                        ct.NgayXuatPhat,
                        ct.GioXuatPhatKH,
                        ct.GioVeDichKH,
@@ -191,37 +412,19 @@ namespace DAL.Repositories
                        g1.TenGa AS TenGaDi,
                        g2.TenGa AS TenGaDen,
                        dt.MaDoanTau,
-                       dt.MaDauMayChinh,
-                       dt.MaDauMayDay,
-                       dt.TongSoToa,
-                       dt.TongChieuDaiM,
-                       dt.TongTrongLuongTan,
                        dt.DaDuyetAnToan,
-                       dmc.SoHieuDauMay AS SoHieuDauMayChinh,
-                       ddmc.MaDongCode  AS DongDauMayChinh,
-                       ddmc.SucKeoToiDaTan AS SucKeoChinhTan,
-                       dmd.SoHieuDauMay AS SoHieuDauMayDay,
-                       ddmd.MaDongCode  AS DongDauMayDay,
-                       ISNULL((SELECT COUNT(*) FROM vantai.ToaXeKhach t WHERE t.MaChuyenTau = ct.MaChuyenTau), 0) AS SoToaThucTe,
-                       (SELECT MIN(dr.ChieuDaiHuuDungM)
-                        FROM vanhanh.LichDungGa ld
-                        JOIN hatang.DuongRayGa dr ON ld.MaGa = dr.MaGa AND dr.LoaiDuong = 'DUONG_TRANH'
-                        WHERE ld.MaChuyenTau = ct.MaChuyenTau) AS DuongTranhNganNhatM
+                       ISNULL((SELECT COUNT(*) FROM vanhanh.ChiTietDoanTau c WHERE c.MaDoanTau = dt.MaDoanTau), 0) AS SoToaTrongDoan
                 FROM vanhanh.ChuyenTau ct
                 JOIN vanhanh.MacTauMau mt ON ct.MaMacTau = mt.MaMacTau
                 JOIN hatang.Ga g1 ON mt.MaGaDi = g1.MaGa
                 JOIN hatang.Ga g2 ON mt.MaGaDen = g2.MaGa
                 LEFT JOIN vanhanh.DoanTau dt ON ct.MaChuyenTau = dt.MaChuyenTau
-                LEFT JOIN phuongtien.DauMay dmc ON dt.MaDauMayChinh = dmc.MaDauMay
-                LEFT JOIN phuongtien.DongDauMay ddmc ON dmc.MaDongDauMay = ddmc.MaDongDauMay
-                LEFT JOIN phuongtien.DauMay dmd ON dt.MaDauMayDay = dmd.MaDauMay
-                LEFT JOIN phuongtien.DongDauMay ddmd ON dmd.MaDongDauMay = ddmd.MaDongDauMay
                 ORDER BY ct.NgayXuatPhat DESC, ct.GioXuatPhatKH ASC";
             return DatabaseHelper.ExecuteQuery(sql);
         }
 
         // ---------------------------------------------------------------------
-        // 4. BIEN CHE TOA XE KHACH CUA MOT CHUYEN + SO DO GHE
+        // 4. BIEN CHE TOA XE KHACH CUA MOT CHUYEN (vantai.ToaXeKhach - toa ban ve) + SO DO GHE
         // ---------------------------------------------------------------------
 
         public DataTable LayBienCheToaXe(int maChuyenTau)
@@ -242,7 +445,8 @@ namespace DAL.Repositories
                        END AS TenLoaiToa,
                        ISNULL(cl.ChieuDaiChuanM, 20.0) AS ChieuDaiToaM,
                        ISNULL((SELECT COUNT(*) FROM vantai.ChoNgoi cn WHERE cn.MaToaXeKhach = tx.MaToaXeKhach), 0) AS SoGheDaThietLap,
-                       ISNULL((SELECT COUNT(*)
+                       -- Dem GHE (khong dem ve): mot ghe ban nhieu chang khong giao nhau van la 1 ghe
+                       ISNULL((SELECT COUNT(DISTINCT cn.MaChoNgoi)
                                FROM vantai.ChoNgoi cn
                                JOIN vantai.Ve v ON v.MaChoNgoi = cn.MaChoNgoi
                                                 AND v.MaChuyenTau = tx.MaChuyenTau

@@ -1,26 +1,29 @@
 ﻿using GUI.ViewModels.KyThuat;
 using GUI.Helpers;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using BUS.Services;
 using DTO.Common;
+using DTO.PhuongTien;
 
 namespace GUI.Views.Dialogs
 {
     // =========================================================================
     // DIALOG THEM MOI / CAP NHAT TOA XE TRONG DOI (phuongtien.ToaXe)
     //
-    // Giai doan dung giao dien: chi kiem tra du lieu nhap va tra ve ToaXeHienThi.
-    // Tai trong truc = (tu trong + tai trong) / so truc, doi chieu nguong tham khao.
+    // - Chung loai lay tu CSDL (phuongtien.ChungLoaiToa); mau the + tu trong / tai trong
+    //   goi y theo DanhMucMauPhuongTien.
+    // - Kiem tra bang CUNG ham voi Service (PhuongTienService.KiemTraToaXe).
+    // - Bam Luu: goi ham luu cua trang; Service tu choi thi hien ly do, giu dialog.
+    // - Tai trong truc = (tu trong + tai trong) / so truc, doi chieu nguong QuyTacLapTau.
     // =========================================================================
     public partial class ToaXeDialog : Window
     {
-        private static readonly Regex MauSoHieu = new(@"^[A-Z]+-[0-9]+$");
-
         private readonly ToaXeHienThi? _banGoc;
         private readonly HashSet<string> _soHieuDaCo;
+        private readonly Func<ToaXeHienThi, string?> _luu;
         private readonly bool _dangKhoiTao;
 
         // Ghi nho gia tri do he thong tu dien, de biet nguoi dung da tu sua hay chua
@@ -29,24 +32,27 @@ namespace GUI.Views.Dialogs
 
         public ToaXeHienThi? KetQua { get; private set; }
 
-        public ToaXeDialog(ToaXeHienThi? banGoc, IEnumerable<string> soHieuDaCo)
+        // soHieuDaCo: so hieu dang co trong doi, chi de goi y so ke tiep (Service moi la noi chan trung)
+        public ToaXeDialog(ToaXeHienThi? banGoc, IReadOnlyList<ChungLoaiToaMau> chungLoai,
+                           IEnumerable<string> soHieuDaCo, Func<ToaXeHienThi, string?> luu)
         {
             _dangKhoiTao = true;
             InitializeComponent();
 
             _banGoc = banGoc;
             _soHieuDaCo = new HashSet<string>(soHieuDaCo, StringComparer.OrdinalIgnoreCase);
+            _luu = luu;
 
-            SmartNumberFormatHelper.AttachDecimalKm(txtTuTrong, 0m, 999.99m);
-            SmartNumberFormatHelper.AttachDecimalKm(txtTaiTrong, 0m, 999.99m);
+            SmartNumberFormatHelper.AttachDecimalKm(txtTuTrong, 0m, PhuongTienService.KhoiLuongToaToiDaTan);
+            SmartNumberFormatHelper.AttachDecimalKm(txtTaiTrong, 0m, PhuongTienService.KhoiLuongToaToiDaTan);
 
-            cboChungLoai.ItemsSource = DanhMucMauPhuongTien.ChungLoaiToa;
-            txtNguongTruc.Text = $"ngưỡng {DanhMucMauPhuongTien.TaiTrongTrucToiDaTan:N1} t";
+            cboChungLoai.ItemsSource = chungLoai;
+            txtNguongTruc.Text = $"ngưỡng {QuyTacLapTau.TaiTrongTrucToiDaTan:N1} t";
 
             if (banGoc == null)
                 KhoiTaoThemMoi();
             else
-                KhoiTaoCapNhat(banGoc);
+                KhoiTaoCapNhat(banGoc, chungLoai);
 
             _chungLoaiTruoc = cboChungLoai.SelectedItem as ChungLoaiToaMau;
             _dangKhoiTao = false;
@@ -73,21 +79,22 @@ namespace GUI.Views.Dialogs
             txtTieuDePhu.Text = "Khai báo toa xe mới vào đội phương tiện";
             txtNutLuu.Text = "Thêm Toa Xe";
 
-            cboChungLoai.SelectedIndex = 0;
-            var cl = (ChungLoaiToaMau)cboChungLoai.SelectedItem;
-            DienThongSoMacDinh(cl);
-            DienSoHieuGoiY(cl);
+            cboChungLoai.SelectedIndex = cboChungLoai.Items.Count > 0 ? 0 : -1;
+            if (cboChungLoai.SelectedItem is ChungLoaiToaMau cl)
+            {
+                DienThongSoMacDinh(cl);
+                DienSoHieuGoiY(cl);
+            }
             rdoSanSang.IsChecked = true;
         }
 
-        private void KhoiTaoCapNhat(ToaXeHienThi tx)
+        private void KhoiTaoCapNhat(ToaXeHienThi tx, IReadOnlyList<ChungLoaiToaMau> chungLoai)
         {
             txtTieuDe.Text = $"CẬP NHẬT TOA XE — {tx.SoHieuToaXe}";
-            txtTieuDePhu.Text = "Số hiệu là khóa định danh nên không sửa sau khi đã tạo";
+            txtTieuDePhu.Text = "Số hiệu và chủng loại là định danh nên không sửa sau khi đã tạo";
             txtNutLuu.Text = "Lưu Thay Đổi";
 
-            cboChungLoai.SelectedItem = DanhMucMauPhuongTien.TimChungLoai(tx.MaChungLoaiCode);
-            if (cboChungLoai.SelectedIndex < 0) cboChungLoai.SelectedIndex = 0;
+            cboChungLoai.SelectedItem = chungLoai.FirstOrDefault(c => c.MaChungLoai == tx.MaChungLoai);
 
             txtSoHieu.Text = tx.SoHieuToaXe;
             txtSoHieu.IsReadOnly = true;
@@ -95,7 +102,7 @@ namespace GUI.Views.Dialogs
             txtSoHieu.Foreground = (Brush)new BrushConverter().ConvertFrom("#475569")!;
             btnGoiYSoHieu.Visibility = Visibility.Collapsed;
 
-            // Doi chung loai khi sua se lam lech tien to so hieu -> khoa lai
+            // Doi chung loai khi sua se lam lech tien to so hieu -> khoa lai (Service cung chan)
             cboChungLoai.IsEnabled = false;
             cboChungLoai.ToolTip = "Không đổi chủng loại của toa đã có. Hãy tạo toa mới nếu cần.";
 
@@ -208,7 +215,7 @@ namespace GUI.Views.Dialogs
             bdMaChungLoai.Background = (Brush)conv.ConvertFrom(cl.MauNen)!;
             bdMaChungLoai.BorderBrush = (Brush)conv.ConvertFrom(cl.MauVien)!;
             txtMaChungLoai.Foreground = (Brush)conv.ConvertFrom(cl.MauChu)!;
-            txtNhomToa.Text = cl.LaToaHang ? "TOA HÀNG" : $"TOA KHÁCH · {cl.SucChuaThamKhao} chỗ";
+            txtNhomToa.Text = cl.LaToaHang ? "TOA HÀNG" : $"TOA KHÁCH · {cl.SucChuaThamKhao} chỗ (tham khảo)";
             txtMoTaChungLoai.Text = cl.TenMoTa;
 
             pnlThongSoChungLoai.Children.Clear();
@@ -221,8 +228,8 @@ namespace GUI.Views.Dialogs
             decimal tuTrong = FormatHelper.TryParseDecimal(txtTuTrong.Text, out decimal a) ? a : 0m;
             decimal taiTrong = FormatHelper.TryParseDecimal(txtTaiTrong.Text, out decimal b) ? b : 0m;
             decimal toanTai = tuTrong + taiTrong;
-            decimal truc = cl.SoTruc > 0 ? Math.Round(toanTai / cl.SoTruc, 2) : 0m;
-            decimal nguong = DanhMucMauPhuongTien.TaiTrongTrucToiDaTan;
+            decimal truc = PhuongTienService.TinhTaiTrongTruc(tuTrong, taiTrong, cl.SoTruc);
+            decimal nguong = QuyTacLapTau.TaiTrongTrucToiDaTan;
             double tyLe = nguong > 0 ? Math.Min(100.0, (double)(truc / nguong) * 100.0) : 0.0;
 
             string mau = truc > nguong ? "#B91C1C" : tyLe >= 85 ? "#B45309" : "#15803D";
@@ -235,7 +242,7 @@ namespace GUI.Views.Dialogs
             txtToanTai.Text = $"{toanTai:N1} t";
 
             txtMoTaTruc.Text = truc > nguong
-                ? $"Vượt ngưỡng {nguong:N1} t/trục khi chở đầy. Toa sẽ bị cảnh báo lúc lập tàu."
+                ? $"Vượt ngưỡng {nguong:N1} t/trục khi chở đầy. Lập tàu sẽ không cho đưa toa này vào đoàn."
                 : tyLe >= 85
                     ? "Sát ngưỡng tải trọng trục cho phép."
                     : "Nằm trong ngưỡng tải trọng trục cho phép.";
@@ -267,62 +274,69 @@ namespace GUI.Views.Dialogs
 
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
-            bool hopLe = true;
-            Control? oLoiDauTien = null;
-
-            void BaoLoi(TextBlock tbLoi, string thongDiep, Control o)
-            {
-                tbLoi.Text = thongDiep;
-                hopLe = false;
-                oLoiDauTien ??= o;
-            }
-
             var cl = cboChungLoai.SelectedItem as ChungLoaiToaMau;
-            if (cl == null)
-                BaoLoi(txtLoiChungLoai, "Vui lòng chọn chủng loại toa.", cboChungLoai);
-
-            string soHieu = txtSoHieu.Text.Trim().ToUpperInvariant();
-            if (_banGoc == null)
-            {
-                if (soHieu.Length == 0)
-                    BaoLoi(txtLoiSoHieu, "Vui lòng nhập số hiệu toa xe.", txtSoHieu);
-                else if (!MauSoHieu.IsMatch(soHieu))
-                    BaoLoi(txtLoiSoHieu, "Số hiệu phải có dạng LOẠI-SỐ, ví dụ NML-205.", txtSoHieu);
-                else if (cl != null && !soHieu.StartsWith(cl.MaChungLoaiCode + "-", StringComparison.OrdinalIgnoreCase))
-                    BaoLoi(txtLoiSoHieu, $"Tiền tố phải khớp chủng loại đã chọn ({cl.MaChungLoaiCode}-...).", txtSoHieu);
-                else if (_soHieuDaCo.Contains(soHieu))
-                    BaoLoi(txtLoiSoHieu, $"Số hiệu {soHieu} đã tồn tại (trùng khóa UNIQUE SoHieuToaXe).", txtSoHieu);
-            }
-
-            // CHECK TuTrongTan > 0, DECIMAL(5,2)
-            if (!FormatHelper.TryParseDecimal(txtTuTrong.Text, out decimal tuTrong) || tuTrong <= 0 || tuTrong > 999.99m)
-                BaoLoi(txtLoiTuTrong, "Tự trọng phải lớn hơn 0 và không quá 999.99 tấn.", txtTuTrong);
-
-            // CHECK TaiTrongToiDaTan >= 0
-            if (!FormatHelper.TryParseDecimal(txtTaiTrong.Text, out decimal taiTrong) || taiTrong < 0 || taiTrong > 999.99m)
-                BaoLoi(txtLoiTaiTrong, "Tải trọng phải từ 0 đến 999.99 tấn.", txtTaiTrong);
-
-            if (!hopLe || cl == null)
-            {
-                oLoiDauTien?.Focus();
-                return;
-            }
+            bool docDuocTuTrong = FormatHelper.TryParseDecimal(txtTuTrong.Text, out decimal tuTrong);
+            bool docDuocTaiTrong = FormatHelper.TryParseDecimal(txtTaiTrong.Text, out decimal taiTrong);
 
             var kq = _banGoc?.SaoChep() ?? new ToaXeHienThi();
-            kq.SoHieuToaXe = _banGoc?.SoHieuToaXe ?? soHieu;
-            kq.MaChungLoai = cl.MaChungLoai;
-            kq.MaChungLoaiCode = cl.MaChungLoaiCode;
-            kq.TenMoTa = cl.TenMoTa;
-            kq.ChieuDaiChuanM = cl.ChieuDaiChuanM;
-            kq.SoTruc = cl.SoTruc;
-            kq.TuTrongTan = tuTrong;
-            kq.TaiTrongToiDaTan = taiTrong;
+            kq.SoHieuToaXe = _banGoc?.SoHieuToaXe ?? txtSoHieu.Text.Trim().ToUpperInvariant();
+            kq.TuTrongTan = docDuocTuTrong ? tuTrong : -1m;
+            kq.TaiTrongToiDaTan = docDuocTaiTrong ? taiTrong : -1m;
             kq.TrangThai = rdoDaNoi.IsChecked == true ? "DA_NOI"
                          : rdoBaoDuong.IsChecked == true ? "BAO_DUONG"
                          : "SAN_SANG";
+            if (cl != null)
+            {
+                kq.MaChungLoai = cl.MaChungLoai;
+                kq.MaChungLoaiCode = cl.MaChungLoaiCode;
+                kq.TenMoTa = cl.TenMoTa;
+                kq.ChieuDaiChuanM = cl.ChieuDaiChuanM;
+                kq.SoTruc = cl.SoTruc;
+            }
+
+            // Cung bo kiem tra voi Service: bao loi canh tung o
+            if (HienLoi(PhuongTienService.KiemTraToaXe(kq.ToET(), cl?.MaChungLoaiCode, laThemMoi: _banGoc == null)))
+                return;
+
+            string? loi = _luu(kq);
+            if (loi != null)
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa lưu được toa xe", this);
+                return;
+            }
 
             KetQua = kq;
             DialogResult = true;
+        }
+
+        // Hien loi canh tung o; tra ve true neu co loi
+        private bool HienLoi(List<LoiNhapLieuDTO> dsLoi)
+        {
+            txtLoiChungLoai.Text = txtLoiSoHieu.Text = txtLoiTuTrong.Text = txtLoiTaiTrong.Text = "";
+            Control? oLoiDauTien = null;
+
+            foreach (var l in dsLoi)
+            {
+                (TextBlock? tb, Control? o) = l.Truong switch
+                {
+                    "ChungLoai" => (txtLoiChungLoai, (Control)cboChungLoai),
+                    "SoHieu" => (txtLoiSoHieu, txtSoHieu),
+                    "TuTrong" => (txtLoiTuTrong, txtTuTrong),
+                    "TaiTrong" => (txtLoiTaiTrong, txtTaiTrong),
+                    _ => ((TextBlock?)null, (Control?)null)
+                };
+
+                if (tb == null)
+                {
+                    ThongBaoDialog.CanhBao(l.ThongDiep, "Dữ liệu chưa hợp lệ", this);
+                    return true;
+                }
+                if (tb.Text.Length == 0) tb.Text = l.ThongDiep;
+                oLoiDauTien ??= o;
+            }
+
+            oLoiDauTien?.Focus();
+            return dsLoi.Count > 0;
         }
 
         private void BtnHuy_Click(object sender, RoutedEventArgs e)

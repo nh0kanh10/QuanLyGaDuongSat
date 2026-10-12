@@ -13,8 +13,10 @@ namespace GUI.Views.Dialogs
     // DIALOG THEM / SUA HO SO NHAN VIEN (nhansu.NhanVien)
     //
     // Kiem tra theo kieu cot + UNIQUE MaNVCode; hang bang lai bat buoc voi lai tau /
-    // phu lai (quy uoc giao dien). Khi sua: khoa ma NV, bao truoc kip chua nhan ban
-    // se hong neu doi chuc danh / bang lai / han kham / cho nghi viec.
+    // phu lai (quy uoc giao dien). Ma NV do he thong cap theo chuc danh (LT_001,
+    // PL_001 ... - MaNhanVienTheoChucDanh, 29/09): them moi lay so ke tiep, sua ma
+    // doi chuc danh thi cap ma moi. Khi sua: bao truoc kip chua nhan ban se hong neu
+    // doi chuc danh / bang lai / han kham / cho nghi viec.
     // =========================================================================
     public partial class NhanVienDialog : Window
     {
@@ -46,6 +48,7 @@ namespace GUI.Views.Dialogs
 
             _dangKhoiTao = false;
             CapNhatTheoChucDanh();
+            CapNhatMa();
             CapNhatTomTat();
 
             Loaded += (_, _) =>
@@ -62,20 +65,17 @@ namespace GUI.Views.Dialogs
             icoTieuDe.Symbol = SymbolRegular.PersonAdd24;
             txtNutLuu.Text = "Lưu Hồ Sơ";
 
-            txtMa.Text = GoiYMaMoi();
             ChonTrangThai(NhanVienHienThi.SanSang);
         }
 
         private void KhoiTaoCapNhat(NhanVienHienThi nv)
         {
             txtTieuDe.Text = $"CẬP NHẬT HỒ SƠ {nv.MaNVCode} — {nv.HoTen}";
-            txtTieuDePhu.Text = "Mã nhân viên là khóa tra cứu nên không sửa";
+            txtTieuDePhu.Text = "Mã nhân viên theo chức danh; đổi chức danh sẽ được cấp mã mới";
             icoTieuDe.Symbol = SymbolRegular.PersonEdit24;
             txtNutLuu.Text = "Lưu Thay Đổi";
 
             txtMa.Text = nv.MaNVCode;
-            txtMa.IsReadOnly = true;
-            txtMa.Background = Mau("#F1F5F9");
             txtHoTen.Text = nv.HoTen;
             txtSoDienThoai.Text = nv.SoDienThoai;
             dpHanKham.SelectedDate = nv.HanKhamSucKhoe;
@@ -85,17 +85,46 @@ namespace GUI.Views.Dialogs
             ChonTrangThai(nv.TrangThai);
         }
 
-        // Ma ke tiep theo dang NV_xxx
-        private string GoiYMaMoi()
+        // Ma nhan vien cap theo chuc danh. Them moi: so ke tiep cua tien to. Sua: giu ma cu
+        // neu con dung tien to cua chuc danh, khong thi cap ma moi (ma cu khong dung lai).
+        private void CapNhatMa()
         {
-            int lonNhat = _duLieu.NhanVien
-                .Select(n => Regex.Match(n.MaNVCode, @"^NV_(\d+)$"))
-                .Where(m => m.Success)
-                .Select(m => int.Parse(m.Groups[1].Value))
-                .DefaultIfEmpty(0)
-                .Max();
-            return $"NV_{lonNhat + 1:000}";
+            string ma;
+            string? ghiChu = null;
+            string tienTo = MaNhanVienTheoChucDanh.TienTo(ChucDanh);
+
+            if (ChucDanh.Length == 0)
+            {
+                ma = _banGoc?.MaNVCode ?? string.Empty;
+                if (_banGoc == null) ghiChu = "Chọn chức danh để hệ thống cấp mã.";
+            }
+            else if (_banGoc != null && MaNhanVienTheoChucDanh.KhopChucDanh(_banGoc.MaNVCode, ChucDanh))
+            {
+                ma = _banGoc.MaNVCode;
+            }
+            else
+            {
+                ma = MaNhanVienTheoChucDanh.MaKeTiep(ChucDanh, MaDaCap());
+                if (_banGoc == null)
+                    ghiChu = tienTo == MaNhanVienTheoChucDanh.TienToKhac
+                        ? "Cấp tự động. Chức danh ngoài danh mục dùng tiền tố NV."
+                        : $"Cấp tự động theo chức danh: {tienTo} = {ChucDanh.ToLower()}.";
+                else
+                    ghiChu = string.Equals(_banGoc.ChucDanh.Trim(), ChucDanh, StringComparison.OrdinalIgnoreCase)
+                        ? $"Mã cũ chưa theo chức danh nên cấp mã mới: {_banGoc.MaNVCode} → {ma}."
+                        : $"Đổi chức danh nên cấp mã mới: {_banGoc.MaNVCode} → {ma}. Mã cũ không dùng lại.";
+            }
+
+            txtMa.Text = ma;
+            txtLoiMa.Text = ghiChu ?? string.Empty;
+            txtLoiMa.Foreground = Mau(_banGoc != null && ma != _banGoc.MaNVCode ? "#B45309" : "#64748B");
         }
+
+        // Ma da cap: du lieu dang hien (ke ca ho so them / sua tam) + du lieu goc, de ma cu
+        // cua nguoi vua doi chuc danh khong bi cap lai cho nguoi khac
+        private IEnumerable<string> MaDaCap()
+            => _duLieu.NhanVien.Select(n => n.MaNVCode)
+                      .Concat(DanhMucMauNhanSu.LayNhanVien().Select(n => n.MaNVCode));
 
         private void ChonTrangThai(string trangThai)
         {
@@ -139,6 +168,7 @@ namespace GUI.Views.Dialogs
             if (_dangKhoiTao) return;
             txtLoiChucDanh.Text = "";
             CapNhatTheoChucDanh();
+            CapNhatMa();
             CapNhatTomTat();
         }
 
@@ -296,14 +326,15 @@ namespace GUI.Views.Dialogs
             void BaoLoi(TextBlock tbLoi, string thongDiep, Control o)
             {
                 tbLoi.Text = thongDiep;
+                tbLoi.Foreground = Mau("#B91C1C");
                 hopLe = false;
                 oLoiDauTien ??= o;
             }
 
-            // MaNVCode VARCHAR(20) NOT NULL UNIQUE
+            // MaNVCode VARCHAR(20) NOT NULL UNIQUE - he thong cap theo chuc danh
             string ma = txtMa.Text.Trim();
             if (ma.Length == 0)
-                BaoLoi(txtLoiMa, "Vui lòng nhập mã nhân viên.", txtMa);
+                BaoLoi(txtLoiMa, "Chọn chức danh để hệ thống cấp mã nhân viên.", cboChucDanh);
             else if (!MaHopLe.IsMatch(ma))
                 BaoLoi(txtLoiMa, "Chỉ dùng chữ không dấu, chữ số, dấu _ hoặc - (cột VARCHAR).", txtMa);
             else if (_duLieu.NhanVien.Any(n => n.MaNhanVien != _banGoc?.MaNhanVien &&

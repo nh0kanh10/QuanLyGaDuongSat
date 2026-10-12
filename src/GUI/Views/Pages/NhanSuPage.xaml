@@ -236,7 +236,7 @@
 
                             <TextBlock Grid.Column="0" Text="Tra cứu:" Style="{StaticResource FieldLabel}"/>
                             <TextBox Grid.Column="1" x:Name="txtTimNhanVien" TextChanged="BoLocNhanVien_Changed"
-                                     ToolTip="Tìm theo mã nhân viên, họ tên (gõ không dấu cũng được), số điện thoại hoặc đơn vị"/>
+                                     ToolTip="Tìm theo mã nhân viên (gõ LT_, PL_, TT_ ... để lọc theo chức danh), họ tên (gõ không dấu cũng được), số điện thoại hoặc đơn vị"/>
 
                             <ComboBox Grid.Column="2" x:Name="cboChucDanhLoc" Width="150" Margin="8,0,0,0"
                                       SelectionChanged="BoLocNhanVien_Changed" ToolTip="Lọc theo chức danh">
