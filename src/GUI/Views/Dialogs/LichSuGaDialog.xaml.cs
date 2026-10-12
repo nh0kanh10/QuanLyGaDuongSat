@@ -117,7 +117,7 @@ namespace GUI.Views.Dialogs
             }
             catch (Exception ex)
             {
-                ThongBaoDialog.Loi($"Không thể tải lịch sử nhật ký: {ex.Message}", "Lỗi Truy Vấn", this);
+                ThongBaoDialog.Loi($"Không thể tải lịch sử thay đổi: {ex.Message}", "Lỗi Tải Dữ Liệu", this);
             }
         }
 

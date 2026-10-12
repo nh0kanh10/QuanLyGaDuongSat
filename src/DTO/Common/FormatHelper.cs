@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace DTO.Common
@@ -249,6 +250,63 @@ namespace DTO.Common
         {
             DateTime display = fromUtc ? ToLocalDateTime(dt) : dt;
             return display.ToString("HH:mm");
+        }
+
+        /// <summary>
+        /// Loại bỏ dấu tiếng Việt để phục vụ tra cứu không dấu (Unaccent Search).
+        /// Ví dụ: "Đà Nẵng" -> "Da Nang", "Hà Nội" -> "Ha Noi", "Diêu Trì" -> "Dieu Tri".
+        /// </summary>
+        public static string RemoveDiacritics(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+            string normalizedString = text.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder();
+
+            foreach (char c in normalizedString)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            // Xử lý riêng biệt ký tự 'đ'/'Đ' trong tiếng Việt
+            return stringBuilder.ToString()
+                .Normalize(NormalizationForm.FormC)
+                .Replace('đ', 'd')
+                .Replace('Đ', 'D');
+        }
+
+        /// <summary>
+        /// Chuẩn hóa Tên Ga chuẩn đường sắt:
+        /// 1. Tự động cắt bỏ tiền tố "Ga " hoặc "ga " nếu người dùng gõ thừa (ví dụ: "Ga Hà Nội" -> "Hà Nội").
+        /// 2. Chuẩn hóa khoảng trắng dư thừa.
+        /// 3. Viết hoa chữ cái đầu mỗi từ (Title Case: "hà nội" -> "Hà Nội", "đà nẵng" -> "Đà Nẵng").
+        /// </summary>
+        public static string ChuanHoaTenGa(string? tenGa)
+        {
+            if (string.IsNullOrWhiteSpace(tenGa)) return string.Empty;
+
+            // Xóa khoảng trắng thừa giữa các từ
+            string clean = Regex.Replace(tenGa.Trim(), @"\s+", " ");
+
+            // Cắt bỏ tiền tố "Ga " ở đầu
+            clean = Regex.Replace(clean, @"^(?i)ga\s+", "");
+
+            if (string.IsNullOrWhiteSpace(clean)) return string.Empty;
+
+            // Chuyển sang Title Case tiếng Việt
+            try
+            {
+                var culture = new CultureInfo("vi-VN");
+                return culture.TextInfo.ToTitleCase(clean.ToLower(culture));
+            }
+            catch
+            {
+                return clean;
+            }
         }
     }
 }

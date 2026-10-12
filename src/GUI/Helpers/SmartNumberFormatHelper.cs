@@ -195,7 +195,7 @@ namespace GUI.Helpers
                 string text = textBox.Text.Trim();
                 if (string.IsNullOrEmpty(text))
                 {
-                    textBox.Text = "0.00";
+                    // Giữ nguyên chuỗi rỗng để không ép giá trị 0.00 đè lên placeholder
                     return;
                 }
 
@@ -204,10 +204,6 @@ namespace GUI.Helpers
                     if (km > max) km = max;
                     if (km < min) km = min;
                     textBox.Text = FormatHelper.FormatKm(km);
-                }
-                else
-                {
-                    textBox.Text = "0.00";
                 }
             };
         }
@@ -269,6 +265,91 @@ namespace GUI.Helpers
                 else
                 {
                     textBox.Text = min.ToString();
+                }
+            };
+        }
+        #endregion
+
+        #region 4. Số thực tổng quát (Độ dốc ‰, tỷ lệ)
+        // Gắn bộ lọc số thực tổng quát với số chữ số thập phân tùy chọn (ví dụ: độ dốc 0.0‰).
+        public static void AttachDecimal(TextBox textBox, decimal min = 0m, decimal max = 50.0m, int decimalPlaces = 1)
+        {
+            if (textBox == null) return;
+
+            textBox.PreviewTextInput += (s, e) =>
+            {
+                if (!_decimalCharRegex.IsMatch(e.Text))
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                if (e.Text == "." || e.Text == ",")
+                {
+                    string curText = textBox.Text;
+                    if (textBox.SelectionLength > 0)
+                    {
+                        curText = curText.Remove(textBox.SelectionStart, textBox.SelectionLength);
+                    }
+
+                    if (curText.Contains('.') || curText.Contains(','))
+                    {
+                        e.Handled = true;
+                        return;
+                    }
+                }
+            };
+
+            textBox.PreviewKeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Space)
+                {
+                    e.Handled = true;
+                }
+            };
+
+            DataObject.AddPastingHandler(textBox, (s, e) =>
+            {
+                if (e.DataObject.GetDataPresent(DataFormats.Text))
+                {
+                    string pasteText = e.DataObject.GetData(DataFormats.Text)?.ToString() ?? "";
+                    if (FormatHelper.TryParseDecimal(pasteText, out decimal val))
+                    {
+                        e.CancelCommand();
+                        if (val > max) val = max;
+                        if (val < min) val = min;
+                        textBox.Text = val.ToString($"F{decimalPlaces}", CultureInfo.InvariantCulture);
+                        textBox.CaretIndex = textBox.Text.Length;
+                    }
+                    else
+                    {
+                        e.CancelCommand();
+                    }
+                }
+                else
+                {
+                    e.CancelCommand();
+                }
+            });
+
+            textBox.LostFocus += (s, e) =>
+            {
+                string text = textBox.Text.Trim();
+                if (string.IsNullOrEmpty(text))
+                {
+                    textBox.Text = min.ToString($"F{decimalPlaces}", CultureInfo.InvariantCulture);
+                    return;
+                }
+
+                if (FormatHelper.TryParseDecimal(text, out decimal val))
+                {
+                    if (val > max) val = max;
+                    if (val < min) val = min;
+                    textBox.Text = val.ToString($"F{decimalPlaces}", CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    textBox.Text = min.ToString($"F{decimalPlaces}", CultureInfo.InvariantCulture);
                 }
             };
         }

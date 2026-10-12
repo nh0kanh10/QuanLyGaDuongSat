@@ -235,6 +235,8 @@ namespace GUI.Views.Dialogs
             {
                 pnlNhapMaXacNhan.Visibility = Visibility.Visible;
                 lblHuongDanNhapMa.Text = $"Vui lòng nhập đúng mã '{_maXacNhanCanNhap}' để mở khóa nút xóa:";
+                txtMaXacNhan.MaxLength = 10;
+                txtMaXacNhan.Text = string.Empty;
                 btnChinh.IsEnabled = false;
                 btnChinh.Opacity = 0.5;
                 txtMaXacNhan.Focus();

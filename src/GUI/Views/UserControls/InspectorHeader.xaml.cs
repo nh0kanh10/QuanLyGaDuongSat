@@ -14,6 +14,13 @@ namespace GUI.Views.UserControls
             InitializeComponent();
         }
 
+        public event System.Windows.RoutedEventHandler? DeleteClicked;
+
+        private void BtnXoaGa_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            DeleteClicked?.Invoke(this, e);
+        }
+
         public void SetStationDetail(string tenGa, string maCode, int maGa, string tuyen)
         {
             _isCreateMode = false;
@@ -23,6 +30,7 @@ namespace GUI.Views.UserControls
             SetDirtyState(false);
             iconHeader.Symbol = SymbolRegular.Location24;
             iconHeader.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x3B, 0x73));
+            btnXoaGaHeader.Visibility = System.Windows.Visibility.Visible;
         }
 
         public void SetCreateMode()
@@ -37,6 +45,7 @@ namespace GUI.Views.UserControls
             txtBadge.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x3B, 0x73));
             iconHeader.Symbol = SymbolRegular.AddCircle24;
             iconHeader.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x3B, 0x73));
+            btnXoaGaHeader.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         public void SetDirtyState(bool isDirty)

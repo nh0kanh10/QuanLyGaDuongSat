@@ -210,8 +210,20 @@ namespace GUI.Helpers
 
         #region ĐỌC TỆP DÙNG CHUNG (HỖ TRỢ .XLSX VÀ .CSV)
 
+        public static MemoryStream MoDocTepAnToan(string filePath)
+        {
+            var ms = new MemoryStream();
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            {
+                fs.CopyTo(ms);
+            }
+            ms.Position = 0;
+            return ms;
+        }
+
         /// <summary>
         /// Đọc toàn bộ các dòng từ tệp Excel (.xlsx) hoặc CSV, trả về danh sách các mảng token chuỗi.
+        /// Hỗ trợ đọc an toàn ngay cả khi tệp đang được mở trong Microsoft Excel.
         /// </summary>
         public static List<string[]> DocTepDuLieu(string filePath)
         {
@@ -220,7 +232,8 @@ namespace GUI.Helpers
 
             if (ext == ".xlsx" || ext == ".xlsm")
             {
-                using var workbook = new XLWorkbook(filePath);
+                using var ms = MoDocTepAnToan(filePath);
+                using var workbook = new XLWorkbook(ms);
                 var worksheet = workbook.Worksheets.FirstOrDefault();
                 if (worksheet == null) return rows;
 
@@ -255,9 +268,10 @@ namespace GUI.Helpers
             }
             else
             {
-                // Mặc định đọc CSV với UTF-8
-                var lines = File.ReadAllLines(filePath, Encoding.UTF8);
-                foreach (var line in lines)
+                using var ms = MoDocTepAnToan(filePath);
+                using var reader = new StreamReader(ms, Encoding.UTF8);
+                string? line;
+                while ((line = reader.ReadLine()) != null)
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
                     rows.Add(ParseCsvLine(line));
@@ -293,33 +307,32 @@ namespace GUI.Helpers
                 var currentIndices = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 var usedCols = new HashSet<int>();
 
-                // Bước 1: Quét khớp CHÍNH XÁC (Exact Match - Điểm cao nhất)
+                // Bước 1: Quét khớp CHÍNH XÁC (Exact Match - Ưu tiên theo thứ tự target.Aliases)
                 foreach (var target in targets)
                 {
-                    for (int c = 0; c < row.Length; c++)
+                    bool matched = false;
+                    foreach (var alias in target.Aliases)
                     {
-                        if (usedCols.Contains(c)) continue;
-                        string cellClean = ChuanHoaSoSanh(row[c]);
-                        if (string.IsNullOrEmpty(cellClean)) continue;
+                        string aliasClean = ChuanHoaSoSanh(alias);
+                        if (string.IsNullOrEmpty(aliasClean)) continue;
 
-                        bool isExact = false;
-                        foreach (var alias in target.Aliases)
+                        for (int c = 0; c < row.Length; c++)
                         {
-                            string aliasClean = ChuanHoaSoSanh(alias);
+                            if (usedCols.Contains(c)) continue;
+                            string cellClean = ChuanHoaSoSanh(row[c]);
+                            if (string.IsNullOrEmpty(cellClean)) continue;
+
                             if (cellClean == aliasClean)
                             {
-                                isExact = true;
+                                currentIndices[target.PropertyKey] = c;
+                                usedCols.Add(c);
+                                score += target.IsRequired ? 5 : 3;
+                                matched = true;
                                 break;
                             }
                         }
 
-                        if (isExact)
-                        {
-                            currentIndices[target.PropertyKey] = c;
-                            usedCols.Add(c);
-                            score += target.IsRequired ? 5 : 3;
-                            break;
-                        }
+                        if (matched) break;
                     }
                 }
 
@@ -328,32 +341,29 @@ namespace GUI.Helpers
                 {
                     if (currentIndices.ContainsKey(target.PropertyKey)) continue;
 
-                    for (int c = 0; c < row.Length; c++)
+                    bool matched = false;
+                    foreach (var alias in target.Aliases)
                     {
-                        if (usedCols.Contains(c)) continue;
-                        string cellClean = ChuanHoaSoSanh(row[c]);
-                        if (string.IsNullOrEmpty(cellClean)) continue;
+                        string aliasClean = ChuanHoaSoSanh(alias);
+                        if (string.IsNullOrEmpty(aliasClean)) continue;
 
-                        bool isSubMatch = false;
-                        foreach (var alias in target.Aliases)
+                        for (int c = 0; c < row.Length; c++)
                         {
-                            string aliasClean = ChuanHoaSoSanh(alias);
-                            if (string.IsNullOrEmpty(aliasClean)) continue;
+                            if (usedCols.Contains(c)) continue;
+                            string cellClean = ChuanHoaSoSanh(row[c]);
+                            if (string.IsNullOrEmpty(cellClean)) continue;
 
                             if (cellClean.Contains(aliasClean) || (cellClean.Length >= 4 && aliasClean.Contains(cellClean)))
                             {
-                                isSubMatch = true;
+                                currentIndices[target.PropertyKey] = c;
+                                usedCols.Add(c);
+                                score += target.IsRequired ? 3 : 1;
+                                matched = true;
                                 break;
                             }
                         }
 
-                        if (isSubMatch)
-                        {
-                            currentIndices[target.PropertyKey] = c;
-                            usedCols.Add(c);
-                            score += target.IsRequired ? 3 : 1;
-                            break;
-                        }
+                        if (matched) break;
                     }
                 }
 

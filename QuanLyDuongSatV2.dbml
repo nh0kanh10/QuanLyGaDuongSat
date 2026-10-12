@@ -1,0 +1,614 @@
+// =============================================================================
+// DBML (Database Markup Language) - Chuẩn định dạng cho dbdiagram.io
+// Dự án: Quản Lý Ga & Vận Tải Đường Sắt (QuanLyDuongSatV2)
+// Quy mô: 42 Bảng, 9 Schemas, 67 Liên kết Khóa ngoại
+// =============================================================================
+
+Table danhmuc.DanhMuc {
+  MaDanhMuc int [pk, increment]
+  NhomDanhMuc varchar(50) [not null]
+  MaCode varchar(50) [not null]
+  TenHienThi nvarchar(100) [not null]
+  ThuTuSapXep int [not null, default: `1`]
+  GhiChu nvarchar(255)
+  DangKhaiThac bit [not null, default: `1`]
+  NgayTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table hatang.TuyenDuong {
+  MaTuyen int [pk, increment]
+  MaTuyenCode varchar(20) [not null, unique]
+  TenTuyen nvarchar(100) [not null]
+  TongChieuDaiKm decimal(7,2) [not null]
+  KhoRayMm int [not null, default: `1000`]
+  DangKhaiThac bit [not null, default: `1`]
+  NgayTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table hatang.Ga {
+  MaGa int [pk, increment]
+  MaTuyen int [not null]
+  MaGaCode varchar(10) [not null, unique]
+  TenGa nvarchar(100) [not null]
+  LyTrinhKm decimal(7,2) [not null]
+  TinhThanh nvarchar(100) [not null]
+  HangGa varchar(20) [not null, default: `'HANG_3'`]
+  CoCauQuay bit [not null, default: `0`]
+  DangKhaiThac bit [not null, default: `1`]
+  NgayTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+  NguoiTao nvarchar(50) [not null, default: `'admin'`]
+  NgayCapNhat datetime2
+  NguoiCapNhat nvarchar(50)
+}
+
+Table hatang.DuongRayGa {
+  MaDuongRay int [pk, increment]
+  MaGa int [not null]
+  SoHieuDuong int [not null]
+  LoaiDuong varchar(30) [not null]
+  ChieuDaiHuuDungM int [not null, default: `450`]
+  CoKeGa bit [not null, default: `1`]
+  TrangThai varchar(20) [not null, default: `'TRONG'`]
+}
+
+Table hatang.KhuGian {
+  MaKhuGian int [pk, increment]
+  MaGaDau int [not null]
+  MaGaCuoi int [not null]
+  CuLyKm decimal(5,2) [not null]
+  TocDoToiDaKhach int [not null, default: `80`]
+  TocDoToiDaHang int [not null, default: `50`]
+  DoDocPermil decimal(4,1) [not null, default: `0.0`]
+  CanDauMayDay bit [not null, default: `0`]
+  TrangThai varchar(20) [not null, default: `'RONG'`]
+}
+
+Table hatang.DuongNgang {
+  MaDuongNgang int [pk, increment]
+  MaKhuGian int [not null]
+  LyTrinhKm decimal(7,2) [not null]
+  LoaiDuongNgang varchar(30) [not null]
+  TenDuongBoGiaoCat nvarchar(150) [not null]
+  LaDiemDen bit [not null, default: `0`]
+}
+
+Table nhansu.NhanVien {
+  MaNhanVien int [pk, increment]
+  MaNVCode varchar(20) [not null, unique]
+  HoTen nvarchar(100) [not null]
+  SoDienThoai varchar(20) [not null]
+  ChucDanh nvarchar(50) [not null]
+  HangBangLai varchar(10)
+  HanKhamSucKhoe date [not null]
+  DonViChuQuan nvarchar(100) [not null]
+  TrangThai varchar(20) [not null, default: `'SAN_SANG'`]
+  NgayTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table phanquyen.VaiTro {
+  MaVaiTro int [pk, increment]
+  MaVaiTroCode varchar(30) [not null, unique]
+  TenVaiTro nvarchar(100) [not null]
+  MoTa nvarchar(255)
+  KichHoat bit [not null, default: `1`]
+  NgayTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table phanquyen.Quyen {
+  MaQuyen int [pk, increment]
+  MaQuyenCode varchar(50) [not null, unique]
+  TenQuyen nvarchar(100) [not null]
+  NhomQuyen varchar(50) [not null]
+  MoTa nvarchar(255)
+}
+
+Table phanquyen.TaiKhoan {
+  MaTaiKhoan int [pk, increment]
+  TenDangNhap varchar(50) [not null, unique]
+  MatKhauHash varchar(255) [not null]
+  HoTenHienThi nvarchar(100) [not null]
+  Email varchar(100)
+  MaNhanVien int
+  DangHoatDong bit [not null, default: `1`]
+  LanDangNhapCuoi datetime2
+  NgayTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table phanquyen.TaiKhoan_VaiTro {
+  MaTaiKhoan int [not null]
+  MaVaiTro int [not null]
+  NgayCap datetime2 [not null, default: `SYSUTCDATETIME(`]
+  NguoiCap int
+}
+
+Table phanquyen.VaiTro_Quyen {
+  MaVaiTro int [not null]
+  MaQuyen int [not null]
+}
+
+Table phanquyen.LichSuDangNhap {
+  MaLichSu bigint [pk, increment]
+  MaTaiKhoan int
+  TenDangNhap varchar(50) [not null]
+  ThoiDiemDangNhap datetime2 [not null, default: `SYSUTCDATETIME(`]
+  DiaChiIP varchar(45)
+  ThietBi nvarchar(255)
+  ThanhCong bit [not null]
+  LyDoThatBai nvarchar(255)
+}
+
+Table phuongtien.DongDauMay {
+  MaDongDauMay int [pk, increment]
+  MaDongCode varchar(20) [not null, unique]
+  NhaSanXuat nvarchar(100) [not null]
+  CongSuatHP int [not null]
+  TocDoToiDaKmh int [not null]
+  SucKeoToiDaTan decimal(6,1) [not null]
+  DungTichBonDauLit int [not null]
+  TrongLuongTan decimal(5,1) [not null]
+  ChieuDaiM decimal(4,1) [not null]
+}
+
+Table phuongtien.DauMay {
+  MaDauMay int [pk, increment]
+  SoHieuDauMay varchar(20) [not null, unique]
+  MaDongDauMay int [not null]
+  DonViQuanLy nvarchar(50) [not null]
+  NamSanXuat int [not null]
+  SoKmTichLuy decimal(9,1) [not null, default: `0.0`]
+  TrangThai varchar(20) [not null, default: `'SAN_SANG'`]
+}
+
+Table phuongtien.ChungLoaiToa {
+  MaChungLoai int [pk, increment]
+  MaChungLoaiCode varchar(20) [not null, unique]
+  TenMoTa nvarchar(100) [not null]
+  ChieuDaiChuanM decimal(4,1) [not null, default: `20.0`]
+  SoTruc int [not null, default: `4`]
+}
+
+Table phuongtien.ToaXe {
+  MaToaXe int [pk, increment]
+  SoHieuToaXe varchar(20) [not null, unique]
+  MaChungLoai int [not null]
+  TuTrongTan decimal(5,2) [not null]
+  TaiTrongToiDaTan decimal(5,2) [not null]
+  TrangThai varchar(20) [not null, default: `'SAN_SANG'`]
+}
+
+Table vanhanh.MacTauMau {
+  MaMacTau int [pk, increment]
+  SoHieuMacTau varchar(20) [not null, unique]
+  LoaiTau varchar(20) [not null]
+  HuongChay varchar(15) [not null]
+  MaGaDi int [not null]
+  MaGaDen int [not null]
+  ThoiGianChuanGio decimal(4,1) [not null]
+  MucUuTien int [not null, default: `1`]
+  DangKhaiThac bit [not null, default: `1`]
+}
+
+Table vanhanh.ChuyenTau {
+  MaChuyenTau int [pk, increment]
+  MaMacTau int [not null]
+  NgayXuatPhat date [not null]
+  GioXuatPhatKH datetime2 [not null]
+  GioVeDichKH datetime2 [not null]
+  GioXuatPhatTT datetime2
+  GioVeDichTT datetime2
+  SoPhutTreLuyKe int [not null, default: `0`]
+  LyDoHuy nvarchar(255)
+  TrangThai varchar(20) [not null, default: `'DA_LEN_LICH'`]
+  PhienBan rowversion [not null]
+}
+
+Table vanhanh.LichDungGa {
+  MaDiemDung int [pk, increment]
+  MaChuyenTau int [not null]
+  MaGa int [not null]
+  ThuTuDung int [not null]
+  GioDenKeHoach datetime2 [not null]
+  GioDiKeHoach datetime2 [not null]
+  GioDenThucTe datetime2
+  GioDiThucTe datetime2
+  MaDuongRay int
+  LaDiemTranh bit [not null, default: `0`]
+}
+
+Table vanhanh.DoanTau {
+  MaDoanTau int [pk, increment]
+  MaChuyenTau int [not null, unique]
+  MaDauMayChinh int [not null]
+  MaDauMayDay int
+  TongSoToa int [not null]
+  TongChieuDaiM decimal(6,1) [not null]
+  TongTrongLuongTan decimal(7,2) [not null]
+  DaDuyetAnToan bit [not null, default: `0`]
+  PhienBan rowversion [not null]
+}
+
+Table vanhanh.ChiTietDoanTau {
+  MaChiTiet int [pk, increment]
+  MaDoanTau int [not null]
+  MaToaXe int [not null]
+  ThuTuNoi int [not null]
+}
+
+Table vanhanh.NhatKyChamGio {
+  MaSuCo int [pk, increment]
+  MaChuyenTau int [not null]
+  MaGa int
+  MaKhuGian int
+  LoaiSuCo varchar(50) [not null]
+  SoPhutCham int [not null]
+  GhiChuXuLy nvarchar(max)
+  ThoiDiemBaoCao datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table vanhanh.LenhPhongToa {
+  MaLenhPhongToa int [pk, increment]
+  MaKhuGian int [not null]
+  ThoiGianBatDau datetime2 [not null]
+  ThoiGianKetThuc datetime2 [not null]
+  LyDo nvarchar(255) [not null]
+  TocDoHanCheKmh int [not null, default: `0`]
+  MaNguoiDuyet int [not null]
+  ThoiDiemTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table nhansu.PhanCongKipLai {
+  MaPhanCong int [pk, increment]
+  MaChuyenTau int [not null]
+  MaLaiTau int [not null]
+  MaPhuLai int [not null]
+  MaTruongTau int [not null]
+  MaGaNhanBan int [not null]
+  MaGaBanGiao int [not null]
+  TrangThai varchar(20) [not null, default: `'DA_PHAN_CONG'`]
+}
+
+Table nhansu.KiemTraSucKhoe {
+  MaKiemTra int [pk, increment]
+  MaNhanVien int [not null]
+  MaChuyenTau int [not null]
+  NongDoConMgL decimal(3,2) [not null]
+  SoGioNghiTruocCa decimal(4,1) [not null]
+  DuDieuKien as
+  ThoiDiemKiemTra datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table vantai.KhachHang {
+  MaKhachHang int [pk, increment]
+  HoTen nvarchar(100) [not null]
+  SoCCCD varchar(20) [not null, unique]
+  SoDienThoai varchar(20) [not null]
+  Email varchar(100)
+  NgaySinh date
+  LoaiKhach varchar(20) [not null, default: `'THUONG'`]
+  NgayTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table vantai.DonDatVe {
+  MaDonVe int [pk, increment]
+  MaPNR varchar(20) [not null, unique]
+  MaKhachHang int [not null]
+  SoLuongVe int [not null]
+  TongTien decimal(12,2) [not null]
+  HinhThucTT varchar(30) [not null, default: `'TIEN_MAT'`]
+  TrangThaiTT varchar(20) [not null, default: `'DA_THANH_TOAN'`]
+  MaNhanVienBan int [not null]
+  ThoiDiemTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+  PhienBan rowversion [not null]
+}
+
+Table vantai.ToaXeKhach {
+  MaToaXeKhach int [pk, increment]
+  MaChuyenTau int [not null]
+  NhanHieuToa nvarchar(20) [not null]
+  LoaiToa varchar(20) [not null]
+  ThuTuToa int [not null]
+  SucChua int [not null]
+}
+
+Table vantai.ChoNgoi {
+  MaChoNgoi int [pk, increment]
+  MaToaXeKhach int [not null]
+  SoGhe int [not null]
+  TangGiuong int
+  LaGhePhu bit [not null, default: `0`]
+}
+
+Table vantai.BieuCuoc {
+  MaBieuCuoc int [pk, increment]
+  LoaiToa varchar(20) [not null, unique]
+  DonGiaMoiKm decimal(8,2) [not null]
+  GiaVeSan decimal(10,2) [not null]
+  PhuThuTangGiuong decimal(8,2) [not null, default: `0.0`]
+}
+
+Table vantai.BangGiaCoDinh {
+  MaBangGia int [pk, increment]
+  LoaiToa varchar(20) [not null]
+  MaGaDi int [not null]
+  MaGaDen int [not null]
+  GiaVe decimal(12,2) [not null]
+  PhuThuTangGiuong decimal(8,2) [not null, default: `0.0`]
+}
+
+Table vantai.Ve {
+  MaVe int [pk, increment]
+  MaDonVe int [not null]
+  MaVeCode varchar(30) [not null, unique]
+  MaChuyenTau int [not null]
+  MaChoNgoi int [not null]
+  MaGaDi int [not null]
+  MaGaDen int [not null]
+  TenHanhKhach nvarchar(100) [not null]
+  CCCDHanhKhach varchar(20) [not null]
+  GiaVeGoc decimal(12,2) [not null]
+  SoTienGiam decimal(12,2) [not null, default: `0.0`]
+  GiaVeThucThu as
+  TrangThai varchar(20) [not null, default: `'DA_DAT'`]
+  ThoiDiemXuatVe datetime2 [not null, default: `SYSUTCDATETIME(`]
+  PhienBan rowversion [not null]
+}
+
+Table vantai.BienLaiPhatVe {
+  MaBienLai int [pk, increment]
+  MaVe int
+  MaChuyenTau int [not null]
+  TenNguoiViPham nvarchar(100) [not null]
+  LyDoViPham nvarchar(255) [not null]
+  CuLyVuotKm decimal(6,2) [not null, default: `0.0`]
+  TienVeBoSung decimal(12,2) [not null]
+  TienPhat decimal(12,2) [not null]
+  TongTienThu as
+  MaNguoiLap int [not null]
+  ThoiDiemLap datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table vantai.HoanHuyVe {
+  MaHoanHuy int [pk, increment]
+  MaVe int [not null, unique]
+  ThoiDiemHoan datetime2 [not null, default: `SYSUTCDATETIME(`]
+  TienVeGoc decimal(12,2) [not null]
+  TyLeLePhi decimal(4,2) [not null]
+  LePhiHoan as
+  SoTienThucHoan as
+  HinhThucHoan varchar(30) [not null, default: `'CHUYEN_KHOAN'`]
+  LyDoHoan nvarchar(255) [not null]
+  MaNhanVienDuyet int [not null]
+}
+
+Table vantai.LoaiHangHoa {
+  MaLoaiHang int [pk, increment]
+  TenHangHoa nvarchar(100) [not null, unique]
+  NhomCuoc int [not null]
+  DonGiaMoiTanKm decimal(8,2) [not null]
+}
+
+Table vantai.VanDonHang {
+  MaVanDon int [pk, increment]
+  MaVanDonCode varchar(30) [not null, unique]
+  TenNguoiGui nvarchar(100) [not null]
+  SDTNguoiGui varchar(20) [not null]
+  TenNguoiNhan nvarchar(100) [not null]
+  SDTNguoiNhan varchar(20) [not null]
+  MaGaGui int [not null]
+  MaGaNhan int [not null]
+  MaLoaiHang int [not null]
+  TrongLuongTan decimal(6,2) [not null]
+  CuocPhi decimal(12,2) [not null]
+  MaToaXeHang int
+  LoaiVanChuyen varchar(20) [not null, default: `'HANG_HOA'`]
+  BienKiemSoat varchar(20)
+  DaRutXang bit
+  SoHieuContainer varchar(30)
+  SoChiHaiQuan varchar(30)
+  GhiChu nvarchar(max)
+  TrangThai varchar(20) [not null, default: `'DA_NHAN'`]
+  ThoiDiemTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+  PhienBan rowversion [not null]
+}
+
+Table baotri.NhatKyCapNhienLieu {
+  MaNhatKyDau int [pk, increment]
+  MaDauMay int [not null]
+  NoiCapDau nvarchar(100) [not null]
+  SoLitTraNap decimal(8,2) [not null]
+  TrongLuongKeoTan decimal(7,2) [not null]
+  CuLyChayKm decimal(6,1) [not null]
+  SuatTieuHaoSFC decimal(5,2) [not null]
+  CanhBaoVuotMuc bit [not null, default: `0`]
+  MaNguoiCap int
+  ThoiDiemBomDau datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table baotri.KhamXeKyThuat {
+  MaKhamXe int [pk, increment]
+  MaDoanTau int [not null]
+  MaNguoiKham int [not null]
+  ApLucHamBar decimal(3,1) [not null]
+  DoSutApBarPhut decimal(3,2) [not null]
+  DaCapNuoc bit [not null, default: `0`]
+  DaXaVeSinh bit [not null, default: `0`]
+  DuDieuKienXuatBen as
+  GhiChuKyThuat nvarchar(max)
+  ThoiDiemKham datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table baotri.NhatKyBaoDuong {
+  MaBaoDuong int [pk, increment]
+  LoaiPhuongTien varchar(20) [not null]
+  MaDauMay int
+  MaToaXe int
+  CapBaoDuong varchar(20) [not null]
+  SoKmTaiThoiDiem decimal(9,1) [not null]
+  GhiChuKyThuat nvarchar(max)
+  MaNguoiThucHien int
+  ThoiDiemHoanThanh datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+Table kiemtoan.NhatKyHeThong {
+  MaNhatKy bigint [pk, increment]
+  ThoiDiem datetime2 [not null, default: `SYSUTCDATETIME(`]
+  MaTaiKhoan int
+  HanhDong varchar(50) [not null]
+  TenBang varchar(50) [not null]
+  KhoaChinhRecord varchar(50) [not null]
+  DuLieuCu nvarchar(max)
+  DuLieuMoi nvarchar(max)
+  DiaChiIP varchar(45)
+}
+
+Table kiemtoan.NhatKyChatAI {
+  MaChat int [pk, increment]
+  MaTaiKhoan int [not null]
+  CauHoi nvarchar(max) [not null]
+  CauSQL nvarchar(max)
+  CauTraLoi nvarchar(max) [not null]
+  ThoiDiem datetime2 [not null, default: `SYSUTCDATETIME(`]
+}
+
+// =============================================================================
+// PHÂN NHÓM BẢNG THEO SCHEMAS
+// =============================================================================
+TableGroup danhmuc {
+  danhmuc.DanhMuc
+}
+
+TableGroup hatang {
+  hatang.TuyenDuong
+  hatang.Ga
+  hatang.DuongRayGa
+  hatang.KhuGian
+  hatang.DuongNgang
+}
+
+TableGroup nhansu {
+  nhansu.NhanVien
+  nhansu.PhanCongKipLai
+  nhansu.KiemTraSucKhoe
+}
+
+TableGroup phanquyen {
+  phanquyen.VaiTro
+  phanquyen.Quyen
+  phanquyen.TaiKhoan
+  phanquyen.TaiKhoan_VaiTro
+  phanquyen.VaiTro_Quyen
+  phanquyen.LichSuDangNhap
+}
+
+TableGroup phuongtien {
+  phuongtien.DongDauMay
+  phuongtien.DauMay
+  phuongtien.ChungLoaiToa
+  phuongtien.ToaXe
+}
+
+TableGroup vanhanh {
+  vanhanh.MacTauMau
+  vanhanh.ChuyenTau
+  vanhanh.LichDungGa
+  vanhanh.DoanTau
+  vanhanh.ChiTietDoanTau
+  vanhanh.NhatKyChamGio
+  vanhanh.LenhPhongToa
+}
+
+TableGroup vantai {
+  vantai.KhachHang
+  vantai.DonDatVe
+  vantai.ToaXeKhach
+  vantai.ChoNgoi
+  vantai.BieuCuoc
+  vantai.BangGiaCoDinh
+  vantai.Ve
+  vantai.BienLaiPhatVe
+  vantai.HoanHuyVe
+  vantai.LoaiHangHoa
+  vantai.VanDonHang
+}
+
+TableGroup baotri {
+  baotri.NhatKyCapNhienLieu
+  baotri.KhamXeKyThuat
+  baotri.NhatKyBaoDuong
+}
+
+TableGroup kiemtoan {
+  kiemtoan.NhatKyHeThong
+  kiemtoan.NhatKyChatAI
+}
+
+// =============================================================================
+// LIÊN KẾT KHÓA NGOẠI (RELATIONSHIPS)
+// =============================================================================
+Ref: hatang.Ga.MaTuyen > hatang.TuyenDuong.MaTuyen // FK_Ga_TuyenDuong
+Ref: hatang.DuongRayGa.MaGa > hatang.Ga.MaGa // FK_DuongRay_Ga
+Ref: hatang.KhuGian.MaGaDau > hatang.Ga.MaGa // FK_KhuGian_GaDau
+Ref: hatang.KhuGian.MaGaCuoi > hatang.Ga.MaGa // FK_KhuGian_GaCuoi
+Ref: hatang.DuongNgang.MaKhuGian > hatang.KhuGian.MaKhuGian // FK_DuongNgang_KhuGian
+Ref: phanquyen.TaiKhoan.MaNhanVien > nhansu.NhanVien.MaNhanVien // FK_TaiKhoan_NhanVien
+Ref: phanquyen.TaiKhoan_VaiTro.MaTaiKhoan > phanquyen.TaiKhoan.MaTaiKhoan // FK_TKVT_TaiKhoan
+Ref: phanquyen.TaiKhoan_VaiTro.MaVaiTro > phanquyen.VaiTro.MaVaiTro // FK_TKVT_VaiTro
+Ref: phanquyen.TaiKhoan_VaiTro.NguoiCap > phanquyen.TaiKhoan.MaTaiKhoan // FK_TKVT_NguoiCap
+Ref: phanquyen.VaiTro_Quyen.MaVaiTro > phanquyen.VaiTro.MaVaiTro // FK_VTQ_VaiTro
+Ref: phanquyen.VaiTro_Quyen.MaQuyen > phanquyen.Quyen.MaQuyen // FK_VTQ_Quyen
+Ref: phanquyen.LichSuDangNhap.MaTaiKhoan > phanquyen.TaiKhoan.MaTaiKhoan // FK_LSDN_TaiKhoan
+Ref: phuongtien.DauMay.MaDongDauMay > phuongtien.DongDauMay.MaDongDauMay // FK_DauMay_Dong
+Ref: phuongtien.ToaXe.MaChungLoai > phuongtien.ChungLoaiToa.MaChungLoai // FK_ToaXe_ChungLoai
+Ref: vanhanh.MacTauMau.MaGaDi > hatang.Ga.MaGa // FK_MacTau_GaDi
+Ref: vanhanh.MacTauMau.MaGaDen > hatang.Ga.MaGa // FK_MacTau_GaDen
+Ref: vanhanh.ChuyenTau.MaMacTau > vanhanh.MacTauMau.MaMacTau // FK_ChuyenTau_MacTau
+Ref: vanhanh.LichDungGa.MaChuyenTau > vanhanh.ChuyenTau.MaChuyenTau // FK_LichDung_ChuyenTau
+Ref: vanhanh.LichDungGa.MaGa > hatang.Ga.MaGa // FK_LichDung_Ga
+Ref: vanhanh.LichDungGa.MaDuongRay > hatang.DuongRayGa.MaDuongRay // FK_LichDung_DuongRay
+Ref: vanhanh.DoanTau.MaChuyenTau > vanhanh.ChuyenTau.MaChuyenTau // FK_DoanTau_ChuyenTau
+Ref: vanhanh.DoanTau.MaDauMayChinh > phuongtien.DauMay.MaDauMay // FK_DoanTau_DauMayChinh
+Ref: vanhanh.DoanTau.MaDauMayDay > phuongtien.DauMay.MaDauMay // FK_DoanTau_DauMayDay
+Ref: vanhanh.ChiTietDoanTau.MaDoanTau > vanhanh.DoanTau.MaDoanTau // FK_CTDoanTau_DoanTau
+Ref: vanhanh.ChiTietDoanTau.MaToaXe > phuongtien.ToaXe.MaToaXe // FK_CTDoanTau_ToaXe
+Ref: vanhanh.NhatKyChamGio.MaChuyenTau > vanhanh.ChuyenTau.MaChuyenTau // FK_ChamGio_ChuyenTau
+Ref: vanhanh.NhatKyChamGio.MaGa > hatang.Ga.MaGa // FK_ChamGio_Ga
+Ref: vanhanh.NhatKyChamGio.MaKhuGian > hatang.KhuGian.MaKhuGian // FK_ChamGio_KhuGian
+Ref: vanhanh.LenhPhongToa.MaKhuGian > hatang.KhuGian.MaKhuGian // FK_PhongToa_KhuGian
+Ref: vanhanh.LenhPhongToa.MaNguoiDuyet > phanquyen.TaiKhoan.MaTaiKhoan // FK_PhongToa_NguoiDuyet
+Ref: nhansu.PhanCongKipLai.MaChuyenTau > vanhanh.ChuyenTau.MaChuyenTau // FK_KipLai_ChuyenTau
+Ref: nhansu.PhanCongKipLai.MaLaiTau > nhansu.NhanVien.MaNhanVien // FK_KipLai_LaiTau
+Ref: nhansu.PhanCongKipLai.MaPhuLai > nhansu.NhanVien.MaNhanVien // FK_KipLai_PhuLai
+Ref: nhansu.PhanCongKipLai.MaTruongTau > nhansu.NhanVien.MaNhanVien // FK_KipLai_TruongTau
+Ref: nhansu.PhanCongKipLai.MaGaNhanBan > hatang.Ga.MaGa // FK_KipLai_GaNhan
+Ref: nhansu.PhanCongKipLai.MaGaBanGiao > hatang.Ga.MaGa // FK_KipLai_GaBanGiao
+Ref: nhansu.KiemTraSucKhoe.MaNhanVien > nhansu.NhanVien.MaNhanVien // FK_KiemTra_NhanVien
+Ref: nhansu.KiemTraSucKhoe.MaChuyenTau > vanhanh.ChuyenTau.MaChuyenTau // FK_KiemTra_ChuyenTau
+Ref: vantai.DonDatVe.MaKhachHang > vantai.KhachHang.MaKhachHang // FK_DonVe_KhachHang
+Ref: vantai.DonDatVe.MaNhanVienBan > phanquyen.TaiKhoan.MaTaiKhoan // FK_DonVe_NhanVienBan
+Ref: vantai.ToaXeKhach.MaChuyenTau > vanhanh.ChuyenTau.MaChuyenTau // FK_ToaXeKhach_ChuyenTau
+Ref: vantai.ChoNgoi.MaToaXeKhach > vantai.ToaXeKhach.MaToaXeKhach // FK_ChoNgoi_ToaXeKhach
+Ref: vantai.BangGiaCoDinh.MaGaDi > hatang.Ga.MaGa // FK_BangGiaCD_GaDi
+Ref: vantai.BangGiaCoDinh.MaGaDen > hatang.Ga.MaGa // FK_BangGiaCD_GaDen
+Ref: vantai.Ve.MaDonVe > vantai.DonDatVe.MaDonVe // FK_Ve_DonVe
+Ref: vantai.Ve.MaChuyenTau > vanhanh.ChuyenTau.MaChuyenTau // FK_Ve_ChuyenTau
+Ref: vantai.Ve.MaChoNgoi > vantai.ChoNgoi.MaChoNgoi // FK_Ve_ChoNgoi
+Ref: vantai.Ve.MaGaDi > hatang.Ga.MaGa // FK_Ve_GaDi
+Ref: vantai.Ve.MaGaDen > hatang.Ga.MaGa // FK_Ve_GaDen
+Ref: vantai.BienLaiPhatVe.MaVe > vantai.Ve.MaVe // FK_BienLai_Ve
+Ref: vantai.BienLaiPhatVe.MaChuyenTau > vanhanh.ChuyenTau.MaChuyenTau // FK_BienLai_ChuyenTau
+Ref: vantai.BienLaiPhatVe.MaNguoiLap > phanquyen.TaiKhoan.MaTaiKhoan // FK_BienLai_NguoiLap
+Ref: vantai.HoanHuyVe.MaVe > vantai.Ve.MaVe // FK_HoanHuy_Ve
+Ref: vantai.HoanHuyVe.MaNhanVienDuyet > phanquyen.TaiKhoan.MaTaiKhoan // FK_HoanHuy_NhanVien
+Ref: vantai.VanDonHang.MaGaGui > hatang.Ga.MaGa // FK_VanDon_GaGui
+Ref: vantai.VanDonHang.MaGaNhan > hatang.Ga.MaGa // FK_VanDon_GaNhan
+Ref: vantai.VanDonHang.MaLoaiHang > vantai.LoaiHangHoa.MaLoaiHang // FK_VanDon_LoaiHang
+Ref: vantai.VanDonHang.MaToaXeHang > phuongtien.ToaXe.MaToaXe // FK_VanDon_ToaXe
+Ref: baotri.NhatKyCapNhienLieu.MaDauMay > phuongtien.DauMay.MaDauMay // FK_CapDau_DauMay
+Ref: baotri.NhatKyCapNhienLieu.MaNguoiCap > phanquyen.TaiKhoan.MaTaiKhoan // FK_CapDau_NguoiCap
+Ref: baotri.KhamXeKyThuat.MaDoanTau > vanhanh.DoanTau.MaDoanTau // FK_KhamXe_DoanTau
+Ref: baotri.KhamXeKyThuat.MaNguoiKham > phanquyen.TaiKhoan.MaTaiKhoan // FK_KhamXe_NguoiKham
+Ref: baotri.NhatKyBaoDuong.MaDauMay > phuongtien.DauMay.MaDauMay // FK_BaoDuong_DauMay
+Ref: baotri.NhatKyBaoDuong.MaToaXe > phuongtien.ToaXe.MaToaXe // FK_BaoDuong_ToaXe
+Ref: baotri.NhatKyBaoDuong.MaNguoiThucHien > phanquyen.TaiKhoan.MaTaiKhoan // FK_BaoDuong_NguoiThucHien
+Ref: kiemtoan.NhatKyHeThong.MaTaiKhoan > phanquyen.TaiKhoan.MaTaiKhoan // FK_NhatKy_TaiKhoan
+Ref: kiemtoan.NhatKyChatAI.MaTaiKhoan > phanquyen.TaiKhoan.MaTaiKhoan // FK_ChatAI_TaiKhoan

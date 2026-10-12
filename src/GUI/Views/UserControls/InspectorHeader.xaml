@@ -41,21 +41,33 @@
                            TextTrimming="CharacterEllipsis"/>
             </StackPanel>
 
-            <!-- Trạng thái / ID -->
-            <Border Grid.Column="2" 
-                    x:Name="badgeContainer"
-                    CornerRadius="2" 
-                    Padding="8,2" 
-                    VerticalAlignment="Center"
-                    Background="#F1F5F9"
-                    BorderThickness="1"
-                    BorderBrush="#CBD5E1">
-                <TextBlock x:Name="txtBadge" 
-                           Text="ID: #" 
-                           FontSize="10" 
-                           FontWeight="SemiBold" 
-                           Foreground="#475569"/>
-            </Border>
+            <!-- Trạng thái / ID và Nút Xóa Ga an toàn -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border x:Name="badgeContainer"
+                        CornerRadius="2" 
+                        Padding="8,2" 
+                        Margin="0,0,6,0"
+                        VerticalAlignment="Center"
+                        Background="#F1F5F9"
+                        BorderThickness="1"
+                        BorderBrush="#CBD5E1">
+                    <TextBlock x:Name="txtBadge" 
+                               Text="ID: #" 
+                               FontSize="10" 
+                               FontWeight="SemiBold" 
+                               Foreground="#475569"/>
+                </Border>
+
+                <!-- Nút Xóa Ga tách biệt an toàn lên Header, có icon xóa và phong cách Danger -->
+                <Button x:Name="btnXoaGaHeader" Click="BtnXoaGa_Click" 
+                        Height="26" Padding="8,0" Style="{StaticResource DangerDesktopButton}"
+                        ToolTip="Xóa vĩnh viễn ga này khỏi cơ sở dữ liệu (yêu cầu xác nhận)">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Delete24" FontSize="12" Foreground="#B91C1C" Margin="0,0,4,0"/>
+                        <TextBlock Text="Xóa ga" FontSize="11" FontWeight="SemiBold" Foreground="#B91C1C"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </Grid>
     </Border>
 </UserControl>

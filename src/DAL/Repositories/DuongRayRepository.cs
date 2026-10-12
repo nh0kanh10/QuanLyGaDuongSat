@@ -94,5 +94,37 @@ namespace DAL.Repositories
             var result = DatabaseHelper.ExecuteScalar(sql, p);
             return result != null && Convert.ToInt32(result) > 0;
         }
+
+        public bool KiemTraChinhTuyenTonTai(int maGa, int maDuongRayBoQua = 0)
+        {
+            string sql = @"SELECT COUNT(*) 
+                           FROM hatang.DuongRayGa 
+                           WHERE MaGa = @maGa AND LoaiDuong = 'CHINH_TUYEN' AND MaDuongRay <> @boQua";
+            var p = new[]
+            {
+                new SqlParameter("@maGa", maGa),
+                new SqlParameter("@boQua", maDuongRayBoQua)
+            };
+            var result = DatabaseHelper.ExecuteScalar(sql, p);
+            return result != null && Convert.ToInt32(result) > 0;
+        }
+
+        public bool KiemTraDangCoTau(int maDuongRay)
+        {
+            string sql = @"SELECT COUNT(*) 
+                           FROM hatang.DuongRayGa 
+                           WHERE MaDuongRay = @id AND TrangThai = 'CO_TAU'";
+            var result = DatabaseHelper.ExecuteScalar(sql, new[] { new SqlParameter("@id", maDuongRay) });
+            return result != null && Convert.ToInt32(result) > 0;
+        }
+
+        public bool KiemTraCoLichDung(int maDuongRay)
+        {
+            string sql = @"SELECT COUNT(*) 
+                           FROM vanhanh.LichDungGa 
+                           WHERE MaDuongRay = @id";
+            var result = DatabaseHelper.ExecuteScalar(sql, new[] { new SqlParameter("@id", maDuongRay) });
+            return result != null && Convert.ToInt32(result) > 0;
+        }
     }
 }

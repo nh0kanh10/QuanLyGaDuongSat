@@ -112,7 +112,7 @@ namespace GUI.Views.Dialogs
                 }
                 else
                 {
-                    txtDuongNgangBac.Text = $"{soDnBac} vị trí (⚠️ {soDdBac} điểm đen)";
+                    txtDuongNgangBac.Text = $"{soDnBac} vị trí ([!] {soDdBac} điểm đen)";
                     txtDuongNgangBac.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DC2626"));
                     txtDuongNgangBac.FontWeight = FontWeights.Bold;
                 }
@@ -185,7 +185,7 @@ namespace GUI.Views.Dialogs
                 }
                 else
                 {
-                    txtDuongNgangNam.Text = $"{soDnNam} vị trí (⚠️ {soDdNam} điểm đen)";
+                    txtDuongNgangNam.Text = $"{soDnNam} vị trí ([!] {soDdNam} điểm đen)";
                     txtDuongNgangNam.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DC2626"));
                     txtDuongNgangNam.FontWeight = FontWeights.Bold;
                 }

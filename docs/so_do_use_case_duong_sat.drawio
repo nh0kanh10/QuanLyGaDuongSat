@@ -1,0 +1,827 @@
+<mxfile host="app.diagrams.net" agent="Antigravity UML Generator v2.5" pages="12">
+  <diagram id="dia_overview" name="1. Tổng quan Toàn Hệ Thống">
+    <mxGraphModel dx="1441" dy="791" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_overview_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="HỆ THỐNG ĐIỀU HÀNH &amp;amp; QUẢN LÝ VẬN TẢI ĐƯỜNG SẮT VIỆT NAM" vertex="1">
+          <mxGeometry height="600" width="840" x="260" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_khach" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Hành khách đi tàu" vertex="1">
+          <mxGeometry height="80" width="45" x="80" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="act_banve" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Nhân viên Bán vé POS" vertex="1">
+          <mxGeometry height="80" width="45" x="80" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="act_hoavan" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Nhân viên Hóa vận" vertex="1">
+          <mxGeometry height="80" width="45" x="80" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="act_dieudo" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Điều độ viên Chạy tàu" vertex="1">
+          <mxGeometry height="80" width="45" x="1180" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="act_khamxe" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Kỹ thuật viên Khám xe" vertex="1">
+          <mxGeometry height="80" width="45" x="1180" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="act_admin" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Quản trị viên Hệ thống" vertex="1">
+          <mxGeometry height="80" width="45" x="1180" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ov_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="UC-01: Quản trị Mạng lưới Ga &amp;amp; Khu gian" vertex="1">
+          <mxGeometry height="65" width="300" x="710" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ov_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="UC-02: Lập Lịch trình &amp;amp; Biểu đồ" vertex="1">
+          <mxGeometry height="65" width="260" x="560" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ov_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="UC-03: Bán vé Chặng &amp;amp; Đổi trả vé" vertex="1">
+          <mxGeometry height="65" width="260" x="340" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ov_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="UC-04: Kiểm soát Lên tàu &amp;amp; Soát vé QR" vertex="1">
+          <mxGeometry height="65" width="330" x="460" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ov_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="UC-05: Quản lý Vận tải Hàng hóa &amp;amp; Xe máy" vertex="1">
+          <mxGeometry height="65" width="220" x="320" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ov_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="UC-06: Quản lý Đầu máy &amp;amp; Đội Toa xe" vertex="1">
+          <mxGeometry height="65" width="220" x="600" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ov_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="UC-07: Khám xe, Thử hãm&amp;nbsp;&lt;div&gt;&amp;amp; Cấp dầu&amp;nbsp;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="65" width="220" x="320" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ov_8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="UC-08: Phân kíp lái&amp;nbsp;" vertex="1">
+          <mxGeometry height="65" width="190" x="870" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ov_9" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="UC-09: Quản trị phân quyền&amp;nbsp;&lt;div&gt;&amp;amp;&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(15, 23, 42), rgb(211, 218, 234));&quot;&gt;Báo cáo&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="70" width="240" x="700" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_1" edge="1" parent="1" source="act_khach" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_2" edge="1" parent="1" source="act_banve" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_3" edge="1" parent="1" source="act_banve" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_4" edge="1" parent="1" source="act_hoavan" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_5" edge="1" parent="1" source="act_dieudo" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_6" edge="1" parent="1" source="act_dieudo" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_7" edge="1" parent="1" source="act_khamxe" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_8" edge="1" parent="1" source="act_khamxe" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_9" edge="1" parent="1" source="act_dieudo" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_1_10" edge="1" parent="1" source="act_admin" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;fontStyle=1" target="uc_ov_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_ga" name="2. Mạng Lưới Ga">
+    <mxGraphModel dx="1141" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_ga_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="PHÂN HỆ QUẢN LÝ MẠNG LƯỚI 175 GA ĐƯỜNG SẮT" vertex="1">
+          <mxGeometry height="420" width="650" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_ga_dd" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Điều độ viên Tuyến" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="act_ga_tb" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Trực ban Chạy tàu Ga" vertex="1">
+          <mxGeometry height="80" width="45" x="960" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_g_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Tra cứu danh mục Ga" vertex="1">
+          <mxGeometry height="60" width="180" x="280" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_g_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Định vị lý trình Km trên tuyến" vertex="1">
+          <mxGeometry height="60" width="180" x="530" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_g_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Xem hồ sơ kỹ thuật nhà ga" vertex="1">
+          <mxGeometry height="60" width="180" x="467" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_g_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Thêm mới ga đường sắt" vertex="1">
+          <mxGeometry height="60" width="180" x="320" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_g_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Cập nhật năng lực thông qua ga" vertex="1">
+          <mxGeometry height="60" width="190" x="350" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_g_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Kiểm tra ràng buộc xóa ga" vertex="1">
+          <mxGeometry height="60" width="180" x="647" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_g_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Xuất danh bạ ga ra Excel" vertex="1">
+          <mxGeometry height="60" width="180" x="630" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_g_1" edge="1" parent="1" source="act_ga_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_g_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_g_2" edge="1" parent="1" source="act_ga_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_g_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_g_3" edge="1" parent="1" source="act_ga_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_g_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_g_4" edge="1" parent="1" source="act_ga_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_g_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_g_5" edge="1" parent="1" source="act_ga_tb" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_g_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_g_6" edge="1" parent="1" source="act_ga_tb" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_g_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_g_7" edge="1" parent="1" source="act_ga_tb" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_g_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_g_1" edge="1" parent="1" source="uc_g_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_g_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_g_1" edge="1" parent="1" source="uc_g_6" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_g_5" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_khugian" name="3. Phân Đoạn Khu Gian">
+    <mxGraphModel dx="1141" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_khugian_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="PHÂN HỆ PHÂN ĐOẠN KHU GIAN &amp;amp; GÁC CHẮN ĐƯỜNG NGANG" vertex="1">
+          <mxGeometry height="510" width="630" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_kg_dd" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Điều độ viên Tuyến" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="act_kg_tuan" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Nhân viên Tuần đường" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_kg_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Quản lý phân đoạn&lt;div&gt;&amp;nbsp;khu gian&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="280" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_kg_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Kiểm tra tải&amp;nbsp;&lt;div&gt;trọng trục &amp;lt;= 14T&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="540" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_kg_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Thiết lập tốc độ&amp;nbsp;&lt;div&gt;Vmax khu gian&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="350" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_kg_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Cảnh báo dốc&amp;nbsp;&lt;div&gt;đặc biệt (&amp;gt;=15‰)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="630" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_kg_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Giám sát phong tỏa&amp;nbsp;&lt;div&gt;khu gian&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="280" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_kg_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Quản lý gác&amp;nbsp;&lt;div&gt;chắn đường ngang&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="310" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_kg_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Ghi nhận sự cố&amp;nbsp;&lt;div&gt;chướng ngại vật&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="660" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_kg_8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Phát lệnh cấp đường&amp;nbsp;&lt;div&gt;chạy tàu&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="500" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_kg_1" edge="1" parent="1" source="act_kg_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_kg_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_kg_2" edge="1" parent="1" source="act_kg_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_kg_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_kg_3" edge="1" parent="1" source="act_kg_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_kg_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_kg_4" edge="1" parent="1" source="act_kg_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_kg_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_kg_5" edge="1" parent="1" source="act_kg_tuan" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_kg_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_kg_1" edge="1" parent="1" source="uc_kg_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_kg_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_kg_1" edge="1" parent="1" source="uc_kg_4" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_kg_3" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_kg_2" edge="1" parent="1" source="uc_kg_7" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_kg_6" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_lichtrinh" name="4. Kế Hoạch Lịch Trình">
+    <mxGraphModel dx="1141" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_lichtrinh_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="PHÂN HỆ LẬP KẾ HOẠCH &amp;amp; LỊCH TRÌNH CHẠY TÀU" vertex="1">
+          <mxGeometry height="440" width="630" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_lt_dd" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Điều độ viên Trung tâm" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="act_lt_tb" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Trực ban Khách vận Ga" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_lt_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Lập lịch trình mác tàu mẫu" vertex="1">
+          <mxGeometry height="60" width="180" x="280" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_lt_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Thiết lập ga dừng &amp;amp; đỗ kỹ thuật" vertex="1">
+          <mxGeometry height="60" width="180" x="540" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_lt_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Tính toán thời gian giãn cách" vertex="1">
+          <mxGeometry height="60" width="180" x="610" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_lt_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Phê duyệt mở bán vé chuyến tàu" vertex="1">
+          <mxGeometry height="60" width="190" x="330" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_lt_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Tự động nhân bản lịch theo ngày" vertex="1">
+          <mxGeometry height="60" width="190" x="500" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_lt_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Điều chỉnh giờ dồn tránh vượt" vertex="1">
+          <mxGeometry height="60" width="180" x="320" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_lt_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Bãi bỏ chuyến tàu do thiên tai" vertex="1">
+          <mxGeometry height="60" width="180" x="670" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_lt_8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="In bảng giờ tàu tại ga" vertex="1">
+          <mxGeometry height="60" width="180" x="450" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_lt_1" edge="1" parent="1" source="act_lt_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_lt_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_lt_2" edge="1" parent="1" source="act_lt_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_lt_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_lt_3" edge="1" parent="1" source="act_lt_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_lt_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_lt_4" edge="1" parent="1" source="act_lt_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_lt_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_lt_5" edge="1" parent="1" source="act_lt_tb" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_lt_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_lt_1" edge="1" parent="1" source="uc_lt_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_lt_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_lt_2" edge="1" parent="1" source="uc_lt_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_lt_3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_lt_1" edge="1" parent="1" source="uc_lt_7" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_lt_6" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_bieudo" name="5. Biểu Đồ Chạy Tàu">
+    <mxGraphModel dx="1141" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_bieudo_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="PHÂN HỆ BIỂU ĐỒ CHẠY TÀU" vertex="1">
+          <mxGeometry height="390" width="760" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_bd_dd" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Điều độ viên Tuyến" vertex="1">
+          <mxGeometry height="80" width="45" x="150" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="act_bd_ai" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Trợ lý AI Điều độ" vertex="1">
+          <mxGeometry height="80" width="45" x="1030" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bd_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Vẽ biểu đồ chạy tàu" vertex="1">
+          <mxGeometry height="60" width="190" x="280" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bd_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Quét xung đột&amp;nbsp;&lt;div&gt;Space-Time&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="550" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bd_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Cảnh báo đối đầu&amp;nbsp;&lt;div&gt;đường đơn&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="810" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bd_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Kéo thả điều chỉnh&lt;div&gt;&amp;nbsp;điểm tránh&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="300" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bd_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="AI đề xuất đổi ga tránh tối ưu" vertex="1">
+          <mxGeometry height="65" width="190" x="650" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bd_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Ban hành điện&amp;nbsp;&lt;div&gt;văn điều độ&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="380" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bd_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Mô phỏng trễ tàu&amp;nbsp;&lt;div&gt;lan truyền&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="480" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bd_8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Xuất biểu đồ dạng SVG / PDF" vertex="1">
+          <mxGeometry height="60" width="180" x="630" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bd_1" edge="1" parent="1" source="act_bd_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_bd_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bd_2" edge="1" parent="1" source="act_bd_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_bd_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bd_3" edge="1" parent="1" source="act_bd_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_bd_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bd_4" edge="1" parent="1" source="act_bd_dd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_bd_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bd_5" edge="1" parent="1" source="act_bd_ai" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_bd_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_bd_1" edge="1" parent="1" source="uc_bd_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_bd_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_bd_2" edge="1" parent="1" source="uc_bd_2" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_bd_3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_bd_1" edge="1" parent="1" source="uc_bd_5" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_bd_4" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_bd_2" edge="1" parent="1" source="uc_bd_8" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_bd_1" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_banve" name="6. Bán Vé &amp; Quản Lý Chỗ">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_banve_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;sketch=1;curveFitting=1;jiggle=2;strokeColor=#6c8ebf;fontFamily=Comic Sans MS;" value="PHÂN HỆ BÁN VÉ HÀNH KHÁCH &amp;amp; QUẢN LÝ CHỖ" vertex="1">
+          <mxGeometry height="500" width="760" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_bv_nv" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Nhân viên Bán vé POS" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="act_bv_kh" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Hành khách" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="act_bv_bank" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Cổng Thanh Toán QR" vertex="1">
+          <mxGeometry height="80" width="45" x="1050" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bv_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Tra cứu chỗ trống theo chặng" vertex="1">
+          <mxGeometry height="60" width="180" x="280" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bv_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Kiểm tra chặng&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="190" x="540" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bv_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Khóa phiên giữ chỗ 5 phút" vertex="1">
+          <mxGeometry height="60" width="180" x="390" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bv_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Áp dụng giảm giá&amp;nbsp;&lt;div&gt;đối tượng&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="750" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bv_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Thanh toán vé&amp;nbsp;&lt;div&gt;(Tiền mặt / QR)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="570" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bv_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Xuất vé &amp;amp; In thẻ&amp;nbsp;&lt;div&gt;lên tàu QR&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="800" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bv_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Đổi vé / Hoàn trả vé" vertex="1">
+          <mxGeometry height="60" width="180" x="280" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bv_8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Tính lệ phí&amp;nbsp;&lt;div&gt;hoàn trả theo giờ&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="550" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bv_9" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="AI tư vấn&amp;nbsp;&lt;div&gt;loại chỗ tối ưu&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="380" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bv_1" edge="1" parent="1" source="act_bv_nv" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontStyle=1;fontSize=13;" target="uc_bv_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bv_2" edge="1" parent="1" source="act_bv_nv" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontStyle=1;fontSize=13;" target="uc_bv_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bv_3" edge="1" parent="1" source="act_bv_nv" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontStyle=1;fontSize=13;" target="uc_bv_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bv_4" edge="1" parent="1" source="act_bv_nv" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontStyle=1;fontSize=13;" target="uc_bv_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bv_6" edge="1" parent="1" source="act_bv_kh" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontStyle=1;fontSize=13;" target="uc_bv_9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bv_7" edge="1" parent="1" source="act_bv_bank" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontStyle=1;fontSize=13;" target="uc_bv_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_bv_1" edge="1" parent="1" source="uc_bv_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=3;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_bv_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_bv_2" edge="1" parent="1" source="uc_bv_5" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=3;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_bv_6" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_bv_3" edge="1" parent="1" source="uc_bv_7" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=3;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_bv_8" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_bv_1" edge="1" parent="1" source="uc_bv_4" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=3;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_bv_5" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_soatve" name="7. Soát Vé &amp; Kiểm Soát Lên Tàu">
+    <mxGraphModel dx="1369" dy="751" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_soatve_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;gradientColor=none;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="PHÂN HỆ KIỂM SOÁT LÊN TÀU &amp;amp; SOÁT VÉ ĐIỆN TỬ" vertex="1">
+          <mxGeometry height="490" width="760" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sv_ks" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Kiểm soát viên Cửa ga" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sv_tt" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Trưởng tàu Khách" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="act_sv_kh" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Hành khách" vertex="1">
+          <mxGeometry height="80" width="45" x="1050" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_sv_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Quét mã Barcode / QR trên vé" vertex="1">
+          <mxGeometry height="60" width="190" x="525" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_sv_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Đối soát CCCD (Đ.56 Luật ĐS)" vertex="1">
+          <mxGeometry height="60" width="180" x="790" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_sv_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Cảnh báo vé quay vòng Anti-Passback" vertex="1">
+          <mxGeometry height="60" width="190" x="670" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_sv_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Tự động cho lên tàu (Auto-Boarding)" vertex="1">
+          <mxGeometry height="60" width="190" x="400" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_sv_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Tra cứu danh sách Manifest tàu" vertex="1">
+          <mxGeometry height="60" width="190" x="510" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_sv_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Soát nhanh toàn bộ khách tại ga" vertex="1">
+          <mxGeometry height="60" width="190" x="690" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_sv_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Hoàn tác soát vé (Hủy nhầm)" vertex="1">
+          <mxGeometry height="60" width="180" x="470" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_sv_8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="In lại Thẻ lên tàu điện tử (F8)" vertex="1">
+          <mxGeometry height="60" width="190" x="260" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_sv_1" edge="1" parent="1" source="act_sv_ks" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_sv_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_sv_2" edge="1" parent="1" source="act_sv_ks" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_sv_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_sv_3" edge="1" parent="1" source="act_sv_ks" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_sv_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_sv_4" edge="1" parent="1" source="act_sv_tt" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_sv_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_sv_5" edge="1" parent="1" source="act_sv_tt" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_sv_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_sv_6" edge="1" parent="1" source="act_sv_tt" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_sv_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_sv_7" edge="1" parent="1" source="act_sv_kh" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_sv_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_sv_1" edge="1" parent="1" source="uc_sv_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_sv_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_sv_1" edge="1" parent="1" source="uc_sv_3" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_sv_1" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_sv_2" edge="1" parent="1" source="uc_sv_6" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_sv_5" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_sv_3" edge="1" parent="1" source="uc_sv_7" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_sv_4" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_hanghoa" name="8. Vận Tải Hàng Hóa &amp; Xe Máy">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_hanghoa_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="PHÂN HỆ VẬN TẢI HÀNG HÓA &amp;amp; KÝ GỬI XE MÁY" vertex="1">
+          <mxGeometry height="450" width="760" x="213" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="act_hh_nv" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Nhân viên Hóa vận Ga" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="act_hh_ch" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Chủ hàng / Người gửi xe" vertex="1">
+          <mxGeometry height="80" width="45" x="1070" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_hh_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Lập vận đơn&amp;nbsp;&lt;div&gt;hàng hóa &amp;amp; bưu kiện&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="732" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_hh_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Tính cước quy&amp;nbsp;&lt;div&gt;đổi thể tích Vm3&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="520" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_hh_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Ký gửi xe máy bọc chống trầy" vertex="1">
+          <mxGeometry height="60" width="190" x="540" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_hh_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Rút sạch xăng&amp;nbsp;&lt;div&gt;xe máy PCCC&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="647" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_hh_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Kẹp chì niêm phong&amp;nbsp;&lt;div&gt;toa hàng&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="350" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_hh_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Theo dõi tiến độ&amp;nbsp;&lt;div&gt;vận chuyển&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="420" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_hh_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Giao hàng &amp;amp; Ký biên bản" vertex="1">
+          <mxGeometry height="60" width="180" x="300" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_hh_1" edge="1" parent="1" source="act_hh_nv" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_hh_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_hh_2" edge="1" parent="1" source="act_hh_nv" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_hh_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_hh_3" edge="1" parent="1" source="act_hh_nv" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_hh_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_hh_4" edge="1" parent="1" source="act_hh_nv" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_hh_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_hh_5" edge="1" parent="1" source="act_hh_nv" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_hh_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_hh_6" edge="1" parent="1" source="act_hh_ch" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_hh_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_hh_7" edge="1" parent="1" source="act_hh_ch" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;fontSize=13;" target="uc_hh_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_hh_1" edge="1" parent="1" source="uc_hh_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_hh_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_hh_2" edge="1" parent="1" source="uc_hh_3" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_hh_4" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_phuongtien" name="9. Phương Tiện &amp; Lập Đoàn Tàu">
+    <mxGraphModel dx="1141" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_phuongtien_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="PHÂN HỆ ĐẦU MÁY, ĐỘI TOA XE &amp;amp; LẬP ĐOÀN TÀU" vertex="1">
+          <mxGeometry height="410" width="760" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_pt_qd" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Quản đốc Lập tàu Bãi dồn" vertex="1">
+          <mxGeometry height="80" width="45" x="120" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="act_pt_ks" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Kỹ sư Quản lý Phương tiện" vertex="1">
+          <mxGeometry height="80" width="45" x="1060" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pt_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Hồ sơ lý lịch Đầu máy D19E" vertex="1">
+          <mxGeometry height="60" width="180" x="770" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pt_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Theo dõi hạn bảo dưỡng định ngạch" vertex="1">
+          <mxGeometry height="60" width="190" x="500" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pt_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Quản lý danh&amp;nbsp;&lt;div&gt;mục đội toa xe&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="720" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pt_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Lập đoàn tàu&lt;div&gt;&amp;nbsp;kéo - thả&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="250" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pt_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Kiểm tra chiều dài &amp;lt;= 450m" vertex="1">
+          <mxGeometry height="60" width="180" x="530" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pt_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Kiểm tra tải trục &amp;lt;= 14T/trục" vertex="1">
+          <mxGeometry height="60" width="180" x="500" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pt_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Cắt móc toa xe&lt;div&gt;&amp;nbsp;hư hỏng&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="300" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pt_8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Cấu hình sơ đồ&lt;div&gt;&amp;nbsp;ghế / giường nằm&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="715" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_pt_1" edge="1" parent="1" source="act_pt_ks" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_pt_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_pt_2" edge="1" parent="1" source="act_pt_ks" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_pt_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_pt_3" edge="1" parent="1" source="act_pt_ks" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_pt_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_pt_4" edge="1" parent="1" source="act_pt_qd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_pt_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_pt_5" edge="1" parent="1" source="act_pt_qd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_pt_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_pt_1" edge="1" parent="1" source="uc_pt_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_pt_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_pt_2" edge="1" parent="1" source="uc_pt_4" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_pt_5" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_pt_3" edge="1" parent="1" source="uc_pt_4" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_pt_6" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_baotri" name="10. Khám Xe &amp; An Toàn Kỹ Thuật">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_baotri_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="PHÂN HỆ KHÁM NGHIỆM KỸ THUẬT &amp;amp; THỬ HÃM ĐOÀN TÀU" vertex="1">
+          <mxGeometry height="450" width="620" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_bt_kx" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Kỹ thuật viên Khám xe C&amp;amp;W" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="act_bt_lt" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Lái tàu / Kíp trực" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bt_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Khám xe kỹ thuật&lt;div&gt;&amp;nbsp;cấp R1 / R2&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="280" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bt_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Thử hãm gió&amp;nbsp;&lt;div&gt;áp lực 5.0 bar&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="360" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bt_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Đo độ sụt áp &amp;lt;= 0.20 bar/phút" vertex="1">
+          <mxGeometry height="60" width="190" x="637" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bt_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Cấp phát dầu&amp;nbsp;&lt;div&gt;Diesel DO tại Depot&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="320" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bt_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Đo lường suất&amp;nbsp;&lt;div&gt;tiêu hao dầu SFC&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="590" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bt_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Cảnh báo an toàn&lt;div&gt;&amp;nbsp;kỹ thuật cấp 1&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="570" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bt_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Ký biên bản&amp;nbsp;&lt;div&gt;bàn giao xuất bến&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="300" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_bt_8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" value="Lịch sử bảo dưỡng&amp;nbsp;&lt;div&gt;trục bánh xe&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="520" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bt_1" edge="1" parent="1" source="act_bt_kx" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_bt_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bt_2" edge="1" parent="1" source="act_bt_kx" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_bt_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bt_3" edge="1" parent="1" source="act_bt_kx" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_bt_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bt_4" edge="1" parent="1" source="act_bt_kx" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_bt_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bt_5" edge="1" parent="1" source="act_bt_lt" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_bt_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_bt_6" edge="1" parent="1" source="act_bt_kx" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;fontSize=13;" target="uc_bt_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_bt_1" edge="1" parent="1" source="uc_bt_2" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_bt_3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_bt_2" edge="1" parent="1" source="uc_bt_4" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_bt_5" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_bt_1" edge="1" parent="1" source="uc_bt_6" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;sketch=1;curveFitting=1;jiggle=2;fontFamily=Comic Sans MS;" target="uc_bt_7" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_nhansu" name="11. Nhân Sự &amp; Kíp Lái Tàu">
+    <mxGraphModel dx="1369" dy="751" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_nhansu_boundary" parent="1" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;spacingTop=12;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="PHÂN HỆ NHÂN SỰ &amp;amp; KÍP LÁI TÀU" vertex="1">
+          <mxGeometry height="440" width="580" x="240" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="act_ns_qd" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Quản đốc Kíp lái Depot" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="act_ns_yt" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Nhân viên Y tế Ga" vertex="1">
+          <mxGeometry height="80" width="45" x="70" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ns_1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Quản lý hồ sơ&amp;nbsp;&lt;div&gt;bằng lái tài xế&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="280" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ns_2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Kiểm tra hạn khám&amp;nbsp;&lt;div&gt;sức khỏe&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="540" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ns_3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Phân ca kíp lái&lt;div&gt;&amp;nbsp;theo chặng&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="300" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ns_4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Kiểm tra&amp;nbsp;&lt;div&gt;nghỉ ngơi &amp;gt;= 8 giờ&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="560" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ns_5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Kiểm tra y tế&amp;nbsp;&lt;div&gt;nồng độ cồn&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="290" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ns_6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Đình chỉ lên ban&lt;div&gt;&amp;nbsp;khi cồn &amp;gt; 0.00&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="190" x="600" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ns_7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Cấp phép&amp;nbsp;&lt;div&gt;nhận ban điều khiển&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="390" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ns_8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=13;fontColor=#0F172A;shadow=1;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" value="Xem biểu đồ ca trực&amp;nbsp;" vertex="1">
+          <mxGeometry height="60" width="190" x="410" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ns_1" edge="1" parent="1" source="act_ns_qd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_ns_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ns_2" edge="1" parent="1" source="act_ns_qd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_ns_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ns_3" edge="1" parent="1" source="act_ns_qd" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_ns_8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ns_4" edge="1" parent="1" source="act_ns_yt" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_ns_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ns_5" edge="1" parent="1" source="act_ns_yt" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;fontFamily=Comic Sans MS;fontSize=13;sketch=1;curveFitting=1;jiggle=2;" target="uc_ns_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_ns_1" edge="1" parent="1" source="uc_ns_1" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_ns_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_ns_2" edge="1" parent="1" source="uc_ns_3" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=13;fontColor=#0284C7;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_ns_4" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_ns_1" edge="1" parent="1" source="uc_ns_6" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#D97706;strokeWidth=1.3;fontSize=13;fontColor=#D97706;fontStyle=2;fontFamily=Comic Sans MS;sketch=1;curveFitting=1;jiggle=2;" target="uc_ns_5" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dia_admin" name="12. Quản Trị &amp; Báo Cáo Doanh Thu">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dia_admin_boundary" value="PHÂN HỆ QUẢN TRỊ HỆ THỐNG &amp; BÁO CÁO THỐNG KÊ DOANH THU" style="shape=rect;html=1;whiteSpace=wrap;fillColor=#F8FAFC;strokeColor=#003B73;strokeWidth=2;align=center;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#003B73;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="40" width="760" height="650" as="geometry" />
+        </mxCell>
+        <mxCell id="act_ad_ad" value="Quản trị viên Hệ thống" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=11;fontColor=#0F172A;" vertex="1" parent="1">
+          <mxGeometry x="70" y="200" width="45" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="act_ad_ld" value="Lãnh đạo VNR / Trưởng ga" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=1.5;fontStyle=1;fontSize=11;fontColor=#0F172A;" vertex="1" parent="1">
+          <mxGeometry x="70" y="440" width="45" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ad_1" value="Xác thực tài khoản người dùng" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="90" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ad_2" value="Phân quyền theo vai trò người dùng" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="90" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ad_3" value="Giám sát vết kiểm toán Audit Trail" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="210" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ad_4" value="Sao lưu &amp; Phục hồi CSDL" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="330" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ad_5" value="Báo cáo doanh thu vé &amp; hàng hóa" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="450" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ad_6" value="Thống kê tỷ lệ lấp đầy ghế SLF" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="450" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ad_7" value="Xuất báo cáo tài chính chuẩn A4" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#003B73;strokeWidth=1.5;fontStyle=1;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="560" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ad_1" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;" edge="1" parent="1" source="act_ad_ad" target="uc_ad_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ad_2" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;" edge="1" parent="1" source="act_ad_ad" target="uc_ad_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ad_3" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;" edge="1" parent="1" source="act_ad_ad" target="uc_ad_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ad_4" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;" edge="1" parent="1" source="act_ad_ld" target="uc_ad_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="asc_ad_5" style="endArrow=none;html=1;strokeColor=#334155;strokeWidth=1.4;rounded=0;" edge="1" parent="1" source="act_ad_ld" target="uc_ad_7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_ad_1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=10;fontColor=#0284C7;fontStyle=2;" edge="1" parent="1" source="uc_ad_1" target="uc_ad_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_ad_2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="html=1;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;endArrow=open;endFill=0;dashed=1;rounded=0;strokeColor=#0284C7;strokeWidth=1.3;fontSize=10;fontColor=#0284C7;fontStyle=2;" edge="1" parent="1" source="uc_ad_5" target="uc_ad_6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

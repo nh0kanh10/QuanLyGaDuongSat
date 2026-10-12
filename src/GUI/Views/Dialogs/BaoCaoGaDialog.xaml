@@ -15,20 +15,7 @@
         PreviewKeyDown="Window_PreviewKeyDown">
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <Border Grid.Row="0" Background="#003B73" Padding="16,0">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <ui:SymbolIcon Symbol="DocumentPdf24" FontSize="18" Foreground="#FFFFFF" Margin="0,0,10,0"/>
-                <TextBlock Text="TRUNG TÂM BÁO CÁO &amp; THỐNG KÊ MẠNG LƯỚI GA ĐƯỜNG SẮT BẮC — NAM" 
-                           FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
-            </StackPanel>
-        </Border>
-
-        <TabControl Grid.Row="1" x:Name="tabControlChinh" Background="#F1F5F9" BorderThickness="0,1,0,0" BorderBrush="#CBD5E1">
+        <TabControl x:Name="tabControlChinh" Background="#F1F5F9" BorderThickness="0">
 
             <!-- Thiết lập bộ lọc và xem trước bản in A4 -->
             <TabItem x:Name="tabThietLap">
@@ -46,149 +33,166 @@
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="0,0,1,0">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14,12">
-                            <StackPanel>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                                <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="10" Margin="0,0,0,12">
-                                    <StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <ui:SymbolIcon Symbol="Flashlight24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
-                                            <TextBlock Text="MẪU BÁO CÁO TIÊU CHUẨN (1-CLICK)" FontSize="11" FontWeight="Bold" Foreground="#003B73"/>
-                                        </StackPanel>
+                            <!-- Khu vực cuộn chứa các nhóm tiêu chí lọc -->
+                            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="14,12">
+                                <StackPanel>
 
-                                        <Button x:Name="btnMauHaTang" Click="BtnMauHaTang_Click" 
-                                                Height="30" Margin="0,0,0,6" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" HorizontalContentAlignment="Left" Padding="8,0">
-                                            <StackPanel Orientation="Horizontal">
-                                                <ui:SymbolIcon Symbol="ArrowTrendingLines24" FontSize="13" Foreground="#0284C7" Margin="0,0,8,0"/>
-                                                <TextBlock Text="Báo cáo Năng Lực Hạ Tầng &amp; Ray Tránh" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                    <!-- Nhóm 1: Mẫu Báo Cáo Tiêu Chuẩn -->
+                                    <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="10" Margin="0,0,0,10">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                <ui:SymbolIcon Symbol="Flashlight24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
+                                                <TextBlock Text="MẪU BÁO CÁO TIÊU CHUẨN (1-CLICK)" FontSize="11" FontWeight="Bold" Foreground="#003B73"/>
                                             </StackPanel>
-                                        </Button>
 
-                                        <Button x:Name="btnMauKhaiThac" Click="BtnMauKhaiThac_Click" 
-                                                Height="30" Margin="0,0,0,6" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" HorizontalContentAlignment="Left" Padding="8,0">
-                                            <StackPanel Orientation="Horizontal">
-                                                <ui:SymbolIcon Symbol="VehicleSubway24" FontSize="13" Foreground="#15803D" Margin="0,0,8,0"/>
-                                                <TextBlock Text="Báo cáo Hiện Trạng Vận Hành Khai Thác" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
-                                            </StackPanel>
-                                        </Button>
+                                            <Button x:Name="btnMauHaTang" Click="BtnMauHaTang_Click" 
+                                                    Height="30" Margin="0,0,0,6" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" HorizontalContentAlignment="Left" Padding="8,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:SymbolIcon Symbol="ArrowTrendingLines24" FontSize="13" Foreground="#0284C7" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="Báo cáo Năng Lực Hạ Tầng &amp; Ray Tránh" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                                </StackPanel>
+                                            </Button>
 
-                                        <Button x:Name="btnMauKiemToan" Click="BtnMauKiemToan_Click" 
-                                                Height="30" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" HorizontalContentAlignment="Left" Padding="8,0">
-                                            <StackPanel Orientation="Horizontal">
-                                                <ui:SymbolIcon Symbol="ClipboardTask24" FontSize="13" Foreground="#7C3AED" Margin="0,0,8,0"/>
-                                                <TextBlock Text="Báo cáo Tổng Hợp Kiểm Toán Ga" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
-                                            </StackPanel>
-                                        </Button>
-                                    </StackPanel>
-                                </Border>
+                                            <Button x:Name="btnMauKhaiThac" Click="BtnMauKhaiThac_Click" 
+                                                    Height="30" Margin="0,0,0,6" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" HorizontalContentAlignment="Left" Padding="8,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:SymbolIcon Symbol="VehicleSubway24" FontSize="13" Foreground="#15803D" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="Báo cáo Hiện Trạng Vận Hành Khai Thác" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                                </StackPanel>
+                                            </Button>
 
-                                <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="10" Margin="0,0,0,12">
-                                    <StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <ui:SymbolIcon Symbol="Filter24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
-                                            <TextBlock Text="BỘ LỌC DỮ LIỆU TÙY BIẾN" FontSize="11" FontWeight="Bold" Foreground="#003B73"/>
+                                            <Button x:Name="btnMauKiemToan" Click="BtnMauKiemToan_Click" 
+                                                    Height="30" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" HorizontalContentAlignment="Left" Padding="8,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:SymbolIcon Symbol="ClipboardTask24" FontSize="13" Foreground="#7C3AED" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="Báo cáo Tổng Hợp Kiểm Toán Ga" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                                </StackPanel>
+                                            </Button>
                                         </StackPanel>
+                                    </Border>
 
-                                        <TextBlock Text="Khoảng Lý Trình (Km):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="20"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox x:Name="txtTuKm" Text="0.00" Height="26" FontSize="11" VerticalContentAlignment="Center" Padding="4,0" TextChanged="FilterInput_Changed"/>
-                                            <TextBlock Grid.Column="1" Text="—" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#64748B"/>
-                                            <TextBox Grid.Column="2" x:Name="txtDenKm" Text="1726.20" Height="26" FontSize="11" VerticalContentAlignment="Center" Padding="4,0" TextChanged="FilterInput_Changed"/>
-                                        </Grid>
+                                    <!-- Nhóm 2: Bộ Lọc Dữ Liệu Tùy Biến -->
+                                    <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="10" Margin="0,0,0,10">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                <ui:SymbolIcon Symbol="Filter24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
+                                                <TextBlock Text="BỘ LỌC DỮ LIỆU TÙY BIẾN" FontSize="11" FontWeight="Bold" Foreground="#003B73"/>
+                                            </StackPanel>
 
-                                        <TextBlock Text="Phân Cấp Ga Cần Lọc:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
-                                        <WrapPanel Margin="0,0,0,8">
-                                            <CheckBox x:Name="chkHang1" Content="Hạng I" IsChecked="True" FontSize="11" Margin="0,0,10,4" Click="FilterInput_Changed"/>
-                                            <CheckBox x:Name="chkHang2" Content="Hạng II" IsChecked="True" FontSize="11" Margin="0,0,10,4" Click="FilterInput_Changed"/>
-                                            <CheckBox x:Name="chkHang3" Content="Hạng III" IsChecked="True" FontSize="11" Margin="0,0,10,4" Click="FilterInput_Changed"/>
-                                        </WrapPanel>
+                                            <TextBlock Text="Khoảng Lý Trình (Km):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="20"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="txtTuKm" Text="0.00" Height="26" FontSize="11" VerticalContentAlignment="Center" Padding="4,0" TextChanged="FilterInput_Changed"/>
+                                                <TextBlock Grid.Column="1" Text="—" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#64748B"/>
+                                                <TextBox Grid.Column="2" x:Name="txtDenKm" Text="1726.20" Height="26" FontSize="11" VerticalContentAlignment="Center" Padding="4,0" TextChanged="FilterInput_Changed"/>
+                                            </Grid>
 
-                                        <TextBlock Text="Hạ Tầng Kỹ Thuật:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
-                                        <StackPanel Margin="0,0,0,6">
-                                            <CheckBox x:Name="chkChiCauQuay" Content="Chỉ lấy ga có Cầu Quay đầu máy" FontSize="11" Click="FilterInput_Changed"/>
-                                        </StackPanel>
+                                            <TextBlock Text="Phân Cấp Ga Cần Lọc:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
+                                            <WrapPanel Margin="0,0,0,8">
+                                                <CheckBox x:Name="chkHang1" Content="Hạng I" IsChecked="True" FontSize="11" Margin="0,0,10,4" Click="FilterInput_Changed"/>
+                                                <CheckBox x:Name="chkHang2" Content="Hạng II" IsChecked="True" FontSize="11" Margin="0,0,10,4" Click="FilterInput_Changed"/>
+                                                <CheckBox x:Name="chkHang3" Content="Hạng III" IsChecked="True" FontSize="11" Margin="0,0,10,4" Click="FilterInput_Changed"/>
+                                            </WrapPanel>
 
-                                        <TextBlock Text="Số Lượng Đường Ray Trong Ga:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="6"/>
-                                                <ColumnDefinition Width="65"/>
-                                            </Grid.ColumnDefinitions>
-                                            <ComboBox x:Name="cboToanTuRay" SelectedIndex="0" Height="26" FontSize="11" SelectionChanged="CboToanTuRay_SelectionChanged">
-                                                <ComboBoxItem Content="Tất cả quy mô ray"/>
-                                                <ComboBoxItem Content="≥ (Tối thiểu từ)"/>
-                                                <ComboBoxItem Content="≤ (Tối đa đến)"/>
-                                                <ComboBoxItem Content="= (Chính xác đúng)"/>
+                                            <TextBlock Text="Hạ Tầng Kỹ Thuật:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
+                                            <StackPanel Margin="0,0,0,6">
+                                                <CheckBox x:Name="chkChiCauQuay" Content="Chỉ lấy ga có Cầu Quay đầu máy" FontSize="11" Click="FilterInput_Changed"/>
+                                            </StackPanel>
+
+                                            <TextBlock Text="Số Lượng Đường Ray Trong Ga:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="6"/>
+                                                    <ColumnDefinition Width="65"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ComboBox x:Name="cboToanTuRay" SelectedIndex="0" Height="26" FontSize="11" SelectionChanged="CboToanTuRay_SelectionChanged">
+                                                    <ComboBoxItem Content="Tất cả quy mô ray"/>
+                                                    <ComboBoxItem Content="≥ (Tối thiểu từ)"/>
+                                                    <ComboBoxItem Content="≤ (Tối đa đến)"/>
+                                                    <ComboBoxItem Content="= (Chính xác đúng)"/>
+                                                </ComboBox>
+                                                <TextBox Grid.Column="2" x:Name="txtSoRay" Text="2" Height="26" FontSize="11" FontWeight="SemiBold"
+                                                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
+                                                         Padding="4,0" IsEnabled="False"
+                                                         TextChanged="FilterInput_Changed"
+                                                         PreviewTextInput="TxtSoRay_PreviewTextInput"
+                                                         ToolTip="Nhập số lượng đường ray (chỉ nhập số 1 - 20)"/>
+                                            </Grid>
+
+                                            <TextBlock Text="Trạng Thái Khai Thác:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
+                                            <ComboBox x:Name="cboLocKhaiThac" SelectedIndex="0" Height="26" FontSize="11" SelectionChanged="CboLocKhaiThac_SelectionChanged">
+                                                <ComboBoxItem Content="Tất cả trạng thái"/>
+                                                <ComboBoxItem Content="Đang khai thác vận hành"/>
+                                                <ComboBoxItem Content="Tạm ngừng khai thác"/>
                                             </ComboBox>
-                                            <TextBox Grid.Column="2" x:Name="txtSoRay" Text="2" Height="26" FontSize="11" FontWeight="SemiBold"
-                                                     VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
-                                                     Padding="4,0" IsEnabled="False"
-                                                     TextChanged="FilterInput_Changed"
-                                                     PreviewTextInput="TxtSoRay_PreviewTextInput"
-                                                     ToolTip="Nhập số lượng đường ray (chỉ nhập số 1 - 20)"/>
-                                        </Grid>
-
-                                        <TextBlock Text="Trạng Thái Khai Thác:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,2,0,4"/>
-                                        <ComboBox x:Name="cboLocKhaiThac" SelectedIndex="0" Height="26" FontSize="11" SelectionChanged="CboLocKhaiThac_SelectionChanged">
-                                            <ComboBoxItem Content="Tất cả trạng thái"/>
-                                            <ComboBoxItem Content="Đang khai thác vận hành"/>
-                                            <ComboBoxItem Content="Tạm ngừng khai thác"/>
-                                        </ComboBox>
-
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-                                            <Button Click="BtnDatLaiLoc_Click" Height="26" Padding="8,0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" Margin="0,0,6,0">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <ui:SymbolIcon Symbol="ArrowReset24" FontSize="11" Foreground="#64748B" Margin="0,0,4,0"/>
-                                                    <TextBlock Text="Đặt lại" FontSize="11" Foreground="#475569"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button Click="BtnApDungLoc_Click" Height="26" Padding="10,0" Background="#003B73" BorderBrush="#002855" BorderThickness="1" Cursor="Hand">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <ui:SymbolIcon Symbol="Checkmark24" FontSize="11" Foreground="#FFFFFF" Margin="0,0,4,0"/>
-                                                    <TextBlock Text="Áp dụng lọc" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
-                                                </StackPanel>
-                                            </Button>
                                         </StackPanel>
-                                    </StackPanel>
-                                </Border>
+                                    </Border>
 
-                                <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="10">
-                                    <StackPanel>
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <ui:SymbolIcon Symbol="Table24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
-                                                <TextBlock Text="CỘT HIỂN THỊ TRÊN BÁO CÁO" FontSize="11" FontWeight="Bold" Foreground="#003B73"/>
+                                    <!-- Nhóm 3: Cột Hiển Thị Trên Báo Cáo (Expander thu gọn thông minh) -->
+                                    <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,0,4">
+                                        <Expander Background="Transparent" BorderThickness="0" IsExpanded="False">
+                                            <Expander.Header>
+                                                <Grid Width="305">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <ui:SymbolIcon Symbol="Table24" FontSize="13" Foreground="#003B73" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="TÙY CHỌN CỘT HIỂN THỊ (10 CỘT)" FontSize="10.5" FontWeight="Bold" Foreground="#003B73" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <Button HorizontalAlignment="Right" Click="BtnChonTatCaCot_Click" Height="20" Padding="6,0" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                                        <TextBlock Text="Chọn tất cả" FontSize="10" Foreground="#0284C7" TextDecorations="Underline"/>
+                                                    </Button>
+                                                </Grid>
+                                            </Expander.Header>
+                                            <StackPanel Margin="10,6,10,8">
+                                                <CheckBox x:Name="chkColMaGa" Content="Mã Code Ga" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                                <CheckBox x:Name="chkColTenGa" Content="Tên Ga" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                                <CheckBox x:Name="chkColLyTrinh" Content="Lý Trình (Km)" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                                <CheckBox x:Name="chkColTinhThanh" Content="Tỉnh / Thành Phố" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                                <CheckBox x:Name="chkColHangGa" Content="Phân Cấp Ga" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                                <CheckBox x:Name="chkColSoRay" Content="Số Đường Ray" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                                <CheckBox x:Name="chkColCauQuay" Content="Cầu Quay Đầu Máy" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                                <CheckBox x:Name="chkColKhaiThac" Content="Trạng Thái Khai Thác" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                                <CheckBox x:Name="chkColNguoiTao" Content="Người Khởi Tạo Bản Ghi" IsChecked="False" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
+                                                <CheckBox x:Name="chkColNgayCapNhat" Content="Thời Điểm Cập Nhật Cuối" IsChecked="False" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
                                             </StackPanel>
-                                            <Button Grid.Column="1" Click="BtnChonTatCaCot_Click" Height="20" Padding="6,0" Background="Transparent" BorderThickness="0" Cursor="Hand">
-                                                <TextBlock Text="Chọn tất cả" FontSize="10" Foreground="#0284C7" TextDecorations="Underline"/>
-                                            </Button>
-                                        </Grid>
+                                        </Expander>
+                                    </Border>
 
-                                        <CheckBox x:Name="chkColMaGa" Content="Mã Code Ga" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                        <CheckBox x:Name="chkColTenGa" Content="Tên Ga" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                        <CheckBox x:Name="chkColLyTrinh" Content="Lý Trình (Km)" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                        <CheckBox x:Name="chkColTinhThanh" Content="Tỉnh / Thành Phố" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                        <CheckBox x:Name="chkColHangGa" Content="Phân Cấp Ga" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                        <CheckBox x:Name="chkColSoRay" Content="Số Đường Ray" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                        <CheckBox x:Name="chkColCauQuay" Content="Cầu Quay Đầu Máy" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                        <CheckBox x:Name="chkColKhaiThac" Content="Trạng Thái Khai Thác" IsChecked="True" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                        <CheckBox x:Name="chkColNguoiTao" Content="Người Khởi Tạo Bản Ghi" IsChecked="False" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                        <CheckBox x:Name="chkColNgayCapNhat" Content="Thời Điểm Cập Nhật Cuối" IsChecked="False" FontSize="11" Margin="0,0,0,4" Click="ColumnCheck_Changed"/>
-                                    </StackPanel>
-                                </Border>
+                                </StackPanel>
+                            </ScrollViewer>
 
-                            </StackPanel>
-                        </ScrollViewer>
+                            <!-- Thanh nút thao tác cố định ở chân cột (Sticky Footer) -->
+                            <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="0,1,0,0" Padding="14,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Click="BtnDatLaiLoc_Click" Height="32" Padding="12,0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand" ToolTip="Khôi phục toàn bộ tiêu chí lọc về mặc định">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon Symbol="ArrowReset24" FontSize="12" Foreground="#64748B" Margin="0,0,5,0"/>
+                                            <TextBlock Text="Đặt lại" FontSize="11" FontWeight="SemiBold" Foreground="#475569"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Grid.Column="1" Click="BtnApDungLoc_Click" Height="32" Margin="8,0,0,0" Background="#003B73" BorderBrush="#002855" BorderThickness="1" Cursor="Hand" ToolTip="Áp dụng các tiêu chí lọc và tải lại bản in A4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon Symbol="Checkmark24" FontSize="13" Foreground="#FFFFFF" Margin="0,0,6,0"/>
+                                            <TextBlock Text="Áp Dụng Lọc &amp; Xem Trước" FontSize="11.5" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </Grid>
                     </Border>
 
                     <Grid Grid.Column="1">
@@ -247,7 +251,7 @@
                                     Width="794" 
                                     MinHeight="1123" 
                                     Margin="0,0,0,20" 
-                                    Padding="48,40"
+                                    Padding="36,30"
                                     BorderBrush="#CBD5E1" 
                                     BorderThickness="1"
                                     HorizontalAlignment="Center">

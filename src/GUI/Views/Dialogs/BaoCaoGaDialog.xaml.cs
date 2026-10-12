@@ -185,7 +185,7 @@ namespace GUI.Views.Dialogs
             {
                 Header = "STT",
                 Binding = new Binding("STT"),
-                Width = 45,
+                Width = 36,
                 ElementStyle = CenterStyle()
             });
 
@@ -195,7 +195,7 @@ namespace GUI.Views.Dialogs
                 {
                     Header = "Mã Ga",
                     Binding = new Binding("MaGaCode"),
-                    Width = 65,
+                    Width = 60,
                     ElementStyle = CenterBoldStyle("#003B73")
                 });
             }
@@ -206,7 +206,7 @@ namespace GUI.Views.Dialogs
                 {
                     Header = "Tên Ga",
                     Binding = new Binding("TenGa"),
-                    Width = 120,
+                    Width = 110,
                     ElementStyle = BoldStyle("#0F172A")
                 });
             }
@@ -217,7 +217,7 @@ namespace GUI.Views.Dialogs
                 {
                     Header = "Lý Trình (km)",
                     Binding = new Binding("LyTrinhKmFormatted"),
-                    Width = 90,
+                    Width = 80,
                     ElementStyle = RightStyle()
                 });
             }
@@ -228,7 +228,7 @@ namespace GUI.Views.Dialogs
                 {
                     Header = "Tỉnh / Thành Phố",
                     Binding = new Binding("TinhThanh"),
-                    Width = 110,
+                    Width = 105,
                     ElementStyle = NormalStyle()
                 });
             }
@@ -239,7 +239,7 @@ namespace GUI.Views.Dialogs
                 {
                     Header = "Phân Cấp Ga",
                     Binding = new Binding("HangGaDisplay"),
-                    Width = 95,
+                    Width = 85,
                     ElementStyle = CenterStyle()
                 });
             }
@@ -250,8 +250,8 @@ namespace GUI.Views.Dialogs
                 {
                     Header = "Số Ray",
                     Binding = new Binding("SoDuongRayDisplay"),
-                    Width = 70,
-                    ElementStyle = CenterBoldStyle("#0284C7")
+                    Width = 65,
+                    ElementStyle = CenterBoldStyle("#0F172A")
                 });
             }
 
@@ -261,7 +261,7 @@ namespace GUI.Views.Dialogs
                 {
                     Header = "Cầu Quay",
                     Binding = new Binding("CauQuayText"),
-                    Width = 75,
+                    Width = 65,
                     ElementStyle = CenterStyle()
                 });
             }
@@ -620,12 +620,12 @@ namespace GUI.Views.Dialogs
                 });
 
                 pnlNhapTenBaoCao.Visibility = Visibility.Collapsed;
-                ThongBaoDialog.ThanhCong($"Đã lưu trữ snapshot báo cáo thành công vào CSDL với tiêu đề:\n'{tieuDe}'", "Lưu Trữ Thành Công", this);
+                ThongBaoDialog.ThanhCong($"Đã lưu báo cáo thành công:\n'{tieuDe}'", "Lưu Thành Công", this);
                 LoadDanhSachBaoCaoCu();
             }
             catch (Exception ex)
             {
-                ThongBaoDialog.Loi($"Lỗi khi lưu snapshot báo cáo: {ex.Message}", "Lỗi Lưu Trữ", this);
+                ThongBaoDialog.Loi($"Không thể lưu báo cáo: {ex.Message}", "Lỗi Lưu Báo Cáo", this);
             }
         }
 
@@ -722,14 +722,14 @@ namespace GUI.Views.Dialogs
 
                     if (string.IsNullOrEmpty(json))
                     {
-                        ThongBaoDialog.CanhBao("Báo cáo này không có dữ liệu snapshot hợp lệ.", "Cảnh Báo", this);
+                        ThongBaoDialog.CanhBao("Báo cáo này không có dữ liệu.", "Cảnh Báo", this);
                         return;
                     }
 
                     var listData = JsonSerializer.Deserialize<List<Dictionary<string, object?>>>(json);
                     if (listData == null || listData.Count == 0)
                     {
-                        ThongBaoDialog.CanhBao("Không thể đọc dữ liệu snapshot.", "Cảnh Báo", this);
+                        ThongBaoDialog.CanhBao("Không thể đọc dữ liệu báo cáo.", "Cảnh Báo", this);
                         return;
                     }
 
@@ -784,7 +784,7 @@ namespace GUI.Views.Dialogs
 
                     txtTieuDeBaoCao.Text = tieuDe.ToUpper();
                     txtPhamViKm.Text = drv["TieuChiLoc"]?.ToString() ?? "";
-                    txtNgayXuat.Text = $"Snapshot lưu lúc: {drv["ThoiGianDisplay"]} (Bản ghi lịch sử bất biến)";
+                    txtNgayXuat.Text = $"Bản lưu lúc: {drv["ThoiGianDisplay"]}";
 
                     int tongGa = _hienTaiTable.Rows.Count;
                     int tongRay = 0;
@@ -805,11 +805,11 @@ namespace GUI.Views.Dialogs
                     // Chuyển sang Tab 1 để xem bản in
                     tabControlChinh.SelectedIndex = 0;
 
-                    ThongBaoDialog.ThanhCong($"Đã nạp thành công bản snapshot lịch sử:\n'{tieuDe}'\n\nBạn đang xem đúng nguyên trạng số liệu thời điểm lưu.", "Xem Lại Báo Cáo", this);
+                    ThongBaoDialog.ThanhCong($"Đã mở bản lưu báo cáo:\n'{tieuDe}'", "Xem Báo Cáo", this);
                 }
                 catch (Exception ex)
                 {
-                    ThongBaoDialog.Loi($"Lỗi khi mở snapshot: {ex.Message}", "Lỗi Nạp Snapshot", this);
+                    ThongBaoDialog.Loi($"Không thể mở báo cáo: {ex.Message}", "Lỗi Mở Báo Cáo", this);
                 }
             }
         }
@@ -823,9 +823,9 @@ namespace GUI.Views.Dialogs
                 string tieuDe = drv["TieuDe"]?.ToString() ?? "";
 
                 bool xacNhan = ThongBaoDialog.XacNhan(
-                    $"Bạn có chắc chắn muốn xóa bản lưu báo cáo:\n'{tieuDe}' (Mã #{maBaoCao}) khỏi CSDL không?",
+                    $"Bạn có chắc chắn muốn xóa bản lưu báo cáo:\n'{tieuDe}' không?",
                     "Xác Nhận Xóa Báo Cáo",
-                    nutDongY: "Xóa vĩnh viễn",
+                    nutDongY: "Xóa báo cáo",
                     nutHuy: "Hủy bỏ",
                     laHanhDongXoa: true,
                     owner: this);

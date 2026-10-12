@@ -61,6 +61,18 @@ namespace GUI
             txtClock.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
         }
 
+        public void ShowModalOverlay()
+        {
+            if (modalBackdropOverlay != null)
+                modalBackdropOverlay.Visibility = Visibility.Visible;
+        }
+
+        public void HideModalOverlay()
+        {
+            if (modalBackdropOverlay != null)
+                modalBackdropOverlay.Visibility = Visibility.Collapsed;
+        }
+
         private void NavCluster_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is string clusterKey)
