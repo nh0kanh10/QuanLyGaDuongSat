@@ -481,6 +481,3 @@ IF @SoLoi > 0
     RAISERROR(N'KIỂM TRA KHÔNG ĐẠT: %d vi phạm luật nghiệp vụ (xem bảng chi tiết).', 16, 1, @SoLoi);
 ELSE
     PRINT CONCAT(N'KIỂM TRA ĐẠT: 0 vi phạm. ', @SoGhiChu, N' ghi chú về dữ liệu phân hệ khác.');
-
-
-    select * from nhansu.NhanVien
