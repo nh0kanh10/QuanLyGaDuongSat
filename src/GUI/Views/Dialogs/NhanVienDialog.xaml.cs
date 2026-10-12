@@ -23,6 +23,11 @@ namespace GUI.Views.Dialogs
     // lai lay tu phuongtien.DongDauMay; kiem tra tung o dung NhanSuService.KiemTraNhanVien;
     // luu goi ham _luu (Service) - loi thi bao va giu dialog mo. "Dang lam nhiem vu" do nhan
     // ban dat, khong chon tay (Q7).
+    //
+    // Tu 12/10 (Dat chot): chuc danh chon trong danh muc, don vi chi hien loai hop chuc danh
+    // (DanhMucDonVi). Dang trong ca -> khoa chuc danh / hang bang / don vi; doi chuc danh / hang
+    // bang lam hong kip chua nhan ban -> khong cho luu (NhanSuService.KiemTraDoiViTri). Doi ma ->
+    // ma cu luu vao lich su, khong cap lai.
     // =========================================================================
     public partial class NhanVienDialog : Window
     {
@@ -33,6 +38,7 @@ namespace GUI.Views.Dialogs
         private readonly DuLieuNhanSu _duLieu;
         private readonly Func<NhanVienHienThi, string?> _luu;
         private readonly bool _dangKhoiTao;
+        private readonly bool _khoaViTri;   // dang trong ca: chuc danh / hang bang / don vi doi sau khi ban giao
 
         public NhanVienHienThi? KetQua { get; private set; }
 
@@ -47,9 +53,6 @@ namespace GUI.Views.Dialogs
 
             cboChucDanh.ItemsSource = QuyTacKipLai.ChucDanhGoiY;
             cboHangBang.ItemsSource = duLieu.HangBangLai;
-            cboDonVi.ItemsSource = duLieu.NhanVien.Select(n => n.DonViChuQuan)
-                                         .Where(s => !string.IsNullOrWhiteSpace(s))
-                                         .Distinct().OrderBy(s => s).ToList();
 
             // Q7: "Dang lam nhiem vu" chi hien khi ho so dang o trang thai do (do nhan ban dat)
             var mucDangLam = cboTrangThai.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == NhanVienHienThi.DangLam);
@@ -63,9 +66,16 @@ namespace GUI.Views.Dialogs
                 : duLieu.KipCuaNhanVien(banGoc.MaNhanVien).FirstOrDefault(p => p.TrangThai == PhanCongKipHienThi.DangThucHien);
             if (dangChay != null)
             {
+                string ca = $"Đang trong ca {dangChay.Chuyen.SoHieuMacTau} ({dangChay.Chang})";
                 cboTrangThai.IsEnabled = false;
-                txtLoiTrangThai.Text = $"Đang trong ca {dangChay.Chuyen.SoHieuMacTau} ({dangChay.Chang}): trạng thái đổi khi xác nhận bàn giao.";
+                txtLoiTrangThai.Text = $"{ca}: trạng thái đổi khi xác nhận bàn giao.";
                 txtLoiTrangThai.Foreground = Mau("#64748B");
+
+                _khoaViTri = true;
+                cboChucDanh.IsEnabled = false;
+                cboDonVi.IsEnabled = false;
+                txtLoiChucDanh.Text = $"{ca}: chức danh, hạng bằng, đơn vị đổi sau khi bàn giao.";
+                txtLoiChucDanh.Foreground = Mau("#64748B");
             }
 
             _dangKhoiTao = false;
@@ -88,6 +98,7 @@ namespace GUI.Views.Dialogs
             txtNutLuu.Text = "Lưu Hồ Sơ";
 
             ChonTrangThai(NhanVienHienThi.SanSang);
+            NapDonVi();
         }
 
         private void KhoiTaoCapNhat(NhanVienHienThi nv)
@@ -101,10 +112,34 @@ namespace GUI.Views.Dialogs
             txtHoTen.Text = nv.HoTen;
             txtSoDienThoai.Text = nv.SoDienThoai;
             dpHanKham.SelectedDate = nv.HanKhamSucKhoe;
-            cboChucDanh.Text = nv.ChucDanh;
+            cboChucDanh.SelectedItem = QuyTacKipLai.ChucDanhGoiY.FirstOrDefault(c => c == nv.ChucDanh);
             cboHangBang.SelectedItem = _duLieu.HangBangLai.FirstOrDefault(h => h == nv.HangBangLai);
-            cboDonVi.Text = nv.DonViChuQuan;
+            NapDonVi(nv.DonViChuQuan);
             ChonTrangThai(nv.TrangThai);
+
+            // Ho so cu nhap tu do truoc 12/10: chuc danh / don vi ngoai danh muc thi bao chon lai
+            if (cboChucDanh.SelectedItem == null)
+                GhiChu(txtLoiChucDanh, $"Chức danh hiện tại \"{nv.ChucDanh}\" không có trong danh mục, hãy chọn lại.");
+            else if (cboDonVi.SelectedItem == null && !string.IsNullOrWhiteSpace(nv.DonViChuQuan))
+                GhiChu(txtLoiDonVi, $"Đơn vị hiện tại \"{nv.DonViChuQuan}\" không hợp với chức danh {nv.ChucDanh.ToLower()}, hãy chọn lại.");
+        }
+
+        private void GhiChu(TextBlock tb, string noiDung)
+        {
+            tb.Text = noiDung;
+            tb.Foreground = Mau("#B45309");
+        }
+
+        // Don vi theo chuc danh dang chon (DanhMucDonVi). Giu don vi dang chon neu con hop, khong thi lay
+        // don vi cua ho so goc (doi chuc danh roi doi lai); danh sach chi 1 muc thi chon san.
+        private void NapDonVi(string? uuTien = null)
+        {
+            var ds = DanhMucDonVi.DonViHopLe(ChucDanh, _duLieu.Ga);
+            string? dangChon = uuTien ?? cboDonVi.SelectedItem as string;
+            cboDonVi.ItemsSource = ds;
+            cboDonVi.SelectedItem = new[] { dangChon, _banGoc?.DonViChuQuan }.FirstOrDefault(d => d != null && ds.Contains(d))
+                                    ?? (ds.Count == 1 ? ds[0] : null);
+            cboDonVi.IsEnabled = !_khoaViTri && ds.Count > 0;
         }
 
         // Ma nhan vien cap theo chuc danh. Them moi: so ke tiep cua tien to. Sua: giu ma cu
@@ -123,6 +158,7 @@ namespace GUI.Views.Dialogs
             else if (_banGoc != null && MaNhanVienTheoChucDanh.KhopChucDanh(_banGoc.MaNVCode, ChucDanh))
             {
                 ma = _banGoc.MaNVCode;
+                if (_banGoc.LichSuMa.Count > 0) ghiChu = $"Mã cũ: {_banGoc.NhanMaCu}.";
             }
             else
             {
@@ -132,9 +168,10 @@ namespace GUI.Views.Dialogs
                         ? "Mã dự kiến, cấp chính thức khi lưu. Chức danh ngoài danh mục dùng tiền tố NV."
                         : $"Mã dự kiến theo chức danh ({tienTo} = {ChucDanh.ToLower()}), hệ thống cấp chính thức khi lưu.";
                 else
-                    ghiChu = string.Equals(_banGoc.ChucDanh.Trim(), ChucDanh, StringComparison.OrdinalIgnoreCase)
+                    ghiChu = (string.Equals(_banGoc.ChucDanh.Trim(), ChucDanh, StringComparison.OrdinalIgnoreCase)
                         ? $"Mã cũ chưa theo chức danh nên cấp mã mới khi lưu: {_banGoc.MaNVCode} → {ma} (dự kiến)."
-                        : $"Đổi chức danh nên cấp mã mới khi lưu: {_banGoc.MaNVCode} → {ma} (dự kiến).";
+                        : $"Đổi chức danh nên cấp mã mới khi lưu: {_banGoc.MaNVCode} → {ma} (dự kiến).")
+                        + $" {_banGoc.MaNVCode} được giữ trong lịch sử để tra cứu, không cấp lại cho người khác.";
             }
 
             txtMa.Text = ma;
@@ -142,8 +179,8 @@ namespace GUI.Views.Dialogs
             txtLoiMa.Foreground = Mau(_banGoc != null && ma != _banGoc.MaNVCode ? "#B45309" : "#64748B");
         }
 
-        // Ma da cap theo anh chup luc mo dialog (ma that do Service cap trong giao dich khi luu)
-        private IEnumerable<string> MaDaCap() => _duLieu.NhanVien.Select(n => n.MaNVCode);
+        // Ma da cap theo anh chup luc mo dialog, ke ca ma cu trong lich su (ma that do Service cap khi luu)
+        private IEnumerable<string> MaDaCap() => _duLieu.MaDaCap;
 
         private void ChonTrangThai(string trangThai)
         {
@@ -152,8 +189,8 @@ namespace GUI.Views.Dialogs
                                         ?? cboTrangThai.Items[0];
         }
 
-        private string ChucDanh => cboChucDanh.Text?.Trim() ?? string.Empty;
-        private string DonVi => cboDonVi.Text?.Trim() ?? string.Empty;
+        private string ChucDanh => cboChucDanh.SelectedItem as string ?? string.Empty;
+        private string DonVi => cboDonVi.SelectedItem as string ?? string.Empty;
         private string TrangThai => (cboTrangThai.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? NhanVienHienThi.SanSang;
         private bool CanBangLai => ChucDanh is "Lái tàu" or "Phụ lái";
 
@@ -186,7 +223,9 @@ namespace GUI.Views.Dialogs
         {
             if (_dangKhoiTao) return;
             txtLoiChucDanh.Text = "";
+            txtLoiDonVi.Text = "";
             CapNhatTheoChucDanh();
+            NapDonVi();
             CapNhatMa();
             CapNhatTomTat();
         }
@@ -216,7 +255,7 @@ namespace GUI.Views.Dialogs
         private void CapNhatTheoChucDanh()
         {
             bool can = CanBangLai;
-            cboHangBang.IsEnabled = can;
+            cboHangBang.IsEnabled = can && !_khoaViTri;
             if (!can) cboHangBang.SelectedItem = null;
 
             txtNhanHangBang.Inlines.Clear();
@@ -271,13 +310,22 @@ namespace GUI.Views.Dialogs
             CapNhatAnhHuongKip();
         }
 
-        // Khi sua: doi chieu lai cac kip chua nhan ban voi ho so moi
+        // Khi sua: doi chieu lai cac kip chua nhan ban voi ho so moi.
+        // Doi chuc danh / hang bang lam hong kip -> do, khong cho luu (KiemTraDoiViTri). Han kham /
+        // nghi viec (su that) lam hong kip -> vang, van luu duoc, phai thay nguoi.
         private void CapNhatAnhHuongKip()
         {
             bdAnhHuong.Visibility = Visibility.Collapsed;
             if (_banGoc == null) return;
 
             var nvMoi = TaoTuForm();
+            var chan = NhanSuService.KiemTraDoiViTri(_banGoc, nvMoi, _duLieu);
+            if (chan.Count > 0)
+            {
+                HienAnhHuong("Chưa lưu được: " + string.Join("\n", chan.Select(l => l.ThongDiep)), laChan: true);
+                return;
+            }
+
             var kip = _duLieu.KipCuaNhanVien(_banGoc.MaNhanVien)
                              .Where(p => p.TrangThai == PhanCongKipHienThi.DaPhanCong && p.Chuyen.ConHieuLuc)
                              .ToList();
@@ -289,15 +337,23 @@ namespace GUI.Views.Dialogs
                 var loiCu = DanhGiaKipLai.DoiChieu(_duLieu, _banGoc, vaiTro, p.Chuyen, p.MaGaNhanBan, p.MaGaBanGiao, p.MaPhanCong)
                                          .Where(d => d.LaLoi).Select(d => d.TenDieuKien).ToHashSet();
                 var loiMoi = DanhGiaKipLai.DoiChieu(_duLieu, nvMoi, vaiTro, p.Chuyen, p.MaGaNhanBan, p.MaGaBanGiao, p.MaPhanCong)
-                                          .Where(d => d.LaLoi && !loiCu.Contains(d.TenDieuKien))
+                                          .Where(d => d.LaLoi && !loiCu.Contains(d.TenDieuKien)
+                                                      && d.TenDieuKien is not (DieuKienKip.ChucDanh or DieuKienKip.BangLai))
                                           .ToList();
                 if (loiMoi.Count > 0)
                     dong.Add($"• {p.Chuyen.SoHieuMacTau} {p.Chang} ({QuyTacKipLai.TenVaiTro(vaiTro).ToLower()}): {loiMoi[0].MoTa}");
             }
 
             if (dong.Count == 0) return;
-            txtAnhHuong.Text = $"Với thông tin mới, {nvMoi.HoTen} sẽ không đủ điều kiện ở kíp chưa nhận ban:\n" +
-                               string.Join("\n", dong) + "\nVẫn lưu được, nhưng phải thay người trong kíp.";
+            HienAnhHuong($"Với thông tin mới, {nvMoi.HoTen} sẽ không đủ điều kiện ở kíp chưa nhận ban:\n" +
+                         string.Join("\n", dong) + "\nVẫn lưu được, nhưng phải thay người trong kíp.", laChan: false);
+        }
+
+        private void HienAnhHuong(string noiDung, bool laChan)
+        {
+            txtAnhHuong.Text = noiDung;
+            bdAnhHuong.Background = Mau(laChan ? "#FEF2F2" : "#FFFBEB");
+            bdAnhHuong.BorderBrush = Mau(laChan ? "#B91C1C" : "#B45309");
             bdAnhHuong.Visibility = Visibility.Visible;
         }
 
@@ -370,7 +426,9 @@ namespace GUI.Views.Dialogs
             if (dpHanKham.SelectedDate == null)
                 BaoLoi(txtLoiHanKham, "Vui lòng chọn hạn khám sức khỏe.", dpHanKham);
 
-            foreach (var l in NhanSuService.KiemTraNhanVien(TaoTuForm(), _duLieu.HangBangLai))
+            var dsLoi = NhanSuService.KiemTraNhanVien(TaoTuForm(), _duLieu.HangBangLai, _duLieu.Ga);
+            if (_banGoc != null) dsLoi.AddRange(NhanSuService.KiemTraDoiViTri(_banGoc, TaoTuForm(), _duLieu));
+            foreach (var l in dsLoi)
             {
                 switch (l.Truong)
                 {

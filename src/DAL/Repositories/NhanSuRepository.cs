@@ -37,10 +37,7 @@ namespace DAL.Repositories
             var thamSoCuaSo = () => new[] { new SqlParameter("@tu", tu), new SqlParameter("@den", den) };
 
             // --- Ga + hang bang lai ---
-            var ga = PhienGiaoDich.TruyVan(gd, "SELECT MaGa, MaGaCode, TenGa FROM hatang.Ga ORDER BY LyTrinhKm, MaGa")
-                .Rows.Cast<DataRow>()
-                .Select(r => new GaNhanSu(Convert.ToInt32(r["MaGa"]), Chuoi(r, "MaGaCode"), Chuoi(r, "TenGa")))
-                .ToList();
+            var ga = LayGa(gd);
             var gaTheoMa = ga.ToDictionary(g => g.MaGa);
 
             var hangBang = LayHangBangLai(gd);
@@ -56,6 +53,18 @@ namespace DAL.Repositories
                              WHERE t.MaNhanVien = nv.MaNhanVien
                              ORDER BY t.DangHoatDong DESC, t.LanDangNhapCuoi DESC) tk")
                 .Rows.Cast<DataRow>().Select(DocNhanVien).ToList();
+
+            // --- Lich su doi ma (migration V20261012_1100) ---
+            var lichSuMa = PhienGiaoDich.TruyVan(gd, @"
+                SELECT MaNhanVien, MaNVCodeCu, MaNVCodeMoi, ChucDanhCu, ChucDanhMoi, DonViCu, DonViMoi, ThoiDiem
+                FROM nhansu.LichSuMaNhanVien ORDER BY ThoiDiem, MaLichSu")
+                .Rows.Cast<DataRow>()
+                .GroupBy(r => Convert.ToInt32(r["MaNhanVien"]))
+                .ToDictionary(g => g.Key, g => (IReadOnlyList<LichSuMaNhanVienDTO>)g.Select(r => new LichSuMaNhanVienDTO(
+                    Chuoi(r, "MaNVCodeCu"), Chuoi(r, "MaNVCodeMoi"), Chuoi(r, "ChucDanhCu"), Chuoi(r, "ChucDanhMoi"),
+                    Chuoi(r, "DonViCu"), Chuoi(r, "DonViMoi"), Convert.ToDateTime(r["ThoiDiem"]))).ToList());
+            foreach (var nv in nhanVien)
+                if (lichSuMa.TryGetValue(nv.MaNhanVien, out var ls)) nv.LichSuMa = ls;
 
             // --- Chuyen tau trong cua so + dau may chinh (dong may) ---
             var bangChuyen = PhienGiaoDich.TruyVan(gd, $@"
@@ -183,6 +192,13 @@ namespace DAL.Repositories
             return dl;
         }
 
+        // Danh muc ga theo ly trinh (ga dong quan R10, don vi "Ga ..." cua nhan vien ban ve)
+        public List<GaNhanSu> LayGa(PhienGiaoDich? gd = null)
+            => PhienGiaoDich.TruyVan(gd, "SELECT MaGa, MaGaCode, TenGa FROM hatang.Ga ORDER BY LyTrinhKm, MaGa")
+               .Rows.Cast<DataRow>()
+               .Select(r => new GaNhanSu(Convert.ToInt32(r["MaGa"]), Chuoi(r, "MaGaCode"), Chuoi(r, "TenGa")))
+               .ToList();
+
         // Hang bang lai hop le = ma dong dau may (D19E, D13E ...)
         public List<string> LayHangBangLai(PhienGiaoDich? gd = null)
             => PhienGiaoDich.TruyVan(gd, "SELECT MaDongCode FROM phuongtien.DongDauMay ORDER BY MaDongCode")
@@ -196,21 +212,41 @@ namespace DAL.Repositories
         // NHAN VIEN
         // =====================================================================
 
-        // Ma da cap cua mot tien to. Khoa UPDLOCK + HOLDLOCK (khoa ca khoang LIKE) toi het giao
-        // dich: 2 nguoi them cung tien to cung luc thi nguoi sau cho, khong cap trung so.
+        // Ma da cap cua mot tien to, ke ca ma cu trong lich su doi ma (khong cap lai). Khoa UPDLOCK +
+        // HOLDLOCK (khoa ca khoang LIKE) toi het giao dich: 2 nguoi them cung tien to cung luc thi
+        // nguoi sau cho, khong cap trung so.
         public List<string> LayMaTheoTienTo(string tienTo, PhienGiaoDich gd)
             => PhienGiaoDich.TruyVan(gd, @"
                 SELECT MaNVCode FROM nhansu.NhanVien WITH (UPDLOCK, HOLDLOCK)
-                WHERE MaNVCode LIKE @mau",
+                WHERE MaNVCode LIKE @mau
+                UNION ALL
+                SELECT MaNVCodeCu FROM nhansu.LichSuMaNhanVien WITH (UPDLOCK, HOLDLOCK)
+                WHERE MaNVCodeCu LIKE @mau",
                 new SqlParameter("@mau", SqlDbType.VarChar, 20) { Value = tienTo + "[_]%" })
                .Rows.Cast<DataRow>().Select(r => Chuoi(r, "MaNVCode")).ToList();
 
+        // Ghi mot lan doi ma trong cung giao dich voi UPDATE ho so (goc = ban truoc khi sua)
+        public void ThemLichSuMa(NhanVienHienThi goc, NhanVienHienThi moi, int? maTaiKhoan, PhienGiaoDich gd)
+            => PhienGiaoDich.ThucThi(gd, @"
+                INSERT INTO nhansu.LichSuMaNhanVien (MaNhanVien, MaNVCodeCu, MaNVCodeMoi, ChucDanhCu, ChucDanhMoi,
+                                                     DonViCu, DonViMoi, ThoiDiem, MaTaiKhoan)
+                VALUES (@id, @cu, @moi, @cdCu, @cdMoi, @dvCu, @dvMoi, SYSDATETIME(), @tk)",
+                new SqlParameter("@id", goc.MaNhanVien),
+                new SqlParameter("@cu", SqlDbType.VarChar, 20) { Value = goc.MaNVCode },
+                new SqlParameter("@moi", SqlDbType.VarChar, 20) { Value = moi.MaNVCode },
+                new SqlParameter("@cdCu", SqlDbType.NVarChar, 50) { Value = goc.ChucDanh },
+                new SqlParameter("@cdMoi", SqlDbType.NVarChar, 50) { Value = moi.ChucDanh },
+                new SqlParameter("@dvCu", SqlDbType.NVarChar, 100) { Value = goc.DonViChuQuan },
+                new SqlParameter("@dvMoi", SqlDbType.NVarChar, 100) { Value = moi.DonViChuQuan },
+                new SqlParameter("@tk", SqlDbType.Int) { Value = (object?)maTaiKhoan ?? DBNull.Value });
+
+        // Bang co trigger (trg_NhanVien_KhongDungLaiMaCu, 12/10) nen khong dung OUTPUT INSERTED (loi 334)
         public int ThemNhanVien(NhanVienHienThi nv, PhienGiaoDich gd)
             => Convert.ToInt32(PhienGiaoDich.LayGiaTri(gd, @"
                 INSERT INTO nhansu.NhanVien (MaNVCode, HoTen, SoDienThoai, ChucDanh, HangBangLai, HanKhamSucKhoe,
                                              DonViChuQuan, TrangThai, NgayTao)
-                OUTPUT INSERTED.MaNhanVien
-                VALUES (@ma, @ten, @sdt, @cd, @bang, @han, @dv, @tt, SYSDATETIME())",
+                VALUES (@ma, @ten, @sdt, @cd, @bang, @han, @dv, @tt, SYSDATETIME());
+                SELECT CAST(SCOPE_IDENTITY() AS INT);",
                 ThamSoNhanVien(nv)));
 
         public int CapNhatNhanVien(NhanVienHienThi nv, byte[] phienBan, PhienGiaoDich gd)

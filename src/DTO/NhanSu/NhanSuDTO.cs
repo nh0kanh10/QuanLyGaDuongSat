@@ -32,11 +32,14 @@ namespace DTO.NhanSu
         public const string TruongTau = "TRUONG_TAU";
         public static readonly string[] CacVaiTro = { LaiTau, PhuLai, TruongTau };
 
-        // Chuc danh goi y cho dialog ho so (cot ChucDanh la chu tu do)
+        // Danh muc chuc danh (cot ChucDanh la chu tu do trong CSDL; tu 12/10 ho so chi chon trong
+        // danh muc nay - DanhMucDonVi). Ho so cu ngoai danh muc (ma NV_) van doc / hien duoc.
         public static readonly IReadOnlyList<string> ChucDanhGoiY = new[]
         {
             "Lái tàu", "Phụ lái", "Trưởng tàu", "Tiếp viên", "Nhân viên khám xe", "Nhân viên bán vé"
         };
+
+        public static bool LaChucDanhTrongDanhMuc(string? chucDanh) => chucDanh != null && ChucDanhGoiY.Contains(chucDanh);
 
         public static bool DuDieuKienLenBan(decimal nongDoCon, decimal soGioNghi)
             => nongDoCon == NongDoConChoPhep && soGioNghi >= SoGioNghiToiThieu;
@@ -70,6 +73,49 @@ namespace DTO.NhanSu
 
         public static decimal SoGio(DateTime tu, DateTime den)
             => Math.Round((decimal)(den - tu).TotalHours, 1, MidpointRounding.AwayFromZero);
+    }
+
+    // Don vi chu quan theo chuc danh (Dat chot 12/10: danh muc trong ma, khong doi CSDL - cot
+    // DonViChuQuan van la chu). Ban lai may thuoc doi lai tau, to tau phuc vu (truong tau, tiep vien)
+    // thuoc doan tiep vien, kham xe thuoc tram, ban ve thuoc ga (theo danh muc hatang.Ga).
+    // Ten don vi giu dung dang trong seed vi R10 suy ga dong quan tu ten (DuLieuNhanSu.GaDongQuan).
+    // Them depot / doan moi: them vao mang tuong ung.
+    public static class DanhMucDonVi
+    {
+        public static readonly IReadOnlyList<string> DoiLaiTau = new[]
+        {
+            "Đội lái tàu Hà Nội", "Đội lái tàu Vinh", "Đội lái tàu Đà Nẵng", "Đội lái tàu Sài Gòn"
+        };
+
+        public static readonly IReadOnlyList<string> DoanTiepVien = new[]
+        {
+            "Đoàn tiếp viên Hà Nội", "Đoàn tiếp viên Đà Nẵng", "Đoàn tiếp viên Phương Nam"
+        };
+
+        public static readonly IReadOnlyList<string> TramKhamXe = new[] { "Trạm Giáp Bát" };
+
+        // Ten loai don vi cho thong bao; null = chuc danh ngoai danh muc
+        public static string? LoaiDonVi(string? chucDanh) => chucDanh switch
+        {
+            "Lái tàu" or "Phụ lái" => "đội lái tàu",
+            "Trưởng tàu" or "Tiếp viên" => "đoàn tiếp viên",
+            "Nhân viên khám xe" => "trạm khám xe",
+            "Nhân viên bán vé" => "ga",
+            _ => null
+        };
+
+        // Cac don vi chon duoc cho chuc danh. Ban ve: "Ga <ten ga>" theo danh muc ga (thu tu ly trinh).
+        public static IReadOnlyList<string> DonViHopLe(string? chucDanh, IEnumerable<GaNhanSu> ga) => chucDanh switch
+        {
+            "Lái tàu" or "Phụ lái" => DoiLaiTau,
+            "Trưởng tàu" or "Tiếp viên" => DoanTiepVien,
+            "Nhân viên khám xe" => TramKhamXe,
+            "Nhân viên bán vé" => ga.Select(g => "Ga " + g.TenGa).ToList(),
+            _ => Array.Empty<string>()
+        };
+
+        public static bool HopLe(string? chucDanh, string? donVi, IEnumerable<GaNhanSu> ga)
+            => donVi != null && DonViHopLe(chucDanh, ga).Contains(donVi);
     }
 
     // Ten cac dieu kien doi chieu khi phan cong (hang cua bang doi chieu, thu tu hien thi)
@@ -235,6 +281,11 @@ namespace DTO.NhanSu
 
         public bool CoTaiKhoan => TenDangNhap != null;
 
+        // Cac lan doi ma (nhansu.LichSuMaNhanVien, migration V20261012_1100), cu nhat truoc
+        public IReadOnlyList<LichSuMaNhanVienDTO> LichSuMa { get; set; } = Array.Empty<LichSuMaNhanVienDTO>();
+        public IEnumerable<string> CacMaCu => LichSuMa.Select(l => l.MaNVCodeCu);
+        public string NhanMaCu => string.Join(", ", LichSuMa.Select(l => $"{l.MaNVCodeCu} ({l.ChucDanhCu.ToLower()}, đến {l.ThoiDiem:dd/MM/yyyy})"));
+
         public string NhanTaiKhoan
         {
             get
@@ -293,6 +344,10 @@ namespace DTO.NhanSu
 
         public NhanVienHienThi SaoChep() => (NhanVienHienThi)MemberwiseClone();
     }
+
+    // Mot lan doi ma (doi chuc danh -> ma theo tien to moi). Ma cu khong bao gio cap lai.
+    public record LichSuMaNhanVienDTO(string MaNVCodeCu, string MaNVCodeMoi, string ChucDanhCu, string ChucDanhMoi,
+                                      string DonViCu, string DonViMoi, DateTime ThoiDiem);
 
     // -------------------------------------------------------------------------
     // 2. PHAN CONG KIP LAI (nhansu.PhanCongKipLai) - 1 kip tren 1 chang

@@ -28,6 +28,7 @@ namespace Tests.NhanSu
         public static readonly GaNhanSu GaVIN = new(VIN, "VIN", "Vinh");
         public static readonly GaNhanSu GaDAN = new(DAN, "DAN", "Đà Nẵng");
         public static readonly GaNhanSu GaSGO = new(SGO, "SGO", "Sài Gòn");
+        public static readonly GaNhanSu[] CacGa = { GaHNI, GaVIN, GaDAN, GaSGO };
 
         public static DateTime HomNay => DateTime.Today;
         public static DateTime NgayMai => DateTime.Today.AddDays(1);
@@ -106,8 +107,7 @@ namespace Tests.NhanSu
             var kiemTra = KiemTraGoc();
             if (kiemTraThem != null) kiemTra.AddRange(kiemTraThem);
 
-            return new DuLieuNhanSu(CacNhanVien(), kip, kiemTra, chuyen,
-                                    new[] { GaHNI, GaVIN, GaDAN, GaSGO }, new[] { "D13E", "D19E" }, BayGio);
+            return new DuLieuNhanSu(CacNhanVien(), kip, kiemTra, chuyen, CacGa, new[] { "D13E", "D19E" }, BayGio);
         }
 
         public static PhanCongKipHienThi Kip(int ma, IReadOnlyList<ChuyenTauNhanSu> chuyen, int maChuyen, int nhan, int giao,

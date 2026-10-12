@@ -23,19 +23,19 @@ namespace Tests.NhanSu
 
         [Fact]
         public void HoSoHopLe_KhongLoi()
-            => Assert.Empty(NhanSuService.KiemTraNhanVien(HoSo(), HangBang));
+            => Assert.Empty(NhanSuService.KiemTraNhanVien(HoSo(), HangBang, CacGa));
 
         [Fact]
         public void LaiTauKhongCoHangBang_Loi()
-            => Assert.Contains("HangBangLai", Truong(NhanSuService.KiemTraNhanVien(HoSo(bang: null), HangBang)));
+            => Assert.Contains("HangBangLai", Truong(NhanSuService.KiemTraNhanVien(HoSo(bang: null), HangBang, CacGa)));
 
         [Fact]
         public void HangBangKhongPhaiDongDauMayCoThat_Loi()
-            => Assert.Contains("HangBangLai", Truong(NhanSuService.KiemTraNhanVien(HoSo(bang: "D20E"), HangBang)));
+            => Assert.Contains("HangBangLai", Truong(NhanSuService.KiemTraNhanVien(HoSo(bang: "D20E"), HangBang, CacGa)));
 
         [Fact]
         public void TruongTauCoHangBang_Loi()
-            => Assert.Contains("HangBangLai", Truong(NhanSuService.KiemTraNhanVien(HoSo("Trưởng tàu", "D19E"), HangBang)));
+            => Assert.Contains("HangBangLai", Truong(NhanSuService.KiemTraNhanVien(HoSo("Trưởng tàu", "D19E"), HangBang, CacGa)));
 
         [Theory]
         [InlineData("0912345678", true)]
@@ -47,7 +47,7 @@ namespace Tests.NhanSu
         {
             var nv = HoSo();
             nv.SoDienThoai = sdt;
-            Assert.Equal(hopLe, !Truong(NhanSuService.KiemTraNhanVien(nv, HangBang)).Contains("SoDienThoai"));
+            Assert.Equal(hopLe, !Truong(NhanSuService.KiemTraNhanVien(nv, HangBang, CacGa)).Contains("SoDienThoai"));
         }
 
         // --- Trang thai (Q7: "Dang lam nhiem vu" chi do nhan ban dat) ---

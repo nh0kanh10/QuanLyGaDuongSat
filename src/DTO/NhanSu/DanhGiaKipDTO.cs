@@ -46,6 +46,9 @@ namespace DTO.NhanSu
 
         public DateTime BayGio { get; }
 
+        // Moi ma da tung cap: ma hien tai + ma cu trong lich su doi ma (khong cap lai ma cu)
+        public IEnumerable<string> MaDaCap => NhanVien.SelectMany(n => n.CacMaCu.Prepend(n.MaNVCode));
+
         public NhanVienHienThi? TimNhanVien(int ma) => _nhanVien.GetValueOrDefault(ma);
         public ChuyenTauNhanSu? TimChuyen(int ma) => _chuyen.GetValueOrDefault(ma);
         public PhanCongKipHienThi? TimKip(int maPhanCong) => PhanCong.FirstOrDefault(p => p.MaPhanCong == maPhanCong);

@@ -26,6 +26,8 @@ namespace BUS.Services
     //   Q1 PhienBan ROWVERSION · Q2 trigger xet ca truong tau · Q3 gio Viet Nam (SYSDATETIME)
     //   Q4 phieu kiem tra chi ghi tu 3 gio truoc gio nhan ban · Q5 ma NV = MAX + 1 cua tien to
     //   Q7 "Dang lam nhiem vu" do nhan ban dat, khong chon tay.
+    // 12/10: chuc danh + don vi chon theo danh muc (DanhMucDonVi); doi chuc danh / hang bang / don vi
+    //   co dieu kien (KiemTraDoiViTri); doi ma thi ghi nhansu.LichSuMaNhanVien, ma cu khong cap lai.
     // =========================================================================
     public record KetQuaLuuNhanVien(int MaNhanVien, string MaNVCode, string? MaCu, bool KhongThayDoi);
 
@@ -74,14 +76,16 @@ namespace BUS.Services
 
         // Ma du kien hien trong dialog (ma that cap khi luu - co the khac neu nguoi khac vua them)
         public static string MaDuKien(string chucDanh, DuLieuNhanSu dl)
-            => MaNhanVienTheoChucDanh.MaKeTiep(chucDanh, dl.NhanVien.Select(n => n.MaNVCode));
+            => MaNhanVienTheoChucDanh.MaKeTiep(chucDanh, dl.MaDaCap);
 
         // =====================================================================
         // HO SO NHAN VIEN
         // =====================================================================
 
         // Kiem tra tung truong (dialog dung chung de bao loi canh o nhap). Truong = ten cot.
-        public static List<LoiNhapLieuDTO> KiemTraNhanVien(NhanVienHienThi nv, IReadOnlyCollection<string> hangBangHopLe)
+        // ga: danh muc ga (don vi "Ga ..." cua nhan vien ban ve).
+        public static List<LoiNhapLieuDTO> KiemTraNhanVien(NhanVienHienThi nv, IReadOnlyCollection<string> hangBangHopLe,
+                                                          IReadOnlyList<GaNhanSu> ga)
         {
             var ds = new List<LoiNhapLieuDTO>();
 
@@ -97,8 +101,10 @@ namespace BUS.Services
                 ds.Add(new("HanKhamSucKhoe", "Vui lòng chọn hạn khám sức khỏe."));
 
             string chucDanh = nv.ChucDanh?.Trim() ?? "";
-            if (chucDanh.Length == 0) ds.Add(new("ChucDanh", "Vui lòng chọn hoặc nhập chức danh."));
-            else if (chucDanh.Length > 50) ds.Add(new("ChucDanh", "Chức danh tối đa 50 ký tự."));
+            // 12/10: chuc danh chon trong danh muc (khong go tu do) - quy tac kip, ma NV, don vi deu theo danh muc
+            if (chucDanh.Length == 0) ds.Add(new("ChucDanh", "Vui lòng chọn chức danh."));
+            else if (!QuyTacKipLai.LaChucDanhTrongDanhMuc(chucDanh))
+                ds.Add(new("ChucDanh", $"Chức danh \"{chucDanh}\" không có trong danh mục, hãy chọn lại."));
 
             // HangBangLai: bat buoc voi ban lai may (CSDL cho NULL), phai la dong dau may co that
             if (QuyTacKipLai.LaChucDanhBanLai(chucDanh))
@@ -113,9 +119,12 @@ namespace BUS.Services
                 ds.Add(new("HangBangLai", "Chỉ lái tàu và phụ lái mới có hạng bằng lái."));
             }
 
+            // 12/10: don vi phai dung loai cua chuc danh (DanhMucDonVi)
             string donVi = nv.DonViChuQuan?.Trim() ?? "";
-            if (donVi.Length == 0) ds.Add(new("DonViChuQuan", "Vui lòng chọn hoặc nhập đơn vị chủ quản."));
-            else if (donVi.Length > 100) ds.Add(new("DonViChuQuan", "Đơn vị chủ quản tối đa 100 ký tự."));
+            if (donVi.Length == 0) ds.Add(new("DonViChuQuan", "Vui lòng chọn đơn vị chủ quản."));
+            else if (QuyTacKipLai.LaChucDanhTrongDanhMuc(chucDanh) && !DanhMucDonVi.HopLe(chucDanh, donVi, ga))
+                ds.Add(new("DonViChuQuan", $"{chucDanh} phải thuộc {DanhMucDonVi.LoaiDonVi(chucDanh)}, " +
+                                           $"không thuộc \"{donVi}\". Hãy chọn lại đơn vị."));
 
             if (nv.TrangThai is not (NhanVienHienThi.SanSang or NhanVienHienThi.DangLam
                                      or NhanVienHienThi.NghiNgoi or NhanVienHienThi.DaNghiViec))
@@ -144,6 +153,51 @@ namespace BUS.Services
             return null;
         }
 
+        // Dat chot 12/10 - doi "vi tri" (chuc danh, hang bang, don vi la QUYET DINH cua quan ly):
+        //   - dang trong ca (kip dang thuc hien) -> khong doi gi trong 3 truong nay, doi sau khi ban giao;
+        //   - doi chuc danh / hang bang lam nguoi nay sai vi tri (R2) hoac sai dong may (R7) o kip chua
+        //     nhan ban -> chan, phai thay nguoi o cac kip do truoc (khong de ca do tu sinh ra).
+        // Han kham, nghi viec la SU THAT -> van cho luu + canh bao kip anh huong (dialog). Rong = hop le.
+        public static List<LoiNhapLieuDTO> KiemTraDoiViTri(NhanVienHienThi goc, NhanVienHienThi moi, DuLieuNhanSu dl)
+        {
+            var ds = new List<LoiNhapLieuDTO>();
+            bool doiChucDanh = !string.Equals(goc.ChucDanh?.Trim(), moi.ChucDanh?.Trim(), StringComparison.Ordinal);
+            bool doiBang = !string.Equals(goc.HangBangLai ?? "", moi.HangBangLai ?? "", StringComparison.Ordinal);
+            bool doiDonVi = !string.Equals(goc.DonViChuQuan?.Trim(), moi.DonViChuQuan?.Trim(), StringComparison.Ordinal);
+            if (!doiChucDanh && !doiBang && !doiDonVi) return ds;
+
+            var dangChay = dl.KipCuaNhanVien(goc.MaNhanVien).FirstOrDefault(p => p.TrangThai == PhanCongKipHienThi.DangThucHien);
+            if (dangChay != null)
+            {
+                string ca = $"Đang trong ca {dangChay.Chuyen.SoHieuMacTau} ({dangChay.Chang})";
+                if (doiChucDanh) ds.Add(new("ChucDanh", $"{ca}: đổi chức danh sau khi bàn giao."));
+                if (doiBang) ds.Add(new("HangBangLai", $"{ca}: đổi hạng bằng sau khi bàn giao."));
+                if (doiDonVi) ds.Add(new("DonViChuQuan", $"{ca}: đổi đơn vị sau khi bàn giao."));
+                return ds;
+            }
+
+            if (!doiChucDanh && !doiBang) return ds;
+            var hong = new List<string>();
+            foreach (var p in dl.KipCuaNhanVien(goc.MaNhanVien)
+                                .Where(p => p.TrangThai == PhanCongKipHienThi.DaPhanCong && p.Chuyen.ConHieuLuc)
+                                .OrderBy(p => p.GioNhanBan))
+            {
+                string vaiTro = p.VaiTroCua(goc.MaNhanVien)!;
+                bool LoiViTri(NhanVienHienThi nv, string dieuKien) =>
+                    DanhGiaKipLai.DoiChieu(dl, nv, vaiTro, p.Chuyen, p.MaGaNhanBan, p.MaGaBanGiao, p.MaPhanCong)
+                                 .Any(d => d.TenDieuKien == dieuKien && d.LaLoi);
+                bool moiHong = new[] { DieuKienKip.ChucDanh, DieuKienKip.BangLai }
+                    .Any(dk => LoiViTri(moi, dk) && !LoiViTri(goc, dk));
+                if (moiHong)
+                    hong.Add($"{p.Chuyen.SoHieuMacTau} {p.Chuyen.NgayXuatPhat:dd/MM} {p.Chang} ({QuyTacKipLai.TenVaiTro(vaiTro).ToLower()})");
+            }
+            if (hong.Count > 0)
+                ds.Add(new(doiChucDanh ? "ChucDanh" : "HangBangLai",
+                           $"Còn {hong.Count} kíp chưa nhận ban sẽ không còn đúng vị trí: {string.Join("; ", hong)}. " +
+                           $"Thay người ở các kíp này (tab Phân công kíp lái) rồi mới đổi {(doiChucDanh ? "chức danh" : "hạng bằng")}."));
+            return ds;
+        }
+
         public bool ThemNhanVien(NhanVienHienThi nv, out string loi, out KetQuaLuuNhanVien? ketQua)
         {
             loi = "";
@@ -156,7 +210,7 @@ namespace BUS.Services
                 using var gd = PhienGiaoDich.Mo();
                 gd.KhoaTaiNguyen(KhoaMaNhanVien);
 
-                var dsLoi = KiemTraNhanVien(nv, _repo.LayHangBangLai(gd));
+                var dsLoi = KiemTraNhanVien(nv, _repo.LayHangBangLai(gd), _repo.LayGa(gd));
                 string? loiTrangThai = KiemTraTrangThai(null, nv.TrangThai, DuLieuNhanSu.Rong(DateTime.Now));
                 if (dsLoi.Count > 0 || loiTrangThai != null)
                 {
@@ -209,7 +263,8 @@ namespace BUS.Services
                     return false;
                 }
 
-                var dsLoi = KiemTraNhanVien(moi, dl.HangBangLai);
+                var dsLoi = KiemTraNhanVien(moi, dl.HangBangLai, dl.Ga);
+                dsLoi.AddRange(KiemTraDoiViTri(goc, moi, dl));
                 string? loiTrangThai = KiemTraTrangThai(goc, moi.TrangThai, dl);
                 if (dsLoi.Count > 0 || loiTrangThai != null)
                 {
@@ -233,6 +288,9 @@ namespace BUS.Services
                     loi = $"Hồ sơ {goc.MaNVCode} vừa được người khác sửa. Hãy nạp lại rồi sửa lại.";
                     return false;
                 }
+                // Doi ma -> giu ma cu de tra cuu, khong cap lai (migration V20261012_1100)
+                if (moi.MaNVCode != goc.MaNVCode)
+                    _repo.ThemLichSuMa(goc, moi, PhanQuyenService.MaTaiKhoanHienTai, gd);
 
                 gd.GhiNhatKyHeThong(PhanQuyenService.MaTaiKhoanHienTai, "SUA", "nhansu.NhanVien",
                                     goc.MaNhanVien.ToString(), MoTaJson(goc), MoTaJson(moi));

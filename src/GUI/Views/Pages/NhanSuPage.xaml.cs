@@ -222,8 +222,10 @@ namespace GUI.Views.Pages
         private static bool KhopBoLocNhanVien(NhanVienHienThi nv, string tuKhoa, string chucDanh, string donVi,
                                               string trangThai, bool hanKham)
         {
+            // Ma cu (lich su doi ma) cung tim duoc: so sach / bien ban cu ghi ma cu
             if (tuKhoa.Length > 0 &&
                 !BoDau(nv.MaNVCode).Contains(tuKhoa, StringComparison.OrdinalIgnoreCase) &&
+                !nv.CacMaCu.Any(m => m.Contains(tuKhoa, StringComparison.OrdinalIgnoreCase)) &&
                 !BoDau(nv.HoTen).Contains(tuKhoa, StringComparison.OrdinalIgnoreCase) &&
                 !nv.SoDienThoai.Contains(tuKhoa) &&
                 !BoDau(nv.DonViChuQuan).Contains(tuKhoa, StringComparison.OrdinalIgnoreCase))
@@ -325,6 +327,7 @@ namespace GUI.Views.Pages
             // --- Thong tin chung ---
             pnlHsThongTin.Children.Clear();
             ThemDongThongSo(pnlHsThongTin, "Mã nhân viên", nv.MaNVCode);
+            if (nv.LichSuMa.Count > 0) ThemDongThongSo(pnlHsThongTin, "Mã cũ", nv.NhanMaCu, "#64748B");
             ThemDongThongSo(pnlHsThongTin, "Số điện thoại", nv.SoDienThoai);
             ThemDongThongSo(pnlHsThongTin, "Chức danh", nv.ChucDanh);
             ThemDongThongSo(pnlHsThongTin, "Đơn vị chủ quản", nv.DonViChuQuan);
@@ -492,7 +495,8 @@ namespace GUI.Views.Pages
 
             // Doi chuc danh -> Service da cap ma moi theo chuc danh
             string doiMa = kq.MaCu != null
-                ? $"Mã nhân viên đổi từ {kq.MaCu} sang {kq.MaNVCode} theo chức danh mới ({nv.ChucDanh.ToLower()}).\n"
+                ? $"Mã nhân viên đổi từ {kq.MaCu} sang {kq.MaNVCode} theo chức danh mới ({nv.ChucDanh.ToLower()}). " +
+                  $"Mã {kq.MaCu} được giữ trong lịch sử (tìm hồ sơ theo mã cũ vẫn ra), không cấp lại cho người khác.\n"
                 : string.Empty;
 
             // Thay doi ho so lam nguoi nay khong con du dieu kien o kip chua nhan ban (danh gia tren du lieu vua nap lai)

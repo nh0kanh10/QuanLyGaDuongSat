@@ -123,9 +123,8 @@
                         <TextBlock Style="{StaticResource KtNhanTruong}">
                             <Run Text="Chức danh"/><Run Text=" *" Foreground="#DC2626"/>
                         </TextBlock>
-                        <ComboBox x:Name="cboChucDanh" IsEditable="True"
-                                  SelectionChanged="CboChucDanh_Changed" TextBoxBase.TextChanged="CboChucDanh_Changed"
-                                  ToolTip="Chọn hoặc gõ chức danh (tối đa 50 ký tự)"/>
+                        <ComboBox x:Name="cboChucDanh" SelectionChanged="CboChucDanh_Changed"
+                                  ToolTip="Chọn chức danh trong danh mục"/>
                         <TextBlock x:Name="txtLoiChucDanh" Style="{StaticResource KtLoiTruong}"/>
                     </StackPanel>
 
@@ -140,9 +139,8 @@
                         <TextBlock Style="{StaticResource KtNhanTruong}">
                             <Run Text="Đơn vị chủ quản (depot / đoàn)"/><Run Text=" *" Foreground="#DC2626"/>
                         </TextBlock>
-                        <ComboBox x:Name="cboDonVi" IsEditable="True" TextBoxBase.TextChanged="CboDonVi_Changed"
-                                  SelectionChanged="CboDonVi_Changed"
-                                  ToolTip="Chọn hoặc gõ đơn vị (tối đa 100 ký tự)"/>
+                        <ComboBox x:Name="cboDonVi" SelectionChanged="CboDonVi_Changed"
+                                  ToolTip="Chỉ hiện đơn vị hợp với chức danh: lái tàu, phụ lái → đội lái tàu; trưởng tàu, tiếp viên → đoàn tiếp viên; khám xe → trạm; bán vé → ga"/>
                         <TextBlock x:Name="txtLoiDonVi" Style="{StaticResource KtLoiTruong}"/>
                     </StackPanel>
                 </Grid>
