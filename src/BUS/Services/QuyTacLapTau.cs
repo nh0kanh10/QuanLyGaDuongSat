@@ -21,7 +21,11 @@ namespace BUS.Services
         public const int SoToaToiDa = 20;
         public const decimal ChieuDaiToiDaM = 450.0m;
 
-        // Nguong THAM KHAO cho kho duong 1.000 mm, chua doi chieu quy chuan chinh thuc.
+        // Nguong GIA DINH cho kho duong 1.000 mm - chua co nguon chinh thuc (12/10).
+        // Tai trong truc cho phep do doanh nghiep duong sat cong bo theo tung tuyen / khu doan trong
+        // "cong lenh tai trong" (Luat Duong sat 2017, TT 27/2018/TT-BGTVT); khong tim duoc ban cong
+        // khai cho tuyen Ha Noi - TP.HCM. Doi chieu: dau may D19E the he moi 13,5 t/truc (VNR, 08/2026).
+        // Giao dien ghi "nguong gia dinh"; bao cao ghi vao muc gia dinh / han che.
         public const decimal TaiTrongTrucToiDaTan = 14.0m;
 
         // Thoi gian do toi thieu tai ga cat / noi toa (don toa, noi ong gio, thu ham lai).
@@ -329,10 +333,10 @@ namespace BUS.Services
             var toaVuotTruc = cacToa.Where(x => TaiTrongTruc(x.Toa) > TaiTrongTrucToiDaTan).ToList();
             if (toaVuotTruc.Count > 0)
                 hm.Add(HangMucKiemTraDTO.Loi(tenTruc,
-                    $"{string.Join(", ", toaVuotTruc.Select(x => $"{x.Toa.SoHieuToaXe} ({TaiTrongTruc(x.Toa):N2} t)"))} vượt ngưỡng {TaiTrongTrucToiDaTan:N1} t/trục khi chở đầy."));
+                    $"{string.Join(", ", toaVuotTruc.Select(x => $"{x.Toa.SoHieuToaXe} ({TaiTrongTruc(x.Toa):N2} t)"))} vượt ngưỡng giả định {TaiTrongTrucToiDaTan:N1} t/trục khi chở đầy."));
             else
                 hm.Add(HangMucKiemTraDTO.Dat(tenTruc,
-                    $"Lớn nhất {cacToa.Max(x => TaiTrongTruc(x.Toa)):N2} t/trục, dưới ngưỡng {TaiTrongTrucToiDaTan:N1} t/trục."));
+                    $"Lớn nhất {cacToa.Max(x => TaiTrongTruc(x.Toa)):N2} t/trục, dưới ngưỡng giả định {TaiTrongTrucToiDaTan:N1} t/trục."));
 
             // 7. Thu tu xep toa hang tren tung khu doan
             const string tenThuTu = "Thứ tự xếp toa";

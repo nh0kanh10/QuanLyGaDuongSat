@@ -1,4 +1,5 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using BUS.Services;
+using DTO.NhanSu;
 using GUI.Helpers;
 using GUI.Views.Dialogs;
 using System.Windows;

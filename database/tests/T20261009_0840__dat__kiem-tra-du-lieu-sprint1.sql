@@ -287,17 +287,18 @@ WHERE DATEDIFF(MINUTE, a.GioGiao, b.GioNhan) < @GioNghiToiThieu * 60
   AND NOT (a.ConHieuLuc = 1 AND b.ConHieuLuc = 1
            AND IIF(a.GioXP > b.GioXP, a.GioXP, b.GioXP) < IIF(a.GioVD < b.GioVD, a.GioVD, b.GioVD));
 
--- NS-05 (R5 R6) Kíp đã nhận ban (DANG_THUC_HIEN / HOAN_THANH): cả 3 người có phiếu đạt cho chuyến đó, đo trước giờ nhận ban;
+-- NS-05 (R5 R6) Kíp đã nhận ban (DANG_THUC_HIEN / HOAN_THANH): cả 3 người có phiếu đạt cho chuyến đó, đo trước giờ bàn giao
+--               kế hoạch của kíp (11/10: nới từ "trước giờ nhận ban" - tàu trễ thì kíp đo muộn hơn giờ nhận ban kế hoạch);
 --               không ai trong kíp của chuyến có phiếu KHÔNG đạt cho chính chuyến đó
 INSERT INTO @KetQua
-SELECT 'LOI', 'NS-05', N'R6 · kíp đã nhận ban có kiểm tra đạt của cả 3 người, trước giờ nhận ban',
-       CONCAT(n.Mac, N' ', n.GaNhan, N'→', n.GaGiao, N': ', n.MaNVCode, N' chưa có phiếu đạt trước ', FORMAT(n.GioNhan, 'HH:mm dd/MM'))
+SELECT 'LOI', 'NS-05', N'R6 · kíp đã nhận ban có kiểm tra đạt của cả 3 người, đo trước giờ bàn giao',
+       CONCAT(n.Mac, N' ', n.GaNhan, N'→', n.GaGiao, N': ', n.MaNVCode, N' chưa có phiếu đạt trước ', FORMAT(n.GioGiao, 'HH:mm dd/MM'))
 FROM #NguoiKip n
 WHERE n.TrangThai IN ('DANG_THUC_HIEN', 'HOAN_THANH')
   AND NOT EXISTS (
       SELECT 1 FROM nhansu.KiemTraSucKhoe ks
       WHERE ks.MaNhanVien = n.MaNhanVien AND ks.MaChuyenTau = n.MaChuyenTau
-        AND ks.DuDieuKien = 1 AND ks.ThoiDiemKiemTra <= n.GioNhan)
+        AND ks.DuDieuKien = 1 AND ks.ThoiDiemKiemTra <= n.GioGiao)
 UNION ALL
 SELECT 'LOI', 'NS-05', N'R6 · người đã kiểm tra không đạt cho chuyến thì không được ở kíp của chuyến đó',
        CONCAT(n.Mac, N': ', n.MaNVCode, N' có phiếu không đạt cho chuyến này')
@@ -348,9 +349,11 @@ SELECT 'LOI', 'NS-09', N'R11 · chuyến đang chạy / chạy hôm nay có kíp
 FROM Phu p
 WHERE p.NhanDau IS NULL OR p.NhanDau <> 1 OR p.GiaoCuoi <> p.SoGa OR p.SoCho > 0;
 
--- NS-10 (R12) Trạng thái kíp khớp tiến độ của tàu (ga cuối cùng đã có giờ đi thực tế)
+-- NS-10 (R12) Trạng thái kíp không CHẬM hơn tiến độ của tàu (ga cuối cùng đã có giờ đi thực tế):
+--       tàu đã rời ga nhận ban mà kíp chưa nhận ban, tàu đã rời ga bàn giao mà kíp chưa bàn giao.
+--       11/10: không bắt kíp "đi trước" - kíp nhận ban / bàn giao khi tàu còn đỗ ở ga, trước khi điều độ ghi giờ đi thực tế.
 INSERT INTO @KetQua
-SELECT 'LOI', 'NS-10', N'R12 · trạng thái kíp khớp tiến độ chuyến tàu',
+SELECT 'LOI', 'NS-10', N'R12 · trạng thái kíp không chậm hơn tiến độ chuyến tàu',
        CONCAT(k.Mac, N' ', k.GaNhan, N'→', k.GaGiao, N': ', k.TrangThai, N', đúng ra ', x.DungRa,
               N' (tàu đã rời ga thứ ', k.DaQuaGa, N')')
 FROM #Kip k
@@ -358,7 +361,8 @@ CROSS APPLY (SELECT CASE
         WHEN k.TrangThaiChuyen = 'HOAN_THANH' OR k.DaQuaGa >= k.ViTriGiao THEN 'HOAN_THANH'
         WHEN k.DaQuaGa >= k.ViTriNhan THEN 'DANG_THUC_HIEN'
         ELSE 'DA_PHAN_CONG' END AS DungRa) x
-WHERE k.TrangThai <> x.DungRa;
+WHERE (CASE k.TrangThai WHEN 'DA_PHAN_CONG' THEN 0 WHEN 'DANG_THUC_HIEN' THEN 1 ELSE 2 END)
+    < (CASE x.DungRa    WHEN 'DA_PHAN_CONG' THEN 0 WHEN 'DANG_THUC_HIEN' THEN 1 ELSE 2 END);
 
 -- NS-11 (R13) Trạng thái nhân viên: đang ở kíp DANG_THUC_HIEN ⇔ DANG_LAM
 INSERT INTO @KetQua
@@ -370,9 +374,9 @@ CROSS APPLY (SELECT CASE WHEN EXISTS (SELECT 1 FROM #NguoiKip n
 WHERE x.DangCa <> CASE WHEN nv.TrangThai = 'DANG_LAM' THEN 1 ELSE 0 END;
 
 -- NS-12 Phiếu kiểm tra lên ban: người thuộc tổ tàu (lái tàu / phụ lái / trưởng tàu); phiếu ĐẠT phải của người trong kíp
---       chuyến đó và đo trước giờ nhận ban của họ (phiếu không đạt của người đã bị thay thì được giữ)
+--       chuyến đó và đo trước giờ bàn giao của họ (phiếu không đạt của người đã bị thay thì được giữ)
 INSERT INTO @KetQua
-SELECT 'LOI', 'NS-12', N'Phiếu kiểm tra: đúng người của tổ tàu, phiếu đạt thuộc người trong kíp và đo trước giờ nhận ban',
+SELECT 'LOI', 'NS-12', N'Phiếu kiểm tra: đúng người của tổ tàu, phiếu đạt thuộc người trong kíp và đo trước giờ bàn giao',
        CONCAT(nv.MaNVCode, N' · chuyến ', c.Mac, N' · ', FORMAT(ks.ThoiDiemKiemTra, 'HH:mm dd/MM'),
               CASE WHEN ks.DuDieuKien = 1 THEN N' (đạt)' ELSE N' (không đạt)' END)
 FROM nhansu.KiemTraSucKhoe ks
@@ -381,7 +385,7 @@ JOIN #Chuyen c ON c.MaChuyenTau = ks.MaChuyenTau
 WHERE nv.ChucDanh NOT IN (N'Lái tàu', N'Phụ lái', N'Trưởng tàu')
    OR (ks.DuDieuKien = 1 AND NOT EXISTS (
           SELECT 1 FROM #NguoiKip n
-          WHERE n.MaNhanVien = ks.MaNhanVien AND n.MaChuyenTau = ks.MaChuyenTau AND ks.ThoiDiemKiemTra <= n.GioNhan));
+          WHERE n.MaNhanVien = ks.MaNhanVien AND n.MaChuyenTau = ks.MaChuyenTau AND ks.ThoiDiemKiemTra <= n.GioGiao));
 
 -- NS-13 Mã nhân viên theo chức danh: TIỀNTỐ_SSS, đúng tiền tố, không trùng (UNIQUE đã chặn trùng)
 INSERT INTO @KetQua
@@ -477,6 +481,3 @@ IF @SoLoi > 0
     RAISERROR(N'KIỂM TRA KHÔNG ĐẠT: %d vi phạm luật nghiệp vụ (xem bảng chi tiết).', 16, 1, @SoLoi);
 ELSE
     PRINT CONCAT(N'KIỂM TRA ĐẠT: 0 vi phạm. ', @SoGhiChu, N' ghi chú về dữ liệu phân hệ khác.');
-
-
-    select * from nhansu.NhanVien

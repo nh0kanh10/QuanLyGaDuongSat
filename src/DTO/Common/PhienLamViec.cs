@@ -160,6 +160,11 @@ namespace DTO.Common
         // (de xuat SRS: LAP_TAU, QUAN_LY). Truoc do phien mac dinh mo het quyen nen van dung duoc.
         public const string QuanLyPhuongTien = "VEHICLE_EDIT";      // them / sua dau may, toa xe
         public const string LapDoanTau = "TRAIN_FORMATION_EDIT";    // lap / sua doan tau
+
+        // Phan he Nhan su (Dat, Sprint 1) - de xuat, cung lo trinh nhu tren (SRS: NHAN_SU, PHAN_CONG_KIP)
+        public const string QuanLyHoSoNhanVien = "STAFF_EDIT";      // them / sua ho so nhan vien
+        public const string PhanCongKipLai = "CREW_ASSIGN";         // lap / sua / huy kip lai
+        public const string NhanBanKipLai = "CREW_CHECKIN";         // kiem tra len ban, nhan ban, ban giao
     }
 
     // =========================================================================

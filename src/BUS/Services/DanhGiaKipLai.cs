@@ -1,300 +1,28 @@
-﻿using GUI.Helpers;
-namespace GUI.ViewModels.KyThuat
+using System.Text.RegularExpressions;
+using DTO.NhanSu;
+
+namespace BUS.Services
 {
     // =========================================================================
     // DOI CHIEU DIEU KIEN PHAN CONG KIP LAI (R2..R12 - PHAN_TICH_NHAN_SU_KIP_LAI.md)
-    // Dung chung cho NhanSuPage, PhanCongKipDialog, KiemTraLenBanDialog va
-    // bieu do ca truc - moi noi cung mot ket luan.
+    // Ham thuan (khong cham CSDL): dung chung cho NhanSuPage, PhanCongKipDialog,
+    // KiemTraLenBanDialog, bieu do ca truc VA NhanSuService (chay lai truoc khi ghi)
+    // - moi noi cung mot ket luan.
+    // 11/10: chuyen tu GUI/ViewModels/KyThuat/DanhGiaKipLai.cs, khong doi luat.
     // =========================================================================
-
-    // Anh chup du lieu da tron thay doi tam, truyen cho dialog de doi chieu
-    public class DuLieuNhanSu
-    {
-        private readonly Dictionary<int, NhanVienHienThi> _nhanVien;
-
-        public DuLieuNhanSu(IReadOnlyList<NhanVienHienThi> nhanVien, IReadOnlyList<PhanCongKipHienThi> phanCong,
-                            IReadOnlyList<KiemTraLenBanHienThi> kiemTra, DateTime bayGio)
-        {
-            NhanVien = nhanVien;
-            PhanCong = phanCong;
-            KiemTra = kiemTra;
-            BayGio = bayGio;
-            _nhanVien = nhanVien.ToDictionary(n => n.MaNhanVien);
-        }
-
-        public IReadOnlyList<NhanVienHienThi> NhanVien { get; }
-        public IReadOnlyList<PhanCongKipHienThi> PhanCong { get; }
-        public IReadOnlyList<KiemTraLenBanHienThi> KiemTra { get; }
-        public DateTime BayGio { get; }
-        public IReadOnlyList<ChuyenTauNhanSu> ChuyenTau => DanhMucMauNhanSu.ChuyenTau;
-
-        public NhanVienHienThi? TimNhanVien(int ma) => _nhanVien.GetValueOrDefault(ma);
-
-        public IEnumerable<PhanCongKipHienThi> KipCuaNhanVien(int maNhanVien)
-            => PhanCong.Where(p => p.CoNhanVien(maNhanVien));
-
-        // Kip cua chuyen theo thu tu chang (ga nhan ban tu dau tuyen)
-        public List<PhanCongKipHienThi> KipCuaChuyen(int maChuyenTau)
-            => PhanCong.Where(p => p.MaChuyenTau == maChuyenTau)
-                       .OrderBy(p => p.ViTriNhan).ThenBy(p => p.MaPhanCong)
-                       .ToList();
-
-        public int SoThuTuKip(PhanCongKipHienThi kip)
-            => KipCuaChuyen(kip.MaChuyenTau).FindIndex(p => p.MaPhanCong == kip.MaPhanCong) + 1;
-
-        public KetQuaKiemTraNguoi KetQuaKiemTra(int maNhanVien, int maChuyenTau)
-        {
-            var ds = KiemTra.Where(k => k.MaNhanVien == maNhanVien && k.MaChuyenTau == maChuyenTau)
-                            .OrderByDescending(k => k.ThoiDiemKiemTra)
-                            .ToList();
-            return new KetQuaKiemTraNguoi(ds.FirstOrDefault(), ds.FirstOrDefault(k => !k.DuDieuKien));
-        }
-
-        // Ca gan nhat da ket thuc truoc thoi diem (bo qua kip dang sua, chuyen trung khung gio)
-        public PhanCongKipHienThi? CaTruoc(int maNhanVien, ChuyenTauNhanSu chuyen, DateTime gioNhanBan, int? maPhanCongBoQua)
-            => KipCuaNhanVien(maNhanVien)
-                .Where(p => p.MaPhanCong != maPhanCongBoQua && p.MaChuyenTau != chuyen.MaChuyenTau
-                            && !QuyTacKipLai.TrungKhungGio(p.Chuyen, chuyen) && p.GioBanGiao <= gioNhanBan)
-                .OrderByDescending(p => p.GioBanGiao)
-                .FirstOrDefault();
-    }
-
-    // R6: mot lan khong dat la khong duoc len ban chuyen do
-    public record KetQuaKiemTraNguoi(KiemTraLenBanHienThi? MoiNhat, KiemTraLenBanHienThi? LanKhongDat)
-    {
-        public bool KhongDat => LanKhongDat != null;
-        public bool DaDat => LanKhongDat == null && MoiNhat?.DuDieuKien == true;
-        public bool ChuaKiemTra => MoiNhat == null;
-
-        public string NhanNgan => KhongDat ? "Không đạt kiểm tra"
-                                : DaDat ? $"Đạt · {MoiNhat!.ThoiDiemKiemTra:HH:mm}"
-                                : "Chưa kiểm tra";
-
-        public string Mau => KhongDat ? "#B91C1C" : DaDat ? "#15803D" : "#B45309";
-    }
-
-    // Ket qua doi chieu mot dieu kien. Dat: true dat / false vi pham (MucDo cho biet
-    // nang nhe) / null khong ap dung hoac chua co du lieu.
-    public record DieuKienUngVien(string TenDieuKien, bool? Dat, MucDoVanDe MucDo, string GiaTri, string MoTa = "")
-    {
-        public bool LaLoi => Dat == false && MucDo == MucDoVanDe.NghiemTrong;
-
-        public string KyHieu => Dat switch
-        {
-            true => "✓",
-            false when MucDo == MucDoVanDe.NghiemTrong => "✗",
-            false => "!",
-            _ => "–"
-        };
-
-        public string MauChu => Dat switch
-        {
-            true => "#15803D",
-            false => MucDo == MucDoVanDe.NghiemTrong ? "#B91C1C" : MucDo == MucDoVanDe.CanhBao ? "#B45309" : "#64748B",
-            _ => "#94A3B8"
-        };
-    }
-
-    public class VanDeNhanSu
-    {
-        public MucDoVanDe MucDo { get; init; }
-        public string DoiTuong { get; init; } = "";
-        public string NoiDung { get; init; } = "";
-        public int? MaChuyenTau { get; init; }
-        public int? MaPhanCong { get; init; }
-        public int? MaNhanVien { get; init; }
-        public string? DieuKien { get; init; }   // ten dieu kien vi pham (DanhGiaKipLai.Dk*), null = van de cua chuyen / kip
-
-        public string NhanMucDo => MucDoHienThi.Nhan(MucDo);
-        public string MauMucDo => MucDoHienThi.Mau(MucDo);
-    }
-
-    // Mot thanh vien trong mot kip (dong luoi kip)
-    public class ThanhVienKip
-    {
-        public string VaiTro { get; init; } = "";
-        public NhanVienHienThi? NhanVien { get; init; }
-        public KetQuaKiemTraNguoi KiemTra { get; init; } = new(null, null);
-        public List<DieuKienUngVien> DieuKien { get; init; } = new();
-
-        public string TenVaiTro => QuyTacKipLai.TenVaiTro(VaiTro);
-        public string HoTen => NhanVien?.HoTen ?? "(chưa có)";
-
-        // Loi phan cong nang nhat (khong tinh ket qua kiem tra - hien rieng)
-        public DieuKienUngVien? LoiPhanCong => DieuKien.FirstOrDefault(d => d.LaLoi && d.TenDieuKien != DanhGiaKipLai.DkKiemTra);
-
-        public string TrangThaiNgan => LoiPhanCong?.GiaTri ?? KiemTra.NhanNgan;
-        public string MauTrangThai => LoiPhanCong != null ? "#B91C1C" : KiemTra.Mau;
-    }
-
-    // Mot dong trong luoi kip cua chuyen / hang cho nhan ban
-    public class KipLaiDong
-    {
-        public PhanCongKipHienThi PhanCong { get; init; } = null!;
-        public int SoThuTu { get; init; }
-        public List<ThanhVienKip> ThanhVien { get; init; } = new();
-        public List<VanDeNhanSu> VanDe { get; init; } = new();
-        public bool QuaGioBanGiao { get; init; }
-
-        public ChuyenTauNhanSu Chuyen => PhanCong.Chuyen;
-        public ThanhVienKip LaiTau => ThanhVien[0];
-        public ThanhVienKip PhuLai => ThanhVien[1];
-        public ThanhVienKip TruongTau => ThanhVien[2];
-
-        public string TenKip => $"Kíp {SoThuTu}";
-        public string NhanChuyen => $"{Chuyen.SoHieuMacTau} · {Chuyen.NgayXuatPhat:dd/MM}";
-        public bool LaThayDoiTam => PhanCong.LaThayDoiTam;
-
-        public bool CoLoi => VanDe.Any(v => v.MucDo == MucDoVanDe.NghiemTrong);
-        public int SoDaDat => ThanhVien.Count(t => t.KiemTra.DaDat);
-        public bool CoNguoiKhongDat => ThanhVien.Any(t => t.KiemTra.KhongDat);
-        public bool LaDaPhanCong => PhanCong.TrangThai == PhanCongKipHienThi.DaPhanCong;
-        public bool CoTheNhanBan => LaDaPhanCong && !CoLoi && SoDaDat == 3;
-
-        public string TinhTrang => PhanCong.TrangThai switch
-        {
-            PhanCongKipHienThi.DangThucHien => QuaGioBanGiao ? "Quá giờ bàn giao" : "Đang thực hiện",
-            PhanCongKipHienThi.HoanThanh => "Đã bàn giao",
-            _ => CoNguoiKhongDat ? "Cần thay người"
-               : CoLoi ? "Lỗi phân công"
-               : SoDaDat == 3 ? "Đủ điều kiện nhận ban"
-               : $"Chờ kiểm tra ({SoDaDat}/3 đạt)"
-        };
-
-        public string MauTinhTrang => PhanCong.TrangThai switch
-        {
-            PhanCongKipHienThi.DangThucHien => QuaGioBanGiao ? "#B45309" : "#1D4ED8",
-            PhanCongKipHienThi.HoanThanh => "#64748B",
-            _ => CoLoi ? "#B91C1C" : SoDaDat == 3 ? "#15803D" : "#B45309"
-        };
-    }
-
-    // Mot doan tren so do hanh trinh: tu diem dung TuViTri toi DenViTri
-    public record DoanPhuKip(int TuViTri, int DenViTri, KipLaiDong? Kip, bool Chong);
-
-    // Tinh trang phan cong cua mot chuyen (dong danh sach chuyen)
-    public class TinhTrangChuyen
-    {
-        public ChuyenTauNhanSu Chuyen { get; init; } = null!;
-        public List<KipLaiDong> Kip { get; init; } = new();
-        public List<DoanPhuKip> Doan { get; init; } = new();
-        public List<VanDeNhanSu> VanDe { get; init; } = new();
-
-        public bool ConHieuLuc => Chuyen.ConHieuLuc;
-        public bool ThieuKip => ConHieuLuc && Doan.Any(d => d.Kip == null);
-        public int SoKipCoLoi => Kip.Count(k => k.LaDaPhanCong && k.CoLoi);
-
-        public string NhanPhuKip
-        {
-            get
-            {
-                if (!ConHieuLuc) return Kip.Count == 0 ? "Không có kíp" : $"{Kip.Count} kíp · đã kết thúc";
-                if (Kip.Count == 0) return "Chưa có kíp";
-                var trong = Doan.Where(d => d.Kip == null).ToList();
-                if (trong.Count == 0)
-                    return SoKipCoLoi > 0 ? $"Đủ {Kip.Count} kíp · {SoKipCoLoi} cần xử lý" : $"Đủ {Kip.Count} kíp";
-                var d0 = trong[0];
-                string chang = $"Thiếu {Chuyen.LichDung[d0.TuViTri].TenGa} → {Chuyen.LichDung[d0.DenViTri].TenGa}";
-                return trong.Count > 1 ? $"{chang} (+{trong.Count - 1})" : chang;
-            }
-        }
-
-        public string MauPhuKip => !ConHieuLuc ? "#64748B"
-                                 : Kip.Count == 0 || (ThieuKip && Chuyen.DaXuatPhat) ? "#B91C1C"
-                                 : ThieuKip ? "#B45309"
-                                 : SoKipCoLoi > 0 ? "#B91C1C"
-                                 : "#15803D";
-    }
-
-    // Mot kip ma nhan vien dam nhan (panel ho so)
-    public class KipCuaNhanVien
-    {
-        public PhanCongKipHienThi PhanCong { get; init; } = null!;
-        public string VaiTro { get; init; } = "";
-
-        public string TenVaiTro => QuyTacKipLai.TenVaiTro(VaiTro);
-        public string NhanChuyen => $"{PhanCong.Chuyen.SoHieuMacTau} · {PhanCong.Chuyen.NgayXuatPhat:dd/MM}";
-        public string MoTa => $"{PhanCong.Chang} · {PhanCong.KhungGio}";
-        public string NhanTrangThai => PhanCong.NhanTrangThai;
-
-        public string MauTrangThai => PhanCong.TrangThai switch
-        {
-            PhanCongKipHienThi.DangThucHien => "#1D4ED8",
-            PhanCongKipHienThi.HoanThanh => "#64748B",
-            _ => "#334155"
-        };
-    }
-
-    // Mot nguoi doi chieu cho mot vi tri tren mot chang: muc trong ComboBox chon
-    // nguoi (du dieu kien) hoac dong trong danh sach "Da an" (khong du dieu kien)
-    public class UngVienKip
-    {
-        public NhanVienHienThi NhanVien { get; init; } = null!;
-        public List<DieuKienUngVien> DieuKien { get; init; } = new();
-
-        // So gio nghi tu ca truoc toi gio nhan ban chang nay; null = khong co ca truoc
-        public decimal? SoGioNghi { get; init; }
-
-        // R10: thuoc depot o mot dau chang (true) / khong (false) / khong ro ga dong quan (null)
-        public bool? CungDepot => DieuKien.FirstOrDefault(d => d.TenDieuKien == DanhGiaKipLai.DkDonVi)?.Dat;
-
-        public bool CoLoi => DieuKien.Any(d => d.LaLoi);
-        public bool CoCanhBao => DieuKien.Any(d => d.Dat == false && d.MucDo == MucDoVanDe.CanhBao);
-
-        // Ly do khong du dieu kien (cac dieu kien vi pham)
-        public string LyDoKhongDuDieuKien => string.Join("; ", DieuKien.Where(d => d.LaLoi).Select(d => d.MoTa));
-
-        public string MaNVCode => NhanVien.MaNVCode;
-        public string HoTen => NhanVien.HoTen;
-        public string PhuDe => NhanVien.LaBanLaiMay
-            ? $"{NhanVien.NhanBangLai} · {NhanVien.DonViChuQuan}"
-            : NhanVien.DonViChuQuan;
-
-        public string TomTat
-        {
-            get
-            {
-                var loi = DieuKien.FirstOrDefault(d => d.LaLoi);
-                if (loi != null) return loi.GiaTri;
-                var canhBao = DieuKien.FirstOrDefault(d => d.Dat == false && d.MucDo == MucDoVanDe.CanhBao);
-                if (canhBao != null)
-                    return canhBao.TenDieuKien == DanhGiaKipLai.DkHanKham ? $"Hạn khám {canhBao.GiaTri.ToLower()}" : canhBao.GiaTri;
-                string nghi = SoGioNghi.HasValue ? $"nghỉ {SoGioNghi:0.0} giờ" : "không có ca trước";
-                return CungDepot == false ? $"Khác depot · {nghi}" : $"Phù hợp · {nghi}";
-            }
-        }
-
-        public string MauTomTat => CoLoi ? "#B91C1C" : CoCanhBao ? "#B45309" : CungDepot == false ? "#64748B" : "#15803D";
-
-        public override string ToString() => $"{NhanVien.MaNVCode} · {NhanVien.HoTen}";
-    }
-
-    // Danh sach chon nguoi cho mot vi tri tren mot chang: chi nguoi du dieu kien
-    // duoc chon; nguoi khong du dieu kien bi an, giu kem ly do de xem
-    public class DanhSachUngVien
-    {
-        public List<UngVienKip> DuDieuKien { get; init; } = new();
-        public List<UngVienKip> BiAn { get; init; } = new();
-
-        // Nguoi dung dau danh sach da xep - dung cho "Goi y kip"
-        public UngVienKip? GoiY => DuDieuKien.FirstOrDefault();
-
-        public UngVienKip? Tim(int maNhanVien) => DuDieuKien.FirstOrDefault(u => u.NhanVien.MaNhanVien == maNhanVien);
-    }
-
     public static class DanhGiaKipLai
     {
-        public const string DkChucDanh = "Chức danh";
-        public const string DkBangLai = "Bằng lái – đầu máy";
-        public const string DkHanKham = "Hạn khám sức khỏe";
-        public const string DkTrung = "Trùng chuyến khác";
-        public const string DkNghi = "Nghỉ giữa hai ca";
-        public const string DkKiemTra = "Kiểm tra lên ban";
-        public const string DkDonVi = "Đơn vị – chặng";
-        public const string DkTrangThai = "Trạng thái hồ sơ";
+        // Ten dieu kien (giu ten cu cho GUI)
+        public const string DkChucDanh = DieuKienKip.ChucDanh;
+        public const string DkBangLai = DieuKienKip.BangLai;
+        public const string DkHanKham = DieuKienKip.HanKham;
+        public const string DkTrung = DieuKienKip.Trung;
+        public const string DkNghi = DieuKienKip.Nghi;
+        public const string DkKiemTra = DieuKienKip.KiemTra;
+        public const string DkDonVi = DieuKienKip.DonVi;
+        public const string DkTrangThai = DieuKienKip.TrangThai;
 
-        public static readonly string[] ThuTuDieuKien =
-            { DkChucDanh, DkBangLai, DkHanKham, DkTrung, DkNghi, DkKiemTra, DkDonVi, DkTrangThai };
+        public static string[] ThuTuDieuKien => DieuKienKip.ThuTu;
 
         // -----------------------------------------------------------------
         // Doi chieu 1 nguoi cho 1 vi tri tren 1 chang (R2 R3 R4 R6 R7 R8 R9 R10)
@@ -395,7 +123,7 @@ namespace GUI.ViewModels.KyThuat
                 ds.Add(new(DkKiemTra, null, MucDoVanDe.LuuY, "Chưa kiểm tra"));
 
             // R10 don vi - chang (tham khao)
-            var gaDongQuan = DanhMucMauNhanSu.GaDongQuan(nv.DonViChuQuan);
+            var gaDongQuan = dl.GaDongQuan(nv.DonViChuQuan);
             if (gaDongQuan == null)
                 ds.Add(new(DkDonVi, null, MucDoVanDe.LuuY, "—"));
             else if (gaDongQuan.MaGa == maGaNhan || gaDongQuan.MaGa == maGaGiao)
@@ -411,6 +139,26 @@ namespace GUI.ViewModels.KyThuat
                 ds.Add(new(DkTrangThai, true, MucDoVanDe.NghiemTrong, nv.NhanTrangThai));
 
             return ds;
+        }
+
+        // -----------------------------------------------------------------
+        // R11 chang: ga nam tren lich dung, nhan truoc giao, khong chong chang kip khac
+        // cua cung chuyen. null = hop le. (Truoc 11/10 nam trong PhanCongKipDialog.)
+        // -----------------------------------------------------------------
+        public static string? KiemTraChang(DuLieuNhanSu dl, ChuyenTauNhanSu chuyen, int maGaNhan, int maGaGiao,
+                                           int? maPhanCongBoQua)
+        {
+            int i1 = chuyen.ViTri(maGaNhan), i2 = chuyen.ViTri(maGaGiao);
+            if (i1 < 0 || i2 < 0) return "Ga nhận ban / bàn giao phải là ga dừng trên hành trình của chuyến.";
+            if (i1 >= i2) return "Ga bàn giao phải nằm sau ga nhận ban trên hành trình.";
+
+            var chong = dl.KipCuaChuyen(chuyen.MaChuyenTau)
+                          .Where(p => p.MaPhanCong != maPhanCongBoQua)
+                          .FirstOrDefault(p => p.ViTriNhan < i2 && i1 < p.ViTriGiao);
+            if (chong != null)
+                return $"Chặng chồng lên kíp {dl.SoThuTuKip(chong)} ({chong.Chang}). Mỗi đoạn hành trình chỉ do một kíp đảm nhận.";
+
+            return null;
         }
 
         // -----------------------------------------------------------------
@@ -623,6 +371,74 @@ namespace GUI.ViewModels.KyThuat
                 DieuKien = DoiChieu(dl, nv, vaiTro, chuyen, maGaNhan, maGaGiao, maPhanCongBoQua),
                 SoGioNghi = truoc == null ? null : QuyTacKipLai.SoGio(truoc.GioBanGiao, gioNhan)
             };
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // MA NHAN VIEN THEO CHUC DANH (quy uoc 29/09 - CSDL chi rang buoc
+    // MaNVCode VARCHAR(20) NOT NULL UNIQUE).
+    // Dang TIENTO_SSS: LT_001 lai tau, PL_001 phu lai, TT_001 truong tau ...;
+    // so thu tu dem rieng tung tien to. Doi chuc danh -> cap ma moi (kip, kiem tra,
+    // tai khoan noi bang MaNhanVien nen khong anh huong).
+    // Tu 11/10 ma that do NhanSuService cap trong giao dich (MAX + 1 cua tien to,
+    // khoa UPDLOCK / HOLDLOCK); dialog chi hien ma du kien.
+    // -------------------------------------------------------------------------
+    public static class MaNhanVienTheoChucDanh
+    {
+        public const string TienToKhac = "NV";
+
+        // Thu tu trong bang = thu tu hien thi (to tau truoc)
+        private static readonly (string ChucDanh, string TienTo)[] Bang =
+        {
+            ("Lái tàu", "LT"), ("Phụ lái", "PL"), ("Trưởng tàu", "TT"), ("Tiếp viên", "TV"),
+            ("Nhân viên khám xe", "KX"), ("Nhân viên bán vé", "BV")
+        };
+
+        private static readonly Regex DangMa = new(@"^([A-Z]{2})_(\d{3,9})$");
+
+        public const string MoTaQuyUoc =
+            "LT lái tàu · PL phụ lái · TT trưởng tàu · TV tiếp viên · KX khám xe · BV bán vé · NV chức danh khác";
+
+        private static int ViTri(string? chucDanh)
+        {
+            string cd = chucDanh?.Trim() ?? string.Empty;
+            for (int i = 0; i < Bang.Length; i++)
+                if (string.Equals(Bang[i].ChucDanh, cd, StringComparison.OrdinalIgnoreCase)) return i;
+            return -1;
+        }
+
+        public static string TienTo(string? chucDanh)
+        {
+            int i = ViTri(chucDanh);
+            return i >= 0 ? Bang[i].TienTo : TienToKhac;
+        }
+
+        // Sap xep theo chuc danh: lai tau, phu lai, truong tau, tiep vien, kham xe, ban ve, khac
+        public static int ThuTu(string? chucDanh)
+        {
+            int i = ViTri(chucDanh);
+            return i >= 0 ? i : Bang.Length;
+        }
+
+        // Ma dung dang va dung tien to cua chuc danh
+        public static bool KhopChucDanh(string? ma, string? chucDanh)
+        {
+            var m = DangMa.Match(ma ?? string.Empty);
+            return m.Success && m.Groups[1].Value == TienTo(chucDanh);
+        }
+
+        // Ma ke tiep = so lon nhat da cap cua tien to + 1
+        public static string MaKeTiep(string? chucDanh, IEnumerable<string> maDaCap)
+        {
+            string tienTo = TienTo(chucDanh);
+            int lonNhat = 0;
+            foreach (string ma in maDaCap)
+            {
+                var m = DangMa.Match(ma ?? string.Empty);
+                if (m.Success && m.Groups[1].Value == tienTo && int.TryParse(m.Groups[2].Value, out int so) && so > lonNhat)
+                    lonNhat = so;
+            }
+            return $"{tienTo}_{lonNhat + 1:000}";
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using BUS.Services;
+using DTO.NhanSu;
 using GUI.Helpers;
 using GUI.Views.Dialogs;
 using System.Windows;
@@ -96,10 +97,11 @@ namespace GUI.Views.Pages
             var ct = tt.Chuyen;
             txtCtMac.Text = ct.SoHieuMacTau;
             txtCtHanhTrinh.Text = ct.HanhTrinh;
-            txtCtTrangThai.Text = ct.NhanTrangThai;
-            txtCtTrangThai.Foreground = Mau(ct.MauTrangThai);
+            txtCtTrangThai.Text = ct.NhanTrangThaiDayDu;
+            txtCtTrangThai.Foreground = Mau(ct.MauTrangThaiHienThi);
             txtCtThongTin.Text = $"Ngày chạy {ct.NgayXuatPhat:dd/MM/yyyy} · xuất phát {ct.GioXuatPhatKH:HH:mm dd/MM} · " +
-                                 $"về đích {ct.GioVeDichKH:HH:mm dd/MM} · đầu máy {ct.NhanDauMay} · {ct.NhanLoaiTau.ToLower()}";
+                                 $"về đích {ct.GioVeDichKH:HH:mm dd/MM} · đầu máy {ct.NhanDauMay} · {ct.NhanLoaiTau.ToLower()}" +
+                                 (ct.QuaGioVeDich ? " · điều độ chưa ghi hoàn thành, kíp của chuyến vẫn được tính khi xét trùng giờ" : "");
 
             dgKip.ItemsSource = tt.Kip;
             var kip = tt.Kip.FirstOrDefault(k => k.PhanCong.MaPhanCong == maKipChon) ?? tt.Kip.FirstOrDefault();
@@ -374,6 +376,7 @@ namespace GUI.Views.Pages
         private void ThemKip(int? maGaNhan = null, int? maGaGiao = null)
         {
             tabNhanSu.SelectedIndex = 1;
+            if (!KiemTraKetNoi()) return;
             var tt = ChuyenDangChon;
             if (tt == null) return;
             if (!tt.ConHieuLuc)
@@ -394,27 +397,27 @@ namespace GUI.Views.Pages
                 }
             }
 
-            var dlg = new PhanCongKipDialog(DuLieu, tt.Chuyen, null, maGaNhan, maGaGiao) { Owner = Window.GetWindow(this) };
+            var dlg = new PhanCongKipDialog(DuLieu, tt.Chuyen, null, maGaNhan, maGaGiao, LuuKip) { Owner = Window.GetWindow(this) };
             if (dlg.ShowDialog() != true || dlg.KetQua == null) return;
 
-            var pc = dlg.KetQua;
-            pc.MaPhanCong = _maTamKeTiep--;
-            pc.LaThayDoiTam = true;
-            _phanCongTam[pc.MaPhanCong] = pc;
+            var pc = dlg.KetQua;   // MaPhanCong do Service gan sau khi ghi
             LamMoiSauKhiDoiKip(pc);
 
             string tenKip = TimKip(pc.MaPhanCong)?.TenKip.ToLower() ?? "kíp";
             ThongBaoDialog.ThanhCong(
                 $"Đã phân công {tenKip} cho chặng {pc.Chang} của chuyến {pc.Chuyen.SoHieuMacTau} ({pc.KhungGio}).\n\n" +
-                $"Trước giờ nhận ban {pc.GioNhanBan:HH:mm dd/MM}, cả 3 người phải qua kiểm tra lên ban.\n" +
-                "Kíp đang hiển thị trên màn hình, chưa ghi vào CSDL.",
+                $"Trước giờ nhận ban {pc.GioNhanBan:HH:mm dd/MM}, cả 3 người phải qua kiểm tra lên ban " +
+                $"(ghi được từ {NhanSuService.GhiKiemTraTuLuc(pc):HH:mm dd/MM}).",
                 "Phân công kíp lái");
         }
+
+        // Ham luu dialog phan cong goi: null = da ghi CSDL, khac null = loi (dialog giu nguyen)
+        private string? LuuKip(PhanCongKipHienThi pc) => _service.LuuKip(pc, out string loi, out _) ? null : loi;
 
         private void SuaKip(KipLaiDong? dong = null, string? vaiTroThay = null)
         {
             dong ??= dgKip.SelectedItem as KipLaiDong;
-            if (dong == null) return;
+            if (dong == null || !KiemTraKetNoi()) return;
             if (!dong.LaDaPhanCong)
             {
                 ThongBaoDialog.ThongTin($"{dong.TenKip} đã {dong.PhanCong.NhanTrangThai.ToLower()}, không đổi được thành phần kíp.",
@@ -423,32 +426,29 @@ namespace GUI.Views.Pages
             }
 
             var goc = dong.PhanCong;
-            var dlg = new PhanCongKipDialog(DuLieu, dong.Chuyen, goc.SaoChep(), null, null, vaiTroThay) { Owner = Window.GetWindow(this) };
+            var dlg = new PhanCongKipDialog(DuLieu, dong.Chuyen, goc.SaoChep(), null, null, LuuKip, vaiTroThay) { Owner = Window.GetWindow(this) };
             if (dlg.ShowDialog() != true || dlg.KetQua == null) return;
 
             var pc = dlg.KetQua;
-            pc.LaThayDoiTam = true;
-            _phanCongTam[pc.MaPhanCong] = pc;
-            LamMoiSauKhiDoiKip(pc);
-
             var thay = QuyTacKipLai.CacVaiTro
                 .Where(vt => goc.MaNhanVienTheoVaiTro(vt) != pc.MaNhanVienTheoVaiTro(vt))
                 .Select(vt => $"• {QuyTacKipLai.TenVaiTro(vt)}: {DuLieu.TimNhanVien(goc.MaNhanVienTheoVaiTro(vt))?.HoTen} → " +
                               $"{DuLieu.TimNhanVien(pc.MaNhanVienTheoVaiTro(vt))?.HoTen}")
                 .ToList();
+            LamMoiSauKhiDoiKip(pc);
 
             ThongBaoDialog.ThanhCong(
-                $"Đã cập nhật {dong.TenKip.ToLower()} chuyến {pc.Chuyen.SoHieuMacTau} ({pc.Chang}).\n" +
+                $"Đã cập nhật {dong.TenKip.ToLower()} chuyến {pc.Chuyen.SoHieuMacTau} ({pc.Chang})." +
                 (thay.Count > 0
-                    ? $"{string.Join("\n", thay)}\n\nNgười mới phải qua kiểm tra lên ban trước {pc.GioNhanBan:HH:mm dd/MM}.\n"
-                    : "\n") +
-                "Thay đổi đang hiển thị trên màn hình, chưa ghi vào CSDL.",
+                    ? $"\n{string.Join("\n", thay)}\n\nNgười mới phải qua kiểm tra lên ban " +
+                      (pc.GioNhanBan > DateTime.Now ? $"trước {pc.GioNhanBan:HH:mm dd/MM}." : "trước khi kíp nhận ban.")
+                    : ""),
                 "Cập nhật kíp lái");
         }
 
         private void HuyKip()
         {
-            if (dgKip.SelectedItem is not KipLaiDong dong || !dong.LaDaPhanCong) return;
+            if (dgKip.SelectedItem is not KipLaiDong dong || !dong.LaDaPhanCong || !KiemTraKetNoi()) return;
 
             bool dongY = ThongBaoDialog.XacNhan(
                 $"Hủy {dong.TenKip.ToLower()} ({dong.PhanCong.Chang}) của chuyến {dong.Chuyen.SoHieuMacTau}?\n" +
@@ -456,9 +456,8 @@ namespace GUI.Views.Pages
                 "Hủy phân công kíp", nutDongY: "Hủy Kíp", nutHuy: "Giữ Lại", laHanhDongXoa: true);
             if (!dongY) return;
 
-            int ma = dong.PhanCong.MaPhanCong;
-            _phanCongTam.Remove(ma);
-            if (ma > 0) _phanCongDaHuy.Add(ma);
+            if (!_service.HuyKip(dong.PhanCong.MaPhanCong, dong.PhanCong.PhienBan, out string loi))
+                ThongBaoDialog.CanhBao(loi, "Chưa hủy được kíp");
             LamMoiTatCa(maChuyenChon: dong.Chuyen.MaChuyenTau);
         }
 
@@ -477,19 +476,14 @@ namespace GUI.Views.Pages
         // Ghi ket qua kiem tra len ban cho kip; sau do goi y thay nguoi / nhan ban
         private void KiemTraKip(KipLaiDong dong)
         {
-            if (!dong.LaDaPhanCong) return;
-
-            var dlg = new KiemTraLenBanDialog(DuLieu, dong.PhanCong, dong.SoThuTu) { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() != true || dlg.KetQua.Count == 0) return;
-
-            foreach (var kt in dlg.KetQua)
-            {
-                kt.MaKiemTra = _maTamKeTiep--;
-                kt.LaThayDoiTam = true;
-                _kiemTraTam[kt.MaKiemTra] = kt;
-            }
+            if (!dong.LaDaPhanCong || !KiemTraKetNoi()) return;
 
             int maPhanCong = dong.PhanCong.MaPhanCong;
+            string? Luu(List<KiemTraLenBanHienThi> ds) => _service.GhiKiemTra(maPhanCong, ds, out string loi) ? null : loi;
+
+            var dlg = new KiemTraLenBanDialog(DuLieu, dong.PhanCong, dong.SoThuTu, Luu) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true || dlg.KetQua.Count == 0) return;
+
             LamMoiTatCa(maChuyenChon: dong.Chuyen.MaChuyenTau, maPhanCongChon: maPhanCong);
 
             var kip = TimKip(maPhanCong);
@@ -523,16 +517,15 @@ namespace GUI.Views.Pages
             var conCho = kip.ThanhVien.Where(t => t.KiemTra.ChuaKiemTra).Select(t => $"{t.TenVaiTro.ToLower()} {t.HoTen}").ToList();
             var loi = kip.VanDe.Where(v => v.MucDo == MucDoVanDe.NghiemTrong).Select(v => "• " + v.NoiDung).ToList();
             ThongBaoDialog.ThongTin(
-                $"Đã ghi {dlg.KetQua.Count} kết quả kiểm tra (đạt).\n" +
-                (conCho.Count > 0 ? $"Còn chờ kiểm tra: {string.Join(", ", conCho)}.\n" : "") +
-                (loi.Count > 0 ? $"\nKíp còn lỗi phân công, chưa nhận ban được:\n{string.Join("\n", loi)}\n" : "") +
-                "\nKết quả đang hiển thị trên màn hình, chưa ghi vào CSDL.",
+                $"Đã ghi {dlg.KetQua.Count} kết quả kiểm tra (đạt)." +
+                (conCho.Count > 0 ? $"\nCòn chờ kiểm tra: {string.Join(", ", conCho)}." : "") +
+                (loi.Count > 0 ? $"\n\nKíp còn lỗi phân công, chưa nhận ban được:\n{string.Join("\n", loi)}" : ""),
                 "Ghi kết quả kiểm tra");
         }
 
         private void NhanBan(KipLaiDong dong, bool hoiXacNhan = true)
         {
-            if (!dong.LaDaPhanCong) return;
+            if (!dong.LaDaPhanCong || !KiemTraKetNoi()) return;
 
             if (!dong.CoTheNhanBan)
             {
@@ -554,48 +547,36 @@ namespace GUI.Views.Pages
                     "Xác nhận nhận ban", nutDongY: "Nhận Ban", nutHuy: "Hủy Bỏ"))
                 return;
 
-            var pc = dong.PhanCong.SaoChep();
-            pc.TrangThai = PhanCongKipHienThi.DangThucHien;
-            pc.LaThayDoiTam = true;
-            _phanCongTam[pc.MaPhanCong] = pc;
-            DoiTrangThaiThanhVien(dong, NhanVienHienThi.DangLam);
+            var pc = dong.PhanCong;
+            if (!_service.NhanBan(pc.MaPhanCong, pc.PhienBan, out string loi))
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa thể nhận ban");
+                LamMoiSauKhiDoiKip(pc);
+                return;
+            }
             LamMoiSauKhiDoiKip(pc);
 
             ThongBaoDialog.ThanhCong(
                 $"{dong.TenKip} chuyến {pc.Chuyen.SoHieuMacTau} đã nhận ban tại {pc.TenGaNhanBan}.\n" +
-                $"Bàn giao dự kiến tại {pc.TenGaBanGiao} lúc {pc.GioBanGiao:HH:mm dd/MM}.\n\nChưa ghi vào CSDL.",
+                $"Bàn giao dự kiến tại {pc.TenGaBanGiao} lúc {pc.GioBanGiao:HH:mm dd/MM}.",
                 "Nhận ban");
         }
 
         private void BanGiao(KipLaiDong dong)
         {
-            if (dong.PhanCong.TrangThai != PhanCongKipHienThi.DangThucHien) return;
+            if (dong.PhanCong.TrangThai != PhanCongKipHienThi.DangThucHien || !KiemTraKetNoi()) return;
 
             bool dongY = ThongBaoDialog.XacNhan(
                 $"Xác nhận {dong.TenKip.ToLower()} chuyến {dong.Chuyen.SoHieuMacTau} đã bàn giao tại {dong.PhanCong.TenGaBanGiao}?\n\n" +
-                $"3 người chuyển sang \"Nghỉ ngơi\" và phải nghỉ tối thiểu {QuyTacKipLai.SoGioNghiToiThieu:0} giờ " +
-                "trước khi nhận ban tiếp theo.",
+                $"Thành viên không còn ca nào đang chạy chuyển sang \"Nghỉ ngơi\" và phải nghỉ tối thiểu " +
+                $"{QuyTacKipLai.SoGioNghiToiThieu:0} giờ trước khi nhận ban tiếp theo.",
                 "Xác nhận bàn giao", nutDongY: "Bàn Giao", nutHuy: "Hủy Bỏ");
             if (!dongY) return;
 
-            var pc = dong.PhanCong.SaoChep();
-            pc.TrangThai = PhanCongKipHienThi.HoanThanh;
-            pc.LaThayDoiTam = true;
-            _phanCongTam[pc.MaPhanCong] = pc;
-            DoiTrangThaiThanhVien(dong, NhanVienHienThi.NghiNgoi);
+            var pc = dong.PhanCong;
+            if (!_service.BanGiao(pc.MaPhanCong, pc.PhienBan, out string loi))
+                ThongBaoDialog.CanhBao(loi, "Chưa bàn giao được");
             LamMoiSauKhiDoiKip(pc);
-        }
-
-        private void DoiTrangThaiThanhVien(KipLaiDong dong, string trangThai)
-        {
-            foreach (var tv in dong.ThanhVien)
-            {
-                if (tv.NhanVien == null) continue;
-                var nv = tv.NhanVien.SaoChep();
-                nv.TrangThai = trangThai;
-                nv.LaThayDoiTam = true;
-                _nhanVienTam[nv.MaNhanVien] = nv;
-            }
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using BUS.Services;
+using DTO.NhanSu;
 using GUI.Helpers;
 using GUI.Views.Dialogs;
 using System.Globalization;
@@ -16,23 +17,21 @@ namespace GUI.Views.Pages
     //   Tab 2: Phan cong kip lai theo chang (PhanCongKipLai)    - NhanSuPage.PhanCong.cs
     //   Tab 3: Kiem tra len ban (KiemTraSucKhoe)                - NhanSuPage.KiemTra.cs
     //   Tab 4: Lich ca truc (tong hop tu PhanCongKipLai)        - NhanSuPage.LichCa.cs
-    // Nghiep vu, quy tac R1..R13: PHAN_TICH_NHAN_SU_KIP_LAI.md.
+    // Nghiep vu, quy tac R1..R15: PHAN_TICH_NHAN_SU_KIP_LAI.md.
     //
-    // Giai doan dung giao dien: du lieu goc lay tu DanhMucMauNhanSu; them / sua
-    // giu trong bo nho ("thay doi tam") va tron vao du lieu goc moi lan nap lai.
+    // Tu 11/10 (back-end): du lieu doc tu CSDL qua NhanSuService.LayDuLieu (mot anh chup
+    // cho ca 4 tab); moi thao tac ghi thang CSDL qua NhanSuService - Service chay lai
+    // bo luat DanhGiaKipLai trong giao dich truoc khi ghi. Dialog nhan ham luu (callback):
+    // loi tu Service thi hien ThongBaoDialog va giu dialog mo.
     // =========================================================================
     public partial class NhanSuPage : Page
     {
         private bool _dangNapDuLieu;
 
-        // --- Thay doi tam (chua ghi CSDL). Khoa am = ban ghi moi, khoa duong = ban ghi goc da sua ---
-        private readonly Dictionary<int, NhanVienHienThi> _nhanVienTam = new();
-        private readonly Dictionary<int, PhanCongKipHienThi> _phanCongTam = new();
-        private readonly HashSet<int> _phanCongDaHuy = new();
-        private readonly Dictionary<int, KiemTraLenBanHienThi> _kiemTraTam = new();
-        private int _maTamKeTiep = -1;
+        private readonly NhanSuService _service = new();
+        private bool _coKetNoiCsdl = true;
 
-        // Du lieu da tron + danh gia o lan nap gan nhat, 4 tab dung chung
+        // Anh chup + danh gia o lan nap gan nhat, 4 tab dung chung
         private DuLieuNhanSu? _duLieu;
         private List<TinhTrangChuyen> _tinhTrangChuyen = new();
 
@@ -62,35 +61,26 @@ namespace GUI.Views.Pages
         // DU LIEU CHUNG
         // =====================================================================
 
-        // Du lieu goc (thay cho doc CSDL) + ban sua tam + ban them moi
+        // Anh chup du lieu tu CSDL. Mat ket noi: anh chup rong, bao loi mot lan (khong bao lai
+        // moi lan lam moi), man hinh van mo duoc; nap lai (F5) khi CSDL co lai thi tu het.
         private DuLieuNhanSu TaoDuLieu()
         {
-            var nhanVien = Tron(DanhMucMauNhanSu.LayNhanVien(), _nhanVienTam, x => x.MaNhanVien);
-            var phanCong = Tron(DanhMucMauNhanSu.LayPhanCong(), _phanCongTam, x => x.MaPhanCong)
-                           .Where(p => !_phanCongDaHuy.Contains(p.MaPhanCong))
-                           .ToList();
-            var kiemTra = Tron(DanhMucMauNhanSu.LayKiemTra(), _kiemTraTam, x => x.MaKiemTra);
-
-            var dl = new DuLieuNhanSu(nhanVien, phanCong, kiemTra, DateTime.Now);
-            foreach (var kt in kiemTra) kt.GanNhanVien(dl.TimNhanVien(kt.MaNhanVien));
+            bool truocDoCoKetNoi = _coKetNoiCsdl;
+            _coKetNoiCsdl = _service.LayDuLieu(out var dl, out string loi);
+            if (!_coKetNoiCsdl && truocDoCoKetNoi)
+                ThongBaoDialog.Loi($"Không đọc được dữ liệu nhân sự từ CSDL.\n{loi}", "Lỗi kết nối CSDL");
             return dl;
         }
 
-        private static List<T> Tron<T>(List<T> goc, Dictionary<int, T> tam, Func<T, int> khoa)
+        private bool KiemTraKetNoi()
         {
-            var ds = new List<T>();
-            var daCo = new HashSet<int>();
-            foreach (var x in goc)
-            {
-                int k = khoa(x);
-                daCo.Add(k);
-                ds.Add(tam.TryGetValue(k, out var banTam) ? banTam : x);
-            }
-            ds.AddRange(tam.Values.Where(x => !daCo.Contains(khoa(x))));
-            return ds;
+            if (_coKetNoiCsdl) return true;
+            ThongBaoDialog.CanhBao("Chưa kết nối được CSDL nên chưa thao tác được. Kiểm tra kết nối rồi bấm F5 để nạp lại.",
+                                   "Chưa có dữ liệu");
+            return false;
         }
 
-        // Nap lai toan bo va danh gia lai (gio "bay gio" doi theo dong ho)
+        // Nap lai toan bo tu CSDL va danh gia lai (gio "bay gio" doi theo dong ho)
         private void LamMoiTatCa(int? maNhanVienChon = null, int? maChuyenChon = null, int? maPhanCongChon = null)
         {
             _duLieu = TaoDuLieu();
@@ -101,7 +91,6 @@ namespace GUI.Views.Pages
             LamMoiKiemTra(giuDongChon: true, maPhanCongChon);
             VeLichCa();
             CapNhatSoDem();
-            CapNhatNhanThayDoiTam();
         }
 
         private void NapDanhSachDonVi()
@@ -233,8 +222,10 @@ namespace GUI.Views.Pages
         private static bool KhopBoLocNhanVien(NhanVienHienThi nv, string tuKhoa, string chucDanh, string donVi,
                                               string trangThai, bool hanKham)
         {
+            // Ma cu (lich su doi ma) cung tim duoc: so sach / bien ban cu ghi ma cu
             if (tuKhoa.Length > 0 &&
                 !BoDau(nv.MaNVCode).Contains(tuKhoa, StringComparison.OrdinalIgnoreCase) &&
+                !nv.CacMaCu.Any(m => m.Contains(tuKhoa, StringComparison.OrdinalIgnoreCase)) &&
                 !BoDau(nv.HoTen).Contains(tuKhoa, StringComparison.OrdinalIgnoreCase) &&
                 !nv.SoDienThoai.Contains(tuKhoa) &&
                 !BoDau(nv.DonViChuQuan).Contains(tuKhoa, StringComparison.OrdinalIgnoreCase))
@@ -308,7 +299,7 @@ namespace GUI.Views.Pages
 
             txtHsTen.Text = nv.HoTen;
             txtHsPhuDe.Text = $"{nv.ChucDanh} · {nv.DonViChuQuan}";
-            txtHsMa.Text = nv.LaThayDoiTam ? $"{nv.MaNVCode} · tạm" : nv.MaNVCode;
+            txtHsMa.Text = nv.MaNVCode;
 
             // --- Canh bao ve dieu kien hanh nghe / kip dang dam nhan ---
             pnlHsCanhBao.Children.Clear();
@@ -336,10 +327,12 @@ namespace GUI.Views.Pages
             // --- Thong tin chung ---
             pnlHsThongTin.Children.Clear();
             ThemDongThongSo(pnlHsThongTin, "Mã nhân viên", nv.MaNVCode);
+            if (nv.LichSuMa.Count > 0) ThemDongThongSo(pnlHsThongTin, "Mã cũ", nv.NhanMaCu, "#64748B");
             ThemDongThongSo(pnlHsThongTin, "Số điện thoại", nv.SoDienThoai);
             ThemDongThongSo(pnlHsThongTin, "Chức danh", nv.ChucDanh);
             ThemDongThongSo(pnlHsThongTin, "Đơn vị chủ quản", nv.DonViChuQuan);
             ThemDongThongSo(pnlHsThongTin, "Trạng thái", nv.NhanTrangThai, nv.MauTrangThai);
+            ThemDongThongSo(pnlHsThongTin, "Tài khoản", nv.NhanTaiKhoan, nv.MauTaiKhoan);
             ThemDongThongSo(pnlHsThongTin, "Ngày lập hồ sơ", nv.NgayTao.ToString("dd/MM/yyyy"), laDongCuoi: true);
 
             // --- Dieu kien hanh nghe ---
@@ -466,109 +459,84 @@ namespace GUI.Views.Pages
         private void ThemNhanVien()
         {
             tabNhanSu.SelectedIndex = 0;
+            if (!KiemTraKetNoi()) return;
 
-            var dlg = new NhanVienDialog(null, DuLieu) { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() != true || dlg.KetQua == null) return;
+            KetQuaLuuNhanVien? kq = null;
+            string? Luu(NhanVienHienThi nv) => _service.ThemNhanVien(nv, out string loi, out kq) ? null : loi;
+
+            var dlg = new NhanVienDialog(null, DuLieu, Luu) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true || dlg.KetQua == null || kq == null) return;
 
             var nv = dlg.KetQua;
-            nv.MaNhanVien = _maTamKeTiep--;
-            nv.NgayTao = DateTime.Now;
-            nv.LaThayDoiTam = true;
-            _nhanVienTam[nv.MaNhanVien] = nv;
-
-            SauKhiLuuNhanVien(nv);
+            SauKhiLuuNhanVien(kq.MaNhanVien, nv.TrangThai);
             ThongBaoDialog.ThanhCong(
-                $"Đã thêm hồ sơ {nv.MaNVCode} — {nv.HoTen} ({nv.ChucDanh}, {nv.DonViChuQuan}).\n\n" +
-                "Hồ sơ đang hiển thị trên màn hình, chưa ghi vào CSDL.",
+                $"Đã thêm hồ sơ {kq.MaNVCode} — {nv.HoTen} ({nv.ChucDanh}, {nv.DonViChuQuan}).",
                 "Thêm hồ sơ nhân viên");
         }
 
         private void SuaNhanVien()
         {
             if (dgNhanVien.SelectedItem is not NhanVienHienThi dangChon) return;
+            if (!KiemTraKetNoi()) return;
 
-            var dlg = new NhanVienDialog(dangChon.SaoChep(), DuLieu) { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() != true || dlg.KetQua == null) return;
+            KetQuaLuuNhanVien? kq = null;
+            string? Luu(NhanVienHienThi nv) => _service.CapNhatNhanVien(nv, out string loi, out kq) ? null : loi;
+
+            var dlg = new NhanVienDialog(dangChon.SaoChep(), DuLieu, Luu) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true || dlg.KetQua == null || kq == null) return;
+            if (kq.KhongThayDoi)
+            {
+                ThongBaoDialog.ThongTin($"Hồ sơ {kq.MaNVCode} không có gì thay đổi, không cần ghi.", "Cập nhật hồ sơ nhân viên");
+                return;
+            }
 
             var nv = dlg.KetQua;
-            nv.LaThayDoiTam = true;
-            _nhanVienTam[nv.MaNhanVien] = nv;
-            SauKhiLuuNhanVien(nv);
+            SauKhiLuuNhanVien(kq.MaNhanVien, nv.TrangThai);
 
-            // Doi chuc danh -> da cap ma moi theo chuc danh
-            string doiMa = dangChon.MaNVCode != nv.MaNVCode
-                ? $"Mã nhân viên đổi từ {dangChon.MaNVCode} sang {nv.MaNVCode} theo chức danh mới ({nv.ChucDanh.ToLower()}).\n"
+            // Doi chuc danh -> Service da cap ma moi theo chuc danh
+            string doiMa = kq.MaCu != null
+                ? $"Mã nhân viên đổi từ {kq.MaCu} sang {kq.MaNVCode} theo chức danh mới ({nv.ChucDanh.ToLower()}). " +
+                  $"Mã {kq.MaCu} được giữ trong lịch sử (tìm hồ sơ theo mã cũ vẫn ra), không cấp lại cho người khác.\n"
                 : string.Empty;
 
-            // Thay doi ho so lam nguoi nay khong con du dieu kien o kip chua nhan ban
+            // Thay doi ho so lam nguoi nay khong con du dieu kien o kip chua nhan ban (danh gia tren du lieu vua nap lai)
             var kipAnhHuong = _tinhTrangChuyen.SelectMany(t => t.Kip)
-                .Where(k => k.LaDaPhanCong && k.VanDe.Any(v => v.MaNhanVien == nv.MaNhanVien && v.MucDo == MucDoVanDe.NghiemTrong))
+                .Where(k => k.LaDaPhanCong && k.VanDe.Any(v => v.MaNhanVien == kq.MaNhanVien && v.MucDo == MucDoVanDe.NghiemTrong))
                 .ToList();
 
             if (kipAnhHuong.Count > 0)
             {
                 ThongBaoDialog.CanhBao(
-                    $"Đã cập nhật hồ sơ {nv.MaNVCode} — {nv.HoTen}.\n{doiMa}\n" +
+                    $"Đã cập nhật hồ sơ {kq.MaNVCode} — {nv.HoTen}.\n{doiMa}\n" +
                     $"Với hồ sơ mới, {nv.HoTen} không đủ điều kiện ở {kipAnhHuong.Count} kíp chưa nhận ban:\n" +
                     string.Join("\n", kipAnhHuong.Select(k => $"• {k.NhanChuyen} · {k.TenKip} ({k.PhanCong.Chang})")) +
-                    "\n\nVào tab Phân công kíp lái để thay người. Hồ sơ chưa ghi vào CSDL.",
+                    "\n\nVào tab Phân công kíp lái để thay người.",
                     "Cần thay người trong kíp");
             }
             else
             {
-                ThongBaoDialog.ThanhCong(
-                    $"Đã cập nhật hồ sơ {nv.MaNVCode} — {nv.HoTen}.\n{doiMa}\nThay đổi đang hiển thị trên màn hình, chưa ghi vào CSDL.",
-                    "Cập nhật hồ sơ nhân viên");
+                ThongBaoDialog.ThanhCong($"Đã cập nhật hồ sơ {kq.MaNVCode} — {nv.HoTen}.\n{doiMa}".TrimEnd('\n'),
+                                         "Cập nhật hồ sơ nhân viên");
             }
         }
 
-        private void SauKhiLuuNhanVien(NhanVienHienThi nv)
+        private void SauKhiLuuNhanVien(int maNhanVien, string trangThai)
         {
-            LamMoiTatCa(maNhanVienChon: nv.MaNhanVien);
+            LamMoiTatCa(maNhanVienChon: maNhanVien);
             NapDanhSachDonVi();
 
             // Bo loc hien tai an mat ho so vua luu thi xoa loc de nguoi dung thay ngay
-            if ((dgNhanVien.SelectedItem as NhanVienHienThi)?.MaNhanVien != nv.MaNhanVien)
+            if ((dgNhanVien.SelectedItem as NhanVienHienThi)?.MaNhanVien != maNhanVien)
             {
                 _dangNapDuLieu = true;
                 txtTimNhanVien.Text = string.Empty;
                 cboChucDanhLoc.SelectedIndex = 0;
                 cboDonViLoc.SelectedIndex = 0;
-                cboTrangThaiLoc.SelectedIndex = nv.TrangThai == NhanVienHienThi.DaNghiViec ? cboTrangThaiLoc.Items.Count - 1 : 0;
+                cboTrangThaiLoc.SelectedIndex = trangThai == NhanVienHienThi.DaNghiViec ? cboTrangThaiLoc.Items.Count - 1 : 0;
                 chkHanKhamLoc.IsChecked = false;
                 _dangNapDuLieu = false;
-                LamMoiHoSo(giuDongChon: false, nv.MaNhanVien);
+                LamMoiHoSo(giuDongChon: false, maNhanVien);
             }
-        }
-
-        // =====================================================================
-        // THAY DOI TAM
-        // =====================================================================
-
-        private void CapNhatNhanThayDoiTam()
-        {
-            int soThayDoi = _nhanVienTam.Count + _phanCongTam.Count + _phanCongDaHuy.Count + _kiemTraTam.Count;
-            bdThayDoiTam.Visibility = soThayDoi > 0 ? Visibility.Visible : Visibility.Collapsed;
-            txtThayDoiTam.Text = $"{soThayDoi} thay đổi tạm · chưa ghi CSDL";
-        }
-
-        private void BtnHuyThayDoiTam_Click(object sender, RoutedEventArgs e)
-        {
-            bool dongY = ThongBaoDialog.XacNhan(
-                "Bỏ toàn bộ hồ sơ, kíp, kết quả kiểm tra lên ban vừa lập / sửa / hủy?\n" +
-                "Màn hình sẽ hiển thị lại đúng dữ liệu gốc.",
-                "Hoàn tác thay đổi tạm", nutDongY: "Hoàn tác", nutHuy: "Giữ lại");
-            if (!dongY) return;
-
-            _nhanVienTam.Clear();
-            _phanCongTam.Clear();
-            _phanCongDaHuy.Clear();
-            _kiemTraTam.Clear();
-            _maTamKeTiep = -1;
-
-            _duLieu = TaoDuLieu();
-            NapDanhSachDonVi();
-            LamMoiTatCa();
         }
 
         // =====================================================================

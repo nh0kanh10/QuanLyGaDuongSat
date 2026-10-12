@@ -62,13 +62,26 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="THÔNG TIN ĐỊNH DANH" Style="{StaticResource KtTieuDeMuc}"/>
 
-                    <!-- Số hiệu -->
+                    <!-- Số hiệu: tiền tố theo dòng máy (không gõ được) + phần số -->
                     <TextBlock Style="{StaticResource KtNhanTruong}">
                         <Run Text="Số hiệu đầu máy"/><Run Text=" *" Foreground="#DC2626"/>
                     </TextBlock>
-                    <TextBox x:Name="txtSoHieu" MaxLength="20" CharacterCasing="Upper"
-                             TextChanged="TruongNhap_TextChanged"
-                             ToolTip="Mã định danh duy nhất, dạng DÒNG-SỐ. Ví dụ: D19E-904"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="bdTienToSoHieu" Grid.Column="0" Height="30" Padding="8,0"
+                                Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1,1,0,1"
+                                SnapsToDevicePixels="True"
+                                ToolTip="Tiền tố theo dòng đầu máy, chỉ đổi khi chọn dòng khác ở ô Dòng đầu máy">
+                            <TextBlock x:Name="txtTienToSoHieu" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="#475569" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBox x:Name="txtSoHieu" Grid.Column="1" MaxLength="20" CharacterCasing="Upper"
+                                 TextChanged="TruongNhap_TextChanged"
+                                 ToolTip="Nhập phần số sau tiền tố dòng máy. Ví dụ: 907 → D19E-907"/>
+                    </Grid>
                     <TextBlock x:Name="txtLoiSoHieu" Style="{StaticResource KtLoiTruong}"/>
 
                     <!-- Dòng đầu máy -->

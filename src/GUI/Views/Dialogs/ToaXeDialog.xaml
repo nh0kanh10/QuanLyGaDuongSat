@@ -164,7 +164,7 @@
                                     <TextBlock x:Name="txtTaiTrongTruc" Text="0.00" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
                                     <TextBlock Text=" t/trục" FontSize="11" Foreground="#64748B" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
                                 </StackPanel>
-                                <TextBlock x:Name="txtNguongTruc" Text="ngưỡng 14.0 t" FontSize="10" Foreground="#94A3B8"
+                                <TextBlock x:Name="txtNguongTruc" Text="ngưỡng giả định 14.0 t" FontSize="10" Foreground="#94A3B8"
                                            HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
                             </Grid>
                             <Grid Height="8" Margin="0,6,0,0">

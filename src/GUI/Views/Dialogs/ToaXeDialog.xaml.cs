@@ -47,7 +47,7 @@ namespace GUI.Views.Dialogs
             SmartNumberFormatHelper.AttachDecimalKm(txtTaiTrong, 0m, PhuongTienService.KhoiLuongToaToiDaTan);
 
             cboChungLoai.ItemsSource = chungLoai;
-            txtNguongTruc.Text = $"ngưỡng {QuyTacLapTau.TaiTrongTrucToiDaTan:N1} t";
+            txtNguongTruc.Text = $"ngưỡng giả định {QuyTacLapTau.TaiTrongTrucToiDaTan:N1} t";
 
             if (banGoc == null)
                 KhoiTaoThemMoi();
@@ -242,7 +242,7 @@ namespace GUI.Views.Dialogs
             txtToanTai.Text = $"{toanTai:N1} t";
 
             txtMoTaTruc.Text = truc > nguong
-                ? $"Vượt ngưỡng {nguong:N1} t/trục khi chở đầy. Lập tàu sẽ không cho đưa toa này vào đoàn."
+                ? $"Vượt ngưỡng giả định {nguong:N1} t/trục khi chở đầy. Lập tàu sẽ không cho đưa toa này vào đoàn."
                 : tyLe >= 85
                     ? "Sát ngưỡng tải trọng trục cho phép."
                     : "Nằm trong ngưỡng tải trọng trục cho phép.";

@@ -19,6 +19,8 @@ namespace GUI.Views.Dialogs
     //   Service tu choi (trung so hieu, luat trang thai, nguoi khac vua sua...) thi hien
     //   ly do va GIU NGUYEN dialog de nguoi dung sua tiep.
     // - Khi sua: khoa so hieu va dong may (Service cung chan).
+    // - So hieu = tien to theo dong may (txtTienToSoHieu, khong go duoc, chi doi khi chon
+    //   dong khac) + phan so (txtSoHieu).
     // =========================================================================
     public partial class DauMayDialog : Window
     {
@@ -76,8 +78,8 @@ namespace GUI.Views.Dialogs
             txtSoKm.Text = "0";
             rdoSanSang.IsChecked = true;
 
-            // Goi y san tien to theo dong may de nguoi dung chi can go phan so
-            if (cboDongMay.SelectedItem is DongDauMayMau dong) txtSoHieu.Text = $"{dong.MaDongCode}-";
+            // Tien to theo dong may, nguoi dung chi go phan so
+            DatTienToSoHieu(cboDongMay.SelectedItem is DongDauMayMau dong ? $"{dong.MaDongCode}-" : "");
         }
 
         private void KhoiTaoCapNhat(DauMayHienThi dm, IReadOnlyList<DongDauMayMau> dongDauMay)
@@ -86,7 +88,11 @@ namespace GUI.Views.Dialogs
             txtTieuDePhu.Text = "Số hiệu và dòng máy là định danh nên không sửa sau khi đã tạo";
             txtNutLuu.Text = "Lưu Thay Đổi";
 
-            txtSoHieu.Text = dm.SoHieuDauMay;
+            // Tach "D19E-901" thanh tien to + phan so de giong luc them moi; so hieu khong co
+            // dau gach (du lieu cu) thi hien nguyen trong o
+            int gach = dm.SoHieuDauMay.IndexOf('-');
+            DatTienToSoHieu(gach > 0 ? dm.SoHieuDauMay[..(gach + 1)] : "");
+            txtSoHieu.Text = gach > 0 ? dm.SoHieuDauMay[(gach + 1)..] : dm.SoHieuDauMay;
             KhoaO(txtSoHieu);
 
             cboDongMay.SelectedItem = dongDauMay.FirstOrDefault(d => d.MaDongDauMay == dm.MaDongDauMay);
@@ -112,6 +118,16 @@ namespace GUI.Views.Dialogs
             o.Foreground = (Brush)new BrushConverter().ConvertFrom("#475569")!;
         }
 
+        private void DatTienToSoHieu(string tienTo)
+        {
+            txtTienToSoHieu.Text = tienTo;
+            bdTienToSoHieu.Visibility = tienTo.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            txtSoHieu.MaxLength = Math.Max(1, PhuongTienService.DoDaiSoHieuToiDa - tienTo.Length);
+        }
+
+        private string GhepSoHieu()
+            => txtTienToSoHieu.Text + txtSoHieu.Text.Trim().ToUpperInvariant();
+
         // =====================================================================
         // XEM TRUOC TRUC TIEP
         // =====================================================================
@@ -121,7 +137,19 @@ namespace GUI.Views.Dialogs
             if (_dangKhoiTao) return;
 
             // Go lai thi xoa loi cua truong do
-            if (sender == txtSoHieu) txtLoiSoHieu.Text = "";
+            if (sender == txtSoHieu)
+            {
+                txtLoiSoHieu.Text = "";
+
+                // Dan ca so hieu day du ("D19E-907") thi bo phan tien to da co san
+                string tienTo = txtTienToSoHieu.Text;
+                if (tienTo.Length > 0 && txtSoHieu.Text.StartsWith(tienTo, StringComparison.OrdinalIgnoreCase))
+                {
+                    txtSoHieu.Text = txtSoHieu.Text[tienTo.Length..];   // goi lai su kien nay
+                    txtSoHieu.CaretIndex = txtSoHieu.Text.Length;
+                    return;
+                }
+            }
             if (sender == txtNamSanXuat) txtLoiNamSanXuat.Text = "";
             if (sender == txtSoKm) txtLoiSoKm.Text = "";
 
@@ -133,16 +161,11 @@ namespace GUI.Views.Dialogs
             if (_dangKhoiTao) return;
             txtLoiDongMay.Text = "";
 
-            // Them moi: doi tien to so hieu theo dong may neu nguoi dung chua go phan so
+            // Them moi: tien to so hieu doi theo dong may, giu nguyen phan so da go
             if (_banGoc == null && cboDongMay.SelectedItem is DongDauMayMau dong)
             {
-                string hienTai = txtSoHieu.Text.Trim();
-                bool chiCoTienTo = hienTai.Length == 0 || hienTai.EndsWith("-");
-                if (chiCoTienTo)
-                {
-                    txtSoHieu.Text = $"{dong.MaDongCode}-";
-                    txtSoHieu.CaretIndex = txtSoHieu.Text.Length;
-                }
+                DatTienToSoHieu($"{dong.MaDongCode}-");
+                txtLoiSoHieu.Text = "";
             }
 
             CapNhatXemTruoc();
@@ -250,7 +273,7 @@ namespace GUI.Views.Dialogs
             bool namHopLe = int.TryParse(txtNamSanXuat.Text.Trim(), out int nam);
 
             var kq = _banGoc?.SaoChep() ?? new DauMayHienThi();
-            kq.SoHieuDauMay = _banGoc?.SoHieuDauMay ?? txtSoHieu.Text.Trim().ToUpperInvariant();
+            kq.SoHieuDauMay = _banGoc?.SoHieuDauMay ?? GhepSoHieu();
             kq.DonViQuanLy = cboXiNghiep.Text.Trim();
             kq.NamSanXuat = namHopLe ? nam : 0;
             kq.SoKmTichLuy = LaySoKm();

@@ -140,23 +140,9 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Nhãn thay đổi tạm (chưa ghi CSDL) -->
+                <!-- 11/10: bỏ nhãn "thay đổi tạm" - mọi thao tác ghi thẳng CSDL qua NhanSuService -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
-                            VerticalAlignment="Center" Margin="12,0,16,0">
-                    <Border x:Name="bdThayDoiTam" Visibility="Collapsed"
-                            Background="#FFFBEB" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="3" Padding="10,3,4,3"
-                            ToolTip="Hồ sơ, kíp, kết quả kiểm tra vừa lập / sửa chỉ lưu trên màn hình, chưa ghi vào CSDL">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock x:Name="txtThayDoiTam" Text="0 thay đổi tạm" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="#92400E" VerticalAlignment="Center"/>
-                            <Button Click="BtnHuyThayDoiTam_Click" Style="{StaticResource DesktopButton}"
-                                    Height="22" Margin="8,0,0,0" Padding="8,0"
-                                    ToolTip="Bỏ toàn bộ thay đổi tạm, hiển thị lại dữ liệu gốc">
-                                <TextBlock Text="Hoàn tác" FontSize="10" FontWeight="SemiBold" Foreground="#92400E"/>
-                            </Button>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
+                            VerticalAlignment="Center" Margin="12,0,16,0"/>
 
                 <!-- Việc cần xử lý: bấm để chuyển tab kèm bộ lọc -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -311,15 +297,7 @@
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding MaNVCode}" FontWeight="Bold" FontSize="11" Foreground="#0F172A"/>
-                                                        <Ellipse x:Name="chamTam" Width="6" Height="6" Fill="#F59E0B" Margin="5,0,0,0"
-                                                                 VerticalAlignment="Center" Visibility="Collapsed"
-                                                                 ToolTip="Thay đổi tạm, chưa ghi CSDL"/>
                                                     </StackPanel>
-                                                    <DataTemplate.Triggers>
-                                                        <DataTrigger Binding="{Binding LaThayDoiTam}" Value="True">
-                                                            <Setter TargetName="chamTam" Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </DataTemplate.Triggers>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -569,13 +547,14 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Giờ Đi" Width="70">
+                                    <DataGridTemplateColumn Header="Giờ Đi" Width="94">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding Chuyen.GioXuatPhatKH, StringFormat=HH:mm}" FontSize="11" FontWeight="SemiBold"/>
-                                                    <TextBlock Text="{Binding Chuyen.NhanTrangThai}" FontSize="10"
-                                                               Foreground="{Binding Chuyen.MauTrangThai}" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Chuyen.NhanTrangThaiNgan}" FontSize="10"
+                                                               Foreground="{Binding Chuyen.MauTrangThaiHienThi}" TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding Chuyen.NhanTrangThaiDayDu}"/>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -702,15 +681,7 @@
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding SoThuTu}" FontSize="12" FontWeight="Bold" Foreground="#0F172A"/>
-                                                        <Ellipse x:Name="chamTam" Width="6" Height="6" Fill="#F59E0B" Margin="4,0,0,0"
-                                                                 VerticalAlignment="Center" Visibility="Collapsed"
-                                                                 ToolTip="Thay đổi tạm, chưa ghi CSDL"/>
                                                     </StackPanel>
-                                                    <DataTemplate.Triggers>
-                                                        <DataTrigger Binding="{Binding LaThayDoiTam}" Value="True">
-                                                            <Setter TargetName="chamTam" Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </DataTemplate.Triggers>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -954,15 +925,7 @@
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding MaPhieu}" FontWeight="Bold" FontSize="11"/>
-                                                    <Ellipse x:Name="chamTam" Width="6" Height="6" Fill="#F59E0B" Margin="5,0,0,0"
-                                                             VerticalAlignment="Center" Visibility="Collapsed"
-                                                             ToolTip="Thay đổi tạm, chưa ghi CSDL"/>
                                                 </StackPanel>
-                                                <DataTemplate.Triggers>
-                                                    <DataTrigger Binding="{Binding LaThayDoiTam}" Value="True">
-                                                        <Setter TargetName="chamTam" Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </DataTemplate.Triggers>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
