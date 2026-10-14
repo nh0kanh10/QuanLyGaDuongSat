@@ -1,5 +1,4 @@
 KIỂM THỬ ĐƠN VỊ (Tests)
-=======================
 
 Chạy (không cần CSDL):
     cd src

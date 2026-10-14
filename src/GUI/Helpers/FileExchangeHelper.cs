@@ -154,16 +154,29 @@ namespace GUI.Helpers
         #region CSV PARSING & ESCAPING
 
         /// <summary>
-        /// Escape chuỗi theo chuẩn RFC 4180 CSV
+        /// Escape chuỗi theo chuẩn RFC 4180 CSV, đồng thời chống triệt để CSV/Formula Injection (CWE-1236).
         /// </summary>
         public static string EscapeCsv(string? value)
         {
             if (string.IsNullOrEmpty(value)) return "";
-            if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+
+            string safeValue = value;
+            // Chống CSV Injection: Nếu ô bắt đầu bằng =, +, -, @, \t và không phải số âm/dương thuần túy
+            char firstChar = safeValue[0];
+            if (firstChar == '=' || firstChar == '+' || firstChar == '-' || firstChar == '@' || firstChar == '\t')
             {
-                return $"\"{value.Replace("\"", "\"\"")}\"";
+                // Nếu là một số hợp lệ (vd: -15.50 hoặc +5) thì không can thiệp để giữ kiểu số
+                if (!decimal.TryParse(safeValue, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                {
+                    safeValue = "'" + safeValue;
+                }
             }
-            return value;
+
+            if (safeValue.Contains(',') || safeValue.Contains('"') || safeValue.Contains('\n') || safeValue.Contains('\r'))
+            {
+                return $"\"{safeValue.Replace("\"", "\"\"")}\"";
+            }
+            return safeValue;
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -19,6 +20,7 @@ namespace GUI.Views.UserControls
         public PaginationControl()
         {
             InitializeComponent();
+            DataObject.AddPastingHandler(txtCurrentPage, TxtCurrentPage_Pasting);
         }
 
         public void SetPagingInfo(int totalItems, int currentPage, int pageSize, string unitName = "ga")
@@ -84,6 +86,7 @@ namespace GUI.Views.UserControls
                 CurrentPage = page;
                 PageChanged?.Invoke(this, CurrentPage);
             }
+            txtCurrentPage.Text = CurrentPage.ToString();
         }
 
         private void BtnFirst_Click(object sender, RoutedEventArgs e) => GoToPage(1);
@@ -91,19 +94,64 @@ namespace GUI.Views.UserControls
         private void BtnNext_Click(object sender, RoutedEventArgs e) => GoToPage(CurrentPage + 1);
         private void BtnLast_Click(object sender, RoutedEventArgs e) => GoToPage(TotalPages);
 
-        private void TxtCurrentPage_KeyDown(object sender, KeyEventArgs e)
+        private void TxtCurrentPage_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            // Chỉ cho phép nhập ký tự số (0-9)
+            e.Handled = !e.Text.All(char.IsDigit);
+        }
+
+        private void TxtCurrentPage_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(DataFormats.Text))
             {
-                if (int.TryParse(txtCurrentPage.Text.Trim(), out int targetPage))
+                string text = ((string)e.DataObject.GetData(DataFormats.Text)).Trim();
+                if (string.IsNullOrEmpty(text) || !text.All(char.IsDigit))
                 {
-                    GoToPage(targetPage);
-                }
-                else
-                {
-                    txtCurrentPage.Text = CurrentPage.ToString();
+                    e.CancelCommand();
                 }
             }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private void TxtCurrentPage_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Enter)
+            {
+                CommitPageInput();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                txtCurrentPage.Text = CurrentPage.ToString();
+                txtCurrentPage.SelectAll();
+                e.Handled = true;
+            }
+        }
+
+        private void TxtCurrentPage_LostFocus(object sender, RoutedEventArgs e)
+        {
+            CommitPageInput();
+        }
+
+        private void CommitPageInput()
+        {
+            if (_isUpdatingUi) return;
+
+            string text = txtCurrentPage.Text.Trim();
+            if (int.TryParse(text, out int targetPage))
+            {
+                GoToPage(targetPage);
+            }
+            txtCurrentPage.Text = CurrentPage.ToString();
         }
 
         private void CboPageSize_SelectionChanged(object sender, SelectionChangedEventArgs e)

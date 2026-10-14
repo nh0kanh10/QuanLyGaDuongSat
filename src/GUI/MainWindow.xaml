@@ -79,8 +79,8 @@
                             <Grid>
                                 <Button Click="NavCluster_Click" Tag="VanHanh" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" Height="42">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <ui:SymbolIcon x:Name="iconClusterVanHanh" Symbol="Timeline24" FontSize="16" Foreground="#94A3B8" Margin="0,0,8,0"/>
-                                        <TextBlock x:Name="txtClusterVanHanh" Text="ĐIỀU ĐỘ &amp; VẬN HÀNH" FontSize="12" FontWeight="Bold" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                        <ui:SymbolIcon x:Name="iconClusterVanHanh" Symbol="Timeline24" FontSize="16" Foreground="#CBD5E1" Margin="0,0,8,0"/>
+                                        <TextBlock x:Name="txtClusterVanHanh" Text="ĐIỀU ĐỘ &amp; VẬN HÀNH" FontSize="12" FontWeight="Bold" Foreground="#CBD5E1" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                                 <Rectangle x:Name="indicatorVanHanh" Height="3" VerticalAlignment="Bottom" Fill="Transparent"/>
@@ -92,8 +92,8 @@
                             <Grid>
                                 <Button Click="NavCluster_Click" Tag="KinhDoanh" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" Height="42">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <ui:SymbolIcon x:Name="iconClusterKinhDoanh" Symbol="TicketDiagonal24" FontSize="16" Foreground="#94A3B8" Margin="0,0,8,0"/>
-                                        <TextBlock x:Name="txtClusterKinhDoanh" Text="KINH DOANH VẬN TẢI" FontSize="12" FontWeight="Bold" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                        <ui:SymbolIcon x:Name="iconClusterKinhDoanh" Symbol="TicketDiagonal24" FontSize="16" Foreground="#CBD5E1" Margin="0,0,8,0"/>
+                                        <TextBlock x:Name="txtClusterKinhDoanh" Text="KINH DOANH VẬN TẢI" FontSize="12" FontWeight="Bold" Foreground="#CBD5E1" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                                 <Rectangle x:Name="indicatorKinhDoanh" Height="3" VerticalAlignment="Bottom" Fill="Transparent"/>
@@ -105,8 +105,8 @@
                             <Grid>
                                 <Button Click="NavCluster_Click" Tag="KyThuat" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" Height="42">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <ui:SymbolIcon x:Name="iconClusterKyThuat" Symbol="WrenchScrewdriver24" FontSize="16" Foreground="#94A3B8" Margin="0,0,8,0"/>
-                                        <TextBlock x:Name="txtClusterKyThuat" Text="KỸ THUẬT &amp; ĐOÀN TÀU" FontSize="12" FontWeight="Bold" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                        <ui:SymbolIcon x:Name="iconClusterKyThuat" Symbol="WrenchScrewdriver24" FontSize="16" Foreground="#CBD5E1" Margin="0,0,8,0"/>
+                                        <TextBlock x:Name="txtClusterKyThuat" Text="KỸ THUẬT &amp; ĐOÀN TÀU" FontSize="12" FontWeight="Bold" Foreground="#CBD5E1" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                                 <Rectangle x:Name="indicatorKyThuat" Height="3" VerticalAlignment="Bottom" Fill="Transparent"/>
@@ -137,106 +137,106 @@
                 </Grid>
             </Border>
 
-            <!-- TẦNG 2: THANH PHÂN HỆ TÁC NGHIỆP CON (ACTION PILLS) -->
-            <Border Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="0,0,0,1" Padding="12,5" Height="40">
+            <!-- TẦNG 2: THANH PHÂN HỆ TÁC NGHIỆP CON (ENTERPRISE FLAT UNDERLINE TABS) -->
+            <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,0" Height="38">
                 <Grid>
                     <!-- SUB-BAR 1: DỮ LIỆU GỐC & HẠ TẦNG -->
-                    <StackPanel x:Name="subBarMasterData" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Visible">
-                        <Border x:Name="tabGa" Background="#003B73" BorderBrush="#002855" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="MangLuoiGa" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabGa" Symbol="Globe24" FontSize="15" Foreground="#FFFFFF" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabGa" Text="MẠNG LƯỚI GA" FontSize="11.5" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                    <StackPanel x:Name="subBarMasterData" Orientation="Horizontal" VerticalAlignment="Stretch" Visibility="Visible">
+                        <Border x:Name="tabGa" Background="#F0F9FF" BorderBrush="#0284C7" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="MangLuoiGa" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabGa" Symbol="Globe24" FontSize="15" Foreground="#0284C7" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabGa" Text="MẠNG LƯỚI GA" FontSize="11.5" FontWeight="Bold" Foreground="#003B73" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
 
-                        <Border x:Name="tabKhuGian" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="KhuGian" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabKhuGian" Symbol="ArrowSwap24" FontSize="15" Foreground="#475569" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabKhuGian" Text="KHU GIAN ĐƯỜNG SẮT" FontSize="11.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                        <Border x:Name="tabKhuGian" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="KhuGian" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabKhuGian" Symbol="ArrowSwap24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabKhuGian" Text="KHU GIAN ĐƯỜNG SẮT" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
 
-                        <Border x:Name="tabNavNhanSu" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="NhanSu" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabNhanSu" Symbol="PeopleTeam24" FontSize="15" Foreground="#475569" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabNhanSu" Text="HỒ SƠ NHÂN SỰ" FontSize="11.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                        <Border x:Name="tabNavNhanSu" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="NhanSu" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch" ToolTip="Danh mục hồ sơ nhân sự vận hành &amp; kíp trực đường sắt">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabNhanSu" Symbol="PeopleTeam24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabNhanSu" Text="HỒ SƠ NHÂN SỰ VẬN HÀNH" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
                     </StackPanel>
 
                     <!-- SUB-BAR 2: ĐIỀU ĐỘ & VẬN HÀNH -->
-                    <StackPanel x:Name="subBarVanHanh" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                        <Border x:Name="tabLichTrinh" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="LichTrinh" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabLichTrinh" Symbol="CalendarClock24" FontSize="15" Foreground="#475569" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabLichTrinh" Text="LỊCH TRÌNH CHẠY TÀU" FontSize="11.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                    <StackPanel x:Name="subBarVanHanh" Orientation="Horizontal" VerticalAlignment="Stretch" Visibility="Collapsed">
+                        <Border x:Name="tabLichTrinh" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="LichTrinh" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabLichTrinh" Symbol="CalendarClock24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabLichTrinh" Text="LỊCH TRÌNH CHẠY TÀU" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
 
-                        <Border x:Name="tabBieuDo" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="BieuDo" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabBieuDo" Symbol="Timeline24" FontSize="15" Foreground="#475569" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabBieuDo" Text="BIỂU ĐỒ 24H (MAREY)" FontSize="11.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                        <Border x:Name="tabBieuDo" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="BieuDo" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabBieuDo" Symbol="Timeline24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabBieuDo" Text="BIỂU ĐỒ 24H (MAREY)" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
                     </StackPanel>
 
                     <!-- SUB-BAR 3: KINH DOANH VẬN TẢI -->
-                    <StackPanel x:Name="subBarKinhDoanh" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                        <Border x:Name="tabBanVe" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="BanVe" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabBanVe" Symbol="TicketDiagonal24" FontSize="15" Foreground="#475569" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabBanVe" Text="HÀNH KHÁCH &amp; BÁN VÉ" FontSize="11.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                    <StackPanel x:Name="subBarKinhDoanh" Orientation="Horizontal" VerticalAlignment="Stretch" Visibility="Collapsed">
+                        <Border x:Name="tabBanVe" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="BanVe" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabBanVe" Symbol="TicketDiagonal24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabBanVe" Text="HÀNH KHÁCH &amp; BÁN VÉ" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
 
-                        <Border x:Name="tabSoatVe" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="SoatVe" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabSoatVe" Symbol="CheckmarkCircle24" FontSize="15" Foreground="#475569" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabSoatVe" Text="KIỂM SOÁT SOÁT VÉ" FontSize="11.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                        <Border x:Name="tabSoatVe" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="SoatVe" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabSoatVe" Symbol="CheckmarkCircle24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabSoatVe" Text="KIỂM SOÁT SOÁT VÉ" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
 
-                        <Border x:Name="tabHangHoa" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="HangHoa" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabHangHoa" Symbol="Box24" FontSize="15" Foreground="#475569" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabHangHoa" Text="VẬN TẢI HÀNG HÓA" FontSize="11.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                        <Border x:Name="tabHangHoa" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="HangHoa" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabHangHoa" Symbol="Box24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabHangHoa" Text="VẬN TẢI HÀNG HÓA" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
                     </StackPanel>
 
                     <!-- SUB-BAR 4: KỸ THUẬT & ĐOÀN TÀU -->
-                    <StackPanel x:Name="subBarKyThuat" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                        <Border x:Name="tabNavPhuongTien" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="PhuongTien" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabPhuongTien" Symbol="Engine24" FontSize="15" Foreground="#475569" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabPhuongTien" Text="ĐỘI TÀU &amp; ĐẦU TOA" FontSize="11.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                    <StackPanel x:Name="subBarKyThuat" Orientation="Horizontal" VerticalAlignment="Stretch" Visibility="Collapsed">
+                        <Border x:Name="tabNavPhuongTien" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="PhuongTien" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabPhuongTien" Symbol="Engine24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabPhuongTien" Text="ĐỘI TÀU &amp; ĐẦU TOA" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
 
-                        <Border x:Name="tabNavBaoTri" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0">
-                            <Button Click="NavTab_Click" Tag="BaoTri" Background="Transparent" BorderThickness="0" Padding="12,5" Cursor="Hand">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon x:Name="iconTabBaoTri" Symbol="WrenchScrewdriver24" FontSize="15" Foreground="#475569" Margin="0,0,8,0"/>
-                                    <TextBlock x:Name="txtTabBaoTri" Text="BẢO TRÌ &amp; SỬA CHỮA" FontSize="11.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                        <Border x:Name="tabNavBaoTri" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="BaoTri" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabBaoTri" Symbol="WrenchScrewdriver24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabBaoTri" Text="BẢO TRÌ &amp; SỬA CHỮA" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
@@ -253,10 +253,10 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button x:Name="btnScF1" Click="BtnShortcut_Click" Tag="F1" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F1: Mở hướng dẫn nghiệp vụ &amp; danh mục phím tắt">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#0284C7" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
-                            <TextBlock Text="F1" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                            <TextBlock Text="F1" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
                         </Border>
-                        <TextBlock x:Name="txtScF1" Text="Trợ Giúp" FontSize="11" FontWeight="SemiBold" Foreground="#F1F5F9" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF1" Text="Trợ Giúp" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -264,10 +264,10 @@
 
                 <Button x:Name="btnScF2" Click="BtnShortcut_Click" Tag="F2" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F2: Thêm mới bản ghi">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#15803D" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                        <Border Background="#003B73" BorderBrush="#0284C7" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
                             <TextBlock Text="F2" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
                         </Border>
-                        <TextBlock x:Name="txtScF2" Text="Thêm Mới" FontSize="11" FontWeight="SemiBold" Foreground="#F1F5F9" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF2" Text="Thêm Mới" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -275,10 +275,10 @@
 
                 <Button x:Name="btnScF3" Click="BtnShortcut_Click" Tag="F3" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F3: Tra cứu nhanh tức thì">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#D97706" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
-                            <TextBlock Text="F3" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                            <TextBlock Text="F3" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
                         </Border>
-                        <TextBlock x:Name="txtScF3" Text="Tra Cứu" FontSize="11" FontWeight="SemiBold" Foreground="#FDE68A" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF3" Text="Tra Cứu" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -286,10 +286,10 @@
 
                 <Button x:Name="btnScF4" Click="BtnShortcut_Click" Tag="F4" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F4: Nhập dữ liệu hàng loạt từ tệp Excel/CSV">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#6366F1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
-                            <TextBlock Text="F4" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                            <TextBlock Text="F4" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
                         </Border>
-                        <TextBlock x:Name="txtScF4" Text="Nhập Tệp" FontSize="11" FontWeight="SemiBold" Foreground="#F1F5F9" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF4" Text="Nhập Tệp" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -297,10 +297,10 @@
 
                 <Button x:Name="btnScF5" Click="BtnShortcut_Click" Tag="F5" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F5: Nạp lại toàn bộ dữ liệu sạch từ CSDL SQL Server">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#059669" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
-                            <TextBlock Text="F5" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                            <TextBlock Text="F5" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
                         </Border>
-                        <TextBlock x:Name="txtScF5" Text="Nạp Lại" FontSize="11" FontWeight="SemiBold" Foreground="#A7F3D0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF5" Text="Nạp Lại" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -308,10 +308,10 @@
 
                 <Button x:Name="btnScF6" Click="BtnShortcut_Click" Tag="F6" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F6: Xuất danh sách dữ liệu ra bảng tính Excel / CSV">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#10B981" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
-                            <TextBlock Text="F6" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                            <TextBlock Text="F6" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
                         </Border>
-                        <TextBlock x:Name="txtScF6" Text="Xuất Excel" FontSize="11" FontWeight="SemiBold" Foreground="#F1F5F9" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF6" Text="Xuất Excel" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -319,10 +319,10 @@
 
                 <Button x:Name="btnScF7" Click="BtnShortcut_Click" Tag="F7" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F7: Kiểm soát vé lên tàu &amp; Quét mã QR/CCCD">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#7C3AED" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
-                            <TextBlock Text="F7" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                            <TextBlock Text="F7" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
                         </Border>
-                        <TextBlock x:Name="txtScF7" Text="Soát Vé" FontSize="11" FontWeight="SemiBold" Foreground="#DDD6FE" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF7" Text="Soát Vé" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -330,10 +330,10 @@
 
                 <Button x:Name="btnScF8" Click="BtnShortcut_Click" Tag="F8" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F8: Mở Biểu đồ chạy tàu điều độ 24h (Marey Diagram)">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#0284C7" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
-                            <TextBlock Text="F8" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                            <TextBlock Text="F8" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
                         </Border>
-                        <TextBlock x:Name="txtScF8" Text="Biểu Đồ 24h" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF8" Text="Biểu Đồ 24h" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -342,10 +342,10 @@
 
                 <Button x:Name="btnScF9" Click="BtnShortcut_Click" Tag="F9" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F9: Mở Trung tâm Lập &amp; In Báo Cáo Kỹ Thuật A4">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#003B73" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
-                            <TextBlock Text="F9" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                            <TextBlock Text="F9" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
                         </Border>
-                        <TextBlock x:Name="txtScF9" Text="Báo Cáo A4" FontSize="11" FontWeight="SemiBold" Foreground="#93C5FD" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF9" Text="Báo Cáo A4" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -353,10 +353,10 @@
 
                 <Button x:Name="btnScF11" Click="BtnShortcut_Click" Tag="F11" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F11: Phóng to toàn màn hình hoặc thu nhỏ cửa sổ">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#475569" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
-                            <TextBlock Text="F11" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                            <TextBlock Text="F11" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
                         </Border>
-                        <TextBlock x:Name="txtScF11" Text="Toàn Màn Hình" FontSize="11" FontWeight="SemiBold" Foreground="#CBD5E1" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtScF11" Text="Toàn Màn Hình" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -364,7 +364,7 @@
 
                 <Button x:Name="btnScEsc" Click="BtnShortcut_Click" Tag="ESC" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Esc: Xóa bộ lọc tìm kiếm hoặc hủy form chi tiết">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#DC2626" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
+                        <Border Background="#991B1B" BorderBrush="#DC2626" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
                             <TextBlock Text="Esc" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
                         </Border>
                         <TextBlock x:Name="txtScEsc" Text="Hủy" FontSize="11" FontWeight="SemiBold" Foreground="#FCA5A5" VerticalAlignment="Center"/>
@@ -389,7 +389,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock Text="|  Máy chủ: .\SQLEXPRESS  |  CSDL: QuanLyDuongSatV2" FontSize="11" Foreground="#475569"/>
+                    <TextBlock Text="|  Máy Chủ: Trực Tuyến  |  Hệ Thống Dữ Liệu: Đã Kết Nối" FontSize="11" Foreground="#475569"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">

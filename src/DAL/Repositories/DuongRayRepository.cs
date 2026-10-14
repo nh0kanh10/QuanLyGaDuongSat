@@ -39,8 +39,8 @@ namespace DAL.Repositories
 
         public int Them(DuongRayGa ray)
         {
-            string sql = @"INSERT INTO hatang.DuongRayGa (MaGa, SoHieuDuong, LoaiDuong, ChieuDaiHuuDungM, CoKeGa, TrangThai)
-                           VALUES (@maGa, @soHieu, @loai, @chieuDai, @keGa, @trangThai)";
+            string sql = @"INSERT INTO hatang.DuongRayGa (MaGa, SoHieuDuong, LoaiDuong, ChieuDaiHuuDungM, CoKeGa, TrangThai, NguoiTao)
+                           VALUES (@maGa, @soHieu, @loai, @chieuDai, @keGa, @trangThai, @nguoiTao)";
             var p = new[]
             {
                 new SqlParameter("@maGa", ray.MaGa),
@@ -48,7 +48,8 @@ namespace DAL.Repositories
                 new SqlParameter("@loai", ray.LoaiDuong),
                 new SqlParameter("@chieuDai", ray.ChieuDaiHuuDungM),
                 new SqlParameter("@keGa", ray.CoKeGa),
-                new SqlParameter("@trangThai", ray.TrangThai)
+                new SqlParameter("@trangThai", ray.TrangThai),
+                new SqlParameter("@nguoiTao", string.IsNullOrEmpty(ray.NguoiTao) ? "admin" : ray.NguoiTao)
             };
             return DatabaseHelper.ExecuteNonQuery(sql, p);
         }
@@ -60,7 +61,9 @@ namespace DAL.Repositories
                                LoaiDuong = @loai,
                                ChieuDaiHuuDungM = @chieuDai,
                                CoKeGa = @keGa,
-                               TrangThai = @trangThai
+                               TrangThai = @trangThai,
+                               NgayCapNhat = SYSUTCDATETIME(),
+                               NguoiCapNhat = @nguoiCapNhat
                            WHERE MaDuongRay = @id";
             var p = new[]
             {
@@ -69,7 +72,8 @@ namespace DAL.Repositories
                 new SqlParameter("@loai", ray.LoaiDuong),
                 new SqlParameter("@chieuDai", ray.ChieuDaiHuuDungM),
                 new SqlParameter("@keGa", ray.CoKeGa),
-                new SqlParameter("@trangThai", ray.TrangThai)
+                new SqlParameter("@trangThai", ray.TrangThai),
+                new SqlParameter("@nguoiCapNhat", (object?)ray.NguoiCapNhat ?? "admin")
             };
             return DatabaseHelper.ExecuteNonQuery(sql, p);
         }
@@ -125,6 +129,17 @@ namespace DAL.Repositories
                            WHERE MaDuongRay = @id";
             var result = DatabaseHelper.ExecuteScalar(sql, new[] { new SqlParameter("@id", maDuongRay) });
             return result != null && Convert.ToInt32(result) > 0;
+        }
+
+        public bool KiemTraLaChinhTuyenDuyNhat(int maDuongRay)
+        {
+            string sql = @"SELECT COUNT(*) 
+                           FROM hatang.DuongRayGa 
+                           WHERE LoaiDuong = 'CHINH_TUYEN' 
+                             AND MaGa = (SELECT MaGa FROM hatang.DuongRayGa WHERE MaDuongRay = @id)
+                             AND (SELECT LoaiDuong FROM hatang.DuongRayGa WHERE MaDuongRay = @id) = 'CHINH_TUYEN'";
+            var result = DatabaseHelper.ExecuteScalar(sql, new[] { new SqlParameter("@id", maDuongRay) });
+            return result != null && Convert.ToInt32(result) <= 1 && Convert.ToInt32(result) > 0;
         }
     }
 }

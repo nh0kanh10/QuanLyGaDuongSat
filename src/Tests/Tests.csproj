@@ -13,6 +13,7 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>

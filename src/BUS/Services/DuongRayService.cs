@@ -47,7 +47,7 @@ namespace BUS.Services
 
             if (ray.LoaiDuong == "CHINH_TUYEN" && _repo.KiemTraChinhTuyenTonTai(ray.MaGa))
             {
-                error = "Mỗi ga đường sắt chỉ được phép có duy nhất 01 đường chính tuyến (CHINH_TUYEN). Vui lòng chọn phân loại 'Đường tránh' hoặc 'Bốc dỡ'.";
+                error = "Mỗi ga đường sắt chỉ được phép có duy nhất 01 đường chính tuyến. Vui lòng chọn phân loại 'Đường tránh' hoặc 'Bốc dỡ'.";
                 return false;
             }
 
@@ -98,7 +98,7 @@ namespace BUS.Services
 
             if (ray.LoaiDuong == "CHINH_TUYEN" && _repo.KiemTraChinhTuyenTonTai(ray.MaGa, ray.MaDuongRay))
             {
-                error = "Mỗi ga đường sắt chỉ được phép có duy nhất 01 đường chính tuyến (CHINH_TUYEN). Vui lòng chọn phân loại 'Đường tránh' hoặc 'Bốc dỡ'.";
+                error = "Mỗi ga đường sắt chỉ được phép có duy nhất 01 đường chính tuyến . Vui lòng chọn phân loại 'Đường tránh' hoặc 'Bốc dỡ'.";
                 return false;
             }
 
@@ -128,6 +128,12 @@ namespace BUS.Services
             if (_repo.KiemTraCoLichDung(maDuongRay))
             {
                 error = "Không thể xóa đường ray này vì đã được xếp lịch dừng đón trả tàu trong kế hoạch chạy tàu.";
+                return false;
+            }
+
+            if (_repo.KiemTraLaChinhTuyenDuyNhat(maDuongRay))
+            {
+                error = "Không thể xóa đường chính tuyến duy nhất của ga. Mọi ga bắt buộc phải có ít nhất 01 đường ray chính tuyến để thông tàu.";
                 return false;
             }
 

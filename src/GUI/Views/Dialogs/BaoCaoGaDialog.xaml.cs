@@ -28,6 +28,22 @@ namespace GUI.Views.Dialogs
             InitializeComponent();
             _gocTable = sourceTable.Copy();
 
+            DataObject.AddPastingHandler(txtSoRay, (s, e) =>
+            {
+                if (e.DataObject.GetDataPresent(DataFormats.Text))
+                {
+                    string text = e.DataObject.GetData(DataFormats.Text)?.ToString() ?? "";
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(text, @"^[0-9]+$"))
+                    {
+                        e.CancelCommand();
+                    }
+                }
+                else
+                {
+                    e.CancelCommand();
+                }
+            });
+
             // Chuẩn hóa cột phụ trợ nếu chưa có
             if (!_gocTable.Columns.Contains("STT")) _gocTable.Columns.Add("STT", typeof(int));
             if (!_gocTable.Columns.Contains("LyTrinhKmFormatted")) _gocTable.Columns.Add("LyTrinhKmFormatted", typeof(string));
@@ -422,6 +438,33 @@ namespace GUI.Views.Dialogs
             // Ràng buộc số: chỉ cho phép nhập ký tự [0-9]
             e.Handled = !System.Text.RegularExpressions.Regex.IsMatch(e.Text, @"^[0-9]+$");
         }
+
+        private void TxtSoRay_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space)
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void TxtSoRay_LostFocus(object sender, RoutedEventArgs e)
+        {
+            string raw = txtSoRay.Text.Trim();
+            if (int.TryParse(raw, out int val))
+            {
+                int clamped = Math.Clamp(val, 1, 50);
+                if (clamped.ToString() != txtSoRay.Text)
+                {
+                    txtSoRay.Text = clamped.ToString();
+                }
+            }
+            else
+            {
+                txtSoRay.Text = "2";
+            }
+            ApDungBoLocVaTaoCot();
+        }
+
         private void ColumnCheck_Changed(object sender, RoutedEventArgs e) => ApDungBoLocVaTaoCot();
 
         private void BtnChonTatCaCot_Click(object sender, RoutedEventArgs e)

@@ -9,5 +9,9 @@ namespace ET.HaTang
         public int ChieuDaiHuuDungM { get; set; } = 450;
         public bool CoKeGa { get; set; } = true;
         public string TrangThai { get; set; } = "TRONG";
+        public System.DateTime NgayTao { get; set; } = System.DateTime.UtcNow;
+        public string NguoiTao { get; set; } = "admin";
+        public System.DateTime? NgayCapNhat { get; set; }
+        public string? NguoiCapNhat { get; set; }
     }
 }

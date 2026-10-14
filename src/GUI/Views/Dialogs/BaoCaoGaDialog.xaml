@@ -124,9 +124,12 @@
                                                 </ComboBox>
                                                 <TextBox Grid.Column="2" x:Name="txtSoRay" Text="2" Height="26" FontSize="11" FontWeight="SemiBold"
                                                          VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
+                                                         MaxLength="2"
                                                          Padding="4,0" IsEnabled="False"
                                                          TextChanged="FilterInput_Changed"
                                                          PreviewTextInput="TxtSoRay_PreviewTextInput"
+                                                         PreviewKeyDown="TxtSoRay_PreviewKeyDown"
+                                                         LostFocus="TxtSoRay_LostFocus"
                                                          ToolTip="Nhập số lượng đường ray (chỉ nhập số 1 - 20)"/>
                                             </Grid>
 
@@ -307,22 +310,22 @@
                                             </Grid.ColumnDefinitions>
 
                                             <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                                                <TextBlock Text="TỔNG SỐ GA ĐÃ LỌC" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
-                                                <TextBlock x:Name="txtKpiTongGa" Text="13 ga" FontSize="15" FontWeight="Bold" Foreground="#003B73" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                <TextBlock Text="TỔNG SỐ GA ĐÃ LỌC" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                                <TextBlock x:Name="txtKpiTongGa" Text="—" FontSize="15" FontWeight="Bold" Foreground="#003B73" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                             </StackPanel>
 
                                             <Rectangle Grid.Column="1" Fill="#E2E8F0" Height="28"/>
 
                                             <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                                                <TextBlock Text="TỔNG SỐ ĐƯỜNG RAY" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
-                                                <TextBlock x:Name="txtKpiTongRay" Text="48 ray" FontSize="15" FontWeight="Bold" Foreground="#0284C7" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                <TextBlock Text="TỔNG SỐ ĐƯỜNG RAY" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                                <TextBlock x:Name="txtKpiTongRay" Text="—" FontSize="15" FontWeight="Bold" Foreground="#0284C7" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                             </StackPanel>
 
                                             <Rectangle Grid.Column="3" Fill="#E2E8F0" Height="28"/>
 
                                             <StackPanel Grid.Column="4" HorizontalAlignment="Center">
-                                                <TextBlock Text="GA CÓ CẦU QUAY" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
-                                                <TextBlock x:Name="txtKpiCauQuay" Text="5 ga" FontSize="15" FontWeight="Bold" Foreground="#15803D" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                <TextBlock Text="GA CÓ CẦU QUAY" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                                <TextBlock x:Name="txtKpiCauQuay" Text="—" FontSize="15" FontWeight="Bold" Foreground="#15803D" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                             </StackPanel>
                                         </Grid>
                                     </Border>

@@ -74,7 +74,6 @@
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
             </Style>
 
-            <!-- Khắc phục triệt để lỗi DatePickerTextBox bị cắt chân chữ do style TextBox chung -->
             <Style TargetType="{x:Type primitives:DatePickerTextBox}">
                 <Setter Property="Height" Value="Auto"/>
                 <Setter Property="MinHeight" Value="0"/>

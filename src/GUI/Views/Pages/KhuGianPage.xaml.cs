@@ -1202,7 +1202,7 @@ namespace GUI.Views.Pages
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); 
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); 
 
-            // TẦNG 1: ĐỊNH DANH VỊ TRÍ & HÀNH ĐỘNG
+            //  ĐỊNH DANH VỊ TRÍ & HÀNH ĐỘNG
             var rowTop = new Grid();
             rowTop.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             rowTop.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -1295,7 +1295,7 @@ namespace GUI.Views.Pages
             Grid.SetRow(rowTop, 0);
             grid.Children.Add(rowTop);
 
-            // TẦNG 2: THƯỚC ĐO 
+            //  THƯỚC ĐO 
             decimal distDau = Math.Abs(lyTrinh - _currentLyTrinhMin);
             decimal distCuoi = Math.Abs(_currentLyTrinhMax - lyTrinh);
             decimal culySegment = _currentLyTrinhMax - _currentLyTrinhMin;
@@ -1339,7 +1339,7 @@ namespace GUI.Views.Pages
             Grid.SetRow(pnlDistance, 1);
             grid.Children.Add(pnlDistance);
 
-            // TẦNG 3: NHÃN HẠ TẦNG & CỜ CẢNH BÁO AN TOÀN
+            // NHÃN HẠ TẦNG & CỜ CẢNH BÁO AN TOÀN
             var pnlTags = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
 
             var tagLoai = new Border
@@ -2052,9 +2052,7 @@ namespace GUI.Views.Pages
             VeSoDoTuyen();
         }
 
-        /// <summary>
-        /// Tìm bản ghi phân đoạn khu gian giữa 2 mã ga .
-        /// </summary>
+        // Tìm bản ghi phân đoạn khu gian giữa 2 mã ga .
         private DataRow? TimKhuGianGiuaHaiGa(int maGa1, int maGa2)
         {
             if (_cachedTable == null) return null;

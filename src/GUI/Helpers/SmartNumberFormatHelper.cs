@@ -86,7 +86,6 @@ namespace GUI.Helpers
                 if (long.TryParse(digits, out long val))
                 {
                     if (val > max) val = max;
-                    if (val < min) val = min;
 
                     string formatted = val.ToString("N0", CultureInfo.InvariantCulture);
 
@@ -121,6 +120,27 @@ namespace GUI.Helpers
                         textBox.CaretIndex = Math.Min(newCaret, formatted.Length);
                         isFormatting = false;
                     }
+                }
+            };
+
+            textBox.LostFocus += (s, e) =>
+            {
+                string rawText = textBox.Text?.Trim() ?? "";
+                if (string.IsNullOrWhiteSpace(rawText))
+                {
+                    if (min > 0)
+                    {
+                        textBox.Text = min.ToString("N0", CultureInfo.InvariantCulture);
+                    }
+                    return;
+                }
+
+                string digits = Regex.Replace(rawText, @"[^0-9]", "");
+                if (long.TryParse(digits, out long val))
+                {
+                    if (val < min) val = min;
+                    if (val > max) val = max;
+                    textBox.Text = val.ToString("N0", CultureInfo.InvariantCulture);
                 }
             };
         }

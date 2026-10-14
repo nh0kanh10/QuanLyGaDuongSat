@@ -16,9 +16,40 @@ namespace GUI.Views.UserControls
 
         public event System.Windows.RoutedEventHandler? DeleteClicked;
 
+        private void BtnMoreActions_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (btnMoreActions.ContextMenu != null)
+            {
+                btnMoreActions.ContextMenu.PlacementTarget = btnMoreActions;
+                btnMoreActions.ContextMenu.IsOpen = true;
+            }
+        }
+
         private void BtnXoaGa_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             DeleteClicked?.Invoke(this, e);
+        }
+
+        private void BadgeContainer_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (_currentMaGa > 0)
+            {
+                try
+                {
+                    System.Windows.Clipboard.SetText(_currentMaGa.ToString());
+                    txtBadge.Text = "Đã sao chép";
+                    var timer = new System.Windows.Threading.DispatcherTimer { Interval = System.TimeSpan.FromSeconds(1.5) };
+                    timer.Tick += (s, ev) =>
+                    {
+                        timer.Stop();
+                        txtBadge.Text = $"MÃ #{_currentMaGa}";
+                    };
+                    timer.Start();
+                }
+                catch
+                {
+                }
+            }
         }
 
         public void SetStationDetail(string tenGa, string maCode, int maGa, string tuyen)
@@ -30,7 +61,7 @@ namespace GUI.Views.UserControls
             SetDirtyState(false);
             iconHeader.Symbol = SymbolRegular.Location24;
             iconHeader.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x3B, 0x73));
-            btnXoaGaHeader.Visibility = System.Windows.Visibility.Visible;
+            btnMoreActions.Visibility = System.Windows.Visibility.Visible;
         }
 
         public void SetCreateMode()
@@ -45,7 +76,7 @@ namespace GUI.Views.UserControls
             txtBadge.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x3B, 0x73));
             iconHeader.Symbol = SymbolRegular.AddCircle24;
             iconHeader.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x3B, 0x73));
-            btnXoaGaHeader.Visibility = System.Windows.Visibility.Collapsed;
+            btnMoreActions.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         public void SetDirtyState(bool isDirty)

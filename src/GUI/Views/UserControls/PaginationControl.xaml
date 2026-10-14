@@ -59,11 +59,16 @@
                 <TextBlock Text="Trang" Style="{StaticResource FieldLabel}" FontSize="11" Margin="0,0,4,0"/>
                 <TextBox x:Name="txtCurrentPage" 
                          Text="1" 
-                         Width="34" Height="24" 
+                         Width="38" Height="24" 
+                         MaxLength="4"
                          HorizontalContentAlignment="Center" 
+                         VerticalContentAlignment="Center"
                          FontSize="11" 
                          FontWeight="Bold"
-                         KeyDown="TxtCurrentPage_KeyDown"
+                         PreviewTextInput="TxtCurrentPage_PreviewTextInput"
+                         PreviewKeyDown="TxtCurrentPage_PreviewKeyDown"
+                         LostFocus="TxtCurrentPage_LostFocus"
+                         ToolTip="Nhập số trang và nhấn Enter (chỉ nhập số 1 - 9999)"
                          Margin="0,0,4,0"/>
                 <TextBlock x:Name="txtTotalPages" 
                            Text="/ 2" 

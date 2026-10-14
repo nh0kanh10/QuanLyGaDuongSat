@@ -145,6 +145,7 @@ namespace DAL.Repositories
                        kg.TocDoToiDaHang, kg.DoDocPermil, kg.CanDauMayDay, kg.TrangThai,
                        g1.TenGa AS TenGaDau, g2.TenGa AS TenGaCuoi, 
                        g1.MaGaCode AS MaGaDauCode, g2.MaGaCode AS MaGaCuoiCode,
+                       g1.LyTrinhKm AS LyTrinhGaDau, g2.LyTrinhKm AS LyTrinhGaCuoi,
                        CASE WHEN kg.MaGaCuoi = @maGa THEN N'Khu gian phía Bắc' ELSE N'Khu gian phía Nam' END AS HuongTuyen,
                        ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian), 0) AS SoDuongNgang,
                        ISNULL((SELECT COUNT(*) FROM hatang.DuongNgang dn WHERE dn.MaKhuGian = kg.MaKhuGian AND dn.LaDiemDen = 1), 0) AS SoDiemDen

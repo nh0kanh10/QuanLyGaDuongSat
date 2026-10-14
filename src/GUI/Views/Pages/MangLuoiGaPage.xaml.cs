@@ -46,6 +46,8 @@ namespace GUI.Views.Pages
         private static readonly Brush ErrorBorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
         private static readonly Thickness ErrorBorderThickness = new(1.5);
         private readonly Dictionary<Control, string> _activeValidationErrors = new();
+        private decimal _maxLyTrinhHienTai = 1726.20m;
+        private string _tenGaCuoiHienTai = "Sài Gòn";
 
         public MangLuoiGaPage()
         {
@@ -53,8 +55,8 @@ namespace GUI.Views.Pages
             _gaService = new GaService();
             Loaded += MangLuoiGaPage_Loaded;
 
-            // Ràng buộc nhập liệu & Tự động định dạng
-            SmartNumberFormatHelper.AttachDecimalKm(txtLyTrinh, min: 0m, max: 5000m);
+            // Ràng buộc nhập liệu 
+            SmartNumberFormatHelper.AttachDecimalKm(txtLyTrinh, min: 0m, max: 5000.00m);
             SmartNumberFormatHelper.AttachIntegerSmall(txtSoHieuRay, min: 1, max: 99);
             SmartNumberFormatHelper.AttachIntegerThousandSeparated(txtChieuDaiRay, min: 100, max: 10000);
         }
@@ -95,6 +97,23 @@ namespace GUI.Views.Pages
                         string searchContent = $"{tenGa} {FormatHelper.RemoveDiacritics(tenGa)} {maCode} {tinh} {FormatHelper.RemoveDiacritics(tinh)} {kmStr} {kmStrVn} {Math.Round(km)}";
                         row["SearchIndex"] = searchContent.ToLowerInvariant();
                     }
+
+                    decimal maxKm = 1726.20m;
+                    string tenGaCuoi = "Sài Gòn";
+                    foreach (DataRow r in _cachedTable.Rows)
+                    {
+                        if (r["LyTrinhKm"] != DBNull.Value)
+                        {
+                            decimal kmVal = Convert.ToDecimal(r["LyTrinhKm"]);
+                            if (kmVal > maxKm)
+                            {
+                                maxKm = kmVal;
+                                tenGaCuoi = r["TenGa"]?.ToString() ?? "Ga cuối";
+                            }
+                        }
+                    }
+                    _maxLyTrinhHienTai = maxKm;
+                    _tenGaCuoiHienTai = tenGaCuoi;
                 }
 
                 _currentPage = 1;
@@ -109,13 +128,20 @@ namespace GUI.Views.Pages
                 _isLoadingData = false;
             }
 
+            dgGa.SelectedIndex = -1;
             if (dgGa.Items.Count > 0)
             {
                 dgGa.SelectedIndex = 0;
+                if (dgGa.SelectedItem is DataRowView drvFirst)
+                {
+                    PopulateFormFromRow(drvFirst);
+                }
+                dgGa.ScrollIntoView(dgGa.SelectedItem);
             }
             else
             {
                 ClearFormForNew();
+                ResetHaTangRayChoGaMoi();
             }
         }
 
@@ -125,9 +151,23 @@ namespace GUI.Views.Pages
 
             var view = _cachedTable.DefaultView;
             int totalItems = view.Count;
-            txtTongSo.Text = $"{totalItems} ga";
+            int tongSoGoc = _cachedTable.Rows.Count;
 
-            // Cập nhật thông tin trên component phân trang
+            txtTongSo.Text = $"{tongSoGoc} ga";
+            if (bdDemKetQuaLoc != null && txtDemKetQuaLoc != null)
+            {
+                if (totalItems < tongSoGoc)
+                {
+                    bdDemKetQuaLoc.Visibility = Visibility.Visible;
+                    txtDemKetQuaLoc.Text = $"Hiển thị {totalItems}/{tongSoGoc} ga";
+                }
+                else
+                {
+                    bdDemKetQuaLoc.Visibility = Visibility.Collapsed;
+                }
+            }
+
+            // Cập nhật thông tin trên  phân trang
             pagerGa.SetPagingInfo(totalItems, _currentPage, _pageSize, "ga");
 
             // Trích xuất các dòng thuộc trang hiện tại
@@ -279,17 +319,10 @@ namespace GUI.Views.Pages
 
                 chkCoCauQuay.IsChecked = row["CoCauQuay"] != DBNull.Value && Convert.ToBoolean(row["CoCauQuay"]);
                 IsDangKhaiThac = row["DangKhaiThac"] != DBNull.Value && Convert.ToBoolean(row["DangKhaiThac"]);
+                CapNhatTomTatTacNghiepGa();
 
-                // Cập nhật Thước Đo 
-                if (pbLyTrinh != null)
-                {
-                    pbLyTrinh.Value = (double)lyTrinh;
-                }
-                if (txtThongTinLyTrinh != null)
-                {
-                    double pt = lyTrinh > 0 ? (double)(lyTrinh / 1726.2m * 100m) : 0;
-                    txtThongTinLyTrinh.Text = $"Vị trí: Ga {tenGa} ({maCode}) — Km {FormatHelper.FormatKm(lyTrinh)} ({pt:0.0}% trục Bắc - Nam)";
-                }
+                // Cập nhật Thước Đo và Cự ly theo Ga cuối động
+                CapNhatThuocDoLyTrinh(lyTrinh, $"{tenGa} ({maCode})");
 
                 // Đổ dữ liệu hạ tầng thực tế 
                 int rays = row.Row.Table.Columns.Contains("SoDuongRay") && row["SoDuongRay"] != DBNull.Value 
@@ -379,6 +412,7 @@ namespace GUI.Views.Pages
                 cboHangGa.SelectedIndex = 0;
                 chkCoCauQuay.IsChecked = false;
                 IsDangKhaiThac = true;
+                CapNhatTomTatTacNghiepGa();
 
                 txtSoDuongRay.Text = "0 đường ray";
                 txtSoKhuGian.Text = "Chưa kết nối";
@@ -455,27 +489,17 @@ namespace GUI.Views.Pages
             {
                 if (string.IsNullOrWhiteSpace(txtLyTrinh.Text))
                 {
-                    if (pbLyTrinh != null) pbLyTrinh.Value = 0;
-                    if (txtThongTinLyTrinh != null) txtThongTinLyTrinh.Text = "Vị trí: Ga mới — Km 0.00 (0.0% trục Bắc - Nam)";
+                    CapNhatThuocDoLyTrinh(0m, "mới");
                 }
-                else if (FormatHelper.TryParseKm(txtLyTrinh.Text, out decimal km) && km >= 0 && km <= 5000)
+                else if (FormatHelper.TryParseKm(txtLyTrinh.Text, out decimal km) && km >= 0 && km <= 5000.00m)
                 {
                     if (_activeValidationErrors.ContainsKey(txtLyTrinh))
                     {
                         RemoveFieldError(txtLyTrinh);
                     }
 
-                    // Cập nhật Thước đo Lý trình
-                    if (pbLyTrinh != null)
-                    {
-                        pbLyTrinh.Value = (double)Math.Min(km, 1726.2m);
-                    }
-                    if (txtThongTinLyTrinh != null)
-                    {
-                        double pt = km > 0 ? (double)(km / 1726.2m * 100m) : 0;
-                        string tenHienThi = string.IsNullOrWhiteSpace(txtTenGa.Text) ? "mới" : txtTenGa.Text.Trim();
-                        txtThongTinLyTrinh.Text = $"Vị trí: Ga {tenHienThi} — Km {FormatHelper.FormatKm(km)} ({pt:0.0}% trục Bắc - Nam)";
-                    }
+                    // Cập nhật Thước đo Lý trình động
+                    CapNhatThuocDoLyTrinh(km, txtTenGa.Text);
 
                     // Nếu đang thêm mới ga: Tự động dự đoán và đồng bộ tỉnh/thành theo mốc km
                     if (_isAddingNew)
@@ -499,11 +523,47 @@ namespace GUI.Views.Pages
                     RemoveFieldError(cboTinhThanh);
                 }
             }
+            else if (sender == cboHangGa)
+            {
+                CapNhatTomTatTacNghiepGa();
+            }
 
             MarkDirty();
         }
 
-        private void FormCheck_Changed(object sender, RoutedEventArgs e) => MarkDirty();
+        private void FormCheck_Changed(object sender, RoutedEventArgs e)
+        {
+            CapNhatTomTatTacNghiepGa();
+            MarkDirty();
+        }
+
+        /// <summary>
+        /// Đồng bộ hiển thị thẻ tóm tắt vai trò vận hành và thiết bị đầu máy theo dữ liệu thực của Ga.
+        /// </summary>
+        private void CapNhatTomTatTacNghiepGa()
+        {
+            if (txtQuyChuanGa == null || txtThietBiQuay == null) return;
+
+            int hangIdx = cboHangGa?.SelectedIndex ?? 0;
+            string hangText = hangIdx switch
+            {
+                0 => "Hạng I · Đầu mối trung tâm",
+                1 => "Hạng II · Trung chuyển khu vực",
+                _ => "Hạng III · Tránh vượt kỹ thuật"
+            };
+            string tacNghiepText = hangIdx switch
+            {
+                0 => "Đón trả khách & lập giải tàu hàng lớn",
+                1 => "Đón trả khách & điều tiết khu vực",
+                _ => "Tác nghiệp giao tránh và vượt tàu kỹ thuật"
+            };
+            txtQuyChuanGa.Text = hangText;
+            if (txtTacNghiepGa != null) txtTacNghiepGa.Text = tacNghiepText;
+
+            bool coCauQuay = chkCoCauQuay?.IsChecked == true;
+            txtThietBiQuay.Text = coCauQuay ? "Có cầu quay xe lửa" : "Không trang bị bàn quay";
+            if (txtMoTaQuay != null) txtMoTaQuay.Text = coCauQuay ? "Đổi chiều đầu máy kỹ thuật" : "Tác nghiệp phương thức kéo đẩy 2 đầu";
+        }
 
         private void ClearFormValidationError(bool preserveBanner = false)
         {
@@ -668,6 +728,37 @@ namespace GUI.Views.Pages
             }
         }
 
+        private void TxtLyTrinh_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // Chặn chữ cái và ký tự lạ ngay khi gõ: chỉ chấp nhận số [0-9] và dấu chấm/phẩy
+            if (!System.Text.RegularExpressions.Regex.IsMatch(e.Text, @"^[0-9\.,]+$"))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Text == "." || e.Text == ",")
+            {
+                string curText = txtLyTrinh.Text;
+                if (txtLyTrinh.SelectionLength > 0)
+                {
+                    curText = curText.Remove(txtLyTrinh.SelectionStart, txtLyTrinh.SelectionLength);
+                }
+                if (curText.Contains(".") || curText.Contains(","))
+                {
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void TxtLyTrinh_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space)
+            {
+                e.Handled = true;
+            }
+        }
+
         // Kiểm tra nhanh trùng mã code ga ngay khi người dùng rời ô nhập (không cướp tiêu điểm).
         private void TxtMaCode_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -698,7 +789,47 @@ namespace GUI.Views.Pages
             }
         }
 
-        // Tự động gợi ý tỉnh / thành phố chính xác theo mốc lý trình trên tuyến đường sắt Bắc - Nam.
+        /// <summary>
+        /// Cập nhật hiển thị Thước đo Lý trình và cự ly đến Ga cuối động
+        /// Tự động mở dãn trục nếu có ga vượt mốc 1.726,20 km (ví dụ Cần Thơ Km 1.900, Cà Mau).
+        /// </summary>
+        private void CapNhatThuocDoLyTrinh(decimal lyTrinh, string? tenGaHienThi = null)
+        {
+            decimal mocTrucTuyen = Math.Max(_maxLyTrinhHienTai, Math.Max(1726.20m, lyTrinh));
+            double pt = mocTrucTuyen > 0 ? (double)(lyTrinh / mocTrucTuyen * 100m) : 0;
+
+            if (pbLyTrinhMini != null)
+            {
+                pbLyTrinhMini.Maximum = (double)mocTrucTuyen;
+                pbLyTrinhMini.Value = (double)Math.Min(Math.Max(lyTrinh, 0m), mocTrucTuyen);
+            }
+
+            if (txtTyLeTuyen != null)
+            {
+                txtTyLeTuyen.Text = $"{pt:0.0}% trục tuyến (Km {FormatHelper.FormatKm(lyTrinh)})";
+            }
+
+            if (txtKhoangCachSaiGon != null)
+            {
+                if (lyTrinh >= mocTrucTuyen && lyTrinh > 0)
+                {
+                    txtKhoangCachSaiGon.Text = $"Ga cuối tuyến (Mốc Km {FormatHelper.FormatKm(lyTrinh)})";
+                }
+                else
+                {
+                    decimal cachGaCuoi = Math.Max(0m, mocTrucTuyen - lyTrinh);
+                    txtKhoangCachSaiGon.Text = $"Cách {_tenGaCuoiHienTai} {FormatHelper.FormatKm(cachGaCuoi)} km";
+                }
+            }
+
+            if (txtThongTinLyTrinh != null)
+            {
+                string ten = string.IsNullOrWhiteSpace(tenGaHienThi) ? "mới" : tenGaHienThi.Trim();
+                txtThongTinLyTrinh.Text = $"Vị trí: Ga {ten} — Km {FormatHelper.FormatKm(lyTrinh)} ({pt:0.0}% trục tuyến)";
+            }
+        }
+
+        // Tự động gợi ý tỉnh / thành phố theo mốc lý trình trên toàn tuyến đường sắt.
         private static string GoiYTinhThanhTheoLyTrinh(decimal km)
         {
             if (km < 35m) return "Hà Nội";
@@ -721,7 +852,15 @@ namespace GUI.Views.Pages
             if (km < 1651m) return "Bình Thuận";
             if (km < 1701m) return "Đồng Nai";
             if (km < 1716m) return "Bình Dương";
-            return "TP. Hồ Chí Minh";
+            if (km <= 1740m) return "TP. Hồ Chí Minh";
+            if (km < 1780m) return "Long An";
+            if (km < 1830m) return "Tiền Giang";
+            if (km < 1880m) return "Vĩnh Long";
+            if (km < 1950m) return "Cần Thơ";
+            if (km < 2050m) return "Hậu Giang";
+            if (km < 2150m) return "Sóc Trăng";
+            if (km < 2250m) return "Bạc Liêu";
+            return "Cà Mau";
         }
 
         private void ChonTinhThanhTheoTen(string tenTinh)
@@ -798,9 +937,9 @@ namespace GUI.Views.Pages
                 {
                     _activeValidationErrors[txtLyTrinh] = "Lý Trình: Chưa nhập số km (ví dụ: 125.50)";
                 }
-                else if (!FormatHelper.TryParseKm(rawLyTrinh, out lyTrinh) || lyTrinh < 0 || lyTrinh > 5000)
+                else if (!FormatHelper.TryParseKm(rawLyTrinh, out lyTrinh) || lyTrinh < 0 || lyTrinh > GaService.MaxLyTrinhKm)
                 {
-                    _activeValidationErrors[txtLyTrinh] = "Lý Trình: Phải từ 0 đến 5,000 km";
+                    _activeValidationErrors[txtLyTrinh] = $"Lý Trình: Phải từ 0.00 đến {FormatHelper.FormatKm(GaService.MaxLyTrinhKm)} km";
                 }
 
                 string tinhThanh = (cboTinhThanh.SelectedItem is ComboBoxItem cbi ? cbi.Content?.ToString() : cboTinhThanh.Text)?.Trim() ?? "";
@@ -847,6 +986,21 @@ namespace GUI.Views.Pages
 
                 if (!_isAddingNew && _currentMaGa > 0 && Math.Abs(lyTrinh - _originalLyTrinh) > 0.001m)
                 {
+                    // 1. Kiểm tra đảo lộn trật tự tương quan giữa các ga trên tuyến
+                    if (KiemTraDaoLonThuTuKm(_currentMaGa, lyTrinh, tenGa, out string canhBaoThuTu))
+                    {
+                        bool xacNhanDaoLon = ThongBaoDialog.XacNhan(
+                            $"{canhBaoThuTu}\n\nBạn có chắc chắn muốn xác nhận thay đổi thứ tự km này không?",
+                            "Cảnh Báo Đảo Lộn Thứ Tự Ga");
+
+                        if (!xacNhanDaoLon)
+                        {
+                            txtLyTrinh.Focus();
+                            return;
+                        }
+                    }
+
+                    // 2. Cảnh báo lệch cự ly khu gian liên kết
                     var dtKg = _gaService.LayKhuGianTheoGa(_currentMaGa);
                     int soKg = dtKg?.Rows.Count ?? 0;
                     if (soKg > 0)
@@ -949,6 +1103,69 @@ namespace GUI.Views.Pages
             }
         }
 
+        /// <summary>
+        /// Kiểm tra xem mốc lý trình mới có bị nhảy cóc làm đảo lộn thứ tự địa lý với các ga lân cận không.
+        /// </summary>
+        private bool KiemTraDaoLonThuTuKm(int maGaHienTai, decimal lyTrinhMoi, string tenGaHienTai, out string canhBao)
+        {
+            canhBao = "";
+            if (_cachedTable == null || _cachedTable.Rows.Count == 0) return false;
+
+            try
+            {
+                var otherStations = _cachedTable.AsEnumerable()
+                    .Where(r => r.RowState != DataRowState.Deleted && Convert.ToInt32(r["MaGa"]) != maGaHienTai)
+                    .Select(r => new
+                    {
+                        MaGa = Convert.ToInt32(r["MaGa"]),
+                        TenGa = r["TenGa"]?.ToString() ?? "",
+                        LyTrinhKm = Convert.ToDecimal(r["LyTrinhKm"])
+                    })
+                    .OrderBy(s => s.LyTrinhKm)
+                    .ToList();
+
+                if (otherStations.Count == 0) return false;
+
+                decimal kmCu = _originalLyTrinh;
+                var invertedStations = new List<string>();
+
+                if (lyTrinhMoi > kmCu)
+                {
+                    // Tăng km: xem có ga nào vốn đứng sau ga hiện tại nhưng lại nhỏ hơn km mới không
+                    foreach (var s in otherStations)
+                    {
+                        if (s.LyTrinhKm > kmCu && s.LyTrinhKm < lyTrinhMoi)
+                        {
+                            invertedStations.Add($"{s.TenGa} (Km {FormatHelper.FormatKm(s.LyTrinhKm)})");
+                        }
+                    }
+                }
+                else if (lyTrinhMoi < kmCu)
+                {
+                    // Giảm km: xem có ga nào vốn đứng trước ga hiện tại nhưng lại lớn hơn km mới không
+                    foreach (var s in otherStations)
+                    {
+                        if (s.LyTrinhKm < kmCu && s.LyTrinhKm > lyTrinhMoi)
+                        {
+                            invertedStations.Add($"{s.TenGa} (Km {FormatHelper.FormatKm(s.LyTrinhKm)})");
+                        }
+                    }
+                }
+
+                if (invertedStations.Count > 0)
+                {
+                    canhBao = $"Lý trình mới (Km {FormatHelper.FormatKm(lyTrinhMoi)}) làm đảo lộn thứ tự địa lý của Ga {tenGaHienTai} so với các ga: {string.Join(", ", invertedStations.Take(3))}{(invertedStations.Count > 3 ? "..." : "")}.\n\nĐiều này làm thay đổi trình tự đón gửi tàu tuần tự trên trục Bắc — Nam.";
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[KiemTraDaoLonThuTuKm] Lỗi kiểm tra thứ tự: {ex.Message}");
+            }
+
+            return false;
+        }
+
         private void CrudActionBar_CancelClicked(object sender, RoutedEventArgs e)
         {
             ClearFormValidationError();
@@ -987,6 +1204,11 @@ namespace GUI.Views.Pages
                     {
                         if (_gaService.Xoa(maGa, out bool daXoaVinhVien, out string thongBao))
                         {
+                            _currentMaGa = 0;
+                            _isDirty = false;
+                            ClearFormForNew();
+                            ResetHaTangRayChoGaMoi();
+
                             if (daXoaVinhVien)
                             {
                                 ThongBaoDialog.ThanhCong($"Đã xóa hoàn toàn Ga {tenGa} ({maCode}) khỏi hệ thống.", "Đã Xóa");
@@ -995,7 +1217,6 @@ namespace GUI.Views.Pages
                             {
                                 ThongBaoDialog.ThongTin($"Ga {tenGa} ({maCode}) đã có dữ liệu hạ tầng kết nối nên hệ thống đã chuyển trạng thái sang 'Tạm ngừng khai thác' để bảo toàn dữ liệu.", "Đã Tạm Ngừng Khai Thác");
                             }
-                            _isDirty = false;
                             LoadData();
                         }
                         else
@@ -1026,96 +1247,70 @@ namespace GUI.Views.Pages
                 var dtKg = _gaService.LayKhuGianTheoGa(maGa);
                 if (dtKg == null || dtKg.Rows.Count == 0)
                 {
-                    pnlChiTietKhuGian.Children.Add(new TextBlock
+                    var emptyBox = new Border
                     {
-                        Text = "Chưa có phân đoạn khu gian nào kết nối",
-                        FontSize = 10,
-                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DC2626")),
-                        FontStyle = FontStyles.Italic,
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8FAFC")),
+                        BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E2E8F0")),
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(4),
+                        Padding = new Thickness(12, 10, 12, 10),
                         Margin = new Thickness(0, 2, 0, 2)
+                    };
+                    var emptySp = new StackPanel { Orientation = Orientation.Horizontal };
+                    emptySp.Children.Add(new Wpf.Ui.Controls.SymbolIcon
+                    {
+                        Symbol = Wpf.Ui.Controls.SymbolRegular.Info24,
+                        FontSize = 14,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8")),
+                        Margin = new Thickness(0, 0, 8, 0),
+                        VerticalAlignment = VerticalAlignment.Center
                     });
+                    emptySp.Children.Add(new TextBlock
+                    {
+                        Text = "Ga chưa có liên kết khu gian trực tiếp trong CSDL.",
+                        FontSize = 11.5,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748B")),
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    emptyBox.Child = emptySp;
+                    pnlChiTietKhuGian.Children.Add(emptyBox);
                 }
                 else
                 {
+                    // Phân loại phân đoạn phía Bắc và phía Nam
+                    DataRow? rowBac = null;
+                    DataRow? rowNam = null;
+
                     foreach (DataRow r in dtKg.Rows)
                     {
-                        string huong = r["HuongTuyen"]?.ToString() ?? "Khu gian";
-                        string gaDau = r["TenGaDau"]?.ToString() ?? "";
-                        string gaCuoi = r["TenGaCuoi"]?.ToString() ?? "";
-                        decimal culy = Convert.ToDecimal(r["CuLyKm"]);
-                        int vk = Convert.ToInt32(r["TocDoToiDaKhach"]);
-                        int vh = Convert.ToInt32(r["TocDoToiDaHang"]);
-                        bool dayTau = Convert.ToBoolean(r["CanDauMayDay"]);
-                        decimal doc = Convert.ToDecimal(r["DoDocPermil"]);
+                        int maGaCuoi = Convert.ToInt32(r["MaGaCuoi"]);
+                        int maGaDau = Convert.ToInt32(r["MaGaDau"]);
+                        string huong = r["HuongTuyen"]?.ToString() ?? "";
 
-                        var itemBorder = new Border
+                        if (maGaCuoi == maGa || huong.Contains("Bắc"))
                         {
-                            Background = Brushes.White,
-                            BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CBD5E1")),
-                            BorderThickness = new Thickness(1),
-                            CornerRadius = new CornerRadius(2),
-                            Padding = new Thickness(6, 4, 6, 4),
-                            Margin = new Thickness(0, 0, 0, 4),
-                            Cursor = Cursors.Hand,
-                            ToolTip = "Nhấn để xem hồ sơ thông số kỹ thuật khu gian chi tiết"
-                        };
-
-                        DataRow capturedKgRow = r;
-                        itemBorder.MouseLeftButtonUp += (s, ev) =>
+                            rowBac = r;
+                        }
+                        else if (maGaDau == maGa || huong.Contains("Nam"))
                         {
-                            ev.Handled = true;
-                            HienThiPopupTongHopKhuGian();
-                        };
+                            rowNam = r;
+                        }
+                    }
 
-                        var sp = new StackPanel();
-                        var topRow = new Grid();
-                        topRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                        topRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    // Tên ga hiện tại và lý trình
+                    string tenGaHienTai = txtTenGa.Text.Trim();
+                    if (string.IsNullOrEmpty(tenGaHienTai)) tenGaHienTai = "GA ĐANG CHỌN";
+                    FormatHelper.TryParseKm(txtLyTrinh.Text, out decimal lyTrinhHienTai);
 
-                        var badgeHuong = new Border
-                        {
-                            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E0E7FF")),
-                            Padding = new Thickness(5, 2, 5, 2),
-                            CornerRadius = new CornerRadius(2),
-                            Margin = new Thickness(0, 0, 6, 0)
-                        };
-                        badgeHuong.Child = new TextBlock
-                        {
-                            Text = huong,
-                            FontSize = 10,
-                            FontWeight = FontWeights.Bold,
-                            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#003B73"))
-                        };
-                        Grid.SetColumn(badgeHuong, 0);
-                        topRow.Children.Add(badgeHuong);
+                    // Sơ Đồ Ray Tuyến Tính Chuỗi Ga (Linear Railway Schematic Track)
+                    var cardSoDo = TaoSoDoKhuGianTuyenTinh(tenGaHienTai, lyTrinhHienTai, rowBac, rowNam);
+                    pnlChiTietKhuGian.Children.Add(cardSoDo);
 
-                        var txtRoute = new TextBlock
-                        {
-                            Text = $"{gaDau} ↔ {gaCuoi} ({culy:0.00} km)",
-                            FontSize = 11.5,
-                            FontWeight = FontWeights.Bold,
-                            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0F172A")),
-                            VerticalAlignment = VerticalAlignment.Center
-                        };
-                        Grid.SetColumn(txtRoute, 1);
-                        topRow.Children.Add(txtRoute);
-
-                        sp.Children.Add(topRow);
-
-                        var txtSub = new TextBlock
-                        {
-                            Text = dayTau ? $"Vmax: {vk} km/h (khách), {vh} km/h (hàng) • Cần đầu máy đẩy (Dốc {doc}‰)"
-                                          : $"Vmax: {vk} km/h (khách), {vh} km/h (hàng) • Dốc {doc}‰",
-                            FontSize = 11,
-                            FontWeight = dayTau ? FontWeights.Bold : FontWeights.SemiBold,
-                            Foreground = dayTau ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C"))
-                                                : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#475569")),
-                            Margin = new Thickness(0, 2, 0, 0)
-                        };
-                        sp.Children.Add(txtSub);
-
-                        itemBorder.Child = sp;
-                        pnlChiTietKhuGian.Children.Add(itemBorder);
+                    // Dải tóm tắt thông số tốc độ & kỹ thuật phụ bên dưới sơ đồ
+                    var pnlThongSo = TaoThongSoKyThuatKhuGian(rowBac, rowNam);
+                    if (pnlThongSo != null)
+                    {
+                        pnlChiTietKhuGian.Children.Add(pnlThongSo);
                     }
                 }
 
@@ -1128,8 +1323,565 @@ namespace GUI.Views.Pages
             }
         }
 
+        /// <summary>
+        /// Tạo Sơ Đồ Ray Tuyến Tính trực quan theo chuỗi liên tục:
+        /// Ga Bắc ── Cự ly, Dốc ── ● GA HIỆN TẠI ── Cự ly, Dốc ── Ga Nam
+        /// </summary>
+        private Border TaoSoDoKhuGianTuyenTinh(string tenGaHienTai, decimal lyTrinhHienTai, DataRow? rowBac, DataRow? rowNam)
+        {
+            var card = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8FAFC")),
+                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E2E8F0")),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(12, 12, 12, 12),
+                Margin = new Thickness(0, 0, 0, 8),
+                Cursor = Cursors.Hand,
+                ToolTip = "Nhấn để mở cửa sổ tổng hợp hồ sơ khu gian toàn tuyến"
+            };
+
+            card.MouseEnter += (s, e) =>
+            {
+                card.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F1F5F9"));
+                card.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CBD5E1"));
+            };
+            card.MouseLeave += (s, e) =>
+            {
+                card.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8FAFC"));
+                card.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E2E8F0"));
+            };
+            card.MouseLeftButtonUp += (s, e) =>
+            {
+                e.Handled = true;
+                HienThiPopupTongHopKhuGian();
+            };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90, GridUnitType.Pixel) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110, GridUnitType.Pixel) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90, GridUnitType.Pixel) });
+
+            // -------------------------------------------------------------
+            // CỘT 0: GA PHÍA BẮC (NÚT TRÁI)
+            // -------------------------------------------------------------
+            var spBac = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            if (rowBac != null)
+            {
+                string tenGaBac = rowBac["TenGaDau"]?.ToString() ?? "Ga Bắc";
+                decimal lyTrinhBac = rowBac.Table.Columns.Contains("LyTrinhGaDau") && rowBac["LyTrinhGaDau"] != DBNull.Value 
+                    ? Convert.ToDecimal(rowBac["LyTrinhGaDau"]) : 0m;
+
+                spBac.Children.Add(new TextBlock
+                {
+                    Text = tenGaBac,
+                    FontSize = 11,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#334155")),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    MaxWidth = 85
+                });
+                spBac.Children.Add(new System.Windows.Shapes.Ellipse
+                {
+                    Width = 10,
+                    Height = 10,
+                    Fill = Brushes.White,
+                    Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748B")),
+                    StrokeThickness = 2.5,
+                    Margin = new Thickness(0, 3, 0, 3),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+                spBac.Children.Add(new TextBlock
+                {
+                    Text = FormatHelper.FormatKm(lyTrinhBac),
+                    FontSize = 10,
+                    FontFamily = new FontFamily("Consolas"),
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748B")),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+            }
+            else
+            {
+                // Ga ở đầu tuyến (Ga Hà Nội)
+                spBac.Children.Add(new TextBlock
+                {
+                    Text = "[ĐẦU TUYẾN]",
+                    FontSize = 9.5,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8")),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+                spBac.Children.Add(new Border
+                {
+                    Width = 4,
+                    Height = 12,
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CBD5E1")),
+                    CornerRadius = new CornerRadius(1),
+                    Margin = new Thickness(0, 3, 0, 3),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+                spBac.Children.Add(new TextBlock
+                {
+                    Text = "Km 0.00",
+                    FontSize = 10,
+                    FontFamily = new FontFamily("Consolas"),
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8")),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+            }
+            Grid.SetColumn(spBac, 0);
+            grid.Children.Add(spBac);
+
+            // -------------------------------------------------------------
+            // CỘT 1: ĐOẠN RAY NỐI PHÍA BẮC (CỰ LY + ĐƯỜNG RAY + ĐỘ DỐC)
+            // -------------------------------------------------------------
+            var segBac = new Grid { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(2, 0, 2, 0) };
+            segBac.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            segBac.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            segBac.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            if (rowBac != null)
+            {
+                decimal cuLyBac = Convert.ToDecimal(rowBac["CuLyKm"]);
+                decimal doDocBac = Convert.ToDecimal(rowBac["DoDocPermil"]);
+                bool dayTauBac = Convert.ToBoolean(rowBac["CanDauMayDay"]);
+
+                // Cự ly (Trên ray)
+                var txtCuLyBac = new TextBlock
+                {
+                    Text = $"{cuLyBac:0.0} km",
+                    FontSize = 10.5,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#003B73")),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 2)
+                };
+                Grid.SetRow(txtCuLyBac, 0);
+                segBac.Children.Add(txtCuLyBac);
+
+                // Đường ray nối ngang
+                var trackBac = new Border
+                {
+                    Height = 3,
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#003B73")),
+                    CornerRadius = new CornerRadius(1.5),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                Grid.SetRow(trackBac, 1);
+                segBac.Children.Add(trackBac);
+
+                // Độ dốc & Cảnh báo (Dưới ray)
+                var docPanelBac = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 2, 0, 0)
+                };
+
+                if (dayTauBac)
+                {
+                    docPanelBac.Children.Add(new Wpf.Ui.Controls.SymbolIcon
+                    {
+                        Symbol = Wpf.Ui.Controls.SymbolRegular.Warning24,
+                        FontSize = 10.5,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DC2626")),
+                        Margin = new Thickness(0, 0, 3, 0),
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    docPanelBac.Children.Add(new TextBlock
+                    {
+                        Text = $"{doDocBac:0.0}‰",
+                        FontSize = 10,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C")),
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    docPanelBac.ToolTip = $"Cần đầu máy đẩy (Độ dốc lớn {doDocBac:0.0}‰)";
+                }
+                else
+                {
+                    docPanelBac.Children.Add(new TextBlock
+                    {
+                        Text = doDocBac > 0 ? $"{doDocBac:0.0}‰" : "0‰",
+                        FontSize = 10,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748B")),
+                        HorizontalAlignment = HorizontalAlignment.Center
+                    });
+                }
+                Grid.SetRow(docPanelBac, 2);
+                segBac.Children.Add(docPanelBac);
+            }
+            else
+            {
+                // Đoạn ray trống ở đầu tuyến
+                var trackEmpty = new Border
+                {
+                    Height = 2,
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E2E8F0")),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                Grid.SetRow(trackEmpty, 1);
+                segBac.Children.Add(trackEmpty);
+            }
+            Grid.SetColumn(segBac, 1);
+            grid.Children.Add(segBac);
+
+            // -------------------------------------------------------------
+            // CỘT 2: GA HIỆN TẠI (● NÚT GIỮA NỔI BẬT NHẤT)
+            // -------------------------------------------------------------
+            var spCurrent = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            
+            // Tên ga hiện tại: IN HOA, ĐẬM, MÀU NAVY
+            spCurrent.Children.Add(new TextBlock
+            {
+                Text = tenGaHienTai.ToUpperInvariant(),
+                FontSize = 12,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#003B73")),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                MaxWidth = 105
+            });
+
+            // Nút tròn to nổi bật ở giữa
+            spCurrent.Children.Add(new System.Windows.Shapes.Ellipse
+            {
+                Width = 14,
+                Height = 14,
+                Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#003B73")),
+                Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#BFDBFE")),
+                StrokeThickness = 2.5,
+                Margin = new Thickness(0, 2, 0, 2),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+
+            // Lý trình hiện tại
+            spCurrent.Children.Add(new TextBlock
+            {
+                Text = FormatHelper.FormatKm(lyTrinhHienTai),
+                FontSize = 10.5,
+                FontWeight = FontWeights.Bold,
+                FontFamily = new FontFamily("Consolas"),
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0F172A")),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+
+            Grid.SetColumn(spCurrent, 2);
+            grid.Children.Add(spCurrent);
+
+            // -------------------------------------------------------------
+            // CỘT 3: ĐOẠN RAY NỐI PHÍA NAM (CỰ LY + ĐƯỜNG RAY + ĐỘ DỐC)
+            // -------------------------------------------------------------
+            var segNam = new Grid { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(2, 0, 2, 0) };
+            segNam.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            segNam.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            segNam.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            if (rowNam != null)
+            {
+                decimal cuLyNam = Convert.ToDecimal(rowNam["CuLyKm"]);
+                decimal doDocNam = Convert.ToDecimal(rowNam["DoDocPermil"]);
+                bool dayTauNam = Convert.ToBoolean(rowNam["CanDauMayDay"]);
+
+                // Cự ly (Trên ray)
+                var txtCuLyNam = new TextBlock
+                {
+                    Text = $"{cuLyNam:0.0} km",
+                    FontSize = 10.5,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#003B73")),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 2)
+                };
+                Grid.SetRow(txtCuLyNam, 0);
+                segNam.Children.Add(txtCuLyNam);
+
+                // Đường ray nối ngang
+                var trackNam = new Border
+                {
+                    Height = 3,
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#003B73")),
+                    CornerRadius = new CornerRadius(1.5),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                Grid.SetRow(trackNam, 1);
+                segNam.Children.Add(trackNam);
+
+                // Độ dốc & Cảnh báo (Dưới ray)
+                var docPanelNam = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 2, 0, 0)
+                };
+
+                if (dayTauNam)
+                {
+                    docPanelNam.Children.Add(new Wpf.Ui.Controls.SymbolIcon
+                    {
+                        Symbol = Wpf.Ui.Controls.SymbolRegular.Warning24,
+                        FontSize = 10.5,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DC2626")),
+                        Margin = new Thickness(0, 0, 3, 0),
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    docPanelNam.Children.Add(new TextBlock
+                    {
+                        Text = $"{doDocNam:0.0}‰",
+                        FontSize = 10,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C")),
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    docPanelNam.ToolTip = $"Cần đầu máy đẩy (Độ dốc lớn {doDocNam:0.0}‰)";
+                }
+                else
+                {
+                    docPanelNam.Children.Add(new TextBlock
+                    {
+                        Text = doDocNam > 0 ? $"{doDocNam:0.0}‰" : "0‰",
+                        FontSize = 10,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748B")),
+                        HorizontalAlignment = HorizontalAlignment.Center
+                    });
+                }
+                Grid.SetRow(docPanelNam, 2);
+                segNam.Children.Add(docPanelNam);
+            }
+            else
+            {
+                // Đoạn ray trống ở cuối tuyến
+                var trackEmpty = new Border
+                {
+                    Height = 2,
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E2E8F0")),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                Grid.SetRow(trackEmpty, 1);
+                segNam.Children.Add(trackEmpty);
+            }
+            Grid.SetColumn(segNam, 3);
+            grid.Children.Add(segNam);
+
+            // -------------------------------------------------------------
+            // CỘT 4: GA PHÍA NAM (NÚT PHẢI)
+            // -------------------------------------------------------------
+            var spNam = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            if (rowNam != null)
+            {
+                string tenGaNam = rowNam["TenGaCuoi"]?.ToString() ?? "Ga Nam";
+                decimal lyTrinhNam = rowNam.Table.Columns.Contains("LyTrinhGaCuoi") && rowNam["LyTrinhGaCuoi"] != DBNull.Value 
+                    ? Convert.ToDecimal(rowNam["LyTrinhGaCuoi"]) : 0m;
+
+                spNam.Children.Add(new TextBlock
+                {
+                    Text = tenGaNam,
+                    FontSize = 11,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#334155")),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    MaxWidth = 85
+                });
+                spNam.Children.Add(new System.Windows.Shapes.Ellipse
+                {
+                    Width = 10,
+                    Height = 10,
+                    Fill = Brushes.White,
+                    Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748B")),
+                    StrokeThickness = 2.5,
+                    Margin = new Thickness(0, 3, 0, 3),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+                spNam.Children.Add(new TextBlock
+                {
+                    Text = FormatHelper.FormatKm(lyTrinhNam),
+                    FontSize = 10,
+                    FontFamily = new FontFamily("Consolas"),
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748B")),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+            }
+            else
+            {
+                // Ga ở cuối tuyến (Ga Sài Gòn)
+                spNam.Children.Add(new TextBlock
+                {
+                    Text = "[CUỐI TUYẾN]",
+                    FontSize = 9.5,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8")),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+                spNam.Children.Add(new Border
+                {
+                    Width = 4,
+                    Height = 12,
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CBD5E1")),
+                    CornerRadius = new CornerRadius(1),
+                    Margin = new Thickness(0, 3, 0, 3),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+                spNam.Children.Add(new TextBlock
+                {
+                    Text = "Km 1,726.20",
+                    FontSize = 10,
+                    FontFamily = new FontFamily("Consolas"),
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8")),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+            }
+            Grid.SetColumn(spNam, 4);
+            grid.Children.Add(spNam);
+
+            card.Child = grid;
+            return card;
+        }
+
+        /// <summary>
+        /// Tạo dải thông số kỹ thuật phụ bên dưới sơ đồ ray (Vmax Khách/Hàng, máy đẩy).
+        /// </summary>
+        private UIElement? TaoThongSoKyThuatKhuGian(DataRow? rowBac, DataRow? rowNam)
+        {
+            if (rowBac == null && rowNam == null) return null;
+
+            var sp = new StackPanel();
+
+            if (rowBac != null)
+            {
+                string gaBac = rowBac["TenGaDau"]?.ToString() ?? "Ga Bắc";
+                int vk = Convert.ToInt32(rowBac["TocDoToiDaKhach"]);
+                int vh = Convert.ToInt32(rowBac["TocDoToiDaHang"]);
+                bool dayTau = Convert.ToBoolean(rowBac["CanDauMayDay"]);
+
+                var cardBac = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EFF6FF")),
+                    BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DBEAFE")),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(10, 6, 10, 6),
+                    Margin = new Thickness(0, 0, 0, 5)
+                };
+
+                var spBacContent = new Grid();
+                spBacContent.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                spBacContent.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+                var tbBac = new TextBlock { FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
+                tbBac.Inlines.Add(new System.Windows.Documents.Run("Phía Bắc (↔ " + gaBac + "): ") 
+                { 
+                    FontWeight = FontWeights.Bold, 
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1D4ED8")) 
+                });
+                tbBac.Inlines.Add(new System.Windows.Documents.Run($"Tốc độ Vmax {vk} km/h (khách), {vh} km/h (hàng)") 
+                { 
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#475569")) 
+                });
+                Grid.SetColumn(tbBac, 0);
+                spBacContent.Children.Add(tbBac);
+
+                if (dayTau)
+                {
+                    var bdBadge = new Border
+                    {
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEE2E2")),
+                        BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FCA5A5")),
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(3),
+                        Padding = new Thickness(6, 2, 6, 2),
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    var tbBadge = new TextBlock
+                    {
+                        Text = "⚠ Cần máy đẩy",
+                        FontSize = 10,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C"))
+                    };
+                    bdBadge.Child = tbBadge;
+                    Grid.SetColumn(bdBadge, 1);
+                    spBacContent.Children.Add(bdBadge);
+                }
+
+                cardBac.Child = spBacContent;
+                sp.Children.Add(cardBac);
+            }
+
+            if (rowNam != null)
+            {
+                string gaNam = rowNam["TenGaCuoi"]?.ToString() ?? "Ga Nam";
+                int vk = Convert.ToInt32(rowNam["TocDoToiDaKhach"]);
+                int vh = Convert.ToInt32(rowNam["TocDoToiDaHang"]);
+                bool dayTau = Convert.ToBoolean(rowNam["CanDauMayDay"]);
+
+                var cardNam = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F0FDF4")),
+                    BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DCFCE7")),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(10, 6, 10, 6),
+                    Margin = new Thickness(0, 0, 0, 3)
+                };
+
+                var spNamContent = new Grid();
+                spNamContent.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                spNamContent.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+                var tbNam = new TextBlock { FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
+                tbNam.Inlines.Add(new System.Windows.Documents.Run("Phía Nam (↔ " + gaNam + "): ") 
+                { 
+                    FontWeight = FontWeights.Bold, 
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15803D")) 
+                });
+                tbNam.Inlines.Add(new System.Windows.Documents.Run($"Tốc độ Vmax {vk} km/h (khách), {vh} km/h (hàng)") 
+                { 
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#475569")) 
+                });
+                Grid.SetColumn(tbNam, 0);
+                spNamContent.Children.Add(tbNam);
+
+                if (dayTau)
+                {
+                    var bdBadge = new Border
+                    {
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEE2E2")),
+                        BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FCA5A5")),
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(3),
+                        Padding = new Thickness(6, 2, 6, 2),
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    var tbBadge = new TextBlock
+                    {
+                        Text = "⚠ Cần máy đẩy",
+                        FontSize = 10,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C"))
+                    };
+                    bdBadge.Child = tbBadge;
+                    Grid.SetColumn(bdBadge, 1);
+                    spNamContent.Children.Add(bdBadge);
+                }
+
+                cardNam.Child = spNamContent;
+                sp.Children.Add(cardNam);
+            }
+
+            return sp;
+        }
+
         private void BdBoxDuongRay_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            if (_isAddingNew || _currentMaGa <= 0)
+            {
+                ThongBaoDialog.CanhBao("Ga chưa được lưu trong hệ thống. Vui lòng bấm [Lưu Ga Mới] trước khi cấu hình đường ray.", "Chưa Lưu Ga Mới");
+                return;
+            }
             tabInspector.SelectedIndex = 1;
         }
 
@@ -1185,7 +1937,8 @@ namespace GUI.Views.Pages
                     }
                     else
                     {
-                        txtTenGaRayTab.Text = $"HẠ TẦNG RAY GA {txtTenGa.Text.Trim().ToUpper()}";
+                        string prefixDirty = _isDirty ? " [Chưa Lưu Thông Tin Ga]" : "";
+                        txtTenGaRayTab.Text = $"HẠ TẦNG RAY GA {txtTenGa.Text.Trim().ToUpper()}{prefixDirty}";
                         if (_dtCurrentDuongRay == null || _dtCurrentDuongRay.Rows.Count == 0)
                         {
                             TaiDanhSachDuongRayTrongGa(_currentMaGa);
@@ -1238,11 +1991,25 @@ namespace GUI.Views.Pages
                 if (txtTongSucChuaGa != null) txtTongSucChuaGa.Text = $"~{Math.Max(0, totalLength / 25)} toa xe";
                 if (txtTongKeGa != null) txtTongKeGa.Text = $"{passengerTracks} đường";
 
+                if (txtTongSucChuaTab0 != null) txtTongSucChuaTab0.Text = $"~{Math.Max(0, totalLength / 25)} toa xe";
+                if (txtTongKeGaTab0 != null) txtTongKeGaTab0.Text = $"{passengerTracks} ke ga";
+
                 VeSoDoDuongRay();
+
+                _isLoadingRay = false;
 
                 if (_dtCurrentDuongRay != null && _dtCurrentDuongRay.Rows.Count > 0)
                 {
+                    dgDuongRayGa.SelectedIndex = -1;
                     dgDuongRayGa.SelectedIndex = 0;
+                    if (dgDuongRayGa.SelectedItem is DataRowView drvFirst)
+                    {
+                        PopulateFormRay(drvFirst);
+                    }
+                    else if (_dtCurrentDuongRay.DefaultView.Count > 0)
+                    {
+                        PopulateFormRay(_dtCurrentDuongRay.DefaultView[0]);
+                    }
                 }
                 else
                 {
@@ -1312,6 +2079,31 @@ namespace GUI.Views.Pages
                 txtLuuRay.Text = "Lưu Cấu Hình Ray";
                 btnXoaRay.IsEnabled = true;
 
+                // Cập nhật thông tin Audit kiểm toán của đường ray
+                if (txtNguoiTaoRay != null)
+                {
+                    string creator = drv.Row.Table.Columns.Contains("NguoiTao") && drv["NguoiTao"] != DBNull.Value
+                        ? drv["NguoiTao"].ToString()! : "admin";
+                    DateTime createTime = drv.Row.Table.Columns.Contains("NgayTao") && drv["NgayTao"] != DBNull.Value
+                        ? Convert.ToDateTime(drv["NgayTao"]) : DateTime.UtcNow;
+                    txtNguoiTaoRay.Text = $"{creator} ({FormatHelper.FormatDateTime(createTime)})";
+                }
+
+                if (txtNgayCapNhatRay != null)
+                {
+                    if (drv.Row.Table.Columns.Contains("NgayCapNhat") && drv["NgayCapNhat"] != DBNull.Value)
+                    {
+                        string updater = drv.Row.Table.Columns.Contains("NguoiCapNhat") && drv["NguoiCapNhat"] != DBNull.Value
+                            ? drv["NguoiCapNhat"].ToString()! : "admin";
+                        DateTime updateTime = Convert.ToDateTime(drv["NgayCapNhat"]);
+                        txtNgayCapNhatRay.Text = $"{updater} ({FormatHelper.FormatDateTime(updateTime)})";
+                    }
+                    else
+                    {
+                        txtNgayCapNhatRay.Text = "Chưa cập nhật";
+                    }
+                }
+
                 CapNhatNangLucToa();
                 VeSoDoDuongRay();
             }
@@ -1346,6 +2138,9 @@ namespace GUI.Views.Pages
                 chkCoKeGaRay.IsChecked = true;
                 cboTrangThaiRay.SelectedIndex = 0;
 
+                if (txtNguoiTaoRay != null) txtNguoiTaoRay.Text = isNew ? "admin (Mới)" : "admin";
+                if (txtNgayCapNhatRay != null) txtNgayCapNhatRay.Text = "Chưa cập nhật";
+
                 txtLuuRay.Text = "Tạo Mới Đường Ray";
                 btnXoaRay.IsEnabled = !isNew;
                 CapNhatNangLucToa();
@@ -1371,6 +2166,8 @@ namespace GUI.Views.Pages
                 if (txtTongChieuDaiRay != null) txtTongChieuDaiRay.Text = "0 m";
                 if (txtTongSucChuaGa != null) txtTongSucChuaGa.Text = "~0 toa xe";
                 if (txtTongKeGa != null) txtTongKeGa.Text = "0 đường";
+                if (txtTongSucChuaTab0 != null) txtTongSucChuaTab0.Text = "~0 toa xe";
+                if (txtTongKeGaTab0 != null) txtTongKeGaTab0.Text = "0 ke ga";
                 if (txtRayCountTab != null) txtRayCountTab.Text = "0 ray";
                 if (txtSoDuongRay != null) txtSoDuongRay.Text = "0 đường ray";
                 if (txtTenGaRayTab != null) txtTenGaRayTab.Text = "HẠ TẦNG RAY GA (MỚI)";
@@ -1441,9 +2238,13 @@ namespace GUI.Views.Pages
             if (txtNangLucToa == null || txtGhiChuTacNghiep == null) return;
 
             int chieuDai = 450;
-            if (txtChieuDaiRay != null && int.TryParse(txtChieuDaiRay.Text.Trim(), out int d) && d > 0)
+            if (txtChieuDaiRay != null)
             {
-                chieuDai = d;
+                string cdStr = (txtChieuDaiRay.Text ?? "").Replace(",", "").Trim();
+                if (int.TryParse(cdStr, out int d) && d > 0)
+                {
+                    chieuDai = d;
+                }
             }
 
             int soToa = Math.Max(1, chieuDai / 25);
@@ -1840,9 +2641,9 @@ namespace GUI.Views.Pages
                     return;
                 }
 
-                if (!int.TryParse(txtChieuDaiRay.Text.Replace(",", "").Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out int chieuDai) || chieuDai < 100 || chieuDai > 3000)
+                if (!int.TryParse(txtChieuDaiRay.Text.Replace(",", "").Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out int chieuDai) || chieuDai < 100 || chieuDai > 10000)
                 {
-                    ThongBaoDialog.CanhBao("Chiều dài đường ray phải từ 100 mét đến 3,000 mét.", "Chiều Dài Không Hợp Lệ");
+                    ThongBaoDialog.CanhBao("Chiều dài đường ray phải từ 100 mét đến 10,000 mét.", "Chiều Dài Không Hợp Lệ");
                     txtChieuDaiRay.Focus();
                     return;
                 }
@@ -1884,7 +2685,9 @@ namespace GUI.Views.Pages
                     LoaiDuong = loai,
                     ChieuDaiHuuDungM = chieuDai,
                     CoKeGa = chkCoKeGaRay.IsChecked == true,
-                    TrangThai = tt
+                    TrangThai = tt,
+                    NguoiTao = "admin",
+                    NguoiCapNhat = "admin"
                 };
 
                 if (_isAddingRay)
@@ -1932,6 +2735,27 @@ namespace GUI.Views.Pages
                 return;
             }
 
+            // Ràng buộc hạ tầng đường sắt: Chặn xóa đường chính tuyến duy nhất trong ga
+            if (cboLoaiDuongRay.SelectedIndex == 0) // CHINH_TUYEN
+            {
+                int countChinhTuyen = 0;
+                if (_dtCurrentDuongRay != null)
+                {
+                    foreach (DataRow r in _dtCurrentDuongRay.Rows)
+                    {
+                        if (r.RowState != DataRowState.Deleted && r["LoaiDuong"]?.ToString() == "CHINH_TUYEN")
+                        {
+                            countChinhTuyen++;
+                        }
+                    }
+                }
+                if (countChinhTuyen <= 1)
+                {
+                    ThongBaoDialog.CanhBao("Không thể xóa đường chính tuyến duy nhất của ga. Mọi ga trên mạng lưới bắt buộc phải duy trì tối thiểu 01 đường ray chính tuyến để thông tàu toàn tuyến.", "Ràng Buộc Hạ Tầng Bắt Buộc");
+                    return;
+                }
+            }
+
             try
             {
                 bool xacNhan = ThongBaoDialog.XacNhan(
@@ -1943,7 +2767,10 @@ namespace GUI.Views.Pages
                     bool thanhCong = _duongRayService.Xoa(_currentMaRay, out string loi);
                     if (thanhCong)
                     {
+                        _currentMaRay = 0;
+                        ClearFormRay(isNew: false);
                         ThongBaoDialog.ThanhCong("Đã xóa đường ray thành công khỏi ga.", "Đã Xóa");
+                        TaiDanhSachDuongRayTrongGa(_currentMaGa);
                         TaiChiTietHaTangGa(_currentMaGa);
                         LoadData();
                     }
@@ -1990,7 +2817,7 @@ namespace GUI.Views.Pages
             {
                 var conditions = new List<string>();
 
-                // 1. Tìm kiếm từ khóa đa năng (Tên ga, mã code, tỉnh thành, lý trình Km - có dấu & không dấu, an toàn ký tự đặc biệt)
+                // 1. Tìm kiếm từ khóa (Tên ga, mã code, tỉnh thành, lý trình Km - có dấu & không dấu, an toàn ký tự đặc biệt)
                 string rawKw = txtTimKiem?.Text?.Trim() ?? "";
                 if (rawKw.Length > 100)
                 {
@@ -2026,8 +2853,59 @@ namespace GUI.Views.Pages
                     conditions.Add("CoCauQuay = true");
                 }
 
-                // Áp dụng 
-                _cachedTable.DefaultView.RowFilter = conditions.Count > 0 ? string.Join(" AND ", conditions) : "";
+                // Cập nhật trạng thái thị giác Active Indicator cho các bộ lọc
+                if (cboLocHangGa != null)
+                {
+                    if (cboLocHangGa.SelectedIndex > 0)
+                    {
+                        cboLocHangGa.BorderBrush = (Brush)new BrushConverter().ConvertFrom("#0284C7")!;
+                        cboLocHangGa.Background = (Brush)new BrushConverter().ConvertFrom("#F0F9FF")!;
+                    }
+                    else
+                    {
+                        cboLocHangGa.ClearValue(Control.BorderBrushProperty);
+                        cboLocHangGa.ClearValue(Control.BackgroundProperty);
+                    }
+                }
+
+                if (cboLocKhaiThac != null)
+                {
+                    if (cboLocKhaiThac.SelectedIndex > 0)
+                    {
+                        cboLocKhaiThac.BorderBrush = (Brush)new BrushConverter().ConvertFrom("#0284C7")!;
+                        cboLocKhaiThac.Background = (Brush)new BrushConverter().ConvertFrom("#F0F9FF")!;
+                    }
+                    else
+                    {
+                        cboLocKhaiThac.ClearValue(Control.BorderBrushProperty);
+                        cboLocKhaiThac.ClearValue(Control.BackgroundProperty);
+                    }
+                }
+
+                if (bdChipCauQuay != null && chkLocCauQuay != null)
+                {
+                    if (chkLocCauQuay.IsChecked == true)
+                    {
+                        bdChipCauQuay.BorderBrush = (Brush)new BrushConverter().ConvertFrom("#0284C7")!;
+                        bdChipCauQuay.Background = (Brush)new BrushConverter().ConvertFrom("#F0F9FF")!;
+                        chkLocCauQuay.Foreground = (Brush)new BrushConverter().ConvertFrom("#0369A1")!;
+                    }
+                    else
+                    {
+                        bdChipCauQuay.BorderBrush = (Brush)new BrushConverter().ConvertFrom("#CBD5E1")!;
+                        bdChipCauQuay.Background = Brushes.White;
+                        chkLocCauQuay.Foreground = (Brush)new BrushConverter().ConvertFrom("#334155")!;
+                    }
+                }
+
+                try
+                {
+                    _cachedTable.DefaultView.RowFilter = conditions.Count > 0 ? string.Join(" AND ", conditions) : "";
+                }
+                catch
+                {
+                    _cachedTable.DefaultView.RowFilter = "";
+                }
 
                 // Hiển thị nút "Hủy Bộ Lọc" nếu có bất kỳ điều kiện lọc nào đang chạy
                 bool isFiltering = conditions.Count > 0;
@@ -2061,6 +2939,10 @@ namespace GUI.Views.Pages
                 {
                     btnXoaTimKiem.Visibility = coChu ? Visibility.Visible : Visibility.Collapsed;
                 }
+                if (bdShortcutSearch != null)
+                {
+                    bdShortcutSearch.Visibility = coChu ? Visibility.Collapsed : Visibility.Visible;
+                }
                 if (txtWatermark != null)
                 {
                     txtWatermark.Visibility = coChu ? Visibility.Collapsed : Visibility.Visible;
@@ -2077,6 +2959,7 @@ namespace GUI.Views.Pages
         {
             txtTimKiem.Text = "";
             btnXoaTimKiem.Visibility = Visibility.Collapsed;
+            if (bdShortcutSearch != null) bdShortcutSearch.Visibility = Visibility.Visible;
             if (txtWatermark != null) txtWatermark.Visibility = Visibility.Visible;
             txtTimKiem.Focus();
         }
@@ -2097,6 +2980,8 @@ namespace GUI.Views.Pages
         {
             _isLoadingData = true;
             txtTimKiem.Text = "";
+            if (btnXoaTimKiem != null) btnXoaTimKiem.Visibility = Visibility.Collapsed;
+            if (bdShortcutSearch != null) bdShortcutSearch.Visibility = Visibility.Visible;
             if (txtWatermark != null) txtWatermark.Visibility = Visibility.Visible;
             if (cboLocHangGa != null) cboLocHangGa.SelectedIndex = 0;
             if (cboLocKhaiThac != null) cboLocKhaiThac.SelectedIndex = 0;
@@ -2400,7 +3285,6 @@ namespace GUI.Views.Pages
             }
             catch
             {
-                // Tránh crash nếu clipboard hệ thống bận
             }
         }
 
@@ -2420,7 +3304,6 @@ namespace GUI.Views.Pages
             }
             catch
             {
-                // Tránh crash nếu clipboard hệ thống bận
             }
         }
 
@@ -2485,6 +3368,7 @@ namespace GUI.Views.Pages
             {
                 if (_currentMaGa > 0)
                 {
+                    TaiDanhSachDuongRayTrongGa(_currentMaGa);
                     TaiChiTietHaTangGa(_currentMaGa);
                 }
             }
@@ -2523,7 +3407,7 @@ namespace GUI.Views.Pages
                         CrudActionBar_SaveClicked(sender, e);
                     }
                 }
-                else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F)
+                else if ((Keyboard.Modifiers == ModifierKeys.Control && (e.Key == Key.K || e.Key == Key.F)) || e.Key == Key.F3)
                 {
                     e.Handled = true;
                     txtTimKiem.Focus();

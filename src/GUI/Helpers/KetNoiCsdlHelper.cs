@@ -1,4 +1,4 @@
-﻿using DAL.Connection;
+using DAL.Connection;
 using DTO.Common;
 
 namespace GUI.Helpers

@@ -217,7 +217,7 @@ namespace GUI.Views.Dialogs
         private void TxtChieuDaiRay_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (txtUocTinhToa == null) return;
-            if (int.TryParse(txtChieuDaiRay.Text.Trim(), out int cd) && cd > 0)
+            if (int.TryParse(txtChieuDaiRay.Text.Replace(",", "").Trim(), out int cd) && cd > 0)
             {
                 txtUocTinhToa.Text = $"~{cd / 20} toa xe tiêu chuẩn ({cd * 50 / 1000:0.0} tấn tải trọng)";
             }
@@ -259,7 +259,7 @@ namespace GUI.Views.Dialogs
                 return;
             }
 
-            if (!int.TryParse(txtChieuDaiRay.Text.Trim(), out int chieuDai) || chieuDai < 100)
+            if (!int.TryParse(txtChieuDaiRay.Text.Replace(",", "").Trim(), out int chieuDai) || chieuDai < 100)
             {
                 ThongBaoDialog.CanhBao("Chiều dài hữu dụng của đường ray phải tối thiểu 100 mét để đảm bảo an toàn dồn dịch.", "Chiều Dài Không Hợp Lệ");
                 txtChieuDaiRay.Focus();

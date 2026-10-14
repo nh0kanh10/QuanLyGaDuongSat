@@ -174,32 +174,32 @@ namespace GUI
                 case "MangLuoiGa":
                     btnScF2.Visibility = Visibility.Visible;
                     sepScF2.Visibility = Visibility.Visible;
-                    txtScF2.Text = "Thêm Ga Mới";
-                    btnScF2.ToolTip = "F2: Mở bảng thêm mới Ga đường sắt";
+                    txtScF2.Text = "Thêm ga mới";
+                    btnScF2.ToolTip = "F2: Khai báo thêm ga mới trên tuyến";
 
                     btnScF3.Visibility = Visibility.Visible;
                     sepScF3.Visibility = Visibility.Visible;
-                    txtScF3.Text = "Tra Cứu Ga";
-                    btnScF3.ToolTip = "F3: Focus con trỏ vào ô tìm kiếm ga";
+                    txtScF3.Text = "Tra cứu ga";
+                    btnScF3.ToolTip = "F3 hoặc Ctrl+K: Focus con trỏ vào ô tìm kiếm ga";
 
                     btnScF4.Visibility = Visibility.Visible;
                     sepScF4.Visibility = Visibility.Visible;
-                    txtScF4.Text = "Nhập Tệp";
-                    btnScF4.ToolTip = "F4: Nhập danh sách ga từ Excel/CSV";
+                    txtScF4.Text = "Nhập tệp";
+                    btnScF4.ToolTip = "F4: Nhập danh sách ga từ file Excel/CSV";
 
                     btnScF5.Visibility = Visibility.Visible;
                     sepScF5.Visibility = Visibility.Visible;
-                    txtScF5.Text = "Nạp Lại";
-                    btnScF5.ToolTip = "F5: Tải lại dữ liệu ga từ CSDL";
+                    txtScF5.Text = "Nạp lại";
+                    btnScF5.ToolTip = "F5: Tải lại toàn bộ dữ liệu ga từ CSDL";
 
                     btnScF6.Visibility = Visibility.Visible;
                     sepScF6.Visibility = Visibility.Visible;
                     txtScF6.Text = "Xuất Excel";
-                    btnScF6.ToolTip = "F6: Xuất danh sách ga ra tệp Excel";
+                    btnScF6.ToolTip = "F6: Xuất danh sách ga ra file Excel";
 
                     btnScF9.Visibility = Visibility.Visible;
                     sepScF9.Visibility = Visibility.Visible;
-                    txtScF9.Text = "Báo Cáo Ga (A4)";
+                    txtScF9.Text = "Báo cáo thống kê";
                     btnScF9.ToolTip = "F9: Mở trung tâm xem trước và in báo cáo kỹ thuật ga";
                     break;
 
@@ -497,76 +497,87 @@ namespace GUI
             else
             {
                 clusterBorder.Background = Brushes.Transparent;
-                icon.Foreground = (Brush)new BrushConverter().ConvertFrom("#94A3B8")!;
-                text.Foreground = (Brush)new BrushConverter().ConvertFrom("#94A3B8")!;
+                icon.Foreground = (Brush)new BrushConverter().ConvertFrom("#CBD5E1")!;
+                text.Foreground = (Brush)new BrushConverter().ConvertFrom("#CBD5E1")!;
                 indicator.Fill = Brushes.Transparent;
             }
         }
 
         private void ResetRibbonTabs()
         {
-            var inactiveBg = (Brush)new BrushConverter().ConvertFrom("#F1F5F9")!;
-            var inactiveBorder = (Brush)new BrushConverter().ConvertFrom("#CBD5E1")!;
-            var inactiveFg = (Brush)new BrushConverter().ConvertFrom("#334155")!;
-            var inactiveIconFg = (Brush)new BrushConverter().ConvertFrom("#475569")!;
+            var inactiveBg = Brushes.Transparent;
+            var inactiveBorder = Brushes.Transparent;
+            var inactiveFg = (Brush)new BrushConverter().ConvertFrom("#475569")!;
+            var inactiveIconFg = (Brush)new BrushConverter().ConvertFrom("#64748B")!;
 
             tabGa.Background = inactiveBg;
             tabGa.BorderBrush = inactiveBorder;
             txtTabGa.Foreground = inactiveFg;
+            txtTabGa.FontWeight = FontWeights.SemiBold;
             iconTabGa.Foreground = inactiveIconFg;
 
             tabKhuGian.Background = inactiveBg;
             tabKhuGian.BorderBrush = inactiveBorder;
             txtTabKhuGian.Foreground = inactiveFg;
+            txtTabKhuGian.FontWeight = FontWeights.SemiBold;
             iconTabKhuGian.Foreground = inactiveIconFg;
 
             tabLichTrinh.Background = inactiveBg;
             tabLichTrinh.BorderBrush = inactiveBorder;
             txtTabLichTrinh.Foreground = inactiveFg;
+            txtTabLichTrinh.FontWeight = FontWeights.SemiBold;
             iconTabLichTrinh.Foreground = inactiveIconFg;
 
             tabBieuDo.Background = inactiveBg;
             tabBieuDo.BorderBrush = inactiveBorder;
             txtTabBieuDo.Foreground = inactiveFg;
+            txtTabBieuDo.FontWeight = FontWeights.SemiBold;
             iconTabBieuDo.Foreground = inactiveIconFg;
 
             tabBanVe.Background = inactiveBg;
             tabBanVe.BorderBrush = inactiveBorder;
             txtTabBanVe.Foreground = inactiveFg;
+            txtTabBanVe.FontWeight = FontWeights.SemiBold;
             iconTabBanVe.Foreground = inactiveIconFg;
 
             tabSoatVe.Background = inactiveBg;
             tabSoatVe.BorderBrush = inactiveBorder;
             txtTabSoatVe.Foreground = inactiveFg;
+            txtTabSoatVe.FontWeight = FontWeights.SemiBold;
             iconTabSoatVe.Foreground = inactiveIconFg;
 
             tabHangHoa.Background = inactiveBg;
             tabHangHoa.BorderBrush = inactiveBorder;
             txtTabHangHoa.Foreground = inactiveFg;
+            txtTabHangHoa.FontWeight = FontWeights.SemiBold;
             iconTabHangHoa.Foreground = inactiveIconFg;
 
             tabNavPhuongTien.Background = inactiveBg;
             tabNavPhuongTien.BorderBrush = inactiveBorder;
             txtTabPhuongTien.Foreground = inactiveFg;
+            txtTabPhuongTien.FontWeight = FontWeights.SemiBold;
             iconTabPhuongTien.Foreground = inactiveIconFg;
 
             tabNavBaoTri.Background = inactiveBg;
             tabNavBaoTri.BorderBrush = inactiveBorder;
             txtTabBaoTri.Foreground = inactiveFg;
+            txtTabBaoTri.FontWeight = FontWeights.SemiBold;
             iconTabBaoTri.Foreground = inactiveIconFg;
 
             tabNavNhanSu.Background = inactiveBg;
             tabNavNhanSu.BorderBrush = inactiveBorder;
             txtTabNhanSu.Foreground = inactiveFg;
+            txtTabNhanSu.FontWeight = FontWeights.SemiBold;
             iconTabNhanSu.Foreground = inactiveIconFg;
         }
 
         private void SetTabActive(Border tab, TextBlock text, Wpf.Ui.Controls.SymbolIcon icon)
         {
-            tab.Background = (Brush)new BrushConverter().ConvertFrom("#003B73")!;
-            tab.BorderBrush = (Brush)new BrushConverter().ConvertFrom("#002855")!;
-            text.Foreground = Brushes.White;
-            icon.Foreground = Brushes.White;
+            tab.Background = (Brush)new BrushConverter().ConvertFrom("#F0F9FF")!;
+            tab.BorderBrush = (Brush)new BrushConverter().ConvertFrom("#0284C7")!;
+            text.Foreground = (Brush)new BrushConverter().ConvertFrom("#003B73")!;
+            text.FontWeight = FontWeights.Bold;
+            icon.Foreground = (Brush)new BrushConverter().ConvertFrom("#0284C7")!;
         }
 
         // Xử lý menu

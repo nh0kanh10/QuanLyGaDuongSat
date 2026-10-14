@@ -9,6 +9,7 @@ namespace BUS.Services
 {
     public class GaService
     {
+        public const decimal MaxLyTrinhKm = 5000.00m;
         private readonly GaRepository _repo = new();
 
         public DataTable LayDanhSach() => _repo.LayDanhSach();
@@ -104,9 +105,9 @@ namespace BUS.Services
                 return false;
             }
 
-            if (ga.LyTrinhKm > 5000)
+            if (ga.LyTrinhKm > MaxLyTrinhKm)
             {
-                error = "Lý trình không được vượt quá 5,000 km.";
+                error = $"Lý trình không được vượt quá {MaxLyTrinhKm:0.00} km.";
                 return false;
             }
 
@@ -201,9 +202,9 @@ namespace BUS.Services
                 return false;
             }
 
-            if (ga.LyTrinhKm > 5000)
+            if (ga.LyTrinhKm > MaxLyTrinhKm)
             {
-                error = "Lý trình không được vượt quá 5,000 km.";
+                error = $"Lý trình không được vượt quá {MaxLyTrinhKm:0.00} km.";
                 return false;
             }
 
@@ -239,9 +240,6 @@ namespace BUS.Services
 
         public bool Xoa(int maGa, out string error) => Xoa(maGa, out _, out error);
 
-        /// <summary>
-        /// Xóa ga thông minh: Xóa hẳn nếu ga mới chưa có liên kết, hoặc chuyển Tạm ngừng nếu đã có hạ tầng/vận hành.
-        /// </summary>
         public bool Xoa(int maGa, out bool daXoaVinhVien, out string message)
         {
             daXoaVinhVien = false;
