@@ -23,6 +23,8 @@ namespace GUI.Views.Pages
     //
     // Tu Sprint 1 (09/10): them / sua dau may, toa xe va lap doan tau GHI THANG CSDL
     // (kem nhat ky he thong). Khong con "thay doi tam" tren giao dien.
+    // 14/10: nut Xoa (phim Delete) - chi xoa ban ghi nhap nham (chua co du lieu lien quan);
+    // da co lich su thi de nghi chuyen sang "Ngung khai thac". Bo loc mac dinh an ban ghi ngung khai thac.
     // =========================================================================
     public partial class PhuongTienPage : Page
     {
@@ -231,6 +233,7 @@ namespace GUI.Views.Pages
             bool coChon = dgDauMay.SelectedItem is DauMayHienThi;
             btnSuaDauMay.IsEnabled = coChon && _coKetNoiCsdl;
             btnSuaChiTietDauMay.IsEnabled = coChon && _coKetNoiCsdl;
+            btnXoaDauMay.IsEnabled = coChon && _coKetNoiCsdl;
 
             if (dgDauMay.SelectedItem is not DauMayHienThi dm)
             {
@@ -275,7 +278,10 @@ namespace GUI.Views.Pages
             string tuLan = td.CoLichSu
                 ? $"chu kỳ {td.ChuKyKm:N0} km tính từ lần bảo dưỡng gần nhất"
                 : $"chưa có lịch sử bảo dưỡng {td.Cap}, chu kỳ {td.ChuKyKm:N0} km tính từ 0 km";
-            txtBaoDuongChiTiet.Text = td.MucCanhBao switch
+            txtBaoDuongChiTiet.Text = dm.LaNgungKhaiThac
+                ? "Đã ngừng khai thác: không còn theo dõi chu kỳ bảo dưỡng, không đưa vào đoàn tàu được. " +
+                  "Muốn dùng lại thì sửa hồ sơ, chuyển về Sẵn sàng hoặc Bảo dưỡng."
+                : td.MucCanhBao switch
             {
                 "QUA_HAN" => $"Quá hạn bảo dưỡng {td.Cap}: {td.MoTaConLai} ({tuLan}). Cần đưa vào xưởng.",
                 "SAP_TOI" => $"Sắp tới hạn bảo dưỡng {td.Cap}: {td.MoTaConLai} ({tuLan}). Nên lên kế hoạch.",
@@ -450,11 +456,19 @@ namespace GUI.Views.Pages
 
                 NapDanhSachDauMay();
 
-                // Bi bo loc hien tai an mat thi xoa loc de nguoi dung thay ngay ban ghi vua luu
+                // Bi bo loc hien tai an mat thi xoa loc de nguoi dung thay ngay ban ghi vua luu;
+                // bo loc mac dinh "Dang khai thac" an dau may vua chuyen sang Ngung khai thac -> xem tat ca
                 if (!ChonDongTheoMa(dgDauMay, (DauMayHienThi d) => d.MaDauMay == maDauMay))
                 {
                     BtnXoaLocDauMay_Click(this, new RoutedEventArgs());
-                    ChonDongTheoMa(dgDauMay, (DauMayHienThi d) => d.MaDauMay == maDauMay);
+                    if (!ChonDongTheoMa(dgDauMay, (DauMayHienThi d) => d.MaDauMay == maDauMay))
+                    {
+                        _dangNapDuLieu = true;
+                        ChonLaiTheoTag(cboTrangThaiDauMay, "ALL");
+                        _dangNapDuLieu = false;
+                        NapDanhSachDauMay();
+                        ChonDongTheoMa(dgDauMay, (DauMayHienThi d) => d.MaDauMay == maDauMay);
+                    }
                 }
 
                 // Doi dau may co the doi ket qua kiem tra cua chuyen dang xem o tab 3
@@ -474,6 +488,99 @@ namespace GUI.Views.Pages
                     ds.Add(tag);
             }
             return ds;
+        }
+
+        // --- Xoa dau may (14/10): chi khi chua co du lieu lien quan, con lai de nghi Ngung khai thac ---
+
+        private void BtnXoaDauMay_Click(object sender, RoutedEventArgs e) => XoaDauMay();
+
+        private void DgDauMay_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete || Keyboard.Modifiers != ModifierKeys.None) return;
+            e.Handled = true;
+            XoaDauMay();
+        }
+
+        private void XoaDauMay()
+        {
+            if (!_coKetNoiCsdl || dgDauMay.SelectedItem is not DauMayHienThi dangChon) return;
+            var goc = dangChon.ToET();
+
+            if (!_service.LayThamChieuDauMay(dangChon.MaDauMay, out var thamChieu, out string loi))
+            {
+                ThongBaoDialog.Loi(loi, "Lỗi CSDL");
+                return;
+            }
+
+            if (thamChieu.Count == 0)
+            {
+                if (!ThongBaoDialog.XacNhan(
+                        $"Xóa hẳn đầu máy {dangChon.SoHieuDauMay} khỏi CSDL?\n\n" +
+                        "Đầu máy này chưa được gán vào đoàn tàu nào, chưa có phiếu cấp nhiên liệu hay bảo dưỡng " +
+                        "nên xóa không làm mất lịch sử. Thao tác được ghi vào nhật ký hệ thống và không hoàn tác được.",
+                        "Xóa đầu máy", nutDongY: "Xóa Đầu Máy", nutHuy: "Giữ Lại", laHanhDongXoa: true))
+                    return;
+
+                if (!_service.XoaDauMay(goc, out loi))
+                {
+                    ThongBaoDialog.CanhBao(loi, "Chưa xóa được đầu máy");
+                    return;
+                }
+
+                LamMoiSauKhiXoa(dgDauMay, () => { NapChiSoTongQuan(); NapBoLocDauMayGiuChon(); NapDanhSachDauMay(); });
+                ThongBaoDialog.ThanhCong($"Đã xóa đầu máy {dangChon.SoHieuDauMay}.", "Xóa đầu máy");
+                return;
+            }
+
+            // Da co lich su: khong xoa, de nghi Ngung khai thac (giu ho so)
+            string thongDiep = ThamChieuXoa.KhongXoaDuoc($"đầu máy {dangChon.SoHieuDauMay}", thamChieu,
+                                                         PhuongTienService.GoiYNgungKhaiThac);
+            if (dangChon.LaNgungKhaiThac)
+            {
+                ThongBaoDialog.ThongTin(thongDiep + "\n\nĐầu máy này đã ở trạng thái \"Ngừng khai thác\".", "Không xóa được đầu máy");
+                return;
+            }
+            if (!ThongBaoDialog.XacNhan(thongDiep, "Không xóa được đầu máy", nutDongY: "Ngừng Khai Thác", nutHuy: "Đóng"))
+                return;
+
+            var moi = dangChon.SaoChep();
+            moi.TrangThai = PhuongTienService.NgungKhaiThac;
+            if (!_service.CapNhatDauMay(moi.ToET(), goc, out loi))
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa chuyển được sang Ngừng khai thác");
+                return;
+            }
+
+            LamMoiSauKhiLuuDauMay(dangChon.MaDauMay);
+            ThongBaoDialog.ThanhCong($"Đã chuyển đầu máy {dangChon.SoHieuDauMay} sang \"Ngừng khai thác\". " +
+                                     "Hồ sơ và lịch sử vẫn giữ để tra cứu; đầu máy không còn được chọn khi lập đoàn tàu.",
+                                     "Ngừng khai thác đầu máy");
+        }
+
+        // Nap lai bo loc xi nghiep (dau may vua xoa co the la cai cuoi cua mot xi nghiep), giu lua chon
+        private void NapBoLocDauMayGiuChon()
+        {
+            string? depot = LayTagDangChon(cboDepot);
+            _dangNapDuLieu = true;
+            NapBoLocDauMay();
+            ChonLaiTheoTag(cboDepot, depot ?? "ALL");
+            _dangNapDuLieu = false;
+        }
+
+        // Sau khi xoa: nap lai roi chon dong o cung vi tri (dong ke tiep) de xoa / xem tiep duoc ngay
+        private void LamMoiSauKhiXoa(DataGrid dg, Action napLai)
+        {
+            int viTri = dg.SelectedIndex;
+            ChayAnToan(() =>
+            {
+                napLai();
+                if (dg.Items.Count > 0)
+                {
+                    dg.SelectedIndex = Math.Clamp(viTri, 0, dg.Items.Count - 1);
+                    dg.ScrollIntoView(dg.SelectedItem);
+                }
+                HienThiChuyenTauLapTau();
+            }, "cập nhật danh sách sau khi xóa");
         }
 
         // =====================================================================
@@ -501,8 +608,9 @@ namespace GUI.Views.Pages
         {
             string tuKhoa = txtTimToaXe.Text?.Trim() ?? string.Empty;
             int maChungLoai = int.TryParse(LayTagDangChon(cboChungLoaiToa), out int cl) ? cl : 0;
+            string trangThai = LayTagDangChon(cboTrangThaiToa) ?? "ALL";
 
-            DataTable dt = LayBang(() => _service.LayDanhSachToaXeDoi(tuKhoa, maChungLoai));
+            DataTable dt = LayBang(() => _service.LayDanhSachToaXeDoi(tuKhoa, maChungLoai, trangThai));
 
             var danhSach = dt.Rows.Cast<DataRow>().Select(ToaXeHienThi.TuDongDuLieu).ToList();
             dgToaXeDoi.ItemsSource = danhSach;
@@ -524,6 +632,7 @@ namespace GUI.Views.Pages
         private void DgToaXeDoi_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             btnSuaToaXe.IsEnabled = dgToaXeDoi.SelectedItem is ToaXeHienThi && _coKetNoiCsdl;
+            btnXoaToaXe.IsEnabled = btnSuaToaXe.IsEnabled;
         }
 
         private void TxtTimToaXe_TextChanged(object sender, TextChangedEventArgs e)
@@ -627,10 +736,19 @@ namespace GUI.Views.Pages
                     _dangNapDuLieu = true;
                     txtTimToaXe.Text = string.Empty;
                     cboChungLoaiToa.SelectedIndex = 0;
+                    cboTrangThaiToa.SelectedIndex = 0;
                     _dangNapDuLieu = false;
 
                     NapDanhSachToaXeDoi();
-                    ChonDongTheoMa(dgToaXeDoi, (ToaXeHienThi t) => t.MaToaXe == maToaXe);
+                    if (!ChonDongTheoMa(dgToaXeDoi, (ToaXeHienThi t) => t.MaToaXe == maToaXe))
+                    {
+                        // Toa vua chuyen sang Ngung khai thac: bo loc mac dinh an -> xem tat ca trang thai
+                        _dangNapDuLieu = true;
+                        ChonLaiTheoTag(cboTrangThaiToa, "ALL");
+                        _dangNapDuLieu = false;
+                        NapDanhSachToaXeDoi();
+                        ChonDongTheoMa(dgToaXeDoi, (ToaXeHienThi t) => t.MaToaXe == maToaXe);
+                    }
                 }
 
                 HienThiChuyenTauLapTau();
@@ -639,6 +757,72 @@ namespace GUI.Views.Pages
 
         private List<ChungLoaiToaMau> LayChungLoaiToa()
             => _service.LayDanhSachChungLoaiToa().Rows.Cast<DataRow>().Select(DanhMucMauPhuongTien.TuChungLoaiCsdl).ToList();
+
+        // --- Xoa toa xe (14/10): nhu dau may ---
+
+        private void BtnXoaToaXe_Click(object sender, RoutedEventArgs e) => XoaToaXe();
+
+        private void DgToaXeDoi_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete || Keyboard.Modifiers != ModifierKeys.None) return;
+            e.Handled = true;
+            XoaToaXe();
+        }
+
+        private void XoaToaXe()
+        {
+            if (!_coKetNoiCsdl || dgToaXeDoi.SelectedItem is not ToaXeHienThi dangChon) return;
+            var goc = dangChon.ToET();
+
+            if (!_service.LayThamChieuToaXe(dangChon.MaToaXe, out var thamChieu, out string loi))
+            {
+                ThongBaoDialog.Loi(loi, "Lỗi CSDL");
+                return;
+            }
+
+            if (thamChieu.Count == 0)
+            {
+                if (!ThongBaoDialog.XacNhan(
+                        $"Xóa hẳn toa {dangChon.SoHieuToaXe} ({dangChon.MaChungLoaiCode}) khỏi CSDL?\n\n" +
+                        "Toa này chưa nằm trong đoàn tàu nào, chưa có vận đơn hay phiếu bảo dưỡng nên xóa không làm mất lịch sử. " +
+                        "Thao tác được ghi vào nhật ký hệ thống và không hoàn tác được.",
+                        "Xóa toa xe", nutDongY: "Xóa Toa Xe", nutHuy: "Giữ Lại", laHanhDongXoa: true))
+                    return;
+
+                if (!_service.XoaToaXe(goc, out loi))
+                {
+                    ThongBaoDialog.CanhBao(loi, "Chưa xóa được toa xe");
+                    return;
+                }
+
+                LamMoiSauKhiXoa(dgToaXeDoi, () => { NapChiSoTongQuan(); NapDanhSachToaXeDoi(); NapDanhSachChungLoaiToa(); });
+                ThongBaoDialog.ThanhCong($"Đã xóa toa {dangChon.SoHieuToaXe}.", "Xóa toa xe");
+                return;
+            }
+
+            string thongDiep = ThamChieuXoa.KhongXoaDuoc($"toa {dangChon.SoHieuToaXe}", thamChieu,
+                                                         PhuongTienService.GoiYNgungKhaiThac);
+            if (dangChon.LaNgungKhaiThac)
+            {
+                ThongBaoDialog.ThongTin(thongDiep + "\n\nToa này đã ở trạng thái \"Ngừng khai thác\".", "Không xóa được toa xe");
+                return;
+            }
+            if (!ThongBaoDialog.XacNhan(thongDiep, "Không xóa được toa xe", nutDongY: "Ngừng Khai Thác", nutHuy: "Đóng"))
+                return;
+
+            var moi = dangChon.SaoChep();
+            moi.TrangThai = PhuongTienService.NgungKhaiThac;
+            if (!_service.CapNhatToaXe(moi.ToET(), goc, out loi))
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa chuyển được sang Ngừng khai thác");
+                return;
+            }
+
+            LamMoiSauKhiLuuToaXe(dangChon.MaToaXe);
+            ThongBaoDialog.ThanhCong($"Đã chuyển toa {dangChon.SoHieuToaXe} sang \"Ngừng khai thác\". " +
+                                     "Hồ sơ và lịch sử vẫn giữ để tra cứu; toa không còn hiện ở bãi toa khi lập đoàn tàu.",
+                                     "Ngừng khai thác toa xe");
+        }
 
         // =====================================================================
         // TAB 3: LAP DOAN TAU (vanhanh.DoanTau + ChiTietDoanTau)
@@ -1001,7 +1185,7 @@ namespace GUI.Views.Pages
 
             // Bai toa: khong bao duong, khong thuoc doan tau cua chuyen khac chong khung gio
             var baiToa = bc.ToaXe
-                .Where(t => t.TrangThai != "BAO_DUONG" && t.ChuyenKhac.Count == 0 && !maTrongDoan.Contains(t.MaToaXe))
+                .Where(t => !QuyTacLapTau.KhongDuocVanDung(t.TrangThai) && t.ChuyenKhac.Count == 0 && !maTrongDoan.Contains(t.MaToaXe))
                 .Select(ToaLapTau.TuToaXe)
                 .ToList();
 
@@ -1010,7 +1194,11 @@ namespace GUI.Views.Pages
                 BoiCanh = bc,
                 HanhTrinh = hanhTrinh,
                 GhiChuHanhTrinh = ghiChu,
-                DanhSachDauMay = bc.DauMay.Select(d => DauMayLapTau.TuDTO(d, bc)).ToList(),
+                // Dau may ngung khai thac khong hien de chon (tru khi dang gan san - bo luat se bao LOI)
+                DanhSachDauMay = bc.DauMay
+                    .Where(d => d.TrangThai != PhuongTienService.NgungKhaiThac
+                                || d.MaDauMay == bc.MaDauMayChinh || d.MaDauMay == bc.MaDauMayDay)
+                    .Select(d => DauMayLapTau.TuDTO(d, bc)).ToList(),
                 DoanTauBanDau = doanTau,
                 BaiToa = baiToa,
                 Luu = pa => _lapTauService.LuuPhuongAn(pa, out string loi, out var kq) ? (kq, null) : (null, loi)

@@ -1,13 +1,15 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DAL.Connection;
+using DTO.Common;
 using ET.PhuongTien;
 
 namespace DAL.Repositories
 {
     // =========================================================================
     // PHAN HE QUAN LY PHUONG TIEN (Dau may, Toa xe, Doan tau & Ghe)
-    // Doc: danh sach / ly lich / thong ke. Ghi: them / sua dau may va toa xe.
+    // Doc: danh sach / ly lich / thong ke. Ghi: them / sua / xoa dau may va toa xe
+    // (xoa chi khi chua co du lieu nao tro toi - DemThamChieu*, 14/10).
     // Lap doan tau (vanhanh.DoanTau + ChiTietDoanTau) nam o LapTauRepository.
     //
     // Cac ham ghi nhan PhienGiaoDich de Service gom kiem tra + ghi + nhat ky vao
@@ -15,6 +17,9 @@ namespace DAL.Repositories
     // =========================================================================
     public class PhuongTienRepository
     {
+        // Gia tri bo loc trang thai: moi trang thai tru NGUNG_KHAI_THAC (migration V20261014_0900)
+        public const string TrangThaiDangKhaiThac = "DANG_KHAI_THAC";
+
         // ---------------------------------------------------------------------
         // 1. DAU MAY
         // ---------------------------------------------------------------------
@@ -84,13 +89,19 @@ namespace DAL.Repositories
                 ps.Add(new SqlParameter("@depot", donViQuanLy));
             }
 
-            if (!string.IsNullOrWhiteSpace(trangThai) && trangThai != "ALL")
+            // DANG_KHAI_THAC (mac dinh cua bo loc) = moi trang thai tru Ngung khai thac
+            if (trangThai == TrangThaiDangKhaiThac)
+            {
+                sql += " AND dm.TrangThai <> 'NGUNG_KHAI_THAC'";
+            }
+            else if (!string.IsNullOrWhiteSpace(trangThai) && trangThai != "ALL")
             {
                 sql += " AND dm.TrangThai = @tt";
                 ps.Add(new SqlParameter("@tt", trangThai));
             }
 
-            sql += " ORDER BY dm.SoHieuDauMay ASC";
+            // Dau may ngung khai thac xuong cuoi danh sach
+            sql += " ORDER BY CASE WHEN dm.TrangThai = 'NGUNG_KHAI_THAC' THEN 1 ELSE 0 END, dm.SoHieuDauMay ASC";
 
             return DatabaseHelper.ExecuteQuery(sql, ps.Count > 0 ? ps.ToArray() : null);
         }
@@ -245,6 +256,51 @@ namespace DAL.Repositories
             }
         }
 
+        // Moi du lieu tro toi dau may (ca chuyen da xong / da huy): con dong nao thi khong xoa
+        // duoc (khoa ngoai + mat lich su), Service de nghi chuyen sang Ngung khai thac.
+        public List<SoThamChieuDTO> DemThamChieuDauMay(int maDauMay, PhienGiaoDich? gd = null)
+            => DocThamChieu(PhienGiaoDich.TruyVan(gd, @"
+                SELECT 'DOAN_TAU' AS Loai, COUNT(*) AS SoLuong,
+                       ISNULL((SELECT STRING_AGG(x.Nhan, ', ') WITHIN GROUP (ORDER BY x.Gio DESC)
+                               FROM (SELECT TOP 3 CONCAT(mt.SoHieuMacTau, ' ', FORMAT(ct.NgayXuatPhat, 'dd/MM')) AS Nhan,
+                                            ct.GioXuatPhatKH AS Gio
+                                     FROM vanhanh.DoanTau d
+                                     JOIN vanhanh.ChuyenTau ct ON ct.MaChuyenTau = d.MaChuyenTau
+                                     JOIN vanhanh.MacTauMau mt ON mt.MaMacTau = ct.MaMacTau
+                                     WHERE d.MaDauMayChinh = @id OR d.MaDauMayDay = @id
+                                     ORDER BY ct.GioXuatPhatKH DESC) x), '') AS ViDu
+                FROM vanhanh.DoanTau WHERE MaDauMayChinh = @id OR MaDauMayDay = @id
+                UNION ALL
+                SELECT 'CAP_NHIEN_LIEU', COUNT(*), '' FROM baotri.NhatKyCapNhienLieu WHERE MaDauMay = @id
+                UNION ALL
+                SELECT 'BAO_DUONG', COUNT(*), '' FROM baotri.NhatKyBaoDuong WHERE MaDauMay = @id",
+                new SqlParameter("@id", maDauMay)));
+
+        // Xoa co kiem tra nhu CapNhatDauMay: chi xoa khi ban ghi van y nhu luc nguoi dung chon.
+        // 0 dong = nguoi khac vua sua / xoa. Con du lieu tro toi -> loi 547 (Service da dem truoc).
+        public int XoaDauMay(DauMay goc, PhienGiaoDich gd)
+        {
+            try
+            {
+                return PhienGiaoDich.ThucThi(gd, @"
+                    DELETE FROM phuongtien.DauMay
+                    WHERE MaDauMay = @id
+                      AND SoHieuDauMay = @shGoc AND MaDongDauMay = @dongGoc AND DonViQuanLy = @dvGoc
+                      AND NamSanXuat = @namGoc AND SoKmTichLuy = @kmGoc AND TrangThai = @ttGoc",
+                    new SqlParameter("@id", goc.MaDauMay),
+                    new SqlParameter("@shGoc", SqlDbType.VarChar, 20) { Value = goc.SoHieuDauMay },
+                    new SqlParameter("@dongGoc", goc.MaDongDauMay),
+                    new SqlParameter("@dvGoc", SqlDbType.NVarChar, 50) { Value = goc.DonViQuanLy },
+                    new SqlParameter("@namGoc", goc.NamSanXuat),
+                    new SqlParameter("@kmGoc", SqlDbType.Decimal) { Precision = 9, Scale = 1, Value = goc.SoKmTichLuy },
+                    new SqlParameter("@ttGoc", SqlDbType.VarChar, 20) { Value = goc.TrangThai });
+            }
+            catch (SqlException ex)
+            {
+                throw DichLoiSqlPhuongTien.Dich(ex);
+            }
+        }
+
         // ---------------------------------------------------------------------
         // 2. DOI TOA XE (phuongtien.ToaXe - tai san vat ly)
         // ---------------------------------------------------------------------
@@ -281,13 +337,17 @@ namespace DAL.Repositories
                 ps.Add(new SqlParameter("@cl", maChungLoai.Value));
             }
 
-            if (!string.IsNullOrWhiteSpace(trangThai) && trangThai != "ALL")
+            if (trangThai == TrangThaiDangKhaiThac)
+            {
+                sql += " AND tx.TrangThai <> 'NGUNG_KHAI_THAC'";
+            }
+            else if (!string.IsNullOrWhiteSpace(trangThai) && trangThai != "ALL")
             {
                 sql += " AND tx.TrangThai = @tt";
                 ps.Add(new SqlParameter("@tt", trangThai));
             }
 
-            sql += " ORDER BY cl.MaChungLoaiCode, tx.SoHieuToaXe";
+            sql += " ORDER BY CASE WHEN tx.TrangThai = 'NGUNG_KHAI_THAC' THEN 1 ELSE 0 END, cl.MaChungLoaiCode, tx.SoHieuToaXe";
 
             return DatabaseHelper.ExecuteQuery(sql, ps.Count > 0 ? ps.ToArray() : null);
         }
@@ -300,7 +360,8 @@ namespace DAL.Repositories
                        cl.TenMoTa,
                        cl.ChieuDaiChuanM,
                        cl.SoTruc,
-                       ISNULL((SELECT COUNT(*) FROM phuongtien.ToaXe tx WHERE tx.MaChungLoai = cl.MaChungLoai), 0) AS SoToaTrongDoi
+                       ISNULL((SELECT COUNT(*) FROM phuongtien.ToaXe tx
+                               WHERE tx.MaChungLoai = cl.MaChungLoai AND tx.TrangThai <> 'NGUNG_KHAI_THAC'), 0) AS SoToaTrongDoi
                 FROM phuongtien.ChungLoaiToa cl
                 ORDER BY cl.MaChungLoaiCode";
             return DatabaseHelper.ExecuteQuery(sql);
@@ -394,6 +455,54 @@ namespace DAL.Repositories
                 throw DichLoiSqlPhuongTien.Dich(ex);
             }
         }
+
+        // Nhu DemThamChieuDauMay: doan tau (moi chuyen), van don hang, phieu bao duong
+        public List<SoThamChieuDTO> DemThamChieuToaXe(int maToaXe, PhienGiaoDich? gd = null)
+            => DocThamChieu(PhienGiaoDich.TruyVan(gd, @"
+                SELECT 'DOAN_TAU' AS Loai, COUNT(*) AS SoLuong,
+                       ISNULL((SELECT STRING_AGG(x.Nhan, ', ') WITHIN GROUP (ORDER BY x.Gio DESC)
+                               FROM (SELECT TOP 3 CONCAT(mt.SoHieuMacTau, ' ', FORMAT(ct.NgayXuatPhat, 'dd/MM')) AS Nhan,
+                                            ct.GioXuatPhatKH AS Gio
+                                     FROM vanhanh.ChiTietDoanTau c
+                                     JOIN vanhanh.DoanTau d ON d.MaDoanTau = c.MaDoanTau
+                                     JOIN vanhanh.ChuyenTau ct ON ct.MaChuyenTau = d.MaChuyenTau
+                                     JOIN vanhanh.MacTauMau mt ON mt.MaMacTau = ct.MaMacTau
+                                     WHERE c.MaToaXe = @id
+                                     ORDER BY ct.GioXuatPhatKH DESC) x), '') AS ViDu
+                FROM vanhanh.ChiTietDoanTau WHERE MaToaXe = @id
+                UNION ALL
+                SELECT 'VAN_DON', COUNT(*), '' FROM vantai.VanDonHang WHERE MaToaXeHang = @id
+                UNION ALL
+                SELECT 'BAO_DUONG', COUNT(*), '' FROM baotri.NhatKyBaoDuong WHERE MaToaXe = @id",
+                new SqlParameter("@id", maToaXe)));
+
+        public int XoaToaXe(ToaXe goc, PhienGiaoDich gd)
+        {
+            try
+            {
+                return PhienGiaoDich.ThucThi(gd, @"
+                    DELETE FROM phuongtien.ToaXe
+                    WHERE MaToaXe = @id
+                      AND SoHieuToaXe = @shGoc AND MaChungLoai = @clGoc AND TuTrongTan = @tuGoc
+                      AND TaiTrongToiDaTan = @taiGoc AND TrangThai = @ttGoc",
+                    new SqlParameter("@id", goc.MaToaXe),
+                    new SqlParameter("@shGoc", SqlDbType.VarChar, 20) { Value = goc.SoHieuToaXe },
+                    new SqlParameter("@clGoc", goc.MaChungLoai),
+                    new SqlParameter("@tuGoc", SqlDbType.Decimal) { Precision = 5, Scale = 2, Value = goc.TuTrongTan },
+                    new SqlParameter("@taiGoc", SqlDbType.Decimal) { Precision = 5, Scale = 2, Value = goc.TaiTrongToiDaTan },
+                    new SqlParameter("@ttGoc", SqlDbType.VarChar, 20) { Value = goc.TrangThai });
+            }
+            catch (SqlException ex)
+            {
+                throw DichLoiSqlPhuongTien.Dich(ex);
+            }
+        }
+
+        internal static List<SoThamChieuDTO> DocThamChieu(DataTable bang)
+            => bang.Rows.Cast<DataRow>()
+                   .Select(r => new SoThamChieuDTO(r["Loai"].ToString() ?? "", Convert.ToInt32(r["SoLuong"]),
+                                                   r["ViDu"] == DBNull.Value ? "" : r["ViDu"].ToString() ?? ""))
+                   .ToList();
 
         // ---------------------------------------------------------------------
         // 3. DANH SACH CHUYEN TAU (o chon chuyen cua tab Lap doan tau va So do cho ngoi)
@@ -538,9 +647,10 @@ namespace DAL.Repositories
         {
             string sql = @"
                 SELECT
-                    (SELECT COUNT(*) FROM phuongtien.DauMay)                                   AS TongDauMay,
+                    -- Ngung khai thac khong tinh vao doi phuong tien dang dung
+                    (SELECT COUNT(*) FROM phuongtien.DauMay WHERE TrangThai <> 'NGUNG_KHAI_THAC') AS TongDauMay,
                     (SELECT COUNT(*) FROM phuongtien.DauMay WHERE TrangThai = 'SAN_SANG')      AS DauMaySanSang,
-                    (SELECT COUNT(*) FROM phuongtien.ToaXe)                                    AS TongToaXe,
+                    (SELECT COUNT(*) FROM phuongtien.ToaXe WHERE TrangThai <> 'NGUNG_KHAI_THAC') AS TongToaXe,
                     (SELECT COUNT(*) FROM vanhanh.DoanTau)                                     AS TongDoanTau,
                     (SELECT COUNT(*) FROM vanhanh.DoanTau WHERE DaDuyetAnToan = 1)             AS DoanTauDaDuyet,
                     (SELECT COUNT(*) FROM vantai.ChoNgoi)                                      AS TongChoNgoi";

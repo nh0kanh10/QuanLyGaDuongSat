@@ -21,6 +21,8 @@ namespace GUI.Views.Dialogs
     // - Khi sua: khoa so hieu va dong may (Service cung chan).
     // - So hieu = tien to theo dong may (txtTienToSoHieu, khong go duoc, chi doi khi chon
     //   dong khac) + phan so (txtSoHieu).
+    // - 14/10 rang buoc co ban (RangBuocNhapLieu): phan so chi chu so 3-4 chu so; ten xi nghiep khong
+    //   ky tu dac biet, 5-50 ky tu; km 0-10,000,000. Go ky tu sai -> bao ngay duoi o; bien -> khi roi o.
     // =========================================================================
     public partial class DauMayDialog : Window
     {
@@ -50,6 +52,13 @@ namespace GUI.Views.Dialogs
                 .OrderBy(x => x)
                 .ToList();
 
+            // O xi nghiep go tu do: bao ngay khi go ky tu dac biet
+            cboXiNghiep.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent,
+                new TextChangedEventHandler((_, _) =>
+                {
+                    if (!_dangKhoiTao) txtLoiXiNghiep.Text = RangBuocNhapLieu.LoiKyTuTenXiNghiep(cboXiNghiep.Text) ?? "";
+                }));
+
             if (banGoc == null)
                 KhoiTaoThemMoi();
             else
@@ -77,6 +86,9 @@ namespace GUI.Views.Dialogs
             txtNamSanXuat.Text = DateTime.Now.Year.ToString();
             txtSoKm.Text = "0";
             rdoSanSang.IsChecked = true;
+
+            // Dau may moi khong dat "Ngung khai thac" (Service cung chan)
+            rdoNgungKhaiThac.Visibility = Visibility.Collapsed;
 
             // Tien to theo dong may, nguoi dung chi go phan so
             DatTienToSoHieu(cboDongMay.SelectedItem is DongDauMayMau dong ? $"{dong.MaDongCode}-" : "");
@@ -107,6 +119,7 @@ namespace GUI.Views.Dialogs
             {
                 case "DANG_CHAY": rdoDangChay.IsChecked = true; break;
                 case "BAO_DUONG": rdoBaoDuong.IsChecked = true; break;
+                case PhuongTienService.NgungKhaiThac: rdoNgungKhaiThac.IsChecked = true; break;
                 default: rdoSanSang.IsChecked = true; break;
             }
         }
@@ -136,11 +149,9 @@ namespace GUI.Views.Dialogs
         {
             if (_dangKhoiTao) return;
 
-            // Go lai thi xoa loi cua truong do
+            // Go lai thi xoa loi cua truong do; phan so hieu thi bao ngay neu go chu cai / ky tu dac biet
             if (sender == txtSoHieu)
             {
-                txtLoiSoHieu.Text = "";
-
                 // Dan ca so hieu day du ("D19E-907") thi bo phan tien to da co san
                 string tienTo = txtTienToSoHieu.Text;
                 if (tienTo.Length > 0 && txtSoHieu.Text.StartsWith(tienTo, StringComparison.OrdinalIgnoreCase))
@@ -149,11 +160,36 @@ namespace GUI.Views.Dialogs
                     txtSoHieu.CaretIndex = txtSoHieu.Text.Length;
                     return;
                 }
+                txtLoiSoHieu.Text = _banGoc == null ? RangBuocNhapLieu.LoiKyTuPhanSo(txtSoHieu.Text) ?? "" : "";
             }
             if (sender == txtNamSanXuat) txtLoiNamSanXuat.Text = "";
             if (sender == txtSoKm) txtLoiSoKm.Text = "";
 
             CapNhatXemTruoc();
+        }
+
+        // Roi o: kiem day du truong do (cung ham voi Service); o dang trong thi de den luc Luu moi bao
+        private void TruongNhap_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (_dangKhoiTao) return;
+            (string truong, TextBlock tb, string giaTri) = sender switch
+            {
+                _ when sender == txtSoHieu => ("SoHieu", txtLoiSoHieu, txtSoHieu.Text),
+                _ when sender == cboXiNghiep => ("XiNghiep", txtLoiXiNghiep, cboXiNghiep.Text),
+                _ when sender == txtNamSanXuat => ("NamSanXuat", txtLoiNamSanXuat, txtNamSanXuat.Text),
+                _ => ("SoKm", txtLoiSoKm, txtSoKm.Text)
+            };
+            if (giaTri.Trim().Length == 0 || (truong == "SoHieu" && _banGoc != null)) return;
+
+            if (truong == "NamSanXuat" && !int.TryParse(giaTri.Trim(), out _))
+            {
+                tb.Text = "Năm sản xuất chỉ gồm chữ số.";
+                return;
+            }
+            var dong = cboDongMay.SelectedItem as DongDauMayMau;
+            var loi = PhuongTienService.KiemTraDauMay(TaoTuForm().ToET(), dong?.MaDongCode, laThemMoi: _banGoc == null)
+                                       .FirstOrDefault(l => l.Truong == truong);
+            tb.Text = loi?.ThongDiep ?? "";
         }
 
         private void CboDongMay_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -221,7 +257,7 @@ namespace GUI.Views.Dialogs
 
             // --- Goi y chuyen trang thai khi sat / qua han bao duong ---
             bool canDuaVaoXuong = tienDo.MucCanhBao is "QUA_HAN" or "SAP_TOI";
-            if (canDuaVaoXuong && rdoBaoDuong.IsChecked != true)
+            if (canDuaVaoXuong && rdoBaoDuong.IsChecked != true && rdoNgungKhaiThac.IsChecked != true)
             {
                 bdGoiYTrangThai.Visibility = Visibility.Visible;
                 txtGoiYTrangThai.Text = tienDo.MucCanhBao == "QUA_HAN"
@@ -270,28 +306,8 @@ namespace GUI.Views.Dialogs
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
             var dong = cboDongMay.SelectedItem as DongDauMayMau;
-            bool namHopLe = int.TryParse(txtNamSanXuat.Text.Trim(), out int nam);
-
-            var kq = _banGoc?.SaoChep() ?? new DauMayHienThi();
-            kq.SoHieuDauMay = _banGoc?.SoHieuDauMay ?? GhepSoHieu();
-            kq.DonViQuanLy = cboXiNghiep.Text.Trim();
-            kq.NamSanXuat = namHopLe ? nam : 0;
-            kq.SoKmTichLuy = LaySoKm();
-            kq.TrangThai = rdoDangChay.IsChecked == true ? "DANG_CHAY"
-                         : rdoBaoDuong.IsChecked == true ? "BAO_DUONG"
-                         : "SAN_SANG";
-            if (dong != null)
-            {
-                kq.MaDongDauMay = dong.MaDongDauMay;
-                kq.MaDongCode = dong.MaDongCode;
-                kq.NhaSanXuat = dong.NhaSanXuat;
-                kq.CongSuatHP = dong.CongSuatHP;
-                kq.TocDoToiDaKmh = dong.TocDoToiDaKmh;
-                kq.SucKeoToiDaTan = dong.SucKeoToiDaTan;
-                kq.DungTichBonDauLit = dong.DungTichBonDauLit;
-                kq.TrongLuongTan = dong.TrongLuongTan;
-                kq.ChieuDaiM = dong.ChieuDaiM;
-            }
+            bool namHopLe = int.TryParse(txtNamSanXuat.Text.Trim(), out _);
+            var kq = TaoTuForm();
 
             // Cung bo kiem tra voi Service: bao loi canh tung o
             var dsLoi = PhuongTienService.KiemTraDauMay(kq.ToET(), dong?.MaDongCode, laThemMoi: _banGoc == null);
@@ -310,6 +326,36 @@ namespace GUI.Views.Dialogs
             kq.TinhLaiTienDoBaoDuong();
             KetQua = kq;
             DialogResult = true;
+        }
+
+        // Ban ghi theo noi dung form hien tai (chua kiem tra)
+        private DauMayHienThi TaoTuForm()
+        {
+            var dong = cboDongMay.SelectedItem as DongDauMayMau;
+            bool namHopLe = int.TryParse(txtNamSanXuat.Text.Trim(), out int nam);
+
+            var kq = _banGoc?.SaoChep() ?? new DauMayHienThi();
+            kq.SoHieuDauMay = _banGoc?.SoHieuDauMay ?? GhepSoHieu();
+            kq.DonViQuanLy = cboXiNghiep.Text.Trim();
+            kq.NamSanXuat = namHopLe ? nam : 0;
+            kq.SoKmTichLuy = LaySoKm();
+            kq.TrangThai = rdoDangChay.IsChecked == true ? "DANG_CHAY"
+                         : rdoBaoDuong.IsChecked == true ? "BAO_DUONG"
+                         : rdoNgungKhaiThac.IsChecked == true ? PhuongTienService.NgungKhaiThac
+                         : "SAN_SANG";
+            if (dong != null)
+            {
+                kq.MaDongDauMay = dong.MaDongDauMay;
+                kq.MaDongCode = dong.MaDongCode;
+                kq.NhaSanXuat = dong.NhaSanXuat;
+                kq.CongSuatHP = dong.CongSuatHP;
+                kq.TocDoToiDaKmh = dong.TocDoToiDaKmh;
+                kq.SucKeoToiDaTan = dong.SucKeoToiDaTan;
+                kq.DungTichBonDauLit = dong.DungTichBonDauLit;
+                kq.TrongLuongTan = dong.TrongLuongTan;
+                kq.ChieuDaiM = dong.ChieuDaiM;
+            }
+            return kq;
         }
 
         // Hien loi canh tung o; tra ve true neu co loi

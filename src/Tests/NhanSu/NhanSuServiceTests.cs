@@ -14,6 +14,7 @@ namespace Tests.NhanSu
         {
             MaNhanVien = 1, MaNVCode = "LT_001", HoTen = "Nguyễn Văn An", SoDienThoai = "0912345678",
             ChucDanh = chucDanh, HangBangLai = bang, HanKhamSucKhoe = DateTime.Today.AddYears(1),
+            NgaySinh = DateTime.Today.AddYears(-30),
             DonViChuQuan = "Đội lái tàu Hà Nội", TrangThai = NhanVienHienThi.SanSang
         };
 
@@ -39,10 +40,11 @@ namespace Tests.NhanSu
 
         [Theory]
         [InlineData("0912345678", true)]
-        [InlineData("02438123456", true)]
+        [InlineData("02438123456", false)]   // 14/10: dung 10 chu so
         [InlineData("912345678", false)]
         [InlineData("09123", false)]
         [InlineData("0912-345-678", false)]
+        [InlineData("09123a5678", false)]
         public void SoDienThoai(string sdt, bool hopLe)
         {
             var nv = HoSo();

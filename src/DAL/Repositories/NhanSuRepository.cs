@@ -1,6 +1,7 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DAL.Connection;
+using DTO.Common;
 using DTO.NhanSu;
 
 namespace DAL.Repositories
@@ -13,6 +14,7 @@ namespace DAL.Repositories
     //             vanhanh.ChuyenTau / LichDungGa / MacTauMau (A Ba, Sprint 1 doc thang -
     //             KE_HOACH §4.5), vanhanh.DoanTau + phuongtien.* (dong may cho R7).
     // Ghi       : chi ghi, khong kiem nghiep vu (BUS da kiem trong cung giao dich).
+    //             Xoa ho so (14/10) chi khi chua co du lieu tro toi (DemThamChieuNhanVien).
     //             Kip / nhan vien ghi theo PhienBan (ROWVERSION, migration V20261011_1500):
     //             tra ve so dong, 0 = nguoi khac vua sua / xoa.
     // Thoi gian : gio Viet Nam (quyet dinh 11/10 - khop gio chuyen tau cua vanhanh), ghi
@@ -45,7 +47,7 @@ namespace DAL.Repositories
             // --- Nhan vien + tai khoan dang nhap (neu co) ---
             var nhanVien = PhienGiaoDich.TruyVan(gd, @"
                 SELECT nv.MaNhanVien, nv.MaNVCode, nv.HoTen, nv.SoDienThoai, nv.ChucDanh, nv.HangBangLai, nv.HanKhamSucKhoe,
-                       nv.DonViChuQuan, nv.TrangThai, nv.NgayTao, nv.PhienBan,
+                       nv.DonViChuQuan, nv.TrangThai, nv.NgayTao, nv.PhienBan, nv.NgaySinh,
                        tk.TenDangNhap, tk.DangHoatDong, tk.LanDangNhapCuoi, ISNULL(tk.SoTaiKhoan, 0) AS SoTaiKhoan
                 FROM nhansu.NhanVien nv
                 OUTER APPLY (SELECT TOP 1 t.TenDangNhap, t.DangHoatDong, t.LanDangNhapCuoi, COUNT(*) OVER () AS SoTaiKhoan
@@ -244,8 +246,8 @@ namespace DAL.Repositories
         public int ThemNhanVien(NhanVienHienThi nv, PhienGiaoDich gd)
             => Convert.ToInt32(PhienGiaoDich.LayGiaTri(gd, @"
                 INSERT INTO nhansu.NhanVien (MaNVCode, HoTen, SoDienThoai, ChucDanh, HangBangLai, HanKhamSucKhoe,
-                                             DonViChuQuan, TrangThai, NgayTao)
-                VALUES (@ma, @ten, @sdt, @cd, @bang, @han, @dv, @tt, SYSDATETIME());
+                                             DonViChuQuan, TrangThai, NgayTao, NgaySinh)
+                VALUES (@ma, @ten, @sdt, @cd, @bang, @han, @dv, @tt, SYSDATETIME(), @ns);
                 SELECT CAST(SCOPE_IDENTITY() AS INT);",
                 ThamSoNhanVien(nv)));
 
@@ -257,10 +259,41 @@ namespace DAL.Repositories
             return PhienGiaoDich.ThucThi(gd, @"
                 UPDATE nhansu.NhanVien
                 SET MaNVCode = @ma, HoTen = @ten, SoDienThoai = @sdt, ChucDanh = @cd, HangBangLai = @bang,
-                    HanKhamSucKhoe = @han, DonViChuQuan = @dv, TrangThai = @tt
+                    HanKhamSucKhoe = @han, DonViChuQuan = @dv, TrangThai = @tt, NgaySinh = @ns
                 WHERE MaNhanVien = @id AND PhienBan = @pb",
                 thamSo.ToArray());
         }
+
+        // 14/10: moi du lieu tro toi ho so (TOAN bang, khong theo cua so ngay cua anh chup).
+        // Con dong nao thi khong xoa duoc - Service de nghi chuyen sang "Da nghi viec".
+        public List<SoThamChieuDTO> DemThamChieuNhanVien(int maNhanVien, PhienGiaoDich? gd = null)
+            => PhuongTienRepository.DocThamChieu(PhienGiaoDich.TruyVan(gd, @"
+                SELECT 'KIP_LAI' AS Loai, COUNT(*) AS SoLuong,
+                       ISNULL((SELECT STRING_AGG(x.Nhan, ', ') WITHIN GROUP (ORDER BY x.Gio DESC)
+                               FROM (SELECT TOP 3 CONCAT(mt.SoHieuMacTau, ' ', FORMAT(ct.NgayXuatPhat, 'dd/MM')) AS Nhan,
+                                            ct.GioXuatPhatKH AS Gio
+                                     FROM nhansu.PhanCongKipLai k
+                                     JOIN vanhanh.ChuyenTau ct ON ct.MaChuyenTau = k.MaChuyenTau
+                                     JOIN vanhanh.MacTauMau mt ON mt.MaMacTau = ct.MaMacTau
+                                     WHERE @id IN (k.MaLaiTau, k.MaPhuLai, k.MaTruongTau)
+                                     ORDER BY ct.GioXuatPhatKH DESC) x), '') AS ViDu
+                FROM nhansu.PhanCongKipLai WHERE @id IN (MaLaiTau, MaPhuLai, MaTruongTau)
+                UNION ALL
+                SELECT 'KIEM_TRA', COUNT(*), '' FROM nhansu.KiemTraSucKhoe WHERE MaNhanVien = @id
+                UNION ALL
+                SELECT 'TAI_KHOAN', COUNT(*), ISNULL(STRING_AGG(TenDangNhap, ', '), '')
+                FROM phanquyen.TaiKhoan WHERE MaNhanVien = @id
+                UNION ALL
+                SELECT 'LICH_SU_MA', COUNT(*), ISNULL(STRING_AGG(MaNVCodeCu, ', '), '')
+                FROM nhansu.LichSuMaNhanVien WHERE MaNhanVien = @id",
+                new SqlParameter("@id", maNhanVien)));
+
+        // Xoa dung phien ban da mo. 0 dong = nguoi khac vua sua / xoa / kip vua doi trang thai ho so.
+        public int XoaNhanVien(int maNhanVien, byte[] phienBan, PhienGiaoDich gd)
+            => PhienGiaoDich.ThucThi(gd, @"
+                DELETE FROM nhansu.NhanVien WHERE MaNhanVien = @id AND PhienBan = @pb",
+                new SqlParameter("@id", maNhanVien),
+                new SqlParameter("@pb", SqlDbType.Timestamp) { Value = phienBan });
 
         // Trang thai di theo kip (R13) - goi trong cung giao dich nhan ban / ban giao
         public void DatTrangThaiNhanVien(int maNhanVien, string trangThai, PhienGiaoDich gd)
@@ -384,6 +417,7 @@ namespace DAL.Repositories
             ChucDanh = Chuoi(r, "ChucDanh"),
             HangBangLai = r["HangBangLai"] == DBNull.Value ? null : Chuoi(r, "HangBangLai"),
             HanKhamSucKhoe = Convert.ToDateTime(r["HanKhamSucKhoe"]),
+            NgaySinh = r["NgaySinh"] == DBNull.Value ? null : Convert.ToDateTime(r["NgaySinh"]),
             DonViChuQuan = Chuoi(r, "DonViChuQuan"),
             TrangThai = Chuoi(r, "TrangThai"),
             NgayTao = Convert.ToDateTime(r["NgayTao"]),
@@ -402,6 +436,7 @@ namespace DAL.Repositories
             new SqlParameter("@cd", SqlDbType.NVarChar, 50) { Value = nv.ChucDanh },
             new SqlParameter("@bang", SqlDbType.VarChar, 10) { Value = (object?)nv.HangBangLai ?? DBNull.Value },
             new SqlParameter("@han", SqlDbType.Date) { Value = nv.HanKhamSucKhoe.Date },
+            new SqlParameter("@ns", SqlDbType.Date) { Value = (object?)nv.NgaySinh?.Date ?? DBNull.Value },
             new SqlParameter("@dv", SqlDbType.NVarChar, 100) { Value = nv.DonViChuQuan },
             new SqlParameter("@tt", SqlDbType.VarChar, 20) { Value = nv.TrangThai }
         };

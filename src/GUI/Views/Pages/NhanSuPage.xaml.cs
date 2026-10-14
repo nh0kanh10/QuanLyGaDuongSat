@@ -23,6 +23,8 @@ namespace GUI.Views.Pages
     // cho ca 4 tab); moi thao tac ghi thang CSDL qua NhanSuService - Service chay lai
     // bo luat DanhGiaKipLai trong giao dich truoc khi ghi. Dialog nhan ham luu (callback):
     // loi tu Service thi hien ThongBaoDialog va giu dialog mo.
+    // 14/10: nut Xoa ho so (phim Delete) - chi xoa ho so nhap nham (chua co du lieu lien quan);
+    // da co lich su thi de nghi chuyen sang "Da nghi viec".
     // =========================================================================
     public partial class NhanSuPage : Page
     {
@@ -278,6 +280,7 @@ namespace GUI.Views.Pages
             var nv = dgNhanVien.SelectedItem as NhanVienHienThi;
             btnSuaNhanVien.IsEnabled = nv != null;
             btnSuaHoSo.IsEnabled = nv != null;
+            btnXoaNhanVien.IsEnabled = nv != null;
 
             if (nv == null) XoaTrangHoSo();
             else HienThiHoSo(nv);
@@ -328,6 +331,8 @@ namespace GUI.Views.Pages
             pnlHsThongTin.Children.Clear();
             ThemDongThongSo(pnlHsThongTin, "Mã nhân viên", nv.MaNVCode);
             if (nv.LichSuMa.Count > 0) ThemDongThongSo(pnlHsThongTin, "Mã cũ", nv.NhanMaCu, "#64748B");
+            ThemDongThongSo(pnlHsThongTin, "Ngày sinh", nv.NgaySinh is DateTime ngaySinh
+                ? $"{ngaySinh:dd/MM/yyyy} · {RangBuocNhapLieu.TinhTuoi(ngaySinh, DateTime.Today)} tuổi" : "Chưa có");
             ThemDongThongSo(pnlHsThongTin, "Số điện thoại", nv.SoDienThoai);
             ThemDongThongSo(pnlHsThongTin, "Chức danh", nv.ChucDanh);
             ThemDongThongSo(pnlHsThongTin, "Đơn vị chủ quản", nv.DonViChuQuan);
@@ -518,6 +523,95 @@ namespace GUI.Views.Pages
                 ThongBaoDialog.ThanhCong($"Đã cập nhật hồ sơ {kq.MaNVCode} — {nv.HoTen}.\n{doiMa}".TrimEnd('\n'),
                                          "Cập nhật hồ sơ nhân viên");
             }
+        }
+
+        // --- Xoa ho so (14/10): chi khi chua co du lieu lien quan, con lai de nghi "Da nghi viec" ---
+
+        private void BtnXoaNhanVien_Click(object sender, RoutedEventArgs e) => XoaNhanVien();
+
+        private void DgNhanVien_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete || Keyboard.Modifiers != ModifierKeys.None) return;
+            e.Handled = true;
+            XoaNhanVien();
+        }
+
+        private void XoaNhanVien()
+        {
+            if (dgNhanVien.SelectedItem is not NhanVienHienThi dangChon) return;
+            if (!KiemTraKetNoi()) return;
+
+            if (!_service.LayThamChieuNhanVien(dangChon.MaNhanVien, out var thamChieu, out string loi))
+            {
+                ThongBaoDialog.Loi(loi, "Lỗi CSDL");
+                return;
+            }
+
+            string ten = $"{dangChon.MaNVCode} — {dangChon.HoTen}";
+            if (thamChieu.Count == 0)
+            {
+                if (!ThongBaoDialog.XacNhan(
+                        $"Xóa hẳn hồ sơ {ten} ({dangChon.ChucDanh.ToLower()}) khỏi CSDL?\n\n" +
+                        "Hồ sơ này chưa có kíp lái, phiếu kiểm tra lên ban, tài khoản hay lịch sử đổi mã nên xóa không làm mất lịch sử. " +
+                        $"Mã {dangChon.MaNVCode} có thể được cấp lại cho hồ sơ thêm sau. " +
+                        "Thao tác được ghi vào nhật ký hệ thống và không hoàn tác được.",
+                        "Xóa hồ sơ nhân viên", nutDongY: "Xóa Hồ Sơ", nutHuy: "Giữ Lại", laHanhDongXoa: true))
+                    return;
+
+                int viTri = dgNhanVien.SelectedIndex;
+                bool daXoa = _service.XoaNhanVien(dangChon.MaNhanVien, dangChon.PhienBan, out loi);
+
+                LamMoiTatCa();
+                NapDanhSachDonVi();
+                if (!daXoa)
+                {
+                    ThongBaoDialog.CanhBao(loi, "Chưa xóa được hồ sơ");
+                    return;
+                }
+                if (dgNhanVien.Items.Count > 0)
+                {
+                    dgNhanVien.SelectedIndex = Math.Clamp(viTri, 0, dgNhanVien.Items.Count - 1);
+                    dgNhanVien.ScrollIntoView(dgNhanVien.SelectedItem);
+                }
+                ThongBaoDialog.ThanhCong($"Đã xóa hồ sơ {ten}.", "Xóa hồ sơ nhân viên");
+                return;
+            }
+
+            // Da co lich su: khong xoa, de nghi "Da nghi viec" (giu ho so)
+            string thongDiep = ThamChieuXoa.KhongXoaDuoc($"hồ sơ {ten}", thamChieu, NhanSuService.GoiYNghiViec);
+            if (dangChon.TrangThai == NhanVienHienThi.DaNghiViec)
+            {
+                ThongBaoDialog.ThongTin(thongDiep + "\n\nHồ sơ này đã ở trạng thái \"Đã nghỉ việc\".", "Không xóa được hồ sơ");
+                return;
+            }
+
+            // Kip chua nhan ban cua nguoi nay se thanh ca do -> bao truoc khi chuyen
+            var kipChuaNhanBan = DuLieu.KipCuaNhanVien(dangChon.MaNhanVien)
+                .Where(p => p.TrangThai == PhanCongKipHienThi.DaPhanCong && p.Chuyen.ConHieuLuc)
+                .OrderBy(p => p.GioNhanBan)
+                .ToList();
+            if (kipChuaNhanBan.Count > 0)
+                thongDiep += $"\n\nLưu ý: {dangChon.HoTen} đang có {kipChuaNhanBan.Count} kíp chưa nhận ban (" +
+                             string.Join("; ", kipChuaNhanBan.Select(p => $"{p.Chuyen.SoHieuMacTau} {p.Chuyen.NgayXuatPhat:dd/MM} {p.Chang}")) +
+                             "). Sau khi chuyển cần thay người ở tab Phân công kíp lái.";
+
+            if (!ThongBaoDialog.XacNhan(thongDiep, "Không xóa được hồ sơ", nutDongY: "Cho Nghỉ Việc", nutHuy: "Đóng"))
+                return;
+
+            var moi = dangChon.SaoChep();
+            moi.TrangThai = NhanVienHienThi.DaNghiViec;
+            if (!_service.CapNhatNhanVien(moi, out loi, out var kq) || kq == null)
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa chuyển được sang Đã nghỉ việc");
+                return;
+            }
+
+            SauKhiLuuNhanVien(kq.MaNhanVien, moi.TrangThai);
+            ThongBaoDialog.ThanhCong(
+                $"Đã chuyển hồ sơ {ten} sang \"Đã nghỉ việc\". Hồ sơ và lịch sử vẫn giữ để tra cứu; " +
+                "người này không còn xuất hiện khi phân công kíp." +
+                (kipChuaNhanBan.Count > 0 ? $"\n\nCòn {kipChuaNhanBan.Count} kíp chưa nhận ban cần thay người (tab Phân công kíp lái)." : ""),
+                "Cho nghỉ việc");
         }
 
         private void SauKhiLuuNhanVien(int maNhanVien, string trangThai)

@@ -7,9 +7,6 @@ namespace DTO.PhuongTien
     //                                hanh trinh, duong ray, dau may, toa xe, ai dang dung gi)
     //   GUI  -> PhuongAnLapTauDTO  : phuong an nguoi dung vua xep (dau may + danh sach toa)
     //   BUS  -> KetQuaKiemTraLapTauDTO : so lieu tung khu doan / chang + bang hang muc an toan
-    //
-    // Mot bo luat duy nhat (BUS.Services.QuyTacLapTau) dung cho ca man hinh keo - tha
-    // (chay sau moi thao tac) va LapTauService (kiem lai trong giao dich truoc khi ghi).
     // =========================================================================
 
     // Mot chuyen tau KHAC co dung dau may / toa xe dang xet (de doi chieu trung gio, vi tri)

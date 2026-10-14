@@ -16,6 +16,7 @@ namespace Tests.NhanSu
         {
             MaNhanVien = 99, MaNVCode = "LT_099", HoTen = "Nguyễn Văn Thử", SoDienThoai = "0912345678",
             ChucDanh = chucDanh, HangBangLai = bang, HanKhamSucKhoe = DateTime.Today.AddYears(1),
+            NgaySinh = DateTime.Today.AddYears(-30),
             DonViChuQuan = donVi, TrangThai = NhanVienHienThi.SanSang
         };
 

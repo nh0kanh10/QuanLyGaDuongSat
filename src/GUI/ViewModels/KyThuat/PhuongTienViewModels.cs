@@ -45,6 +45,9 @@ namespace GUI.ViewModels.KyThuat
 
         public string TenMoTaDong => $"{MaDongCode} — {NhaSanXuat}";
 
+        // 14/10: dong lam mo tren danh sach, khong theo doi chu ky bao duong nua
+        public bool LaNgungKhaiThac => TrangThai == PhuongTienService.NgungKhaiThac;
+
         // --- Thong tin vach tien do bao duong tren DataGrid ---
         public TienDoBaoDuongDauMay TienDoBaoDuong { get; private set; } = null!;
         public string NhanBaoDuong { get; set; } = "";
@@ -88,7 +91,7 @@ namespace GUI.ViewModels.KyThuat
             TienDoBaoDuong = PhuongTienService.TinhTienDoBaoDuong(SoKmTichLuy, KmBaoDuongR1GanNhat, KmBaoDuongR2GanNhat);
 
             NhanBaoDuong = $"{TienDoBaoDuong.Cap} · {TienDoBaoDuong.TyLePhanTram:N0}%";
-            MauChuBaoDuong = LayMauTheoMucCanhBao(TienDoBaoDuong.MucCanhBao);
+            MauChuBaoDuong = LaNgungKhaiThac ? MauNgungKhaiThac : LayMauTheoMucCanhBao(TienDoBaoDuong.MucCanhBao);
 
             double phanTram = Math.Min(100.0, (double)TienDoBaoDuong.TyLePhanTram);
             PhanDaChay = new GridLength(phanTram, GridUnitType.Star);
@@ -109,6 +112,8 @@ namespace GUI.ViewModels.KyThuat
             SoKmTichLuy = SoKmTichLuy,
             TrangThai = TrangThai
         };
+
+        public const string MauNgungKhaiThac = "#94A3B8";
 
         // QUA_HAN | SAP_TOI | BINH_THUONG (PhuongTienService.TinhTienDoBaoDuong)
         public static string LayMauTheoMucCanhBao(string mucCanhBao) => mucCanhBao switch
@@ -180,6 +185,8 @@ namespace GUI.ViewModels.KyThuat
         public decimal TaiTrongTrucTan => SoTruc > 0
             ? Math.Round((TuTrongTan + TaiTrongToiDaTan) / SoTruc, 2)
             : 0m;
+
+        public bool LaNgungKhaiThac => TrangThai == PhuongTienService.NgungKhaiThac;
 
         public static ToaXeHienThi TuDongDuLieu(DataRow r) => new()
         {

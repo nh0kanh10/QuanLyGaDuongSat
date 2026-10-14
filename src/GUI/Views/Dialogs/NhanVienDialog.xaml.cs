@@ -28,11 +28,13 @@ namespace GUI.Views.Dialogs
     // (DanhMucDonVi). Dang trong ca -> khoa chuc danh / hang bang / don vi; doi chuc danh / hang
     // bang lam hong kip chua nhan ban -> khong cho luu (NhanSuService.KiemTraDoiViTri). Doi ma ->
     // ma cu luu vao lich su, khong cap lai.
+    //
+    // 14/10: rang buoc co ban (RangBuocNhapLieu): ho ten chi chu cai, SDT 10 chu so, ngay sinh 18-62 tuoi,
+    // han kham <= 2 nam. Go ky tu sai -> bao NGAY duoi o; do dai / so tu / bien -> bao khi roi o va khi Luu.
     // =========================================================================
     public partial class NhanVienDialog : Window
     {
         private static readonly Regex MaHopLe = new(@"^[A-Za-z0-9_\-]+$");
-        private static readonly Regex ChiSo = new(@"^[0-9]+$");
 
         private readonly NhanVienHienThi? _banGoc;   // null = them moi
         private readonly DuLieuNhanSu _duLieu;
@@ -99,6 +101,7 @@ namespace GUI.Views.Dialogs
 
             ChonTrangThai(NhanVienHienThi.SanSang);
             NapDonVi();
+            dpNgaySinh.DisplayDate = DateTime.Today.AddYears(-30);   // lich mo gan nam sinh hop ly
         }
 
         private void KhoiTaoCapNhat(NhanVienHienThi nv)
@@ -111,6 +114,7 @@ namespace GUI.Views.Dialogs
             txtMa.Text = nv.MaNVCode;
             txtHoTen.Text = nv.HoTen;
             txtSoDienThoai.Text = nv.SoDienThoai;
+            dpNgaySinh.SelectedDate = nv.NgaySinh;
             dpHanKham.SelectedDate = nv.HanKhamSucKhoe;
             cboChucDanh.SelectedItem = QuyTacKipLai.ChucDanhGoiY.FirstOrDefault(c => c == nv.ChucDanh);
             cboHangBang.SelectedItem = _duLieu.HangBangLai.FirstOrDefault(h => h == nv.HangBangLai);
@@ -198,25 +202,47 @@ namespace GUI.Views.Dialogs
         // CAP NHAT TRUC TIEP
         // =====================================================================
 
+        // Dang go: chi bao loi KY TU (chu so / ky tu dac biet trong ho ten, chu cai trong SDT) ngay duoi o
         private void TruongNhap_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (_dangKhoiTao) return;
             if (sender == txtMa) txtLoiMa.Text = "";
-            if (sender == txtHoTen) txtLoiHoTen.Text = "";
-            if (sender == txtSoDienThoai) txtLoiSoDienThoai.Text = "";
+            if (sender == txtHoTen) BaoLoiTruong(txtLoiHoTen, RangBuocNhapLieu.LoiKyTuHoTen(txtHoTen.Text));
+            if (sender == txtSoDienThoai) BaoLoiTruong(txtLoiSoDienThoai, RangBuocNhapLieu.LoiKyTuSoDienThoai(txtSoDienThoai.Text));
             CapNhatTomTat();
         }
 
-        private void TxtSoDienThoai_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        // Roi o: kiem day du (do dai, so tu, dau so ...). O dang trong thi de den luc bam Luu moi bao.
+        private void TruongNhap_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (!ChiSo.IsMatch(e.Text)) e.Handled = true;
+            if (_dangKhoiTao) return;
+            if (sender == txtHoTen && txtHoTen.Text.Trim().Length > 0)
+                BaoLoiTruong(txtLoiHoTen, RangBuocNhapLieu.KiemTraHoTen(txtHoTen.Text));
+            if (sender == txtSoDienThoai && txtSoDienThoai.Text.Trim().Length > 0)
+                BaoLoiTruong(txtLoiSoDienThoai, RangBuocNhapLieu.KiemTraSoDienThoai(txtSoDienThoai.Text));
+        }
+
+        private void DpNgaySinh_SelectedDateChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (_dangKhoiTao) return;
+            BaoLoiTruong(txtLoiNgaySinh, dpNgaySinh.SelectedDate == null ? null
+                : RangBuocNhapLieu.KiemTraNgaySinh(dpNgaySinh.SelectedDate, DateTime.Today));
+            CapNhatTomTat();
         }
 
         private void DpHanKham_SelectedDateChanged(object? sender, SelectionChangedEventArgs e)
         {
             if (_dangKhoiTao) return;
-            txtLoiHanKham.Text = "";
+            BaoLoiTruong(txtLoiHanKham, dpHanKham.SelectedDate == null ? null
+                : RangBuocNhapLieu.KiemTraHanKham(dpHanKham.SelectedDate, laHoSoMoi: _banGoc == null, DateTime.Today));
             CapNhatTomTat();
+        }
+
+        // Dong do duoi o nhap; null = xoa loi
+        private void BaoLoiTruong(TextBlock tb, string? loi)
+        {
+            tb.Text = loi ?? string.Empty;
+            tb.Foreground = Mau("#B91C1C");
         }
 
         private void CboChucDanh_Changed(object sender, RoutedEventArgs e)
@@ -267,8 +293,9 @@ namespace GUI.Views.Dialogs
         {
             var nv = _banGoc?.SaoChep() ?? new NhanVienHienThi();
             nv.MaNVCode = txtMa.Text.Trim();
-            nv.HoTen = txtHoTen.Text.Trim();
+            nv.HoTen = RangBuocNhapLieu.ChuanHoa(txtHoTen.Text);
             nv.SoDienThoai = txtSoDienThoai.Text.Trim();
+            nv.NgaySinh = dpNgaySinh.SelectedDate?.Date;
             nv.ChucDanh = ChucDanh;
             nv.HangBangLai = CanBangLai ? cboHangBang.SelectedItem as string : null;
             nv.HanKhamSucKhoe = dpHanKham.SelectedDate ?? DateTime.Today;
@@ -289,6 +316,14 @@ namespace GUI.Views.Dialogs
                 _ => "Không thuộc kíp lái — chỉ quản lý hồ sơ"
             };
             ThemDong("Vị trí trong kíp", viTri, null);
+
+            if (dpNgaySinh.SelectedDate is DateTime ngaySinh)
+            {
+                int tuoi = RangBuocNhapLieu.TinhTuoi(ngaySinh, DateTime.Today);
+                bool hopLe = tuoi >= RangBuocNhapLieu.TuoiToiThieu && tuoi <= RangBuocNhapLieu.TuoiToiDa;
+                ThemDong("Tuổi", hopLe ? $"{tuoi} tuổi" : $"{tuoi} tuổi — ngoài khoảng {RangBuocNhapLieu.TuoiToiThieu}–{RangBuocNhapLieu.TuoiToiDa}",
+                         hopLe ? null : "#B91C1C");
+            }
 
             if (dpHanKham.SelectedDate is DateTime han)
             {
@@ -408,6 +443,9 @@ namespace GUI.Views.Dialogs
             bool hopLe = true;
             Control? oLoiDauTien = null;
 
+            // Xoa loi cu cua cac o nhap tay (txtLoiChucDanh / txtLoiTrangThai con dung de ghi chu nen giu)
+            txtLoiHoTen.Text = txtLoiSoDienThoai.Text = txtLoiNgaySinh.Text = txtLoiHanKham.Text = string.Empty;
+
             void BaoLoi(TextBlock tbLoi, string thongDiep, Control o)
             {
                 tbLoi.Text = thongDiep;
@@ -433,6 +471,7 @@ namespace GUI.Views.Dialogs
                 switch (l.Truong)
                 {
                     case "HoTen": BaoLoi(txtLoiHoTen, l.ThongDiep, txtHoTen); break;
+                    case "NgaySinh": BaoLoi(txtLoiNgaySinh, l.ThongDiep, dpNgaySinh); break;
                     case "SoDienThoai": BaoLoi(txtLoiSoDienThoai, l.ThongDiep, txtSoDienThoai); break;
                     case "HanKhamSucKhoe": if (dpHanKham.SelectedDate != null) BaoLoi(txtLoiHanKham, l.ThongDiep, dpHanKham); break;
                     case "ChucDanh": BaoLoi(txtLoiChucDanh, l.ThongDiep, cboChucDanh); break;

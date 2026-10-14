@@ -86,6 +86,9 @@ namespace GUI.Views.Dialogs
                 DienSoHieuGoiY(cl);
             }
             rdoSanSang.IsChecked = true;
+
+            // Toa moi khong dat "Ngung khai thac" (Service cung chan)
+            rdoNgungKhaiThac.Visibility = Visibility.Collapsed;
         }
 
         private void KhoiTaoCapNhat(ToaXeHienThi tx, IReadOnlyList<ChungLoaiToaMau> chungLoai)
@@ -113,6 +116,7 @@ namespace GUI.Views.Dialogs
             {
                 case "DA_NOI": rdoDaNoi.IsChecked = true; break;
                 case "BAO_DUONG": rdoBaoDuong.IsChecked = true; break;
+                case PhuongTienService.NgungKhaiThac: rdoNgungKhaiThac.IsChecked = true; break;
                 default: rdoSanSang.IsChecked = true; break;
             }
         }
@@ -196,13 +200,34 @@ namespace GUI.Views.Dialogs
         // XEM TRUOC
         // =====================================================================
 
+        // 14/10 rang buoc co ban (RangBuocNhapLieu): phan so sau "NML-" chi chu so -> bao ngay khi go
         private void TruongNhap_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (_dangKhoiTao) return;
-            if (sender == txtSoHieu) txtLoiSoHieu.Text = "";
+            if (sender == txtSoHieu)
+            {
+                string sh = txtSoHieu.Text;
+                int gach = sh.IndexOf('-');
+                txtLoiSoHieu.Text = _banGoc == null && gach >= 0 ? RangBuocNhapLieu.LoiKyTuPhanSo(sh[(gach + 1)..]) ?? "" : "";
+            }
             if (sender == txtTuTrong) txtLoiTuTrong.Text = "";
             if (sender == txtTaiTrong) txtLoiTaiTrong.Text = "";
             CapNhatXemTruoc();
+        }
+
+        // Roi o: kiem day du truong do (cung ham voi Service: tien to, 3-4 chu so, tu trong 10-100 t ...)
+        private void TruongNhap_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (_dangKhoiTao) return;
+            (string truong, TextBlock tb, TextBox o) = sender == txtSoHieu ? ("SoHieu", txtLoiSoHieu, txtSoHieu)
+                                                    : sender == txtTuTrong ? ("TuTrong", txtLoiTuTrong, txtTuTrong)
+                                                    : ("TaiTrong", txtLoiTaiTrong, txtTaiTrong);
+            if (o.Text.Trim().Length == 0 || (truong == "SoHieu" && _banGoc != null)) return;
+
+            var cl = cboChungLoai.SelectedItem as ChungLoaiToaMau;
+            var loi = PhuongTienService.KiemTraToaXe(TaoTuForm().ToET(), cl?.MaChungLoaiCode, laThemMoi: _banGoc == null)
+                                       .FirstOrDefault(l => l.Truong == truong);
+            tb.Text = loi?.ThongDiep ?? "";
         }
 
         private void CapNhatXemTruoc()
@@ -275,24 +300,7 @@ namespace GUI.Views.Dialogs
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
             var cl = cboChungLoai.SelectedItem as ChungLoaiToaMau;
-            bool docDuocTuTrong = FormatHelper.TryParseDecimal(txtTuTrong.Text, out decimal tuTrong);
-            bool docDuocTaiTrong = FormatHelper.TryParseDecimal(txtTaiTrong.Text, out decimal taiTrong);
-
-            var kq = _banGoc?.SaoChep() ?? new ToaXeHienThi();
-            kq.SoHieuToaXe = _banGoc?.SoHieuToaXe ?? txtSoHieu.Text.Trim().ToUpperInvariant();
-            kq.TuTrongTan = docDuocTuTrong ? tuTrong : -1m;
-            kq.TaiTrongToiDaTan = docDuocTaiTrong ? taiTrong : -1m;
-            kq.TrangThai = rdoDaNoi.IsChecked == true ? "DA_NOI"
-                         : rdoBaoDuong.IsChecked == true ? "BAO_DUONG"
-                         : "SAN_SANG";
-            if (cl != null)
-            {
-                kq.MaChungLoai = cl.MaChungLoai;
-                kq.MaChungLoaiCode = cl.MaChungLoaiCode;
-                kq.TenMoTa = cl.TenMoTa;
-                kq.ChieuDaiChuanM = cl.ChieuDaiChuanM;
-                kq.SoTruc = cl.SoTruc;
-            }
+            var kq = TaoTuForm();
 
             // Cung bo kiem tra voi Service: bao loi canh tung o
             if (HienLoi(PhuongTienService.KiemTraToaXe(kq.ToET(), cl?.MaChungLoaiCode, laThemMoi: _banGoc == null)))
@@ -307,6 +315,32 @@ namespace GUI.Views.Dialogs
 
             KetQua = kq;
             DialogResult = true;
+        }
+
+        // Ban ghi theo noi dung form hien tai (chua kiem tra)
+        private ToaXeHienThi TaoTuForm()
+        {
+            var cl = cboChungLoai.SelectedItem as ChungLoaiToaMau;
+            bool docDuocTuTrong = FormatHelper.TryParseDecimal(txtTuTrong.Text, out decimal tuTrong);
+            bool docDuocTaiTrong = FormatHelper.TryParseDecimal(txtTaiTrong.Text, out decimal taiTrong);
+
+            var kq = _banGoc?.SaoChep() ?? new ToaXeHienThi();
+            kq.SoHieuToaXe = _banGoc?.SoHieuToaXe ?? txtSoHieu.Text.Trim().ToUpperInvariant();
+            kq.TuTrongTan = docDuocTuTrong ? tuTrong : -1m;
+            kq.TaiTrongToiDaTan = docDuocTaiTrong ? taiTrong : -1m;
+            kq.TrangThai = rdoDaNoi.IsChecked == true ? "DA_NOI"
+                         : rdoBaoDuong.IsChecked == true ? "BAO_DUONG"
+                         : rdoNgungKhaiThac.IsChecked == true ? PhuongTienService.NgungKhaiThac
+                         : "SAN_SANG";
+            if (cl != null)
+            {
+                kq.MaChungLoai = cl.MaChungLoai;
+                kq.MaChungLoaiCode = cl.MaChungLoaiCode;
+                kq.TenMoTa = cl.TenMoTa;
+                kq.ChieuDaiChuanM = cl.ChieuDaiChuanM;
+                kq.SoTruc = cl.SoTruc;
+            }
+            return kq;
         }
 
         // Hien loi canh tung o; tra ve true neu co loi

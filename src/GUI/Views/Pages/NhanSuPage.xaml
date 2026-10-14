@@ -224,7 +224,7 @@
                             <TextBox Grid.Column="1" x:Name="txtTimNhanVien" TextChanged="BoLocNhanVien_Changed"
                                      ToolTip="Tìm theo mã nhân viên (gõ LT_, PL_, TT_ ... để lọc theo chức danh), họ tên (gõ không dấu cũng được), số điện thoại hoặc đơn vị"/>
 
-                            <ComboBox Grid.Column="2" x:Name="cboChucDanhLoc" Width="150" Margin="8,0,0,0"
+                            <ComboBox Grid.Column="2" x:Name="cboChucDanhLoc" Width="150" Margin="6,0,0,0"
                                       SelectionChanged="BoLocNhanVien_Changed" ToolTip="Lọc theo chức danh">
                                 <ComboBoxItem Content="Tất cả chức danh" Tag="ALL" IsSelected="True"/>
                                 <ComboBoxItem Content="Lái tàu" Tag="Lái tàu"/>
@@ -234,10 +234,10 @@
                                 <ComboBoxItem Content="Chức danh khác" Tag="KHAC"/>
                             </ComboBox>
 
-                            <ComboBox Grid.Column="3" x:Name="cboDonViLoc" Width="170" Margin="8,0,0,0"
+                            <ComboBox Grid.Column="3" x:Name="cboDonViLoc" Width="150" Margin="6,0,0,0"
                                       SelectionChanged="BoLocNhanVien_Changed" ToolTip="Lọc theo đơn vị chủ quản (depot / đoàn)"/>
 
-                            <ComboBox Grid.Column="4" x:Name="cboTrangThaiLoc" Width="150" Margin="8,0,0,0"
+                            <ComboBox Grid.Column="4" x:Name="cboTrangThaiLoc" Width="150" Margin="6,0,0,0"
                                       SelectionChanged="BoLocNhanVien_Changed" ToolTip="Lọc theo trạng thái hồ sơ">
                                 <ComboBoxItem Content="Đang công tác" Tag="DANG_CONG_TAC" IsSelected="True"/>
                                 <ComboBoxItem Content="Sẵn sàng" Tag="SAN_SANG"/>
@@ -256,23 +256,28 @@
                                         Style="{StaticResource PrimaryDesktopButton}" ToolTip="Thêm hồ sơ nhân viên (F2)">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="PersonAdd24" Style="{StaticResource NsIconNut}"/>
-                                        <TextBlock Text="Thêm Mới"/>
+                                        <TextBlock Text="Thêm"/>
                                     </StackPanel>
                                 </Button>
-                                <Button x:Name="btnSuaNhanVien" Click="BtnSuaNhanVien_Click" IsEnabled="False"
+                                <Button x:Name="btnSuaNhanVien" Click="BtnSuaNhanVien_Click" IsEnabled="False" Padding="10,0"
                                         Style="{StaticResource DesktopButton}" ToolTip="Sửa hồ sơ đang chọn (nhấp đúp vào dòng)">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Edit24" Style="{StaticResource NsIconNut}"/>
                                         <TextBlock Text="Sửa"/>
                                     </StackPanel>
                                 </Button>
-                                <Border Width="1" Background="#CBD5E1" Margin="2,4,8,4"/>
-                                <Button Click="BtnXoaLocNhanVien_Click" Style="{StaticResource DesktopButton}" Margin="0"
-                                        ToolTip="Xóa toàn bộ điều kiện lọc (Esc)">
+                                <Button x:Name="btnXoaNhanVien" Click="BtnXoaNhanVien_Click" IsEnabled="False" Padding="10,0"
+                                        Style="{StaticResource DesktopButton}"
+                                        ToolTip="Xóa hồ sơ nhập nhầm (chưa có kíp, phiếu kiểm tra, tài khoản). Người đã làm việc thì chuyển sang Đã nghỉ việc (Delete)">
                                     <StackPanel Orientation="Horizontal">
-                                        <ui:SymbolIcon Symbol="Dismiss24" Style="{StaticResource NsIconNut}"/>
-                                        <TextBlock Text="Xóa Lọc"/>
+                                        <ui:SymbolIcon Symbol="Delete24" Style="{StaticResource NsIconNut}" Foreground="#B91C1C"/>
+                                        <TextBlock Text="Xóa"/>
                                     </StackPanel>
+                                </Button>
+                                <Border Width="1" Background="#CBD5E1" Margin="2,4,8,4"/>
+                                <Button x:Name="btnXoaLocNhanVien" Click="BtnXoaLocNhanVien_Click" Style="{StaticResource DesktopButton}"
+                                        Margin="0" Padding="8,0" ToolTip="Xóa toàn bộ điều kiện lọc (Esc)">
+                                    <ui:SymbolIcon Symbol="FilterDismiss24" FontSize="13" Foreground="#64748B"/>
                                 </Button>
                             </StackPanel>
                         </Grid>
@@ -290,7 +295,8 @@
                             <Grid>
                                 <DataGrid x:Name="dgNhanVien" HeadersVisibility="Column" BorderThickness="0"
                                           RowStyle="{StaticResource DongNhanVienStyle}"
-                                          SelectionChanged="DgNhanVien_SelectionChanged">
+                                          SelectionChanged="DgNhanVien_SelectionChanged"
+                                          PreviewKeyDown="DgNhanVien_PreviewKeyDown">
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn Header="Mã NV" Width="74">
                                             <DataGridTemplateColumn.CellTemplate>

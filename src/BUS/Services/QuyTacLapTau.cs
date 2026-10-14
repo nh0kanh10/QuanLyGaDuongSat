@@ -43,6 +43,12 @@ namespace BUS.Services
 
         public static bool ChuyenDangChay(string trangThaiChuyen) => trangThaiChuyen is "DANG_CHAY" or "TRE_GIO";
 
+        // Dau may / toa khong duoc dua vao doan tau: dang bao duong hoac da ngung khai thac (14/10)
+        public static bool KhongDuocVanDung(string trangThai) => trangThai is "BAO_DUONG" or PhuongTienService.NgungKhaiThac;
+
+        private static string MoTaKhongVanDung(string trangThai)
+            => trangThai == PhuongTienService.NgungKhaiThac ? "đã ngừng khai thác" : "đang bảo dưỡng";
+
         // Hai khung gio chong nhau: y nhu trigger trg_PhanCongKipLai_CheckTrungGio
         public static bool ChongGio(DateTime aTu, DateTime aDen, DateTime bTu, DateTime bDen)
             => (aTu > bTu ? aTu : bTu) < (aDen < bDen ? aDen : bDen);
@@ -358,15 +364,17 @@ namespace BUS.Services
             // 8. Toa xe san sang: khong bao duong, khong thuoc chuyen khac chong gio
             const string tenToaSanSang = "Toa xe sẵn sàng";
             var toaBaoDuong = cacToa.Where(x => x.Toa.TrangThai == "BAO_DUONG").Select(x => x.Toa.SoHieuToaXe).ToList();
+            var toaNgung = cacToa.Where(x => x.Toa.TrangThai == PhuongTienService.NgungKhaiThac).Select(x => x.Toa.SoHieuToaXe).ToList();
             var toaTrungChuyen = cacToa
                 .SelectMany(x => x.Toa.ChuyenKhac
                     .Where(c => ChuyenConHieuLuc(c.TrangThai) && ChongGio(c.GioXuatPhatKH, c.GioVeDichKH, bc.GioXuatPhatKH, bc.GioVeDichKH))
                     .Select(c => $"{x.Toa.SoHieuToaXe} đang thuộc đoàn {c.SoHieuMacTau} ({c.KhungGio})"))
                 .ToList();
-            if (toaBaoDuong.Count > 0 || toaTrungChuyen.Count > 0)
+            if (toaBaoDuong.Count > 0 || toaNgung.Count > 0 || toaTrungChuyen.Count > 0)
             {
                 var dong = new List<string>();
                 if (toaBaoDuong.Count > 0) dong.Add($"Đang bảo dưỡng: {string.Join(", ", toaBaoDuong)}.");
+                if (toaNgung.Count > 0) dong.Add($"Đã ngừng khai thác: {string.Join(", ", toaNgung)}.");
                 dong.AddRange(toaTrungChuyen);
                 hm.Add(HangMucKiemTraDTO.Loi(tenToaSanSang, string.Join("\n", dong)));
             }
@@ -420,9 +428,9 @@ namespace BUS.Services
                 hm.Add(HangMucKiemTraDTO.Loi(ten, "Chưa chọn đầu máy kéo cho đoàn tàu."));
                 return;
             }
-            if (dm.TrangThai == "BAO_DUONG")
+            if (KhongDuocVanDung(dm.TrangThai))
             {
-                hm.Add(HangMucKiemTraDTO.Loi(ten, $"{dm.SoHieuDauMay} đang bảo dưỡng, không được đưa vào vận dụng."));
+                hm.Add(HangMucKiemTraDTO.Loi(ten, $"{dm.SoHieuDauMay} {MoTaKhongVanDung(dm.TrangThai)}, không được đưa vào vận dụng."));
                 return;
             }
 
@@ -483,9 +491,9 @@ namespace BUS.Services
                 hm.Add(HangMucKiemTraDTO.Loi(ten, "Đầu máy đẩy phải khác đầu máy kéo chính."));
                 return;
             }
-            if (dmDay.TrangThai == "BAO_DUONG")
+            if (KhongDuocVanDung(dmDay.TrangThai))
             {
-                hm.Add(HangMucKiemTraDTO.Loi(ten, $"{dmDay.SoHieuDauMay} đang bảo dưỡng, không được đưa vào vận dụng."));
+                hm.Add(HangMucKiemTraDTO.Loi(ten, $"{dmDay.SoHieuDauMay} {MoTaKhongVanDung(dmDay.TrangThai)}, không được đưa vào vận dụng."));
                 return;
             }
 

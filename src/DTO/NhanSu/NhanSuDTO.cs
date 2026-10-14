@@ -1,15 +1,5 @@
 namespace DTO.NhanSu
 {
-    // =========================================================================
-    // Cac lop HIEN THI cua phan he Nhan su, To tau & Phan cong ca truc.
-    // Ten thuoc tinh trung ten cot schema nhansu (script_tao_csdl_v2.sql).
-    // Quy tac R1..R15: PHAN_TICH_NHAN_SU_KIP_LAI.md §3. Bo luat: BUS/Services/DanhGiaKipLai.cs.
-    //
-    // 11/10 (back-end): chuyen tu GUI/ViewModels/KyThuat/NhanSuModels.cs sang DTO de
-    // Repository tra ve va Service chay lai luat truoc khi ghi. Bo moi cho tra cuu du lieu
-    // mau tinh (DanhMucMauNhanSu): kip / phieu kiem tra noi toi chuyen tau qua thuoc tinh
-    // gan luc dung anh chup du lieu (NhanSuRepository.LayDuLieu).
-    // =========================================================================
 
     public static class QuyTacKipLai
     {
@@ -74,12 +64,6 @@ namespace DTO.NhanSu
         public static decimal SoGio(DateTime tu, DateTime den)
             => Math.Round((decimal)(den - tu).TotalHours, 1, MidpointRounding.AwayFromZero);
     }
-
-    // Don vi chu quan theo chuc danh (Dat chot 12/10: danh muc trong ma, khong doi CSDL - cot
-    // DonViChuQuan van la chu). Ban lai may thuoc doi lai tau, to tau phuc vu (truong tau, tiep vien)
-    // thuoc doan tiep vien, kham xe thuoc tram, ban ve thuoc ga (theo danh muc hatang.Ga).
-    // Ten don vi giu dung dang trong seed vi R10 suy ga dong quan tu ten (DuLieuNhanSu.GaDongQuan).
-    // Them depot / doan moi: them vao mang tuong ung.
     public static class DanhMucDonVi
     {
         public static readonly IReadOnlyList<string> DoiLaiTau = new[]
@@ -268,6 +252,9 @@ namespace DTO.NhanSu
         public string DonViChuQuan { get; set; } = "";
         public string TrangThai { get; set; } = SanSang;
         public DateTime NgayTao { get; set; }
+
+        // 14/10 (migration V20261014_1000): bat buoc, du 18 tuoi. null chi khi dialog chua chon.
+        public DateTime? NgaySinh { get; set; }
 
         // ROWVERSION (migration V20261011_1500): ban ghi luc mo dialog, null = them moi
         public byte[]? PhienBan { get; set; }

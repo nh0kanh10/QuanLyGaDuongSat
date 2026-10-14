@@ -80,20 +80,31 @@
                         <TextBlock x:Name="txtLoiTrangThai" Style="{StaticResource KtLoiTruong}"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
+                    <StackPanel Grid.Row="1" Grid.Column="0">
                         <TextBlock Style="{StaticResource KtNhanTruong}">
                             <Run Text="Họ và tên"/><Run Text=" *" Foreground="#DC2626"/>
                         </TextBlock>
-                        <TextBox x:Name="txtHoTen" MaxLength="100" TextChanged="TruongNhap_TextChanged"/>
+                        <TextBox x:Name="txtHoTen" MaxLength="100" TextChanged="TruongNhap_TextChanged" LostFocus="TruongNhap_LostFocus"
+                                 ToolTip="Chỉ gồm chữ cái và khoảng trắng, ít nhất 2 từ, tối đa 50 ký tự"/>
                         <TextBlock x:Name="txtLoiHoTen" Style="{StaticResource KtLoiTruong}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="2">
+                        <TextBlock Style="{StaticResource KtNhanTruong}">
+                            <Run Text="Ngày sinh"/><Run Text=" *" Foreground="#DC2626"/>
+                        </TextBlock>
+                        <DatePicker x:Name="dpNgaySinh" Height="30" FontSize="12" SelectedDateFormat="Short"
+                                    SelectedDateChanged="DpNgaySinh_SelectedDateChanged"
+                                    ToolTip="Nhân viên phải từ 18 đến 62 tuổi"/>
+                        <TextBlock x:Name="txtLoiNgaySinh" Style="{StaticResource KtLoiTruong}"/>
                     </StackPanel>
 
                     <StackPanel Grid.Row="2" Grid.Column="0">
                         <TextBlock Style="{StaticResource KtNhanTruong}">
                             <Run Text="Số điện thoại"/><Run Text=" *" Foreground="#DC2626"/>
                         </TextBlock>
-                        <TextBox x:Name="txtSoDienThoai" MaxLength="20" TextChanged="TruongNhap_TextChanged"
-                                 PreviewTextInput="TxtSoDienThoai_PreviewTextInput"/>
+                        <TextBox x:Name="txtSoDienThoai" MaxLength="20" TextChanged="TruongNhap_TextChanged" LostFocus="TruongNhap_LostFocus"
+                                 ToolTip="Đúng 10 chữ số, bắt đầu bằng 0"/>
                         <TextBlock x:Name="txtLoiSoDienThoai" Style="{StaticResource KtLoiTruong}"/>
                     </StackPanel>
 
