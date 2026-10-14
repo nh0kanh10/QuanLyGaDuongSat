@@ -74,7 +74,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" x:Name="txtSoHieu" MaxLength="20" CharacterCasing="Upper"
-                                 TextChanged="TruongNhap_TextChanged"
+                                 TextChanged="TruongNhap_TextChanged" LostFocus="TruongNhap_LostFocus"
                                  ToolTip="Mã định danh duy nhất, dạng LOẠI-SỐ. Ví dụ: NML-205"/>
                         <Button Grid.Column="1" x:Name="btnGoiYSoHieu" Click="BtnGoiYSoHieu_Click"
                                 Style="{StaticResource DesktopButton}" Margin="6,0,0,0" Padding="8,0"
@@ -108,7 +108,7 @@
                             <TextBlock Style="{StaticResource KtNhanTruong}">
                                 <Run Text="Tự trọng (tấn)"/><Run Text=" *" Foreground="#DC2626"/>
                             </TextBlock>
-                            <TextBox x:Name="txtTuTrong" TextChanged="TruongNhap_TextChanged"
+                            <TextBox x:Name="txtTuTrong" TextChanged="TruongNhap_TextChanged" LostFocus="TruongNhap_LostFocus"
                                      ToolTip="Khối lượng bản thân toa khi rỗng"/>
                             <TextBlock x:Name="txtLoiTuTrong" Style="{StaticResource KtLoiTruong}"/>
                         </StackPanel>
@@ -117,7 +117,7 @@
                             <TextBlock Style="{StaticResource KtNhanTruong}">
                                 <Run Text="Tải trọng tối đa (tấn)"/><Run Text=" *" Foreground="#DC2626"/>
                             </TextBlock>
-                            <TextBox x:Name="txtTaiTrong" TextChanged="TruongNhap_TextChanged"
+                            <TextBox x:Name="txtTaiTrong" TextChanged="TruongNhap_TextChanged" LostFocus="TruongNhap_LostFocus"
                                      ToolTip="Khối lượng hàng / hành khách tối đa được phép chở"/>
                             <TextBlock x:Name="txtLoiTaiTrong" Style="{StaticResource KtLoiTruong}"/>
                         </StackPanel>
@@ -134,6 +134,9 @@
                         <RadioButton x:Name="rdoBaoDuong" GroupName="TrangThaiToa" Content="Bảo dưỡng" Tag="#D97706"
                                      Style="{StaticResource KtChipRadio}"
                                      ToolTip="Toa đang trong xưởng, không đưa vào lập tàu"/>
+                        <RadioButton x:Name="rdoNgungKhaiThac" GroupName="TrangThaiToa" Content="Ngừng khai thác" Tag="#64748B"
+                                     Style="{StaticResource KtChipRadio}"
+                                     ToolTip="Thanh lý / hỏng hẳn: giữ hồ sơ để tra cứu nhưng không đưa vào lập tàu được nữa"/>
                     </WrapPanel>
                 </StackPanel>
 

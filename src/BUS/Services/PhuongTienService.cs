@@ -13,12 +13,15 @@ namespace BUS.Services
     // PHAN HE QUAN LY PHUONG TIEN (Dau may, Toa xe, Ghe)
     //
     // Doc: danh sach / ly lich / thong ke (DataTable cho tang giao dien).
-    // Ghi: them / sua dau may va toa xe theo mau "bool Them(..., out string loi)":
+    // Ghi: them / sua / xoa dau may va toa xe theo mau "bool Them(..., out string loi)":
     //   1. kiem quyen (PhanQuyenService),
     //   2. kiem du lieu nhap (cung ham ma dialog dung - KiemTraDauMay / KiemTraToaXe),
     //   3. trong MOT giao dich: kiem trung so hieu, luat trang thai theo chuyen dang dung,
     //      ghi, ghi nhat ky he thong (kiemtoan.NhatKyHeThong).
     // Lap doan tau: LapTauService.
+    //
+    // 14/10 (Dat chot): xoa han chi khi chua co du lieu nao tro toi (nhap nham); da co lich su
+    // thi chuyen sang "Ngung khai thac" (NGUNG_KHAI_THAC) - giu ho so, khong van dung nua.
     // =========================================================================
     public class PhuongTienService
     {
@@ -30,17 +33,26 @@ namespace BUS.Services
         public const decimal MocBaoDuongR2 = 150_000m;
         public const decimal NguongSapToiHanPhanTram = 90m;     // khop BaoTri: NguongSapToi
 
-        public const decimal SoKmToiDa = 99_999_999.9m;          // DECIMAL(9,1)
-        public const decimal KhoiLuongToaToiDaTan = 999.99m;     // DECIMAL(5,2)
+        // 14/10 rang buoc co ban (RangBuocNhapLieu): bien tren / duoi theo thuc te, chat hon kieu cot
+        public const decimal SoKmToiDa = 10_000_000m;            // ~200,000 km/nam x 50 nam (cot DECIMAL(9,1))
+        public const decimal KhoiLuongToaToiDaTan = 999.99m;     // DECIMAL(5,2) - gioi han o nhap
+        public const decimal TuTrongToaToiThieuTan = 10m;
+        public const decimal TuTrongToaToiDaTan = 100m;
+        public const decimal TaiTrongToaToiDaTan = 100m;
         public const int DoDaiSoHieuToiDa = 20;                  // VARCHAR(20)
         public const int DoDaiDonViToiDa = 50;                   // NVARCHAR(50)
         public const int NamSanXuatNhoNhat = 1970;               // CHECK NamSanXuat >= 1970
 
-        public static readonly string[] TrangThaiDauMay = { "SAN_SANG", "DANG_CHAY", "BAO_DUONG" };
-        public static readonly string[] TrangThaiToaXe = { "SAN_SANG", "DA_NOI", "BAO_DUONG" };
+        // 14/10: them NGUNG_KHAI_THAC (migration V20261014_0900) - giu ho so de tra cuu, khong van dung nua
+        public const string NgungKhaiThac = "NGUNG_KHAI_THAC";
+        public static readonly string[] TrangThaiDauMay = { "SAN_SANG", "DANG_CHAY", "BAO_DUONG", NgungKhaiThac };
+        public static readonly string[] TrangThaiToaXe = { "SAN_SANG", "DA_NOI", "BAO_DUONG", NgungKhaiThac };
 
-        private static readonly Regex MauSoHieuDauMay = new(@"^[A-Z0-9]+-[0-9]+$");
-        private static readonly Regex MauSoHieuToaXe = new(@"^[A-Z]+-[0-9]+$");
+        // Goi y khi khong xoa duoc vi da co lich su
+        public const string GoiYNgungKhaiThac =
+            "Xóa sẽ làm mất lịch sử này. Nếu không còn dùng nữa, hãy chuyển sang \"Ngừng khai thác\": " +
+            "hồ sơ vẫn giữ để tra cứu nhưng không đưa vào đoàn tàu được nữa.";
+
 
         // ---------------------------------------------------------------------
         // DAU MAY - DOC
@@ -90,7 +102,7 @@ namespace BUS.Services
         public static void ChuanHoa(DauMay dm)
         {
             dm.SoHieuDauMay = (dm.SoHieuDauMay ?? "").Trim().ToUpperInvariant();
-            dm.DonViQuanLy = (dm.DonViQuanLy ?? "").Trim();
+            dm.DonViQuanLy = RangBuocNhapLieu.ChuanHoa(dm.DonViQuanLy);
             dm.TrangThai = (dm.TrangThai ?? "").Trim().ToUpperInvariant();
         }
 
@@ -99,33 +111,34 @@ namespace BUS.Services
         {
             var loi = new List<LoiNhapLieuDTO>();
 
+            // So hieu = tien to dong may + phan so (chi chu so, 3-4 chu so) - RangBuocNhapLieu
             if (laThemMoi)
             {
                 string sh = dm.SoHieuDauMay;
-                if (sh.Length == 0 || sh.EndsWith("-"))
-                    loi.Add(new("SoHieu", "Vui lòng nhập đầy đủ số hiệu đầu máy."));
-                else if (sh.Length > DoDaiSoHieuToiDa)
-                    loi.Add(new("SoHieu", $"Số hiệu tối đa {DoDaiSoHieuToiDa} ký tự."));
-                else if (!MauSoHieuDauMay.IsMatch(sh))
-                    loi.Add(new("SoHieu", "Số hiệu phải có dạng DÒNG-SỐ, ví dụ D19E-907."));
-                else if (maDongCode != null && !sh.StartsWith(maDongCode + "-", StringComparison.Ordinal))
+                if (maDongCode == null)
+                {
+                    if (sh.Length == 0) loi.Add(new("SoHieu", "Vui lòng nhập số hiệu đầu máy."));
+                }
+                else if (!sh.StartsWith(maDongCode + "-", StringComparison.Ordinal))
                     loi.Add(new("SoHieu", $"Tiền tố số hiệu phải khớp dòng máy đã chọn ({maDongCode}-...)."));
+                else if (RangBuocNhapLieu.KiemTraPhanSoHieu(sh[(maDongCode.Length + 1)..], maDongCode + "-") is { } loiSo)
+                    loi.Add(new("SoHieu", loiSo));
             }
 
             if (maDongCode == null)
                 loi.Add(new("DongMay", "Vui lòng chọn dòng đầu máy."));
 
-            if (dm.DonViQuanLy.Length == 0)
-                loi.Add(new("XiNghiep", "Vui lòng chọn hoặc nhập xí nghiệp quản lý."));
-            else if (dm.DonViQuanLy.Length > DoDaiDonViToiDa)
-                loi.Add(new("XiNghiep", $"Tên xí nghiệp tối đa {DoDaiDonViToiDa} ký tự (đang có {dm.DonViQuanLy.Length})."));
+            if (RangBuocNhapLieu.KiemTraTenXiNghiep(dm.DonViQuanLy) is { } loiXn)
+                loi.Add(new("XiNghiep", loiXn));
 
             int namNay = DateTime.Now.Year;
             if (dm.NamSanXuat < NamSanXuatNhoNhat || dm.NamSanXuat > namNay)
                 loi.Add(new("NamSanXuat", $"Năm sản xuất phải từ {NamSanXuatNhoNhat} đến {namNay}."));
 
-            if (dm.SoKmTichLuy < 0 || dm.SoKmTichLuy > SoKmToiDa)
-                loi.Add(new("SoKm", $"Số km tích lũy phải từ 0 đến {SoKmToiDa:N1}."));
+            if (dm.SoKmTichLuy < 0)
+                loi.Add(new("SoKm", "Số km tích lũy không được âm."));
+            else if (dm.SoKmTichLuy > SoKmToiDa)
+                loi.Add(new("SoKm", $"Số km tích lũy tối đa {SoKmToiDa:N0} km."));
             else if (QuaSoChuSoLe(dm.SoKmTichLuy, 1))
                 loi.Add(new("SoKm", "Số km tích lũy chỉ lấy 1 chữ số lẻ."));
 
@@ -153,6 +166,11 @@ namespace BUS.Services
                 if (dm.TrangThai == "DANG_CHAY")
                 {
                     loi = "Đầu máy mới chưa kéo chuyến nào nên không đặt trạng thái \"Đang chạy\".";
+                    return false;
+                }
+                if (dm.TrangThai == NgungKhaiThac)
+                {
+                    loi = "Đầu máy mới không đặt trạng thái \"Ngừng khai thác\".";
                     return false;
                 }
 
@@ -262,9 +280,10 @@ namespace BUS.Services
 
             switch (dm.TrangThai)
             {
-                case "BAO_DUONG" when chuyen.Count > 0:
+                case "BAO_DUONG" or NgungKhaiThac when chuyen.Count > 0:
                     loi = $"{dm.SoHieuDauMay} đang được gán cho {MoTaChuyen(chuyen)}. " +
-                          "Hãy lập lại đoàn tàu các chuyến đó với đầu máy khác trước khi chuyển sang Bảo dưỡng.";
+                          "Hãy lập lại đoàn tàu các chuyến đó với đầu máy khác trước khi chuyển sang " +
+                          $"{(dm.TrangThai == NgungKhaiThac ? "Ngừng khai thác" : "Bảo dưỡng")}.";
                     return false;
                 case "DANG_CHAY" when dangChay.Count == 0:
                     loi = $"{dm.SoHieuDauMay} không kéo / đẩy chuyến nào đang chạy nên không đặt trạng thái \"Đang chạy\".";
@@ -274,6 +293,78 @@ namespace BUS.Services
                     return false;
             }
             return true;
+        }
+
+        // ---------------------------------------------------------------------
+        // DAU MAY - XOA (14/10): chi khi chua co du lieu nao tro toi (nhap nham)
+        // ---------------------------------------------------------------------
+
+        // Doc truoc khi hoi xac nhan: cac dong mo ta du lieu dang tro toi; rong = xoa duoc
+        public bool LayThamChieuDauMay(int maDauMay, out List<string> thamChieu, out string loi)
+        {
+            loi = "";
+            thamChieu = new();
+            try
+            {
+                thamChieu = ThamChieuXoa.MoTa(_repo.DemThamChieuDauMay(maDauMay));
+                return true;
+            }
+            catch (Exception ex) when (DichLoiSqlPhuongTien.LaLoiCsdl(ex))
+            {
+                loi = DichLoiSqlPhuongTien.ThongDiep(ex);
+                return false;
+            }
+        }
+
+        // goc: ban ghi luc nguoi dung chon (phat hien nguoi khac sua / xoa chen giua)
+        public bool XoaDauMay(DauMay goc, out string loi)
+        {
+            loi = "";
+            if (!CoQuyen(MaQuyen.QuanLyPhuongTien, "xóa đầu máy", out loi)) return false;
+
+            ChuanHoa(goc);
+            try
+            {
+                using var gd = PhienGiaoDich.Mo();
+
+                // Cung khoa voi LapTauService: khong de dau may vua duoc gan vao doan tau chen giua
+                gd.KhoaTaiNguyen(LapTauService.TaiNguyenKhoa);
+
+                var hienTai = _repo.LayDauMay(goc.MaDauMay, gd);
+                if (hienTai == null)
+                {
+                    loi = "Đầu máy không còn trong CSDL (có thể vừa bị xóa). Hãy nạp lại danh sách.";
+                    return false;
+                }
+                if (!GiongNhau(hienTai, goc))
+                {
+                    loi = BaoDaBiSua(hienTai.SoHieuDauMay);
+                    return false;
+                }
+
+                var thamChieu = ThamChieuXoa.MoTa(_repo.DemThamChieuDauMay(goc.MaDauMay, gd));
+                if (thamChieu.Count > 0)
+                {
+                    loi = ThamChieuXoa.KhongXoaDuoc($"đầu máy {hienTai.SoHieuDauMay}", thamChieu, GoiYNgungKhaiThac);
+                    return false;
+                }
+
+                if (_repo.XoaDauMay(goc, gd) == 0)
+                {
+                    loi = BaoDaBiSua(goc.SoHieuDauMay);
+                    return false;
+                }
+
+                gd.GhiNhatKyHeThong(PhanQuyenService.MaTaiKhoanHienTai, "XOA", "phuongtien.DauMay",
+                                    goc.MaDauMay.ToString(), Json(hienTai), null);
+                gd.XacNhan();
+                return true;
+            }
+            catch (Exception ex) when (DichLoiSqlPhuongTien.LaLoiCsdl(ex))
+            {
+                loi = DichLoiSqlPhuongTien.ThongDiep(ex);
+                return false;
+            }
         }
 
         // ---------------------------------------------------------------------
@@ -305,26 +396,26 @@ namespace BUS.Services
             if (maChungLoaiCode == null)
                 loi.Add(new("ChungLoai", "Vui lòng chọn chủng loại toa."));
 
+            // So hieu = ma chung loai + "-" + phan so (chi chu so, 3-4 chu so) - RangBuocNhapLieu
             if (laThemMoi)
             {
                 string sh = tx.SoHieuToaXe;
                 if (sh.Length == 0)
                     loi.Add(new("SoHieu", "Vui lòng nhập số hiệu toa xe."));
-                else if (sh.Length > DoDaiSoHieuToiDa)
-                    loi.Add(new("SoHieu", $"Số hiệu tối đa {DoDaiSoHieuToiDa} ký tự."));
-                else if (!MauSoHieuToaXe.IsMatch(sh))
-                    loi.Add(new("SoHieu", "Số hiệu phải có dạng LOẠI-SỐ, ví dụ NML-222."));
                 else if (maChungLoaiCode != null && !sh.StartsWith(maChungLoaiCode + "-", StringComparison.Ordinal))
-                    loi.Add(new("SoHieu", $"Tiền tố phải khớp chủng loại đã chọn ({maChungLoaiCode}-...)."));
+                    loi.Add(new("SoHieu", $"Số hiệu phải bắt đầu bằng \"{maChungLoaiCode}-\" theo chủng loại đã chọn (ví dụ {maChungLoaiCode}-222)."));
+                else if (maChungLoaiCode != null &&
+                         RangBuocNhapLieu.KiemTraPhanSoHieu(sh[(maChungLoaiCode.Length + 1)..], maChungLoaiCode + "-") is { } loiSo)
+                    loi.Add(new("SoHieu", loiSo));
             }
 
-            if (tx.TuTrongTan <= 0 || tx.TuTrongTan > KhoiLuongToaToiDaTan)
-                loi.Add(new("TuTrong", $"Tự trọng phải lớn hơn 0 và không quá {KhoiLuongToaToiDaTan:N2} tấn."));
+            if (tx.TuTrongTan < TuTrongToaToiThieuTan || tx.TuTrongTan > TuTrongToaToiDaTan)
+                loi.Add(new("TuTrong", $"Tự trọng phải từ {TuTrongToaToiThieuTan:N0} đến {TuTrongToaToiDaTan:N0} tấn."));
             else if (QuaSoChuSoLe(tx.TuTrongTan, 2))
                 loi.Add(new("TuTrong", "Tự trọng chỉ lấy 2 chữ số lẻ."));
 
-            if (tx.TaiTrongToiDaTan < 0 || tx.TaiTrongToiDaTan > KhoiLuongToaToiDaTan)
-                loi.Add(new("TaiTrong", $"Tải trọng phải từ 0 đến {KhoiLuongToaToiDaTan:N2} tấn."));
+            if (tx.TaiTrongToiDaTan < 0 || tx.TaiTrongToiDaTan > TaiTrongToaToiDaTan)
+                loi.Add(new("TaiTrong", $"Tải trọng phải từ 0 đến {TaiTrongToaToiDaTan:N0} tấn."));
             else if (QuaSoChuSoLe(tx.TaiTrongToiDaTan, 2))
                 loi.Add(new("TaiTrong", "Tải trọng chỉ lấy 2 chữ số lẻ."));
 
@@ -352,6 +443,11 @@ namespace BUS.Services
                 if (tx.TrangThai == "DA_NOI")
                 {
                     loi = "Toa mới chưa thuộc đoàn tàu nào nên không đặt trạng thái \"Đã nối\".";
+                    return false;
+                }
+                if (tx.TrangThai == NgungKhaiThac)
+                {
+                    loi = "Toa mới không đặt trạng thái \"Ngừng khai thác\".";
                     return false;
                 }
 
@@ -450,9 +546,10 @@ namespace BUS.Services
 
             switch (tx.TrangThai)
             {
-                case "BAO_DUONG" when chuyen.Count > 0:
+                case "BAO_DUONG" or NgungKhaiThac when chuyen.Count > 0:
                     loi = $"Toa {tx.SoHieuToaXe} đang nằm trong đoàn tàu của {MoTaChuyen(chuyen)}. " +
-                          "Hãy tháo toa khỏi các đoàn tàu đó trước khi chuyển sang Bảo dưỡng.";
+                          "Hãy tháo toa khỏi các đoàn tàu đó trước khi chuyển sang " +
+                          $"{(tx.TrangThai == NgungKhaiThac ? "Ngừng khai thác" : "Bảo dưỡng")}.";
                     return false;
                 case "DA_NOI" when chuyen.Count == 0:
                     loi = $"Toa {tx.SoHieuToaXe} chưa thuộc đoàn tàu nào của chuyến còn hiệu lực nên không đặt trạng thái \"Đã nối\".";
@@ -462,6 +559,74 @@ namespace BUS.Services
                     return false;
             }
             return true;
+        }
+
+        // ---------------------------------------------------------------------
+        // DOI TOA XE - XOA (14/10): nhu dau may
+        // ---------------------------------------------------------------------
+
+        public bool LayThamChieuToaXe(int maToaXe, out List<string> thamChieu, out string loi)
+        {
+            loi = "";
+            thamChieu = new();
+            try
+            {
+                thamChieu = ThamChieuXoa.MoTa(_repo.DemThamChieuToaXe(maToaXe));
+                return true;
+            }
+            catch (Exception ex) when (DichLoiSqlPhuongTien.LaLoiCsdl(ex))
+            {
+                loi = DichLoiSqlPhuongTien.ThongDiep(ex);
+                return false;
+            }
+        }
+
+        public bool XoaToaXe(ToaXe goc, out string loi)
+        {
+            loi = "";
+            if (!CoQuyen(MaQuyen.QuanLyPhuongTien, "xóa toa xe", out loi)) return false;
+
+            ChuanHoa(goc);
+            try
+            {
+                using var gd = PhienGiaoDich.Mo();
+                gd.KhoaTaiNguyen(LapTauService.TaiNguyenKhoa);
+
+                var hienTai = _repo.LayToaXe(goc.MaToaXe, gd);
+                if (hienTai == null)
+                {
+                    loi = "Toa xe không còn trong CSDL (có thể vừa bị xóa). Hãy nạp lại danh sách.";
+                    return false;
+                }
+                if (!GiongNhau(hienTai, goc))
+                {
+                    loi = BaoDaBiSua(hienTai.SoHieuToaXe);
+                    return false;
+                }
+
+                var thamChieu = ThamChieuXoa.MoTa(_repo.DemThamChieuToaXe(goc.MaToaXe, gd));
+                if (thamChieu.Count > 0)
+                {
+                    loi = ThamChieuXoa.KhongXoaDuoc($"toa {hienTai.SoHieuToaXe}", thamChieu, GoiYNgungKhaiThac);
+                    return false;
+                }
+
+                if (_repo.XoaToaXe(goc, gd) == 0)
+                {
+                    loi = BaoDaBiSua(goc.SoHieuToaXe);
+                    return false;
+                }
+
+                gd.GhiNhatKyHeThong(PhanQuyenService.MaTaiKhoanHienTai, "XOA", "phuongtien.ToaXe",
+                                    goc.MaToaXe.ToString(), Json(hienTai), null);
+                gd.XacNhan();
+                return true;
+            }
+            catch (Exception ex) when (DichLoiSqlPhuongTien.LaLoiCsdl(ex))
+            {
+                loi = DichLoiSqlPhuongTien.ThongDiep(ex);
+                return false;
+            }
         }
 
         // ---------------------------------------------------------------------

@@ -76,11 +76,22 @@
         </Style>
 
         <!-- Dòng DataGrid: nhấp đúp để mở dialog cập nhật -->
+        <!-- Dòng "Ngừng khai thác" làm mờ: vẫn tra cứu được nhưng không còn trong đội đang dùng -->
         <Style x:Key="DongDauMayStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
             <EventSetter Event="MouseDoubleClick" Handler="DongDauMay_MouseDoubleClick"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding LaNgungKhaiThac}" Value="True">
+                    <Setter Property="Opacity" Value="0.6"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
         <Style x:Key="DongToaXeStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
             <EventSetter Event="MouseDoubleClick" Handler="DongToaXe_MouseDoubleClick"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding LaNgungKhaiThac}" Value="True">
+                    <Setter Property="Opacity" Value="0.6"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
     </Page.Resources>
@@ -233,12 +244,15 @@
                                       SelectionChanged="BoLocDauMay_Changed"/>
 
                             <TextBlock Grid.Column="4" Text="Trạng thái:" Style="{StaticResource FieldLabel}" Margin="12,0,6,0"/>
-                            <ComboBox Grid.Column="5" x:Name="cboTrangThaiDauMay" Width="130"
-                                      SelectionChanged="BoLocDauMay_Changed">
-                                <ComboBoxItem Content="Tất cả" Tag="ALL" IsSelected="True"/>
+                            <ComboBox Grid.Column="5" x:Name="cboTrangThaiDauMay" Width="160"
+                                      SelectionChanged="BoLocDauMay_Changed"
+                                      ToolTip="Mặc định ẩn đầu máy đã ngừng khai thác">
+                                <ComboBoxItem Content="Đang khai thác" Tag="DANG_KHAI_THAC" IsSelected="True"/>
                                 <ComboBoxItem Content="Sẵn sàng" Tag="SAN_SANG"/>
                                 <ComboBoxItem Content="Đang chạy" Tag="DANG_CHAY"/>
                                 <ComboBoxItem Content="Bảo dưỡng" Tag="BAO_DUONG"/>
+                                <ComboBoxItem Content="Ngừng khai thác" Tag="NGUNG_KHAI_THAC"/>
+                                <ComboBoxItem Content="Tất cả" Tag="ALL"/>
                             </ComboBox>
 
                             <StackPanel Grid.Column="7" Orientation="Horizontal">
@@ -246,7 +260,7 @@
                                         Style="{StaticResource PrimaryDesktopButton}" ToolTip="Khai báo đầu máy mới (F2)">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Add24" FontSize="12" Margin="0,0,5,0" Foreground="#FFFFFF"/>
-                                        <TextBlock Text="Thêm Đầu Máy"/>
+                                        <TextBlock Text="Thêm"/>
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="btnSuaDauMay" Click="BtnSuaDauMay_Click" IsEnabled="False"
@@ -256,13 +270,18 @@
                                         <TextBlock Text="Sửa"/>
                                     </StackPanel>
                                 </Button>
+                                <Button x:Name="btnXoaDauMay" Click="BtnXoaDauMay_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}"
+                                        ToolTip="Xóa đầu máy nhập nhầm (chưa có dữ liệu liên quan). Đầu máy đã vận dụng thì chuyển sang Ngừng khai thác (Delete)">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Delete24" FontSize="12" Margin="0,0,5,0" Foreground="#B91C1C"/>
+                                        <TextBlock Text="Xóa"/>
+                                    </StackPanel>
+                                </Button>
                                 <Border Width="1" Background="#CBD5E1" Margin="2,4,8,4"/>
                                 <Button x:Name="btnXoaLocDauMay" Click="BtnXoaLocDauMay_Click"
-                                        Style="{StaticResource DesktopButton}" ToolTip="Xóa toàn bộ điều kiện lọc (Esc)">
-                                    <StackPanel Orientation="Horizontal">
-                                        <ui:SymbolIcon Symbol="Dismiss24" FontSize="12" Margin="0,0,5,0" Foreground="#64748B"/>
-                                        <TextBlock Text="Xóa Lọc"/>
-                                    </StackPanel>
+                                        Style="{StaticResource DesktopButton}" Padding="8,0" ToolTip="Xóa toàn bộ điều kiện lọc (Esc)">
+                                    <ui:SymbolIcon Symbol="FilterDismiss24" FontSize="13" Foreground="#64748B"/>
                                 </Button>
                                 <Button x:Name="btnNapLaiDauMay" Click="BtnNapLaiDauMay_Click"
                                         Style="{StaticResource DesktopButton}" Margin="0" ToolTip="Nạp lại dữ liệu từ CSDL (F5)">
@@ -287,7 +306,8 @@
                         <Border Grid.Column="0" Style="{StaticResource CardBorder}">
                             <DataGrid x:Name="dgDauMay" BorderThickness="0"
                                       RowStyle="{StaticResource DongDauMayStyle}"
-                                      SelectionChanged="DgDauMay_SelectionChanged">
+                                      SelectionChanged="DgDauMay_SelectionChanged"
+                                      PreviewKeyDown="DgDauMay_PreviewKeyDown">
                                 <DataGrid.Columns>
 
                                     <!-- Số hiệu đầu máy -->
@@ -383,7 +403,7 @@
                                     </DataGridTemplateColumn>
 
                                     <!-- Trạng thái -->
-                                    <DataGridTemplateColumn Header="Trạng Thái" Width="130"
+                                    <DataGridTemplateColumn Header="Trạng Thái" Width="145"
                                                             HeaderStyle="{StaticResource DataGridHeaderCenter}">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -421,6 +441,10 @@
                                                         <Setter TargetName="icoTt" Property="Foreground" Value="#B45309"/>
                                                         <Setter TargetName="txtTt" Property="Text" Value="Bảo dưỡng"/>
                                                         <Setter TargetName="txtTt" Property="Foreground" Value="#B45309"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding TrangThai}" Value="NGUNG_KHAI_THAC">
+                                                        <Setter TargetName="icoTt" Property="Symbol" Value="Archive24"/>
+                                                        <Setter TargetName="txtTt" Property="Text" Value="Ngừng khai thác"/>
                                                     </DataTrigger>
                                                 </DataTemplate.Triggers>
                                             </DataTemplate>
@@ -587,7 +611,10 @@
 
                     <Border Grid.Row="0" Style="{StaticResource ToolbarBorder}">
                         <Grid>
+                            <!-- Ô tra cứu co giãn như tab Đầu máy để thanh công cụ vừa ở bề rộng tối thiểu -->
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*" MinWidth="110" MaxWidth="180"/>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -597,20 +624,32 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Column="0" Text="Tra cứu:" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Grid.Column="1" x:Name="txtTimToaXe" Width="180"
+                            <TextBox Grid.Column="1" x:Name="txtTimToaXe"
                                      TextChanged="TxtTimToaXe_TextChanged"
                                      ToolTip="Tìm theo số hiệu toa xe hoặc chủng loại"/>
 
                             <TextBlock Grid.Column="2" Text="Chủng loại:" Style="{StaticResource FieldLabel}" Margin="12,0,6,0"/>
-                            <ComboBox Grid.Column="3" x:Name="cboChungLoaiToa" Width="240"
+                            <ComboBox Grid.Column="3" x:Name="cboChungLoaiToa" Width="220"
                                       SelectionChanged="BoLocToaXe_Changed"/>
 
-                            <StackPanel Grid.Column="5" Orientation="Horizontal">
+                            <TextBlock Grid.Column="4" Text="Trạng thái:" Style="{StaticResource FieldLabel}" Margin="12,0,6,0"/>
+                            <ComboBox Grid.Column="5" x:Name="cboTrangThaiToa" Width="160"
+                                      SelectionChanged="BoLocToaXe_Changed"
+                                      ToolTip="Mặc định ẩn toa đã ngừng khai thác">
+                                <ComboBoxItem Content="Đang khai thác" Tag="DANG_KHAI_THAC" IsSelected="True"/>
+                                <ComboBoxItem Content="Sẵn sàng" Tag="SAN_SANG"/>
+                                <ComboBoxItem Content="Đã nối" Tag="DA_NOI"/>
+                                <ComboBoxItem Content="Bảo dưỡng" Tag="BAO_DUONG"/>
+                                <ComboBoxItem Content="Ngừng khai thác" Tag="NGUNG_KHAI_THAC"/>
+                                <ComboBoxItem Content="Tất cả" Tag="ALL"/>
+                            </ComboBox>
+
+                            <StackPanel Grid.Column="7" Orientation="Horizontal">
                                 <Button x:Name="btnThemToaXe" Click="BtnThemToaXe_Click"
                                         Style="{StaticResource PrimaryDesktopButton}" ToolTip="Khai báo toa xe mới (F2)">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Add24" FontSize="12" Margin="0,0,5,0" Foreground="#FFFFFF"/>
-                                        <TextBlock Text="Thêm Toa Xe"/>
+                                        <TextBlock Text="Thêm"/>
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="btnSuaToaXe" Click="BtnSuaToaXe_Click" IsEnabled="False"
@@ -618,6 +657,14 @@
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Edit24" FontSize="12" Margin="0,0,5,0" Foreground="#003B73"/>
                                         <TextBlock Text="Sửa"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="btnXoaToaXe" Click="BtnXoaToaXe_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}"
+                                        ToolTip="Xóa toa nhập nhầm (chưa có dữ liệu liên quan). Toa đã vận dụng thì chuyển sang Ngừng khai thác (Delete)">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Delete24" FontSize="12" Margin="0,0,5,0" Foreground="#B91C1C"/>
+                                        <TextBlock Text="Xóa"/>
                                     </StackPanel>
                                 </Button>
                                 <Border Width="1" Background="#CBD5E1" Margin="2,4,8,4"/>
@@ -643,7 +690,8 @@
                         <Border Grid.Column="0" Style="{StaticResource CardBorder}">
                             <DataGrid x:Name="dgToaXeDoi" BorderThickness="0"
                                       RowStyle="{StaticResource DongToaXeStyle}"
-                                      SelectionChanged="DgToaXeDoi_SelectionChanged">
+                                      SelectionChanged="DgToaXeDoi_SelectionChanged"
+                                      PreviewKeyDown="DgToaXeDoi_PreviewKeyDown">
                                 <DataGrid.Columns>
                                     <DataGridTemplateColumn Header="Số Hiệu Toa" Width="140">
                                         <DataGridTemplateColumn.CellTemplate>
@@ -753,6 +801,9 @@
                                                         <Setter TargetName="bdTtx" Property="BorderBrush" Value="#BFDBFE"/>
                                                         <Setter TargetName="txtTtx" Property="Text" Value="Đã nối"/>
                                                         <Setter TargetName="txtTtx" Property="Foreground" Value="#1D4ED8"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding TrangThai}" Value="NGUNG_KHAI_THAC">
+                                                        <Setter TargetName="txtTtx" Property="Text" Value="Ngừng khai thác"/>
                                                     </DataTrigger>
                                                 </DataTemplate.Triggers>
                                             </DataTemplate>

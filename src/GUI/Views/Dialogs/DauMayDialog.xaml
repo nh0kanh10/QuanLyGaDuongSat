@@ -79,8 +79,8 @@
                                        Foreground="#475569" VerticalAlignment="Center"/>
                         </Border>
                         <TextBox x:Name="txtSoHieu" Grid.Column="1" MaxLength="20" CharacterCasing="Upper"
-                                 TextChanged="TruongNhap_TextChanged"
-                                 ToolTip="Nhập phần số sau tiền tố dòng máy. Ví dụ: 907 → D19E-907"/>
+                                 TextChanged="TruongNhap_TextChanged" LostFocus="TruongNhap_LostFocus"
+                                 ToolTip="Nhập phần số sau tiền tố dòng máy: chỉ chữ số, 3–4 chữ số. Ví dụ: 907 → D19E-907"/>
                     </Grid>
                     <TextBlock x:Name="txtLoiSoHieu" Style="{StaticResource KtLoiTruong}"/>
 
@@ -96,8 +96,8 @@
                     <TextBlock Style="{StaticResource KtNhanTruong}">
                         <Run Text="Xí nghiệp quản lý (depot)"/><Run Text=" *" Foreground="#DC2626"/>
                     </TextBlock>
-                    <ComboBox x:Name="cboXiNghiep" IsEditable="True"
-                              ToolTip="Chọn trong danh sách hoặc gõ tên xí nghiệp mới (tối đa 50 ký tự)"/>
+                    <ComboBox x:Name="cboXiNghiep" IsEditable="True" LostFocus="TruongNhap_LostFocus"
+                              ToolTip="Chọn trong danh sách hoặc gõ tên xí nghiệp mới: chỉ chữ, số, khoảng trắng; 5–50 ký tự"/>
                     <TextBlock x:Name="txtLoiXiNghiep" Style="{StaticResource KtLoiTruong}"/>
 
                     <TextBlock Text="THÔNG TIN KHAI THÁC" Style="{StaticResource KtTieuDeMuc}" Margin="0,4,0,8"/>
@@ -113,13 +113,13 @@
                             <TextBlock Style="{StaticResource KtNhanTruong}">
                                 <Run Text="Năm sản xuất"/><Run Text=" *" Foreground="#DC2626"/>
                             </TextBlock>
-                            <TextBox x:Name="txtNamSanXuat" MaxLength="4" TextChanged="TruongNhap_TextChanged"/>
+                            <TextBox x:Name="txtNamSanXuat" MaxLength="4" TextChanged="TruongNhap_TextChanged" LostFocus="TruongNhap_LostFocus"/>
                             <TextBlock x:Name="txtLoiNamSanXuat" Style="{StaticResource KtLoiTruong}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Số km tích lũy" Style="{StaticResource KtNhanTruong}"/>
-                            <TextBox x:Name="txtSoKm" TextChanged="TruongNhap_TextChanged"
+                            <TextBox x:Name="txtSoKm" TextChanged="TruongNhap_TextChanged" LostFocus="TruongNhap_LostFocus"
                                      ToolTip="Tổng quãng đường đã chạy, dùng để tính chu kỳ bảo dưỡng R1 / R2 / Ro"/>
                             <TextBlock x:Name="txtLoiSoKm" Style="{StaticResource KtLoiTruong}"/>
                         </StackPanel>
@@ -134,6 +134,9 @@
                                      Style="{StaticResource KtChipRadio}" Checked="TrangThai_Checked"/>
                         <RadioButton x:Name="rdoBaoDuong" GroupName="TrangThaiDauMay" Content="Bảo dưỡng" Tag="#D97706"
                                      Style="{StaticResource KtChipRadio}" Checked="TrangThai_Checked"/>
+                        <RadioButton x:Name="rdoNgungKhaiThac" GroupName="TrangThaiDauMay" Content="Ngừng khai thác" Tag="#64748B"
+                                     Style="{StaticResource KtChipRadio}" Checked="TrangThai_Checked"
+                                     ToolTip="Thanh lý / hỏng hẳn: giữ hồ sơ để tra cứu nhưng không đưa vào đoàn tàu được nữa"/>
                     </WrapPanel>
 
                     <!-- Gợi ý chuyển trạng thái khi sát mốc bảo dưỡng -->

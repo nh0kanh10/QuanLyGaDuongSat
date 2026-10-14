@@ -193,6 +193,7 @@ namespace GUI.ViewModels.KyThuat
             "SAN_SANG" => "Sẵn sàng",
             "DANG_CHAY" => "Đang chạy",
             "BAO_DUONG" => "Bảo dưỡng",
+            PhuongTienService.NgungKhaiThac => "Ngừng khai thác",
             _ => TrangThai
         };
 

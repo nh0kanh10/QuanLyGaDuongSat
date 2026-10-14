@@ -1,13 +1,5 @@
 namespace DTO.NhanSu
 {
-    // =========================================================================
-    // ANH CHUP DU LIEU NHAN SU + KET QUA DOI CHIEU (R2..R12)
-    // Chuyen tu GUI/ViewModels/KyThuat/DanhGiaKipLai.cs (11/10). Bo luat nam o
-    // BUS/Services/DanhGiaKipLai.cs; cac lop duoi day chi chua du lieu va ket qua.
-    // =========================================================================
-
-    // Anh chup du lieu de doi chieu: NhanSuRepository.LayDuLieu dung mot lan, ca 4 tab +
-    // 3 dialog dung chung; Service dung lai ban moi trong giao dich truoc khi ghi.
     public class DuLieuNhanSu
     {
         private readonly Dictionary<int, NhanVienHienThi> _nhanVien;
@@ -54,7 +46,7 @@ namespace DTO.NhanSu
         public PhanCongKipHienThi? TimKip(int maPhanCong) => PhanCong.FirstOrDefault(p => p.MaPhanCong == maPhanCong);
 
         // R10 (tham khao): ga dong quan cua don vi = ga co ten nam trong ten don vi
-        // ("Đội lái tàu Vinh" -> Vinh, "Trạm Giáp Bát" -> Giáp Bát). CSDL chua co bang
+        // ("Đội lái tàu Vinh" -> Vinh, "Trạm Giáp Bát" -> Giáp Bát). 
         // chang - depot. "Phương Nam" = khu vuc phia Nam -> Sai Gon.
         public GaNhanSu? GaDongQuan(string? donVi)
         {

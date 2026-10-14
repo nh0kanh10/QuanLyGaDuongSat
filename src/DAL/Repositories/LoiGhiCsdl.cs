@@ -146,6 +146,14 @@ namespace DAL.Repositories
                     "FK_KipLai_GaNhan" or "FK_KipLai_GaBanGiao" => "Ga nhận ban / bàn giao không tồn tại.",
                     "FK_KiemTra_NhanVien" => laXoa ? "Nhân viên đã có phiếu kiểm tra lên ban, không xoá được." : "Nhân viên không tồn tại.",
                     "FK_KiemTra_ChuyenTau" => "Chuyến tàu của phiếu kiểm tra không tồn tại.",
+                    // 14/10: xoa dau may / toa / nhan vien con du lieu tro toi (Service da dem truoc,
+                    // day la luoi cuoi khi co nguoi ghi chen giua hoac bang moi them khoa ngoai)
+                    "FK_CapDau_DauMay" => laXoa ? "Đầu máy đã có phiếu cấp nhiên liệu, không xóa được (chuyển sang \"Ngừng khai thác\")." : "Đầu máy không tồn tại.",
+                    "FK_BaoDuong_DauMay" => laXoa ? "Đầu máy đã có phiếu bảo dưỡng, không xóa được (chuyển sang \"Ngừng khai thác\")." : "Đầu máy không tồn tại.",
+                    "FK_BaoDuong_ToaXe" => laXoa ? "Toa xe đã có phiếu bảo dưỡng, không xóa được (chuyển sang \"Ngừng khai thác\")." : "Toa xe không tồn tại.",
+                    "FK_VanDon_ToaXe" => laXoa ? "Toa xe đã có vận đơn hàng hóa, không xóa được (chuyển sang \"Ngừng khai thác\")." : "Toa xe không tồn tại.",
+                    "FK_TaiKhoan_NhanVien" => laXoa ? "Nhân viên đã có tài khoản đăng nhập, không xóa được (chuyển sang \"Đã nghỉ việc\")." : "Nhân viên không tồn tại.",
+                    "FK_LichSuMa_NhanVien" => laXoa ? "Nhân viên đã có lịch sử đổi mã, không xóa được (chuyển sang \"Đã nghỉ việc\")." : "Nhân viên không tồn tại.",
                     _ => laXoa ? "Bản ghi đang được dữ liệu khác tham chiếu, không xoá được."
                                : "Dữ liệu tham chiếu không tồn tại."
                 };
@@ -155,6 +163,8 @@ namespace DAL.Repositories
                 return "Một toa không thể nối và cắt ở cùng một ga.";
             if (rangBuoc.Equals("CK_KipLai_KhacNhanVien", StringComparison.OrdinalIgnoreCase))
                 return "Lái tàu, phụ lái và trưởng tàu phải là ba người khác nhau.";
+            if (rangBuoc.Equals("CK_NhanVien_NgaySinh", StringComparison.OrdinalIgnoreCase))
+                return "Ngày sinh không hợp lệ: nhân viên phải đủ 18 tuổi tại ngày lập hồ sơ.";
 
             // CHECK do SQL Server tu dat ten: nhan dien theo cot
             return cot switch

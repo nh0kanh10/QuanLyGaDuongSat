@@ -28,6 +28,7 @@ namespace BUS.Services
     //   Q7 "Dang lam nhiem vu" do nhan ban dat, khong chon tay.
     // 12/10: chuc danh + don vi chon theo danh muc (DanhMucDonVi); doi chuc danh / hang bang / don vi
     //   co dieu kien (KiemTraDoiViTri); doi ma thi ghi nhansu.LichSuMaNhanVien, ma cu khong cap lai.
+    // 14/10: xoa ho so chi khi chua co du lieu nao tro toi (XoaNhanVien), con lai -> "Da nghi viec".
     // =========================================================================
     public record KetQuaLuuNhanVien(int MaNhanVien, string MaNVCode, string? MaCu, bool KhongThayDoi);
 
@@ -39,8 +40,6 @@ namespace BUS.Services
         // Cua so du lieu: tu 00:00 hom qua toi het ngay thu 7 sau hom nay
         public const int SoNgayXemTruoc = 1;
         public const int SoNgayXemSau = 8;
-
-        private static readonly Regex SoDienThoaiHopLe = new(@"^0\d{9,10}$");
 
         // Q7: trang thai chon tay trong ho so
         public static readonly string[] TrangThaiChonTay =
@@ -89,16 +88,16 @@ namespace BUS.Services
         {
             var ds = new List<LoiNhapLieuDTO>();
 
-            string hoTen = nv.HoTen?.Trim() ?? "";
-            if (hoTen.Length == 0) ds.Add(new("HoTen", "Vui lòng nhập họ và tên."));
-            else if (hoTen.Length > 100) ds.Add(new("HoTen", "Họ và tên tối đa 100 ký tự."));
-
-            string sdt = nv.SoDienThoai?.Trim() ?? "";
-            if (sdt.Length == 0) ds.Add(new("SoDienThoai", "Vui lòng nhập số điện thoại."));
-            else if (!SoDienThoaiHopLe.IsMatch(sdt)) ds.Add(new("SoDienThoai", "Số điện thoại gồm 10–11 chữ số, bắt đầu bằng 0."));
+            // 14/10: rang buoc co ban (RangBuocNhapLieu) - ho ten chi chu cai, SDT 10 chu so, du 18 tuoi ...
+            DateTime homNay = DateTime.Today;
+            if (RangBuocNhapLieu.KiemTraHoTen(nv.HoTen) is { } loiTen) ds.Add(new("HoTen", loiTen));
+            if (RangBuocNhapLieu.KiemTraSoDienThoai(nv.SoDienThoai) is { } loiSdt) ds.Add(new("SoDienThoai", loiSdt));
+            if (RangBuocNhapLieu.KiemTraNgaySinh(nv.NgaySinh, homNay) is { } loiNs) ds.Add(new("NgaySinh", loiNs));
 
             if (nv.HanKhamSucKhoe.Year is < 2000 or > 2100)
                 ds.Add(new("HanKhamSucKhoe", "Vui lòng chọn hạn khám sức khỏe."));
+            else if (RangBuocNhapLieu.KiemTraHanKham(nv.HanKhamSucKhoe, laHoSoMoi: nv.MaNhanVien <= 0, homNay) is { } loiHan)
+                ds.Add(new("HanKhamSucKhoe", loiHan));
 
             string chucDanh = nv.ChucDanh?.Trim() ?? "";
             // 12/10: chuc danh chon trong danh muc (khong go tu do) - quy tac kip, ma NV, don vi deu theo danh muc
@@ -298,6 +297,85 @@ namespace BUS.Services
 
                 ketQua = new KetQuaLuuNhanVien(goc.MaNhanVien, moi.MaNVCode,
                                                moi.MaNVCode != goc.MaNVCode ? goc.MaNVCode : null, false);
+                return true;
+            }
+            catch (Exception ex) when (DichLoiSqlPhuongTien.LaLoiCsdl(ex))
+            {
+                loi = DichLoiSqlPhuongTien.ThongDiep(ex);
+                return false;
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // XOA HO SO (14/10, Dat chot): chi khi chua co du lieu nao tro toi (nhap nham).
+        // Da co kip / phieu kiem tra / tai khoan / lich su ma -> chuyen sang "Da nghi viec".
+        // Ma cua ho so bi xoa duoc cap lai cho nguoi them sau (chua dung o dau, khong gay nham).
+        // ---------------------------------------------------------------------
+
+        public const string GoiYNghiViec =
+            "Xóa sẽ làm mất lịch sử này. Nếu người này không còn làm việc, hãy chuyển hồ sơ sang \"Đã nghỉ việc\": " +
+            "hồ sơ vẫn giữ để tra cứu nhưng không xuất hiện khi phân công kíp.";
+
+        // Doc truoc khi hoi xac nhan: cac dong mo ta du lieu dang tro toi; rong = xoa duoc
+        public bool LayThamChieuNhanVien(int maNhanVien, out List<string> thamChieu, out string loi)
+        {
+            loi = "";
+            thamChieu = new();
+            try
+            {
+                thamChieu = ThamChieuXoa.MoTa(_repo.DemThamChieuNhanVien(maNhanVien));
+                return true;
+            }
+            catch (Exception ex) when (DichLoiSqlPhuongTien.LaLoiCsdl(ex))
+            {
+                loi = DichLoiSqlPhuongTien.ThongDiep(ex);
+                return false;
+            }
+        }
+
+        // phienBan = phien ban luc nguoi dung chon ho so
+        public bool XoaNhanVien(int maNhanVien, byte[]? phienBan, out string loi)
+        {
+            loi = "";
+            if (!CoQuyen(MaQuyen.QuanLyHoSoNhanVien, "xóa hồ sơ nhân viên", out loi)) return false;
+
+            try
+            {
+                using var gd = PhienGiaoDich.Mo();
+                // PhanCong: khong de ho so vua duoc dua vao kip chen giua; MaNhanVien: ma vua giai
+                // phong khong bi cap song song cho nguoi dang them
+                gd.KhoaTaiNguyen(KhoaPhanCong);
+                gd.KhoaTaiNguyen(KhoaMaNhanVien);
+                var dl = NapTrongGiaoDich(gd);
+
+                var goc = dl.TimNhanVien(maNhanVien);
+                if (goc == null)
+                {
+                    loi = "Không tìm thấy hồ sơ nhân viên (có thể vừa bị xóa). Hãy nạp lại danh sách.";
+                    return false;
+                }
+                if (!CungPhienBan(phienBan, goc.PhienBan))
+                {
+                    loi = $"Hồ sơ {goc.MaNVCode} — {goc.HoTen} vừa được thay đổi sau khi bạn chọn. Hãy nạp lại rồi thao tác lại.";
+                    return false;
+                }
+
+                var thamChieu = ThamChieuXoa.MoTa(_repo.DemThamChieuNhanVien(maNhanVien, gd));
+                if (thamChieu.Count > 0)
+                {
+                    loi = ThamChieuXoa.KhongXoaDuoc($"hồ sơ {goc.MaNVCode} — {goc.HoTen}", thamChieu, GoiYNghiViec);
+                    return false;
+                }
+
+                if (_repo.XoaNhanVien(maNhanVien, goc.PhienBan!, gd) == 0)
+                {
+                    loi = $"Hồ sơ {goc.MaNVCode} vừa được người khác sửa. Hãy nạp lại rồi thao tác lại.";
+                    return false;
+                }
+
+                gd.GhiNhatKyHeThong(PhanQuyenService.MaTaiKhoanHienTai, "XOA", "nhansu.NhanVien",
+                                    maNhanVien.ToString(), MoTaJson(goc), null);
+                gd.XacNhan();
                 return true;
             }
             catch (Exception ex) when (DichLoiSqlPhuongTien.LaLoiCsdl(ex))
@@ -731,7 +809,7 @@ namespace BUS.Services
         private static NhanVienHienThi ChuanHoa(NhanVienHienThi nv)
         {
             var x = nv.SaoChep();
-            x.HoTen = x.HoTen?.Trim() ?? "";
+            x.HoTen = RangBuocNhapLieu.ChuanHoa(x.HoTen);
             x.SoDienThoai = x.SoDienThoai?.Trim() ?? "";
             x.ChucDanh = x.ChucDanh?.Trim() ?? "";
             x.DonViChuQuan = x.DonViChuQuan?.Trim() ?? "";
@@ -742,6 +820,7 @@ namespace BUS.Services
         private static bool GiongNhau(NhanVienHienThi a, NhanVienHienThi b)
             => a.MaNVCode == b.MaNVCode && a.HoTen == b.HoTen && a.SoDienThoai == b.SoDienThoai && a.ChucDanh == b.ChucDanh
                && a.HangBangLai == b.HangBangLai && a.HanKhamSucKhoe.Date == b.HanKhamSucKhoe.Date
+               && a.NgaySinh?.Date == b.NgaySinh?.Date
                && a.DonViChuQuan == b.DonViChuQuan && a.TrangThai == b.TrangThai;
 
         private static string GopLoi(IEnumerable<string?> ds)
@@ -753,6 +832,7 @@ namespace BUS.Services
         private static string MoTaJson(NhanVienHienThi nv) => JsonSerializer.Serialize(new
         {
             nv.MaNhanVien, nv.MaNVCode, nv.HoTen, nv.SoDienThoai, nv.ChucDanh, nv.HangBangLai,
+            NgaySinh = nv.NgaySinh?.ToString("yyyy-MM-dd"),
             HanKhamSucKhoe = nv.HanKhamSucKhoe.ToString("yyyy-MM-dd"), nv.DonViChuQuan, nv.TrangThai
         });
 
