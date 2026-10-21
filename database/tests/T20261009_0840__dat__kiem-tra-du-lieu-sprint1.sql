@@ -212,16 +212,18 @@ JOIN #Chuyen b ON b.MaDoanTau = y.MaDoanTau AND b.ConHieuLuc = 1 AND a.MaChuyenT
 JOIN phuongtien.ToaXe tx ON tx.MaToaXe = x.MaToaXe
 WHERE IIF(a.GioXP > b.GioXP, a.GioXP, b.GioXP) < IIF(a.GioVD < b.GioVD, a.GioVD, b.GioVD);
 
--- PT-10 Đầu máy / toa đang bảo dưỡng không được đưa vào chuyến còn hiệu lực
+-- PT-10 Đầu máy / toa đang bảo dưỡng hoặc đã ngừng khai thác (14/10) không được đưa vào chuyến còn hiệu lực
 INSERT INTO @KetQua
-SELECT 'LOI', 'PT-10', N'Đầu máy / toa BAO_DUONG không nằm trong đoàn tàu của chuyến còn hiệu lực', CONCAT(c.Mac, N': ', dm.SoHieuDauMay)
+SELECT 'LOI', 'PT-10', N'Đầu máy / toa BAO_DUONG hoặc NGUNG_KHAI_THAC không nằm trong đoàn tàu của chuyến còn hiệu lực',
+       CONCAT(c.Mac, N': ', dm.SoHieuDauMay, N' (', dm.TrangThai, N')')
 FROM #Chuyen c JOIN phuongtien.DauMay dm ON dm.MaDauMay IN (c.MaDauMayChinh, c.MaDauMayDay)
-WHERE c.ConHieuLuc = 1 AND dm.TrangThai = 'BAO_DUONG'
+WHERE c.ConHieuLuc = 1 AND dm.TrangThai IN ('BAO_DUONG', 'NGUNG_KHAI_THAC')
 UNION ALL
-SELECT 'LOI', 'PT-10', N'Đầu máy / toa BAO_DUONG không nằm trong đoàn tàu của chuyến còn hiệu lực', CONCAT(c.Mac, N': ', tx.SoHieuToaXe)
+SELECT 'LOI', 'PT-10', N'Đầu máy / toa BAO_DUONG hoặc NGUNG_KHAI_THAC không nằm trong đoàn tàu của chuyến còn hiệu lực',
+       CONCAT(c.Mac, N': ', tx.SoHieuToaXe, N' (', tx.TrangThai, N')')
 FROM vanhanh.ChiTietDoanTau ct JOIN #Chuyen c ON c.MaDoanTau = ct.MaDoanTau
 JOIN phuongtien.ToaXe tx ON tx.MaToaXe = ct.MaToaXe
-WHERE c.ConHieuLuc = 1 AND tx.TrangThai = 'BAO_DUONG';
+WHERE c.ConHieuLuc = 1 AND tx.TrangThai IN ('BAO_DUONG', 'NGUNG_KHAI_THAC');
 
 -- PT-11 Trạng thái khớp việc đang làm:
 --   toa chạy suốt trong chuyến DANG_CHAY → DA_NOI; toa DA_NOI → phải thuộc đoàn tàu của chuyến còn hiệu lực;
@@ -449,7 +451,7 @@ FROM (VALUES
     ('PT-07', N'Nhóm toa nối / cắt liền khối ở đầu / cuối'),
     ('PT-08', N'Đầu máy không kéo 2 chuyến chồng giờ'),
     ('PT-09', N'Toa không thuộc 2 chuyến chồng giờ'),
-    ('PT-10', N'Không dùng đầu máy / toa đang bảo dưỡng'),
+    ('PT-10', N'Không dùng đầu máy / toa đang bảo dưỡng / ngừng khai thác'),
     ('PT-11', N'Trạng thái toa / đầu máy khớp chuyến đang chạy'),
     ('NS-01', N'R2 đúng chức danh'),
     ('NS-02', N'R3 không ở 2 chuyến chồng giờ'),
