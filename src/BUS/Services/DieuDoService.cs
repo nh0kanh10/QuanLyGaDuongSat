@@ -25,8 +25,8 @@ namespace BUS.Services
                 string soHieu = first["SoHieuMacTau"].ToString() ?? "";
                 string loaiTau = first["LoaiTau"].ToString() ?? "TAU_NHANH";
                 string huongChay = first["HuongChay"].ToString() ?? "BAC_NAM";
-                int mucUuTien = Convert.ToInt32(first["MucUuTien"]);
-                decimal chieuDai = Convert.ToDecimal(first["TongChieuDaiM"]);
+                int mucUuTien = first["MucUuTien"] != DBNull.Value ? Convert.ToInt32(first["MucUuTien"]) : 3;
+                decimal chieuDai = first["TongChieuDaiM"] != DBNull.Value ? Convert.ToDecimal(first["TongChieuDaiM"]) : 0m;
                 string trangThai = first["TrangThai"].ToString() ?? "DA_LEN_LICH";
 
                 var hanhTrinh = new HanhTrinhTauDTO
@@ -47,6 +47,10 @@ namespace BUS.Services
 
                 foreach (DataRow r in group)
                 {
+                    DateTime gioDen = Convert.ToDateTime(r["GioDenKeHoach"]);
+                    DateTime gioDi = Convert.ToDateTime(r["GioDiKeHoach"]);
+                    int thoiGianDung = (int)(gioDi - gioDen).TotalMinutes;
+
                     hanhTrinh.DanhSachDiem.Add(new DiemChayTauDTO
                     {
                         MaChuyenTau = maChuyenTau,
@@ -54,15 +58,15 @@ namespace BUS.Services
                         LoaiTau = loaiTau,
                         HuongChay = huongChay,
                         MucUuTien = mucUuTien,
-                        ThuTuDung = Convert.ToInt32(r["ThuTuDung"]),
-                        MaGa = Convert.ToInt32(r["MaGa"]),
-                        TenGa = r["TenGa"].ToString() ?? "",
-                        MaGaCode = r["MaGaCode"].ToString() ?? "",
-                        LyTrinhKm = Convert.ToDecimal(r["LyTrinhKm"]),
-                        GioDen = Convert.ToDateTime(r["GioDenKeHoach"]),
-                        GioDi = Convert.ToDateTime(r["GioDiKeHoach"]),
-                        ThoiGianDungPhut = (int)(Convert.ToDateTime(r["GioDiKeHoach"]) - Convert.ToDateTime(r["GioDenKeHoach"])).TotalMinutes,
-                        LaDiemTranh = Convert.ToBoolean(r["LaDiemTranh"]),
+                        ThuTuDung = r["ThuTuDung"] != DBNull.Value ? Convert.ToInt32(r["ThuTuDung"]) : 0,
+                        MaGa = r["MaGa"] != DBNull.Value ? Convert.ToInt32(r["MaGa"]) : 0,
+                        TenGa = r["TenGa"]?.ToString() ?? "",
+                        MaGaCode = r["MaGaCode"]?.ToString() ?? "",
+                        LyTrinhKm = r["LyTrinhKm"] != DBNull.Value ? Convert.ToDecimal(r["LyTrinhKm"]) : 0m,
+                        GioDen = gioDen,
+                        GioDi = gioDi,
+                        ThoiGianDungPhut = Math.Max(0, thoiGianDung),
+                        LaDiemTranh = r["LaDiemTranh"] != DBNull.Value && Convert.ToBoolean(r["LaDiemTranh"]),
                         MaDuongRay = r["MaDuongRay"] != DBNull.Value ? Convert.ToInt32(r["MaDuongRay"]) : null,
                         SoHieuDuongRay = r["SoHieuDuongRay"] != DBNull.Value ? Convert.ToInt32(r["SoHieuDuongRay"]) : null,
                         LoaiDuong = r["LoaiDuong"] != DBNull.Value ? r["LoaiDuong"].ToString() : null
@@ -208,34 +212,138 @@ namespace BUS.Services
             return dsXungDot;
         }
 
+        private class PhuongAnTranh
+        {
+            public HanhTrinhTauDTO TauUuTien { get; set; } = null!;
+            public HanhTrinhTauDTO TauBiTranh { get; set; } = null!;
+            public int MaGaTranh { get; set; }
+            public string TenGaTranh { get; set; } = "";
+            public decimal LyTrinhGaTranh { get; set; }
+            public DateTime GioDenGaTranh { get; set; }
+            public DateTime GioDiGaTranh { get; set; }
+            public int SoPhutDung { get; set; }
+            public int SoPhutTang { get; set; }
+            public int? MaRayTranh { get; set; }
+            public int? SoHieuRay { get; set; }
+            public double DiemChiPhi { get; set; }
+        }
+
+        private PhuongAnTranh DanhGiaPhuongAnTranh(
+            HanhTrinhTauDTO tUuTien, HanhTrinhTauDTO tBiTranh,
+            DiemChayTauDTO d_uuTien_start, DiemChayTauDTO d_uuTien_end,
+            DiemChayTauDTO d_biTranh_start, DiemChayTauDTO d_biTranh_end,
+            decimal kmXungDot, DataTable dtGaCoDuongTranh)
+        {
+            decimal chieuDaiYeuCau = tBiTranh.TongChieuDaiM > 0 ? tBiTranh.TongChieuDaiM : 200m;
+
+            // Trong bài toán điều độ đường đơn (Single-Track Meet-Pass Problem):
+            // Tàu bị tránh BẮT BUỘC phải dừng chờ tại ga bắt đầu phân đoạn chuẩn bị vào khu gian xung đột (d_biTranh_start).
+            // Tuyệt đối không cho phép duyệt lùi về các ga trong quá khứ vì tàu đã đi qua từ trước.
+            int currMaGa = d_biTranh_start.MaGa;
+            string currTenGa = d_biTranh_start.TenGa;
+            decimal currLyTrinh = d_biTranh_start.LyTrinhKm;
+
+            // Thời điểm tàu bị tránh đến ga này (bảo toàn lịch đến)
+            DateTime curGioDen = d_biTranh_start.GioDen;
+
+            // Tính thời điểm tàu ưu tiên thông qua / giải phóng khu gian và đến ga này
+            DateTime curGioTauUuTienQua;
+            if (currMaGa == d_uuTien_end.MaGa)
+            {
+                curGioTauUuTienQua = d_uuTien_end.GioDen;
+            }
+            else if (currMaGa == d_uuTien_start.MaGa)
+            {
+                curGioTauUuTienQua = d_uuTien_start.GioDi;
+            }
+            else
+            {
+                double durUuTien = (d_uuTien_end.GioDen - d_uuTien_start.GioDi).TotalMinutes;
+                double vUuTien = durUuTien > 0 ? (double)(d_uuTien_end.LyTrinhKm - d_uuTien_start.LyTrinhKm) / durUuTien : 1.0;
+                double phutTuStartUuTien = Math.Abs(vUuTien) > 1e-5 ? (double)(currLyTrinh - d_uuTien_start.LyTrinhKm) / vUuTien : durUuTien;
+                curGioTauUuTienQua = d_uuTien_start.GioDi.AddMinutes(Math.Max(0, phutTuStartUuTien));
+            }
+
+            // Tính thời điểm xuất phát mới sau khi tàu ưu tiên đã thoát khỏi khu gian + 5 phút đệm an toàn
+            double diffMinutes = (curGioTauUuTienQua - curGioDen).TotalMinutes;
+            DateTime curGioDi;
+
+            if (diffMinutes >= 5 && diffMinutes <= 35)
+            {
+                // Khoảng thời gian tự nhiên: đỗ chờ tàu ưu tiên thông qua + 5 phút đệm
+                curGioDi = curGioTauUuTienQua.AddMinutes(5);
+            }
+            else if (diffMinutes > 35)
+            {
+                // Chênh lệch tự nhiên quá lớn: khống chế giãn cách dời lịch chuẩn 20 phút kể từ giờ đi cũ
+                curGioDi = d_biTranh_start.GioDi.AddMinutes(20);
+            }
+            else
+            {
+                // Tàu ưu tiên đã đi qua ga này trước khi tàu tránh đến -> lùi 15 phút an toàn
+                curGioDi = d_biTranh_start.GioDi.AddMinutes(15);
+            }
+
+            // Đảm bảo giờ đi mới không sớm hơn giờ đi cũ và đỗ tối thiểu 15 phút tại ga
+            if (curGioDi < d_biTranh_start.GioDi)
+            {
+                curGioDi = d_biTranh_start.GioDi.AddMinutes(15);
+            }
+            if ((curGioDi - curGioDen).TotalMinutes < 15)
+            {
+                curGioDi = curGioDen.AddMinutes(15);
+            }
+
+            int soPhutDung = (int)Math.Ceiling((curGioDi - curGioDen).TotalMinutes);
+            int soPhutTang = Math.Max(0, (int)Math.Ceiling((curGioDi - d_biTranh_start.GioDi).TotalMinutes));
+            if (soPhutTang == 0)
+            {
+                soPhutTang = 15;
+                curGioDi = d_biTranh_start.GioDi.AddMinutes(soPhutTang);
+                soPhutDung = (int)Math.Ceiling((curGioDi - curGioDen).TotalMinutes);
+            }
+
+            // Kiểm tra đường ray tránh khả dụng tại ga dừng tránh
+            DataTable dtRayKhaDung = _repo.LayDuongTranhKhaDung(currMaGa, chieuDaiYeuCau, curGioDen, curGioDi, tBiTranh.MaChuyenTau);
+            bool coRay = dtRayKhaDung.Rows.Count > 0;
+
+            // Tính hàm chi phí (Cost Function) cho bài toán điều độ đường sắt đơn
+            // Quy ước hệ thống: Mức 1 (Tối cao: SE1-SE4) -> Mức 4 (Tàu hàng)
+            // Tàu ưu tiên càng cao (số MucUuTien càng nhỏ) mà bị trễ thì phạt càng nặng
+            double trongSoPhatTre = (6 - tBiTranh.MucUuTien) * 10.0;
+            double chiPhi = (soPhutTang * trongSoPhatTre);
+            if (!coRay)
+            {
+                chiPhi += 50000.0; // Phạt cực nặng nếu ga không có đường ray tránh đủ chuẩn
+            }
+            if (diffMinutes > 35)
+            {
+                chiPhi += (diffMinutes - 35) * 5.0;
+            }
+
+            return new PhuongAnTranh
+            {
+                TauUuTien = tUuTien,
+                TauBiTranh = tBiTranh,
+                MaGaTranh = currMaGa,
+                TenGaTranh = currTenGa,
+                LyTrinhGaTranh = currLyTrinh,
+                GioDenGaTranh = curGioDen,
+                GioDiGaTranh = curGioDi,
+                SoPhutDung = soPhutDung,
+                SoPhutTang = soPhutTang,
+                MaRayTranh = coRay ? Convert.ToInt32(dtRayKhaDung.Rows[0]["MaDuongRay"]) : null,
+                SoHieuRay = coRay ? Convert.ToInt32(dtRayKhaDung.Rows[0]["SoHieuDuong"]) : null,
+                DiemChiPhi = chiPhi
+            };
+        }
+
         private XungDotKhuGianDTO TaoXungDot(int id, HanhTrinhTauDTO t1, HanhTrinhTauDTO t2,
                                              DiemChayTauDTO d1_start, DiemChayTauDTO d1_end,
                                              DiemChayTauDTO d2_start, DiemChayTauDTO d2_end,
                                              string loaiXungDot, DateTime thoiDiem, decimal kmXungDot)
         {
-            // 1. Phân định quyền ưu tiên chạy tàu (Train Priority Hierarchy)
-            bool t1UuTienHon = t1.MucUuTien < t2.MucUuTien;
-            if (t1.MucUuTien == t2.MucUuTien)
-            {
-                // Cùng cấp ưu tiên: Tàu chiều Nam -> Bắc (mác chẵn SE2, SE4) quy chuẩn biểu đồ ưu tiên hơn
-                if (t1.HuongChay != t2.HuongChay)
-                {
-                    t1UuTienHon = (t1.HuongChay == "NAM_BAC");
-                }
-                else
-                {
-                    t1UuTienHon = t1.GioXuatPhat <= t2.GioXuatPhat;
-                }
-            }
-
-            var tauUuTien = t1UuTienHon ? t1 : t2;
-            var tauBiTranh = t1UuTienHon ? t2 : t1;
-            var d_uuTien_start = t1UuTienHon ? d1_start : d2_start;
-            var d_uuTien_end = t1UuTienHon ? d1_end : d2_end;
-            var d_biTranh_start = t1UuTienHon ? d2_start : d1_start;
-            var d_biTranh_end = t1UuTienHon ? d2_end : d1_end;
-
-            // 2. Xác định khu gian vật lý thực tế trên tuyến đường sắt (Physical Block Section)
+            // Xác định khu gian vật lý thực tế trên tuyến đường sắt (Physical Block Section)
             DataTable dtTatCaGa = _repo.LayDanhSachGaTuyen();
             DataRow? gaTruoc = null;
             DataRow? gaSau = null;
@@ -261,102 +369,30 @@ namespace BUS.Services
             decimal lyTrinhCuoi = gaSau != null ? Convert.ToDecimal(gaSau["LyTrinhKm"]) : Math.Max(d1_start.LyTrinhKm, d1_end.LyTrinhKm);
             int maGaCuoi = gaSau != null ? Convert.ToInt32(gaSau["MaGa"]) : Math.Max(d1_start.MaGa, d1_end.MaGa);
 
-            // 3. Thuật toán chọn ga tránh tối ưu (Nearest Feasible Siding Station)
-            DataTable dtGaCoDuongTranh = _repo.LayTatCaGaCoDuongTranh(tauBiTranh.TongChieuDaiM);
-            DataRow? gaTranhDuocChon = null;
+            // Đánh giá 2 phương án tránh tàu đối ứng (Meet-Pass Alternative Evaluation)
+            DataTable dtGaCoDuongTranh = _repo.LayTatCaGaCoDuongTranh(150m);
 
-            if (tauBiTranh.HuongChay == "BAC_NAM")
+            var pa1 = DanhGiaPhuongAnTranh(t1, t2, d1_start, d1_end, d2_start, d2_end, kmXungDot, dtGaCoDuongTranh);
+            var pa2 = DanhGiaPhuongAnTranh(t2, t1, d2_start, d2_end, d1_start, d1_end, kmXungDot, dtGaCoDuongTranh);
+
+            PhuongAnTranh paChon;
+            // Áp dụng Quy chuẩn Điều độ Đường sắt:
+            // 1. Nếu 2 tàu khác cấp ưu tiên -> Tàu cấp thấp hơn (số MucUuTien lớn hơn) BẮT BUỘC phải dừng tránh nhường đường cho tàu cấp cao hơn
+            if (t1.MucUuTien < t2.MucUuTien)
             {
-                // Tàu Bắc -> Nam (Km tăng dần): Ga tránh phải nằm TRƯỚC điểm xung đột (LyTrinhKm <= kmXungDot)
-                gaTranhDuocChon = dtGaCoDuongTranh.AsEnumerable()
-                    .Where(r => Convert.ToDecimal(r["LyTrinhKm"]) <= kmXungDot)
-                    .OrderByDescending(r => Convert.ToDecimal(r["LyTrinhKm"]))
-                    .FirstOrDefault();
+                // t1 ưu tiên cao hơn t2 (ví dụ SE4 mức 1 vs NA1 mức 3) -> pa1 (t1 ưu tiên chạy suốt, t2 dừng nhường đường) được chọn
+                paChon = (pa1.MaRayTranh.HasValue || !pa2.MaRayTranh.HasValue) ? pa1 : pa2;
+            }
+            else if (t2.MucUuTien < t1.MucUuTien)
+            {
+                // t2 ưu tiên cao hơn t1 -> pa2 (t2 ưu tiên chạy suốt, t1 dừng nhường đường) được chọn
+                paChon = (pa2.MaRayTranh.HasValue || !pa1.MaRayTranh.HasValue) ? pa2 : pa1;
             }
             else
             {
-                // Tàu Nam -> Bắc (Km giảm dần): Ga tránh phải nằm TRƯỚC điểm xung đột (LyTrinhKm >= kmXungDot)
-                gaTranhDuocChon = dtGaCoDuongTranh.AsEnumerable()
-                    .Where(r => Convert.ToDecimal(r["LyTrinhKm"]) >= kmXungDot)
-                    .OrderBy(r => Convert.ToDecimal(r["LyTrinhKm"]))
-                    .FirstOrDefault();
+                // 2. Cùng cấp ưu tiên (SE gặp SE, hoặc tàu chợ gặp tàu chợ) -> Chọn phương án có tổng chi phí / độ trễ nhỏ nhất
+                paChon = (pa1.DiemChiPhi <= pa2.DiemChiPhi) ? pa1 : pa2;
             }
-
-            int maGaTranh;
-            string tenGaTranh;
-            decimal lyTrinhGaTranh;
-            int? maRayTranh = null;
-            int? soHieuRay = null;
-
-            if (gaTranhDuocChon != null)
-            {
-                maGaTranh = Convert.ToInt32(gaTranhDuocChon["MaGa"]);
-                tenGaTranh = gaTranhDuocChon["TenGa"].ToString() ?? "";
-                lyTrinhGaTranh = Convert.ToDecimal(gaTranhDuocChon["LyTrinhKm"]);
-                maRayTranh = Convert.ToInt32(gaTranhDuocChon["MaDuongRay"]);
-                soHieuRay = Convert.ToInt32(gaTranhDuocChon["SoHieuDuong"]);
-            }
-            else
-            {
-                maGaTranh = d_biTranh_start.MaGa;
-                tenGaTranh = d_biTranh_start.TenGa;
-                lyTrinhGaTranh = d_biTranh_start.LyTrinhKm;
-            }
-
-            // 4. Tính toán thời gian dừng tránh chuẩn theo Lý Thuyết Chiếm Dụng Phân Đoạn (Blocking Time Theory)
-            // Thời điểm tàu nhường đến ga tránh
-            double durBiTranh = (d_biTranh_end.GioDen - d_biTranh_start.GioDi).TotalMinutes;
-            double vBiTranh = durBiTranh > 0 ? (double)(d_biTranh_end.LyTrinhKm - d_biTranh_start.LyTrinhKm) / durBiTranh : 1.0;
-
-            DateTime gioDenGaTranh;
-            if (maGaTranh == d_biTranh_start.MaGa)
-            {
-                gioDenGaTranh = d_biTranh_start.GioDen;
-            }
-            else if (maGaTranh == d_biTranh_end.MaGa)
-            {
-                gioDenGaTranh = d_biTranh_end.GioDen;
-            }
-            else
-            {
-                double phutTuStart = Math.Abs(vBiTranh) > 1e-5 ? (double)(lyTrinhGaTranh - d_biTranh_start.LyTrinhKm) / vBiTranh : 0;
-                gioDenGaTranh = d_biTranh_start.GioDi.AddMinutes(Math.Max(0, phutTuStart));
-            }
-
-            // Thời điểm tàu ưu tiên chạy qua ga tránh này
-            double durUuTien = (d_uuTien_end.GioDen - d_uuTien_start.GioDi).TotalMinutes;
-            double vUuTien = durUuTien > 0 ? (double)(d_uuTien_end.LyTrinhKm - d_uuTien_start.LyTrinhKm) / durUuTien : 1.0;
-
-            DateTime gioTauUuTienQuaGaTranh;
-            if (maGaTranh == d_uuTien_start.MaGa)
-            {
-                gioTauUuTienQuaGaTranh = d_uuTien_start.GioDi;
-            }
-            else if (maGaTranh == d_uuTien_end.MaGa)
-            {
-                gioTauUuTienQuaGaTranh = d_uuTien_end.GioDen;
-            }
-            else
-            {
-                double phutTuStartUuTien = Math.Abs(vUuTien) > 1e-5 ? (double)(lyTrinhGaTranh - d_uuTien_start.LyTrinhKm) / vUuTien : 0;
-                gioTauUuTienQuaGaTranh = d_uuTien_start.GioDi.AddMinutes(Math.Max(0, phutTuStartUuTien));
-            }
-
-            // Tàu nhường xuất phát sau khi tàu ưu tiên qua ga + 5 phút đệm an toàn
-            DateTime gioDiGaTranh = gioTauUuTienQuaGaTranh.AddMinutes(5);
-            if ((gioDiGaTranh - gioDenGaTranh).TotalMinutes < 15)
-            {
-                gioDiGaTranh = gioDenGaTranh.AddMinutes(15);
-            }
-
-            int soPhutDung = (int)Math.Max(15, Math.Ceiling((gioDiGaTranh - gioDenGaTranh).TotalMinutes));
-
-            // Tính số phút tịnh tiến cần thiết cho các ga phía sau (đảm bảo giờ đến ga sau luôn > giờ đi ga này)
-            double distToNxt = Math.Abs((double)(d_biTranh_end.LyTrinhKm - lyTrinhGaTranh));
-            double phutChayToNxt = Math.Abs(vBiTranh) > 1e-5 ? distToNxt / Math.Abs(vBiTranh) : 15.0;
-            DateTime gioDenNxtMoi = gioDiGaTranh.AddMinutes(Math.Max(10, phutChayToNxt));
-            int soPhutTang = (int)Math.Max(soPhutDung, Math.Ceiling((gioDenNxtMoi - d_biTranh_end.GioDen).TotalMinutes));
-            if (soPhutTang < soPhutDung) soPhutTang = soPhutDung;
 
             string moTa = loaiXungDot == "DOI_DAU"
                 ? $"Xung đột đối đầu: Tàu {t1.SoHieuMacTau} ({t1.HuongChay}) và {t2.SoHieuMacTau} ({t2.HuongChay}) đối đầu tại Km {kmXungDot:F1} (khu gian {tenGaDau} - {tenGaCuoi}) lúc {thoiDiem:HH:mm}."
@@ -388,22 +424,22 @@ namespace BUS.Services
                 LyTrinhUocTinhKm = kmXungDot,
                 MoTaChiTiet = moTa,
 
-                SoHieuTauUuTien = tauUuTien.SoHieuMacTau,
-                MucUuTienTauUuTien = tauUuTien.MucUuTien,
-                MaChuyenTauBiTranh = tauBiTranh.MaChuyenTau,
-                SoHieuMacTauBiTranh = tauBiTranh.SoHieuMacTau,
-                SoHieuTauBiTranh = tauBiTranh.SoHieuMacTau,
-                MucUuTienTauBiTranh = tauBiTranh.MucUuTien,
+                SoHieuTauUuTien = paChon.TauUuTien.SoHieuMacTau,
+                MucUuTienTauUuTien = paChon.TauUuTien.MucUuTien,
+                MaChuyenTauBiTranh = paChon.TauBiTranh.MaChuyenTau,
+                SoHieuMacTauBiTranh = paChon.TauBiTranh.SoHieuMacTau,
+                SoHieuTauBiTranh = paChon.TauBiTranh.SoHieuMacTau,
+                MucUuTienTauBiTranh = paChon.TauBiTranh.MucUuTien,
 
-                MaGaDeXuatTranh = maGaTranh,
-                TenGaDeXuatTranh = tenGaTranh,
-                LyTrinhGaTranhKm = lyTrinhGaTranh,
-                GioDenGaTranh = gioDenGaTranh,
-                GioDiGaTranh = gioDiGaTranh,
-                SoPhutDungDeXuat = soPhutDung,
-                SoPhutTangLichTrinh = soPhutTang,
-                MaDuongRayDeXuat = maRayTranh,
-                SoHieuDuongRayDeXuat = soHieuRay
+                MaGaDeXuatTranh = paChon.MaGaTranh,
+                TenGaDeXuatTranh = paChon.TenGaTranh,
+                LyTrinhGaTranhKm = paChon.LyTrinhGaTranh,
+                GioDenGaTranh = paChon.GioDenGaTranh,
+                GioDiGaTranh = paChon.GioDiGaTranh,
+                SoPhutDungDeXuat = paChon.SoPhutDung,
+                SoPhutTangLichTrinh = paChon.SoPhutTang,
+                MaDuongRayDeXuat = paChon.MaRayTranh,
+                SoHieuDuongRayDeXuat = paChon.SoHieuRay
             };
         }
 
@@ -412,7 +448,11 @@ namespace BUS.Services
         /// </summary>
         public bool GiaiQuyetMotXungDot(XungDotKhuGianDTO xd, out string baoCaoChiTiet)
         {
-            string ghiChu = $"Điều độ tự động: Nhường đường cho tàu {xd.SoHieuTauUuTien}. Đỗ đường tránh số {xd.SoHieuDuongRayDeXuat ?? 2} trong {xd.SoPhutDungDeXuat} phút (Đến {xd.GioDenGaTranh:HH:mm} - Đi {xd.GioDiGaTranh:HH:mm}).";
+            string thongTinRay = xd.SoHieuDuongRayDeXuat.HasValue
+                ? $"Đường tránh #{xd.SoHieuDuongRayDeXuat.Value}"
+                : "Đường tránh chỉ định bởi Trực ban ga";
+
+            string ghiChu = $"Điều độ tự động: Nhường đường cho tàu {xd.SoHieuTauUuTien}. Đỗ {thongTinRay} trong {xd.SoPhutDungDeXuat} phút (Đến {xd.GioDenGaTranh:HH:mm} - Đi {xd.GioDiGaTranh:HH:mm}).";
 
             int soPhutTang = xd.SoPhutTangLichTrinh > 0 ? xd.SoPhutTangLichTrinh : xd.SoPhutDungDeXuat;
 
@@ -429,7 +469,7 @@ namespace BUS.Services
             if (ok)
             {
                 xd.DaGiaiQuyet = true;
-                baoCaoChiTiet = $"Đã xếp tàu {xd.SoHieuTauBiTranh} dừng tránh tại Ga {xd.TenGaDeXuatTranh} (Đường tránh #{xd.SoHieuDuongRayDeXuat ?? 2}) từ {xd.GioDenGaTranh:HH:mm} đến {xd.GioDiGaTranh:HH:mm} ({xd.SoPhutDungDeXuat} phút).\n\nLịch trình các ga tiếp theo đã được tịnh tiến an toàn (+{soPhutTang} phút).";
+                baoCaoChiTiet = $"Đã xếp tàu {xd.SoHieuTauBiTranh} dừng tránh tại Ga {xd.TenGaDeXuatTranh} ({thongTinRay}) từ {xd.GioDenGaTranh:HH:mm} đến {xd.GioDiGaTranh:HH:mm} ({xd.SoPhutDungDeXuat} phút).\n\nLịch trình các ga tiếp theo đã được tịnh tiến an toàn (+{soPhutTang} phút).";
                 return true;
             }
             else
@@ -440,39 +480,68 @@ namespace BUS.Services
         }
 
         /// <summary>
-        /// Thuật toán tự động giải quyết xung đột tránh tàu toàn tuyến (Auto-Conflict Resolution Engine)
+        /// Thuật toán tự động giải quyết xung đột tránh tàu toàn tuyến theo giải thuật lặp tham lam (Iterative Greedy Meet-Pass Resolution)
+        /// Mỗi vòng lặp giải quyết xung đột sớm nhất, cập nhật biểu đồ và kiểm tra lại trạng thái để chống xung đột dây chuyền.
         /// </summary>
         public bool TuDongGiaiQuyetTranhTau(DateTime ngay, out string baoCaoChiTiet)
         {
-            var dsXungDot = KiemTraXungDotToanTuyen(ngay);
-            if (dsXungDot.Count == 0)
+            var dsBanDau = KiemTraXungDotToanTuyen(ngay);
+            if (dsBanDau.Count == 0)
             {
                 baoCaoChiTiet = "Không phát hiện xung đột an toàn nào trong ngày được chọn. Toàn bộ lịch trình đều hợp lệ!";
                 return true;
             }
 
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"=== BÁO CÁO KẾT QUẢ TỰ ĐỘNG XẾP TRÁNH TÀU NGÀY {ngay:dd/MM/yyyy} ===");
-            sb.AppendLine($"Tổng số xung đột phát hiện: {dsXungDot.Count}");
+            sb.AppendLine($"    BÁO CÁO KẾT QUẢ TỰ ĐỘNG XẾP TRÁNH TÀU NGÀY {ngay:dd/MM/yyyy}    ");
+            sb.AppendLine($"Số xung đột phát hiện ban đầu: {dsBanDau.Count}");
             sb.AppendLine("---------------------------------------------------------------");
 
             int thanhCong = 0;
+            int maxVongLap = 15;
+            int vong = 0;
+            var daXuLy = new HashSet<string>();
 
-            foreach (var xd in dsXungDot)
+            while (vong < maxVongLap)
             {
-                if (GiaiQuyetMotXungDot(xd, out string thongBao))
+                var dsHienTai = KiemTraXungDotToanTuyen(ngay);
+                if (dsHienTai.Count == 0) break;
+
+                // Lấy xung đột xảy ra sớm nhất theo thời gian
+                var xdSomNhat = dsHienTai.OrderBy(x => x.ThoiDiemXungDot).FirstOrDefault(x => !daXuLy.Contains($"{x.MaChuyenTauBiTranh}_{x.MaGaDeXuatTranh}"));
+                if (xdSomNhat == null)
+                {
+                    xdSomNhat = dsHienTai.OrderBy(x => x.ThoiDiemXungDot).First();
+                }
+
+                string key = $"{xdSomNhat.MaChuyenTauBiTranh}_{xdSomNhat.MaGaDeXuatTranh}";
+                daXuLy.Add(key);
+
+                if (GiaiQuyetMotXungDot(xdSomNhat, out string thongBao))
                 {
                     thanhCong++;
-                    sb.AppendLine($"✔ Xung đột #{xd.MaXungDot}: Đã xếp tàu {xd.SoHieuTauBiTranh} dừng tránh tại Ga {xd.TenGaDeXuatTranh} (Đường #{xd.SoHieuDuongRayDeXuat ?? 2}).");
+                    string thongTinRay = xdSomNhat.SoHieuDuongRayDeXuat.HasValue ? $"Đường #{xdSomNhat.SoHieuDuongRayDeXuat.Value}" : "Đường tránh phân bổ";
+                    sb.AppendLine($" Bước {thanhCong}: Đã xếp tàu {xdSomNhat.SoHieuTauBiTranh} dừng tránh tại Ga {xdSomNhat.TenGaDeXuatTranh} ({thongTinRay}) đỗ {xdSomNhat.SoPhutDungDeXuat} phút (Đến {xdSomNhat.GioDenGaTranh:HH:mm} - Đi {xdSomNhat.GioDiGaTranh:HH:mm}).");
                 }
                 else
                 {
-                    sb.AppendLine($"❌ Xung đột #{xd.MaXungDot}: {thongBao}");
+                    sb.AppendLine($" Lỗi tại bước {thanhCong + 1}: {thongBao}");
+                    break;
                 }
+
+                vong++;
             }
 
             sb.AppendLine("---------------------------------------------------------------");
-            sb.AppendLine($"Hoàn thành giải quyết {thanhCong}/{dsXungDot.Count} xung đột. Biểu đồ chạy tàu đã được cập nhật mượt mà!");
+            var dsConLai = KiemTraXungDotToanTuyen(ngay);
+            if (dsConLai.Count == 0)
+            {
+                sb.AppendLine($" TẤT CẢ XUNG ĐỘT ĐÃ ĐƯỢC GIẢI QUYẾT TRIỆT ĐỂ! Tuyến đường sắt an toàn 100%.");
+            }
+            else
+            {
+                sb.AppendLine($" Đã giải quyết {thanhCong} điểm giao nhau. Còn {dsConLai.Count} điểm cần trực ban ga giám sát.");
+            }
             baoCaoChiTiet = sb.ToString();
 
             return thanhCong > 0;

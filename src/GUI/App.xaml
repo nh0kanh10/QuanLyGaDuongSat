@@ -50,6 +50,11 @@
                 <Setter Property="UseLayoutRounding" Value="True"/>
             </Style>
 
+            <Style x:Key="RequiredLabel" TargetType="TextBlock" BasedOn="{StaticResource FieldLabel}">
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="#003B73"/>
+            </Style>
+
             <Style TargetType="TextBox">
                 <Setter Property="Height" Value="30"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>

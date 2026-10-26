@@ -165,6 +165,7 @@ Table phuongtien.ChungLoaiToa {
   TenMoTa nvarchar(100) [not null]
   ChieuDaiChuanM decimal(4,1) [not null, default: `20.0`]
   SoTruc int [not null, default: `4`]
+  SucChuaChuan int [not null, default: 0, note: 'Sức chứa tiêu chuẩn']
 }
 
 Table phuongtien.ToaXe {
@@ -186,6 +187,10 @@ Table vanhanh.MacTauMau {
   ThoiGianChuanGio decimal(4,1) [not null]
   MucUuTien int [not null, default: `1`]
   DangKhaiThac bit [not null, default: `1`]
+  NgayTao datetime2 [not null, default: `SYSUTCDATETIME(`]
+  NguoiTao nvarchar(50) [not null, default: `'admin'`]
+  NgayCapNhat datetime2
+  NguoiCapNhat nvarchar(50)
 }
 
 Table vanhanh.ChuyenTau {

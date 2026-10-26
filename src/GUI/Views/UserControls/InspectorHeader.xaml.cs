@@ -64,12 +64,24 @@ namespace GUI.Views.UserControls
             btnMoreActions.Visibility = System.Windows.Visibility.Visible;
         }
 
-        public void SetCreateMode()
+        public void SetDetail(string title, string subtitle, int id, SymbolRegular icon = SymbolRegular.BranchFork24)
+        {
+            _isCreateMode = false;
+            _currentMaGa = id;
+            txtTitle.Text = title;
+            txtSubtitle.Text = subtitle;
+            SetDirtyState(false);
+            iconHeader.Symbol = icon;
+            iconHeader.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x3B, 0x73));
+            btnMoreActions.Visibility = System.Windows.Visibility.Visible;
+        }
+
+        public void SetCreateMode(string title = "KHAI BÁO GA MỚI", string subtitle = "Nhập thông tin ga và bấm [Lưu Ga Mới] để lưu")
         {
             _isCreateMode = true;
             _currentMaGa = 0;
-            txtTitle.Text = "KHAI BÁO GA MỚI";
-            txtSubtitle.Text = "Nhập thông tin ga và bấm [Lưu Ga Mới] để lưu";
+            txtTitle.Text = title;
+            txtSubtitle.Text = subtitle;
             txtBadge.Text = "THÊM MỚI";
             badgeContainer.Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF2, 0xF6));
             badgeContainer.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x3B, 0x73));

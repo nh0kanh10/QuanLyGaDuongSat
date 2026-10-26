@@ -83,6 +83,7 @@ namespace GUI.Views.Dialogs
             {
                 "MangLuoiGa" => btnTabGa,
                 "KhuGian" => btnTabKhuGian,
+                "MacTau" => btnTabMacTau,
                 "LichTrinh" => btnTabLichTrinh,
                 "BanVe" => btnTabBanVe,
                 "HangHoa" => btnTabHangHoa,
@@ -99,6 +100,7 @@ namespace GUI.Views.Dialogs
             {
                 "MangLuoiGa" => "Mạng Lưới Ga",
                 "KhuGian" => "Khu Gian Đường Sắt",
+                "MacTau" => "Danh Mục Mác Tàu",
                 "LichTrinh" => "Lịch Trình Chạy Tàu",
                 "BanVe" => "Hành Khách & Bán Vé",
                 "HangHoa" => "Vận Tải Hàng Hóa",
@@ -124,9 +126,9 @@ namespace GUI.Views.Dialogs
             var inactiveIconFg = (Brush)new BrushConverter().ConvertFrom("#475569")!;
             var activeBg = (Brush)new BrushConverter().ConvertFrom("#003B73")!;
 
-            Button[] tabs = { btnTabGa, btnTabKhuGian, btnTabLichTrinh, btnTabBanVe, btnTabHangHoa, btnTabTatCa };
-            TextBlock[] labels = { txtTabGa, txtTabKhuGian, txtTabLichTrinh, txtTabBanVe, txtTabHangHoa, txtTabTatCa };
-            Wpf.Ui.Controls.SymbolIcon[] icons = { icoTabGa, icoTabKhuGian, icoTabLichTrinh, icoTabBanVe, icoTabHangHoa, icoTabTatCa };
+            Button[] tabs = { btnTabGa, btnTabKhuGian, btnTabMacTau, btnTabLichTrinh, btnTabBanVe, btnTabHangHoa, btnTabTatCa };
+            TextBlock[] labels = { txtTabGa, txtTabKhuGian, txtTabMacTau, txtTabLichTrinh, txtTabBanVe, txtTabHangHoa, txtTabTatCa };
+            Wpf.Ui.Controls.SymbolIcon[] icons = { icoTabGa, icoTabKhuGian, icoTabMacTau, icoTabLichTrinh, icoTabBanVe, icoTabHangHoa, icoTabTatCa };
 
             for (int i = 0; i < tabs.Length; i++)
             {
@@ -160,6 +162,7 @@ namespace GUI.Views.Dialogs
             {
                 items.AddRange(LayDanhSachGa());
                 items.AddRange(LayDanhSachKhuGian());
+                items.AddRange(LayDanhSachMacTau());
                 items.AddRange(LayDanhSachLichTrinh());
                 items.AddRange(LayDanhSachBanVe());
                 items.AddRange(LayDanhSachHangHoa());
@@ -173,6 +176,9 @@ namespace GUI.Views.Dialogs
                         break;
                     case "KhuGian":
                         items = LayDanhSachKhuGian();
+                        break;
+                    case "MacTau":
+                        items = LayDanhSachMacTau();
                         break;
                     case "LichTrinh":
                         items = LayDanhSachLichTrinh();
@@ -311,6 +317,85 @@ namespace GUI.Views.Dialogs
                     MoTa = "Hủy thao tác đang sửa hoặc bỏ chọn khu gian trong bảng.",
                     MauKeycapHex = "#DC2626",
                     TagNhan = "Khu Gian"
+                }
+            };
+        }
+
+        private List<PhimTatItemViewModel> LayDanhSachMacTau()
+        {
+            return new List<PhimTatItemViewModel>
+            {
+                new()
+                {
+                    Phim = "F2 / Ctrl+N",
+                    TenTacNghiep = "Khai Báo Mác Tàu Mới",
+                    MoTa = "Mở form thêm mới mác tàu mẫu trên tuyến: cho phép gõ số hiệu (SE1, NA1, HP2...), chọn ga đầu cuối và loại tàu.",
+                    MauKeycapHex = "#15803D",
+                    TagNhan = "Mác Tàu"
+                },
+                new()
+                {
+                    Phim = "F3 / Ctrl+K",
+                    TenTacNghiep = "Tra Cứu Nhanh Mác Tàu",
+                    MoTa = "Focus con trỏ vào ô tìm kiếm mác tàu, tra cứu nhanh tức thì theo số hiệu, loại đoàn tàu hoặc tên ga đi/đến.",
+                    MauKeycapHex = "#D97706",
+                    TagNhan = "Mác Tàu"
+                },
+                new()
+                {
+                    Phim = "F4",
+                    TenTacNghiep = "Tự Động Tính Giờ Chuẩn",
+                    MoTa = "Tự động ước lượng thời gian chuẩn hành trình dựa vào cự ly khoảng cách giữa Ga Đi - Ga Đến và tốc độ định mức VNR.",
+                    MauKeycapHex = "#0284C7",
+                    TagNhan = "Mác Tàu"
+                },
+                new()
+                {
+                    Phim = "Ctrl + S",
+                    TenTacNghiep = "Lưu Mác Tàu Vào CSDL",
+                    MoTa = "Kiểm tra ràng buộc nghiệp vụ (số hiệu, giờ chuẩn, lộ trình) và lưu dữ liệu vào CSDL kèm dấu vết audit log.",
+                    MauKeycapHex = "#003B73",
+                    TagNhan = "Mác Tàu"
+                },
+                new()
+                {
+                    Phim = "F5",
+                    TenTacNghiep = "Nạp Lại Dữ Liệu",
+                    MoTa = "Tải lại danh sách mác tàu sạch từ CSDL SQL Server và cập nhật lại danh mục ga và loại tàu mới nhất.",
+                    MauKeycapHex = "#059669",
+                    TagNhan = "Mác Tàu"
+                },
+                new()
+                {
+                    Phim = "F6 / Ctrl+E",
+                    TenTacNghiep = "Xuất Danh Sách CSV",
+                    MoTa = "Xuất toàn bộ bảng danh sách mác tàu kèm thông số hành trình và trạng thái ra tệp định dạng CSV tiêu chuẩn.",
+                    MauKeycapHex = "#0D9488",
+                    TagNhan = "Mác Tàu"
+                },
+                new()
+                {
+                    Phim = "F7",
+                    TenTacNghiep = "Cấu Hình Định Mức Vận Tốc",
+                    MoTa = "Mở cửa sổ quản trị định mức vận tốc lữ hành (V_lh) theo từng loại đoàn tàu (Tàu SE, Tàu Chợ, Tàu Hàng) chuẩn VNR / UIC.",
+                    MauKeycapHex = "#8B5CF6",
+                    TagNhan = "Mác Tàu"
+                },
+                new()
+                {
+                    Phim = "Delete",
+                    TenTacNghiep = "Xóa Mác Tàu Đang Chọn",
+                    MoTa = "Xóa mác tàu khỏi hệ thống với kiểm tra an toàn: chỉ cho phép xóa khi mác tàu chưa từng phát sinh chuyến chạy trong lịch trình.",
+                    MauKeycapHex = "#DC2626",
+                    TagNhan = "Mác Tàu"
+                },
+                new()
+                {
+                    Phim = "Esc",
+                    TenTacNghiep = "Hủy Chế Độ / Xóa Lọc",
+                    MoTa = "Hủy thao tác thêm mới/chỉnh sửa đang dở dang hoặc xóa trắng từ khóa tìm kiếm trên thanh công cụ.",
+                    MauKeycapHex = "#64748B",
+                    TagNhan = "Mác Tàu"
                 }
             };
         }

@@ -46,7 +46,7 @@ namespace DAL.Repositories
                 parameters.Add(new SqlParameter("@trangThai", trangThai));
             }
 
-            sql += " ORDER BY ct.NgayXuatPhat DESC, ct.GioXuatPhatKH ASC";
+            sql += " ORDER BY ct.NgayXuatPhat DESC, CAST(ct.GioXuatPhatKH AS TIME) ASC, ct.MaChuyenTau ASC";
 
             return DatabaseHelper.ExecuteQuery(sql, parameters.Count > 0 ? parameters.ToArray() : null);
         }
@@ -56,7 +56,8 @@ namespace DAL.Repositories
             string sql = @"SELECT mt.MaMacTau, mt.SoHieuMacTau, mt.LoaiTau, mt.HuongChay, 
                                   mt.MaGaDi, mt.MaGaDen, mt.ThoiGianChuanGio, mt.MucUuTien, mt.DangKhaiThac,
                                   g1.TenGa AS TenGaDi, g2.TenGa AS TenGaDen,
-                                  g1.MaGaCode AS MaGaDiCode, g2.MaGaCode AS MaGaDenCode
+                                  g1.MaGaCode AS MaGaDiCode, g2.MaGaCode AS MaGaDenCode,
+                                  g1.LyTrinhKm AS KmGaDi, g2.LyTrinhKm AS KmGaDen
                            FROM vanhanh.MacTauMau mt
                            JOIN hatang.Ga g1 ON mt.MaGaDi = g1.MaGa
                            JOIN hatang.Ga g2 ON mt.MaGaDen = g2.MaGa
@@ -71,29 +72,109 @@ namespace DAL.Repositories
                                   ld.GioDenKeHoach, ld.GioDiKeHoach, ld.GioDenThucTe, ld.GioDiThucTe,
                                   ld.MaDuongRay, ld.LaDiemTranh,
                                   g.TenGa, g.MaGaCode, g.LyTrinhKm,
-                                  DATEDIFF(MINUTE, ld.GioDenKeHoach, ld.GioDiKeHoach) AS ThoiGianDungPhut
+                                  DATEDIFF(MINUTE, ld.GioDenKeHoach, ld.GioDiKeHoach) AS ThoiGianDungPhut,
+                                  ISNULL(DATEDIFF(DAY, ct.NgayXuatPhat, CAST(ld.GioDenKeHoach AS DATE)), 0) AS SoNgayQuaDemDen,
+                                  ISNULL(DATEDIFF(DAY, ct.NgayXuatPhat, CAST(ld.GioDiKeHoach AS DATE)), 0) AS SoNgayQuaDemDi
                            FROM vanhanh.LichDungGa ld
                            JOIN hatang.Ga g ON ld.MaGa = g.MaGa
+                           LEFT JOIN vanhanh.ChuyenTau ct ON ld.MaChuyenTau = ct.MaChuyenTau
                            WHERE ld.MaChuyenTau = @maChuyenTau
                            ORDER BY ld.ThuTuDung ASC";
             return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@maChuyenTau", maChuyenTau) });
         }
 
+        public DataTable LayLichDungGaMauTheoMac(int maMacTau, DateTime ngayXuatPhat, TimeSpan gioXuatPhat)
+        {
+            DateTime dtXuatPhatMoi = ngayXuatPhat.Date.Add(gioXuatPhat);
+            string sql = @"
+                SELECT 0 AS MaDiemDung, 0 AS MaChuyenTau, ld.MaGa, ld.ThuTuDung,
+                       DATEADD(MINUTE, DATEDIFF(MINUTE, ctNguon.GioXuatPhatKH, @gioXuatPhatMoi), ld.GioDenKeHoach) AS GioDenKeHoach,
+                       DATEADD(MINUTE, DATEDIFF(MINUTE, ctNguon.GioXuatPhatKH, @gioXuatPhatMoi), ld.GioDiKeHoach) AS GioDiKeHoach,
+                       ld.GioDenThucTe, ld.GioDiThucTe,
+                       ld.MaDuongRay, ld.LaDiemTranh,
+                       g.TenGa, g.MaGaCode, g.LyTrinhKm,
+                       DATEDIFF(MINUTE, ld.GioDenKeHoach, ld.GioDiKeHoach) AS ThoiGianDungPhut,
+                       ISNULL(DATEDIFF(DAY, @ngayXuatPhat, CAST(DATEADD(MINUTE, DATEDIFF(MINUTE, ctNguon.GioXuatPhatKH, @gioXuatPhatMoi), ld.GioDenKeHoach) AS DATE)), 0) AS SoNgayQuaDemDen,
+                       ISNULL(DATEDIFF(DAY, @ngayXuatPhat, CAST(DATEADD(MINUTE, DATEDIFF(MINUTE, ctNguon.GioXuatPhatKH, @gioXuatPhatMoi), ld.GioDiKeHoach) AS DATE)), 0) AS SoNgayQuaDemDi
+                FROM vanhanh.LichDungGa ld
+                JOIN vanhanh.ChuyenTau ctNguon ON ld.MaChuyenTau = ctNguon.MaChuyenTau
+                JOIN hatang.Ga g ON ld.MaGa = g.MaGa
+                WHERE ld.MaChuyenTau = (
+                    SELECT TOP 1 ld2.MaChuyenTau
+                    FROM vanhanh.LichDungGa ld2
+                    JOIN vanhanh.ChuyenTau ct2 ON ld2.MaChuyenTau = ct2.MaChuyenTau
+                    WHERE ct2.MaMacTau = @mac
+                    GROUP BY ld2.MaChuyenTau, ct2.NgayXuatPhat
+                    ORDER BY ct2.NgayXuatPhat DESC
+                )
+                ORDER BY ld.ThuTuDung ASC";
+
+            return DatabaseHelper.ExecuteQuery(sql, new[]
+            {
+                new SqlParameter("@mac", maMacTau),
+                new SqlParameter("@ngayXuatPhat", ngayXuatPhat.Date),
+                new SqlParameter("@gioXuatPhatMoi", dtXuatPhatMoi)
+            });
+        }
+
         public DataTable LayDanhSachToaXe(int maChuyenTau)
         {
-            string sql = @"SELECT tx.MaToaXeKhach, tx.MaChuyenTau, tx.NhanHieuToa, tx.LoaiToa, tx.ThuTuToa, tx.SucChua,
-                                  CASE tx.LoaiToa
-                                      WHEN 'NC' THEN N'Ngồi Cứng'
-                                      WHEN 'NML' THEN N'Ngồi Mềm Lạnh'
-                                      WHEN 'BN' THEN N'Giường Nằm K6'
-                                      WHEN 'AN' THEN N'Giường Nằm K4'
-                                      ELSE tx.LoaiToa
-                                  END AS TenLoaiToa,
-                                  ISNULL((SELECT COUNT(*) FROM vantai.ChoNgoi cn WHERE cn.MaToaXeKhach = tx.MaToaXeKhach), 0) AS SoChoDaThietLap
-                           FROM vantai.ToaXeKhach tx
-                           WHERE tx.MaChuyenTau = @maChuyenTau
-                           ORDER BY tx.ThuTuToa ASC";
-            return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@maChuyenTau", maChuyenTau) });
+            // Ưu tiên 1: Lấy từ chi tiết đoàn tàu kỹ thuật (vanhanh.ChiTietDoanTau + phuongtien.ToaXe + phuongtien.ChungLoaiToa)
+            string sqlDoanTau = @"SELECT c.ThuTuNoi AS ThuTuToa,
+                                         tx.MaToaXe AS MaToaXeKhach,
+                                         dt.MaChuyenTau,
+                                         tx.SoHieuToaXe AS NhanHieuToa,
+                                         cl.MaChungLoaiCode AS LoaiToa,
+                                         cl.TenMoTa AS TenLoaiToa,
+                                         ISNULL(cl.SucChuaChuan, 0) AS SucChua,
+                                         tx.TuTrongTan,
+                                         tx.TaiTrongToiDaTan,
+                                         cl.ChieuDaiChuanM
+                                  FROM vanhanh.ChiTietDoanTau c
+                                  JOIN vanhanh.DoanTau dt ON dt.MaDoanTau = c.MaDoanTau
+                                  JOIN phuongtien.ToaXe tx ON tx.MaToaXe = c.MaToaXe
+                                  JOIN phuongtien.ChungLoaiToa cl ON cl.MaChungLoai = tx.MaChungLoai
+                                  WHERE dt.MaChuyenTau = @maChuyenTau
+                                  ORDER BY c.ThuTuNoi ASC";
+
+            var dt = DatabaseHelper.ExecuteQuery(sqlDoanTau, new[] { new SqlParameter("@maChuyenTau", maChuyenTau) });
+            if (dt.Rows.Count > 0)
+            {
+                return dt;
+            }
+
+            // Ưu tiên 2: Fallback sang bảng thương mại vé vantai.ToaXeKhach (nếu có dữ liệu)
+            string sqlVe = @"SELECT tx.MaToaXeKhach, tx.MaChuyenTau, tx.NhanHieuToa, tx.LoaiToa, tx.ThuTuToa, tx.SucChua,
+                                   ISNULL(cl.TenMoTa, tx.LoaiToa) AS TenLoaiToa,
+                                   ISNULL((SELECT COUNT(*) FROM vantai.ChoNgoi cn WHERE cn.MaToaXeKhach = tx.MaToaXeKhach), 0) AS SoChoDaThietLap
+                            FROM vantai.ToaXeKhach tx
+                            LEFT JOIN phuongtien.ChungLoaiToa cl ON cl.MaChungLoaiCode = tx.LoaiToa
+                            WHERE tx.MaChuyenTau = @maChuyenTau
+                            ORDER BY tx.ThuTuToa ASC";
+            return DatabaseHelper.ExecuteQuery(sqlVe, new[] { new SqlParameter("@maChuyenTau", maChuyenTau) });
+        }
+
+        public DataTable LayDanhSachToaXeTheoDauMay(int maDauMay)
+        {
+            if (maDauMay <= 0) return new DataTable();
+
+            string sql = @"SELECT TOP 20 c.ThuTuNoi AS ThuTuToa,
+                                  tx.MaToaXe AS MaToaXeKhach,
+                                  dt.MaChuyenTau,
+                                  tx.SoHieuToaXe AS NhanHieuToa,
+                                  cl.MaChungLoaiCode AS LoaiToa,
+                                  cl.TenMoTa AS TenLoaiToa,
+                                  ISNULL(cl.SucChuaChuan, 0) AS SucChua,
+                                  tx.TuTrongTan,
+                                  tx.TaiTrongToiDaTan,
+                                  cl.ChieuDaiChuanM
+                           FROM vanhanh.ChiTietDoanTau c
+                           JOIN vanhanh.DoanTau dt ON dt.MaDoanTau = c.MaDoanTau
+                           JOIN phuongtien.ToaXe tx ON tx.MaToaXe = c.MaToaXe
+                           JOIN phuongtien.ChungLoaiToa cl ON cl.MaChungLoai = tx.MaChungLoai
+                           WHERE dt.MaDauMayChinh = @dm
+                           ORDER BY dt.MaDoanTau DESC, c.ThuTuNoi ASC";
+            return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@dm", maDauMay) });
         }
 
         public int Them(ChuyenTau ct)
@@ -114,6 +195,97 @@ namespace DAL.Repositories
             object? result = DatabaseHelper.ExecuteScalar(sql, p);
             return result != null && result != DBNull.Value ? Convert.ToInt32(result) : 0;
         }
+
+        public int LapChuyenTauTronGoi(ChuyenTau ct, DataTable dtLichDung, DoanTau? dt, out string thongBaoLoi)
+        {
+            thongBaoLoi = string.Empty;
+            using var conn = new SqlConnection(DatabaseHelper.GetConnectionString());
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                // 1. Chèn Chuyến Tàu
+                string sqlTrip = @"INSERT INTO vanhanh.ChuyenTau (MaMacTau, NgayXuatPhat, GioXuatPhatKH, GioVeDichKH, TrangThai, SoPhutTreLuyKe, LyDoHuy)
+                                   VALUES (@mac, @ngay, @gioDi, @gioDen, @tt, @tre, @lyDo);
+                                   SELECT CAST(SCOPE_IDENTITY() AS INT);";
+                using var cmdTrip = new SqlCommand(sqlTrip, conn, trans);
+                cmdTrip.Parameters.AddWithValue("@mac", ct.MaMacTau);
+                cmdTrip.Parameters.AddWithValue("@ngay", ct.NgayXuatPhat.Date);
+                cmdTrip.Parameters.AddWithValue("@gioDi", ct.GioXuatPhatKH);
+                cmdTrip.Parameters.AddWithValue("@gioDen", ct.GioVeDichKH);
+                cmdTrip.Parameters.AddWithValue("@tt", string.IsNullOrEmpty(ct.TrangThai) ? "DA_LEN_LICH" : ct.TrangThai);
+                cmdTrip.Parameters.AddWithValue("@tre", ct.SoPhutTreLuyKe);
+                cmdTrip.Parameters.AddWithValue("@lyDo", (object?)ct.LyDoHuy ?? DBNull.Value);
+
+                object? resId = cmdTrip.ExecuteScalar();
+                int newMaChuyen = resId != null && resId != DBNull.Value ? Convert.ToInt32(resId) : 0;
+                if (newMaChuyen <= 0)
+                {
+                    trans.Rollback();
+                    thongBaoLoi = "Không thể tạo bản ghi chuyến tàu.";
+                    return 0;
+                }
+
+                // 2. Chèn Lịch Dừng Ga (nếu có các điểm dừng trên RAM)
+                if (dtLichDung != null && dtLichDung.Rows.Count > 0)
+                {
+                    string sqlStop = @"INSERT INTO vanhanh.LichDungGa (MaChuyenTau, MaGa, ThuTuDung, GioDenKeHoach, GioDiKeHoach, GioDenThucTe, GioDiThucTe, MaDuongRay, LaDiemTranh)
+                                       VALUES (@ct, @ga, @tt, @denKH, @diKH, @denTT, @diTT, @ray, @tranh)";
+                    int stt = 1;
+                    foreach (DataRow r in dtLichDung.Rows)
+                    {
+                        using var cmdStop = new SqlCommand(sqlStop, conn, trans);
+                        cmdStop.Parameters.AddWithValue("@ct", newMaChuyen);
+                        cmdStop.Parameters.AddWithValue("@ga", Convert.ToInt32(r["MaGa"]));
+                        
+                        int thuTu = r.Table.Columns.Contains("ThuTuDung") && r["ThuTuDung"] != DBNull.Value 
+                            ? Convert.ToInt32(r["ThuTuDung"]) 
+                            : stt;
+                        cmdStop.Parameters.AddWithValue("@tt", thuTu);
+
+                        cmdStop.Parameters.AddWithValue("@denKH", Convert.ToDateTime(r["GioDenKeHoach"]));
+                        cmdStop.Parameters.AddWithValue("@diKH", Convert.ToDateTime(r["GioDiKeHoach"]));
+                        cmdStop.Parameters.AddWithValue("@denTT", (r.Table.Columns.Contains("GioDenThucTe") && r["GioDenThucTe"] != DBNull.Value) ? r["GioDenThucTe"] : DBNull.Value);
+                        cmdStop.Parameters.AddWithValue("@diTT", (r.Table.Columns.Contains("GioDiThucTe") && r["GioDiThucTe"] != DBNull.Value) ? r["GioDiThucTe"] : DBNull.Value);
+                        cmdStop.Parameters.AddWithValue("@ray", (r.Table.Columns.Contains("MaDuongRay") && r["MaDuongRay"] != DBNull.Value) ? r["MaDuongRay"] : DBNull.Value);
+                        
+                        bool laTranh = r.Table.Columns.Contains("LaDiemTranh") && r["LaDiemTranh"] != DBNull.Value && Convert.ToBoolean(r["LaDiemTranh"]);
+                        cmdStop.Parameters.AddWithValue("@tranh", laTranh);
+
+                        cmdStop.ExecuteNonQuery();
+                        stt++;
+                    }
+                }
+
+                // 3. Chèn Đoàn Tàu & Đầu Máy (nếu có)
+                if (dt != null && dt.MaDauMayChinh > 0)
+                {
+                    string sqlDoanTau = @"INSERT INTO vanhanh.DoanTau (MaChuyenTau, MaDauMayChinh, MaDauMayDay, TongSoToa, TongChieuDaiM, TongTrongLuongTan, DaDuyetAnToan)
+                                          VALUES (@ct, @chinh, @day, @soToa, @dai, @trongLuong, @duyet)";
+                    using var cmdDT = new SqlCommand(sqlDoanTau, conn, trans);
+                    cmdDT.Parameters.AddWithValue("@ct", newMaChuyen);
+                    cmdDT.Parameters.AddWithValue("@chinh", dt.MaDauMayChinh);
+                    cmdDT.Parameters.AddWithValue("@day", (object?)dt.MaDauMayDay ?? DBNull.Value);
+                    cmdDT.Parameters.AddWithValue("@soToa", dt.TongSoToa > 0 ? dt.TongSoToa : 1);
+                    cmdDT.Parameters.AddWithValue("@dai", dt.TongChieuDaiM > 0 ? dt.TongChieuDaiM : 216.5m);
+                    cmdDT.Parameters.AddWithValue("@trongLuong", dt.TongTrongLuongTan > 0 ? dt.TongTrongLuongTan : 478.0m);
+                    cmdDT.Parameters.AddWithValue("@duyet", dt.DaDuyetAnToan);
+
+                    cmdDT.ExecuteNonQuery();
+                }
+
+                trans.Commit();
+                return newMaChuyen;
+            }
+            catch (Exception ex)
+            {
+                trans.Rollback();
+                thongBaoLoi = $"Lỗi giao dịch lập chuyến tàu: {ex.Message}";
+                return 0;
+            }
+        }
+
 
         public int CapNhat(ChuyenTau ct)
         {
@@ -140,6 +312,25 @@ namespace DAL.Repositories
                 new SqlParameter("@tre", ct.SoPhutTreLuyKe),
                 new SqlParameter("@lyDo", (object?)ct.LyDoHuy ?? DBNull.Value),
                 new SqlParameter("@tt", ct.TrangThai)
+            };
+            return DatabaseHelper.ExecuteNonQuery(sql, p);
+        }
+
+        public int CapNhatThongSoKeHoach(int maChuyenTau, int maMacTau, DateTime ngayXuatPhat, DateTime gioXuatPhatKH, DateTime gioVeDichKH)
+        {
+            string sql = @"UPDATE vanhanh.ChuyenTau 
+                           SET MaMacTau = @mac,
+                               NgayXuatPhat = @ngay,
+                               GioXuatPhatKH = @gioDi,
+                               GioVeDichKH = @gioDen
+                           WHERE MaChuyenTau = @id";
+            var p = new[]
+            {
+                new SqlParameter("@id", maChuyenTau),
+                new SqlParameter("@mac", maMacTau),
+                new SqlParameter("@ngay", ngayXuatPhat.Date),
+                new SqlParameter("@gioDi", gioXuatPhatKH),
+                new SqlParameter("@gioDen", gioVeDichKH)
             };
             return DatabaseHelper.ExecuteNonQuery(sql, p);
         }
@@ -193,22 +384,257 @@ namespace DAL.Repositories
             return DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@id", maDiemDung) });
         }
 
+        public int CapNhatLichDungGa(LichDungGa ld)
+        {
+            string sql = @"UPDATE vanhanh.LichDungGa 
+                           SET GioDenKeHoach = @denKH,
+                               GioDiKeHoach = @diKH,
+                               LaDiemTranh = @tranh
+                           WHERE MaDiemDung = @id";
+            var p = new[]
+            {
+                new SqlParameter("@id", ld.MaDiemDung),
+                new SqlParameter("@denKH", ld.GioDenKeHoach),
+                new SqlParameter("@diKH", ld.GioDiKeHoach),
+                new SqlParameter("@tranh", ld.LaDiemTranh)
+            };
+            return DatabaseHelper.ExecuteNonQuery(sql, p);
+        }
+
+        public bool DayThuTuDung(int maChuyenTau, int tuThuTu)
+        {
+            string sql = @"UPDATE vanhanh.LichDungGa 
+                           SET ThuTuDung = ThuTuDung + 10000 + 1 
+                           WHERE MaChuyenTau = @ct AND ThuTuDung >= @tu;
+                           
+                           UPDATE vanhanh.LichDungGa 
+                           SET ThuTuDung = ThuTuDung - 10000 
+                           WHERE MaChuyenTau = @ct AND ThuTuDung > 10000;";
+            return DatabaseHelper.ExecuteNonQuery(sql, new[]
+            {
+                new SqlParameter("@ct", maChuyenTau),
+                new SqlParameter("@tu", tuThuTu)
+            }) > 0;
+        }
+
+        public bool SapXepLichDungTheoKm(int maChuyenTau, bool chieuBacNam, out int soDiemDungThayDoi)
+        {
+            soDiemDungThayDoi = 0;
+            string sqlGet = @"SELECT ld.MaDiemDung, ld.ThuTuDung, ISNULL(g.LyTrinhKm, 0) AS LyTrinhKm,
+                                     ld.GioDenKeHoach, ld.GioDiKeHoach, g.TenGa
+                              FROM vanhanh.LichDungGa ld
+                              JOIN hatang.Ga g ON ld.MaGa = g.MaGa
+                              WHERE ld.MaChuyenTau = @ct";
+            var dt = DatabaseHelper.ExecuteQuery(sqlGet, new[] { new SqlParameter("@ct", maChuyenTau) });
+            if (dt.Rows.Count <= 1) return true;
+
+            var rows = dt.AsEnumerable();
+            var sortedRows = (chieuBacNam
+                ? rows.OrderBy(r => Convert.ToDecimal(r["LyTrinhKm"]))
+                : rows.OrderByDescending(r => Convert.ToDecimal(r["LyTrinhKm"]))).ToList();
+
+            var listNodes = new List<(int MaDiemDung, int NewThuTu, decimal Km, DateTime GioDen, DateTime GioDi)>();
+
+            for (int i = 0; i < sortedRows.Count; i++)
+            {
+                var r = sortedRows[i];
+                int mdd = Convert.ToInt32(r["MaDiemDung"]);
+                decimal km = Convert.ToDecimal(r["LyTrinhKm"]);
+                DateTime dtDen = Convert.ToDateTime(r["GioDenKeHoach"]);
+                DateTime dtDi = Convert.ToDateTime(r["GioDiKeHoach"]);
+                listNodes.Add((mdd, i + 1, km, dtDen, dtDi));
+            }
+
+            // Tự động nội suy thời gian cho các ga bị ngược giờ sau khi đảo vị trí theo Km
+            for (int i = 0; i < listNodes.Count; i++)
+            {
+                var cur = listNodes[i];
+                bool thoiGianKhongHopLe = false;
+
+                if (i > 0 && cur.GioDen <= listNodes[i - 1].GioDi)
+                {
+                    thoiGianKhongHopLe = true;
+                }
+                if (i < listNodes.Count - 1 && cur.GioDi >= listNodes[i + 1].GioDen)
+                {
+                    thoiGianKhongHopLe = true;
+                }
+
+                if (thoiGianKhongHopLe)
+                {
+                    if (i > 0 && i < listNodes.Count - 1)
+                    {
+                        var prev = listNodes[i - 1];
+                        int nextIdx = i + 1;
+                        while (nextIdx < listNodes.Count && listNodes[nextIdx].GioDen <= prev.GioDi)
+                        {
+                            nextIdx++;
+                        }
+
+                        if (nextIdx < listNodes.Count)
+                        {
+                            var nextValid = listNodes[nextIdx];
+                            decimal distTotal = Math.Abs(nextValid.Km - prev.Km);
+                            decimal distCur = Math.Abs(cur.Km - prev.Km);
+
+                            TimeSpan totalSpan = nextValid.GioDen - prev.GioDi;
+                            double ratio = distTotal > 0 ? (double)(distCur / distTotal) : 0.5;
+                            double minutesChay = Math.Round(totalSpan.TotalMinutes * ratio);
+                            if (minutesChay < 5) minutesChay = 5;
+
+                            DateTime rawDen = prev.GioDi.AddMinutes(minutesChay);
+                            DateTime newDen = new DateTime(rawDen.Year, rawDen.Month, rawDen.Day, rawDen.Hour, rawDen.Minute, 0);
+
+                            int dwellMinutes = (int)Math.Max(2, Math.Round((cur.GioDi - cur.GioDen).TotalMinutes));
+                            if (dwellMinutes > 30) dwellMinutes = 5;
+
+                            DateTime newDi = newDen.AddMinutes(dwellMinutes);
+                            if (newDi >= nextValid.GioDen)
+                            {
+                                newDi = nextValid.GioDen.AddMinutes(-5);
+                                newDen = newDi.AddMinutes(-dwellMinutes);
+                            }
+
+                            listNodes[i] = (cur.MaDiemDung, cur.NewThuTu, cur.Km, newDen, newDi);
+                        }
+                    }
+                    else if (i == listNodes.Count - 1 && i > 0)
+                    {
+                        // Ga cuối cùng bị trễ/ngược: dự kiến vận tốc trung bình ~55 km/h
+                        var prev = listNodes[i - 1];
+                        decimal dist = Math.Abs(cur.Km - prev.Km);
+                        int runMins = (int)Math.Max(10, Math.Round((double)dist * 1.1));
+                        DateTime rawDen = prev.GioDi.AddMinutes(runMins);
+                        DateTime newDen = new DateTime(rawDen.Year, rawDen.Month, rawDen.Day, rawDen.Hour, rawDen.Minute, 0);
+                        listNodes[i] = (cur.MaDiemDung, cur.NewThuTu, cur.Km, newDen, newDen);
+                    }
+                }
+            }
+
+            for (int i = 0; i < sortedRows.Count; i++)
+            {
+                int currentThuTu = Convert.ToInt32(sortedRows[i]["ThuTuDung"]);
+                if (currentThuTu != (i + 1) || listNodes[i].GioDen != Convert.ToDateTime(sortedRows[i]["GioDenKeHoach"]))
+                {
+                    soDiemDungThayDoi++;
+                }
+            }
+
+            if (soDiemDungThayDoi == 0) return true;
+
+            using var conn = new SqlConnection(DatabaseHelper.GetConnectionString());
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                // Vô hiệu hóa trigger kiểm tra thời gian trong lúc cập nhật hàng loạt
+                using (var cmdDis = new SqlCommand("ALTER TABLE vanhanh.LichDungGa DISABLE TRIGGER trg_LichDungGa_CheckThoiGian;", conn, trans))
+                {
+                    cmdDis.ExecuteNonQuery();
+                }
+
+                // B1: Đánh số tạm thời với offset 10000 để tránh vi phạm CHECK constraint hoặc xung đột UNIQUE
+                for (int i = 0; i < listNodes.Count; i++)
+                {
+                    var node = listNodes[i];
+                    string sqlUp = @"UPDATE vanhanh.LichDungGa 
+                                     SET ThuTuDung = @tt, GioDenKeHoach = @den, GioDiKeHoach = @di 
+                                     WHERE MaDiemDung = @mdd";
+                    using var cmd = new SqlCommand(sqlUp, conn, trans);
+                    cmd.Parameters.AddWithValue("@tt", node.NewThuTu + 10000);
+                    cmd.Parameters.AddWithValue("@den", node.GioDen);
+                    cmd.Parameters.AddWithValue("@di", node.GioDi);
+                    cmd.Parameters.AddWithValue("@mdd", node.MaDiemDung);
+                    cmd.ExecuteNonQuery();
+                }
+
+                // B2: Giảm offset 10000 về đúng dải 1..N
+                string sqlFinal = "UPDATE vanhanh.LichDungGa SET ThuTuDung = ThuTuDung - 10000 WHERE MaChuyenTau = @ct AND ThuTuDung > 10000";
+                using (var cmdFinal = new SqlCommand(sqlFinal, conn, trans))
+                {
+                    cmdFinal.Parameters.AddWithValue("@ct", maChuyenTau);
+                    cmdFinal.ExecuteNonQuery();
+                }
+
+                // B3: Cập nhật lại GioXuatPhatKH và GioVeDichKH của chuyến tàu
+                if (listNodes.Count >= 2)
+                {
+                    string sqlTrip = @"UPDATE vanhanh.ChuyenTau 
+                                       SET GioXuatPhatKH = @xp, GioVeDichKH = @vd 
+                                       WHERE MaChuyenTau = @ct";
+                    using var cmdTrip = new SqlCommand(sqlTrip, conn, trans);
+                    cmdTrip.Parameters.AddWithValue("@xp", listNodes[0].GioDi);
+                    cmdTrip.Parameters.AddWithValue("@vd", listNodes[^1].GioDen);
+                    cmdTrip.Parameters.AddWithValue("@ct", maChuyenTau);
+                    cmdTrip.ExecuteNonQuery();
+                }
+
+                // Kích hoạt lại trigger sau khi hoàn tất sắp xếp chuẩn
+                using (var cmdEn = new SqlCommand("ALTER TABLE vanhanh.LichDungGa ENABLE TRIGGER trg_LichDungGa_CheckThoiGian;", conn, trans))
+                {
+                    cmdEn.ExecuteNonQuery();
+                }
+
+                trans.Commit();
+                return true;
+            }
+            catch
+            {
+                trans.Rollback();
+                try
+                {
+                    using var connEn = new SqlConnection(DatabaseHelper.GetConnectionString());
+                    connEn.Open();
+                    using var cmdEn = new SqlCommand("ALTER TABLE vanhanh.LichDungGa ENABLE TRIGGER trg_LichDungGa_CheckThoiGian;", connEn);
+                    cmdEn.ExecuteNonQuery();
+                }
+                catch { }
+                throw;
+            }
+        }
+
+        public bool TinhTienGioCacGaPhiaSau(int maChuyenTau, int tuThuTu, int soPhut)
+        {
+            string sql = @"UPDATE vanhanh.LichDungGa
+                           SET GioDenKeHoach = DATEADD(MINUTE, @phut, GioDenKeHoach),
+                               GioDiKeHoach = DATEADD(MINUTE, @phut, GioDiKeHoach)
+                           WHERE MaChuyenTau = @ct AND ThuTuDung >= @tu;
+
+                           UPDATE vanhanh.ChuyenTau
+                           SET GioVeDichKH = (SELECT MAX(GioDenKeHoach) FROM vanhanh.LichDungGa WHERE MaChuyenTau = @ct)
+                           WHERE MaChuyenTau = @ct;";
+            return DatabaseHelper.ExecuteNonQuery(sql, new[]
+            {
+                new SqlParameter("@ct", maChuyenTau),
+                new SqlParameter("@tu", tuThuTu),
+                new SqlParameter("@phut", soPhut)
+            }) > 0;
+        }
+
         public int SaoChepLichDungTuChuyenKhac(int maChuyenNguon, int maChuyenDich, DateTime ngayKhoiHanhMoi)
         {
-            string sql = @"INSERT INTO vanhanh.LichDungGa (MaChuyenTau, MaGa, ThuTuDung, GioDenKeHoach, GioDiKeHoach, LaDiemTranh)
+            // Bọc DELETE và INSERT trong cùng một transaction nguyên tử (atomic)
+            string sql = @"SET XACT_ABORT ON;
+                           BEGIN TRANSACTION;
+
+                           DELETE FROM vanhanh.LichDungGa WHERE MaChuyenTau = @dich;
+
+                           INSERT INTO vanhanh.LichDungGa (MaChuyenTau, MaGa, ThuTuDung, GioDenKeHoach, GioDiKeHoach, LaDiemTranh)
                            SELECT @dich, ld.MaGa, ld.ThuTuDung,
-                                  DATEADD(DAY, DATEDIFF(DAY, ct.NgayXuatPhat, @ngayMoi), ld.GioDenKeHoach),
-                                  DATEADD(DAY, DATEDIFF(DAY, ct.NgayXuatPhat, @ngayMoi), ld.GioDiKeHoach),
+                                  DATEADD(MINUTE, DATEDIFF(MINUTE, ctNguon.GioXuatPhatKH, ctDich.GioXuatPhatKH), ld.GioDenKeHoach),
+                                  DATEADD(MINUTE, DATEDIFF(MINUTE, ctNguon.GioXuatPhatKH, ctDich.GioXuatPhatKH), ld.GioDiKeHoach),
                                   ld.LaDiemTranh
                            FROM vanhanh.LichDungGa ld
-                           JOIN vanhanh.ChuyenTau ct ON ld.MaChuyenTau = ct.MaChuyenTau
+                           JOIN vanhanh.ChuyenTau ctNguon ON ld.MaChuyenTau = ctNguon.MaChuyenTau
+                           CROSS JOIN (SELECT GioXuatPhatKH FROM vanhanh.ChuyenTau WHERE MaChuyenTau = @dich) ctDich
                            WHERE ld.MaChuyenTau = @nguon
-                           ORDER BY ld.ThuTuDung";
+                           ORDER BY ld.ThuTuDung;
+
+                           COMMIT TRANSACTION;";
             return DatabaseHelper.ExecuteNonQuery(sql, new[]
             {
                 new SqlParameter("@nguon", maChuyenNguon),
-                new SqlParameter("@dich", maChuyenDich),
-                new SqlParameter("@ngayMoi", ngayKhoiHanhMoi.Date)
+                new SqlParameter("@dich", maChuyenDich)
             });
         }
 
@@ -228,9 +654,7 @@ namespace DAL.Repositories
             return res != null && res != DBNull.Value ? Convert.ToInt32(res) : 0;
         }
 
-        // =========================================================================
         // PHÂN HỆ QUẢN LÝ ĐOÀN TÀU & RÀNG BUỘC CHỐNG TRANH CHẤP ĐẦU MÁY (DoanTau, DauMay)
-        // =========================================================================
 
         public DataTable LayThongTinDoanTau(int maChuyenTau)
         {
@@ -367,14 +791,14 @@ namespace DAL.Repositories
         public bool KiemTraChieuDaiVoiGaDung(int maChuyenTau, decimal tongChieuDaiM, out string canhBao)
         {
             canhBao = string.Empty;
-            string sql = @"SELECT TOP 1 g.TenGa, MIN(dr.ChieuDaiHuuDungM) AS MinDuongTranh
+            string sql = @"SELECT TOP 1 g.TenGa, ISNULL(MAX(dr.ChieuDaiHuuDungM), 0) AS MaxDuongTranh
                            FROM vanhanh.LichDungGa ld
                            JOIN hatang.Ga g ON ld.MaGa = g.MaGa
-                           JOIN hatang.DuongRayGa dr ON ld.MaGa = dr.MaGa AND dr.LoaiDuong = 'DUONG_TRANH'
-                           WHERE ld.MaChuyenTau = @ct
+                           LEFT JOIN hatang.DuongRayGa dr ON ld.MaGa = dr.MaGa AND dr.LoaiDuong = 'DUONG_TRANH'
+                           WHERE ld.MaChuyenTau = @ct AND ld.LaDiemTranh = 1
                            GROUP BY g.TenGa, g.LyTrinhKm
-                           HAVING MIN(dr.ChieuDaiHuuDungM) < @chieuDai
-                           ORDER BY MinDuongTranh ASC";
+                           HAVING ISNULL(MAX(dr.ChieuDaiHuuDungM), 0) < @chieuDai
+                           ORDER BY MaxDuongTranh ASC";
             DataTable dt = DatabaseHelper.ExecuteQuery(sql, new[]
             {
                 new SqlParameter("@ct", maChuyenTau),
@@ -383,17 +807,21 @@ namespace DAL.Repositories
             if (dt.Rows.Count > 0)
             {
                 string tenGa = dt.Rows[0]["TenGa"].ToString() ?? "";
-                int minM = Convert.ToInt32(dt.Rows[0]["MinDuongTranh"]);
-                canhBao = $"Cảnh báo an toàn: Chiều dài đoàn tàu ({tongChieuDaiM:F1}m) vượt quá chiều dài đường tránh tại Ga {tenGa} ({minM}m)!";
+                int maxM = Convert.ToInt32(dt.Rows[0]["MaxDuongTranh"]);
+                if (maxM <= 0)
+                {
+                    canhBao = $"Cảnh báo an toàn kỹ thuật: Ga {tenGa} được chỉ định là Điểm Tránh Tàu nhưng không có đường tránh quy chuẩn trong cơ sở dữ liệu!";
+                }
+                else
+                {
+                    canhBao = $"Cảnh báo an toàn: Chiều dài đoàn tàu ({tongChieuDaiM:F1}m) vượt quá chiều dài đường tránh lớn nhất tại Ga {tenGa} ({maxM}m)! Ga này không đủ điều kiện đón tránh tàu.";
+                }
                 return false;
             }
             return true;
         }
 
-        // =========================================================================
         // PHÂN HỆ QUẢN LÝ BIÊN CHẾ TOA XE KHÁCH (ToaXeKhach, ChoNgoi)
-        // =========================================================================
-
         public int ThemToaXeKhach(ToaXeKhach tx, bool tuDongSinhGhe)
         {
             string sql = @"INSERT INTO vantai.ToaXeKhach (MaChuyenTau, NhanHieuToa, LoaiToa, ThuTuToa, SucChua)
@@ -557,29 +985,77 @@ namespace DAL.Repositories
             return count;
         }
 
+        public bool KiemTraTrungLich(int maMacTau, DateTime ngayXuatPhat, int excludeMaChuyen = 0)
+        {
+            string sql = @"SELECT COUNT(*) FROM vanhanh.ChuyenTau 
+                           WHERE MaMacTau = @mac AND NgayXuatPhat = @ngay
+                           AND TrangThai <> 'DA_HUY'
+                           AND (@exclude <= 0 OR MaChuyenTau <> @exclude)";
+            object? res = DatabaseHelper.ExecuteScalar(sql, new[]
+            {
+                new SqlParameter("@mac", maMacTau),
+                new SqlParameter("@ngay", ngayXuatPhat.Date),
+                new SqlParameter("@exclude", excludeMaChuyen)
+            });
+            return res != null && Convert.ToInt32(res) > 0;
+        }
+
+        public string LayTrangThai(int maChuyenTau)
+        {
+            if (maChuyenTau <= 0) return string.Empty;
+            string sql = "SELECT TrangThai FROM vanhanh.ChuyenTau WHERE MaChuyenTau = @id";
+            object? res = DatabaseHelper.ExecuteScalar(sql, new[] { new SqlParameter("@id", maChuyenTau) });
+            return res?.ToString() ?? string.Empty;
+        }
+
         public bool Xoa(int maChuyenTau, out string thongBaoLoi)
         {
             thongBaoLoi = string.Empty;
-            string checkVeSql = @"SELECT COUNT(*) 
-                                  FROM vantai.Ve 
-                                  WHERE MaChuyenTau = @id 
-                                    AND TrangThai IN ('DA_DAT', 'DA_LEN_TAU')";
-            object? veCount = DatabaseHelper.ExecuteScalar(checkVeSql, new[] { new SqlParameter("@id", maChuyenTau) });
-            if (veCount != null && Convert.ToInt32(veCount) > 0)
+
+            string checkTrangThaiSql = @"SELECT TrangThai FROM vanhanh.ChuyenTau WHERE MaChuyenTau = @id";
+            object? ttObj = DatabaseHelper.ExecuteScalar(checkTrangThaiSql, new[] { new SqlParameter("@id", maChuyenTau) });
+            string tt = ttObj?.ToString() ?? "";
+            if (tt == "DANG_CHAY" || tt == "TRE_GIO" || tt == "HOAN_THANH")
             {
-                thongBaoLoi = $"Không thể hủy chuyến tàu này vì đã có {Convert.ToInt32(veCount)} vé được bán cho hành khách! Vui lòng thực hiện hoàn/hủy vé trước khi xóa chuyến.";
+                thongBaoLoi = $"Chuyến tàu đang vận hành hoặc đã hoàn thành ({tt}), không được phép xóa khỏi cơ sở dữ liệu! Vui lòng chuyển sang [Đã Hủy] nếu muốn ngừng phục vụ.";
                 return false;
             }
 
-            string sql = @"DELETE FROM vanhanh.ChiTietDoanTau WHERE MaDoanTau IN (SELECT MaDoanTau FROM vanhanh.DoanTau WHERE MaChuyenTau = @id);
-                           DELETE FROM vanhanh.DoanTau WHERE MaChuyenTau = @id;
-                           DELETE FROM vanhanh.NhatKyChamGio WHERE MaChuyenTau = @id;
-                           DELETE FROM vantai.ChoNgoi WHERE MaToaXeKhach IN (SELECT MaToaXeKhach FROM vantai.ToaXeKhach WHERE MaChuyenTau = @id);
-                           DELETE FROM vantai.ToaXeKhach WHERE MaChuyenTau = @id;
-                           DELETE FROM vanhanh.LichDungGa WHERE MaChuyenTau = @id;
-                           DELETE FROM vanhanh.ChuyenTau WHERE MaChuyenTau = @id;";
-            int affected = DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@id", maChuyenTau) });
-            return affected > 0;
+            string checkVeSql = @"SELECT COUNT(*) 
+                                  FROM vantai.Ve 
+                                  WHERE MaChuyenTau = @id";
+            object? veCount = DatabaseHelper.ExecuteScalar(checkVeSql, new[] { new SqlParameter("@id", maChuyenTau) });
+            if (veCount != null && Convert.ToInt32(veCount) > 0)
+            {
+                thongBaoLoi = $"Không thể xóa vật lý chuyến tàu này vì đã có {Convert.ToInt32(veCount)} bản ghi vé được phát hành (chứng từ kế toán)! Vui lòng chuyển trạng thái chuyến tàu sang [Đã Hủy].";
+                return false;
+            }
+
+            try
+            {
+                string sql = @"SET XACT_ABORT ON;
+                               BEGIN TRANSACTION;
+
+                               DELETE FROM baotri.KhamXeKyThuat WHERE MaDoanTau IN (SELECT MaDoanTau FROM vanhanh.DoanTau WHERE MaChuyenTau = @id);
+                               DELETE FROM vanhanh.ChiTietDoanTau WHERE MaDoanTau IN (SELECT MaDoanTau FROM vanhanh.DoanTau WHERE MaChuyenTau = @id);
+                               DELETE FROM vanhanh.DoanTau WHERE MaChuyenTau = @id;
+                               DELETE FROM vanhanh.NhatKyChamGio WHERE MaChuyenTau = @id;
+                               DELETE FROM nhansu.PhanCongKipLai WHERE MaChuyenTau = @id;
+                               DELETE FROM nhansu.KiemTraSucKhoe WHERE MaChuyenTau = @id;
+                               DELETE FROM vantai.ChoNgoi WHERE MaToaXeKhach IN (SELECT MaToaXeKhach FROM vantai.ToaXeKhach WHERE MaChuyenTau = @id);
+                               DELETE FROM vantai.ToaXeKhach WHERE MaChuyenTau = @id;
+                               DELETE FROM vanhanh.LichDungGa WHERE MaChuyenTau = @id;
+                               DELETE FROM vanhanh.ChuyenTau WHERE MaChuyenTau = @id;
+
+                               COMMIT TRANSACTION;";
+                int affected = DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@id", maChuyenTau) });
+                return affected > 0;
+            }
+            catch (Exception ex)
+            {
+                thongBaoLoi = $"Lỗi khi xóa chuyến tàu: {ex.Message}";
+                return false;
+            }
         }
 
         public int Xoa(int maChuyenTau)

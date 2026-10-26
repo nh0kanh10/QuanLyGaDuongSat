@@ -112,6 +112,16 @@
                                 </StackPanel>
                             </Button>
 
+                            <Button x:Name="btnTabMacTau" Click="TabFilter_Click" Tag="MacTau" Margin="0,0,6,0" Padding="12,6" Background="#E2E8F0" BorderThickness="0" Cursor="Hand">
+                                <Button.Resources>
+                                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>
+                                </Button.Resources>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="icoTabMacTau" Symbol="VehicleSubway24" FontSize="14" Foreground="#334155" Margin="0,0,6,0"/>
+                                    <TextBlock x:Name="txtTabMacTau" Text="Mác Tàu" FontSize="11.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                </StackPanel>
+                            </Button>
+
                             <Button x:Name="btnTabLichTrinh" Click="TabFilter_Click" Tag="LichTrinh" Margin="0,0,6,0" Padding="12,6" Background="#E2E8F0" BorderThickness="0" Cursor="Hand">
                                 <Button.Resources>
                                     <Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style>

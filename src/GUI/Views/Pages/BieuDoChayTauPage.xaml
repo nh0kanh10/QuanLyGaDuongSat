@@ -38,14 +38,13 @@
 
     <Grid Margin="12,8,12,8">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- 1. Toolbar thanh công cụ điều độ -->
-            <RowDefinition Height="*"/>    <!-- 2. Vùng chính: Biểu đồ Marey + Sidebar an toàn -->
-            <RowDefinition Height="Auto"/> <!-- 3. Panel chi tiết lịch dừng ga bên dưới -->
+            <RowDefinition Height="Auto"/>                                         <!-- 0. Toolbar thanh công cụ điều độ -->
+            <RowDefinition Height="*" MinHeight="220"/>                            <!-- 1. Vùng chính: Biểu đồ Marey + Sidebar an toàn -->
+            <RowDefinition Height="Auto" x:Name="rowSplitter"/>                     <!-- 2. GridSplitter cho phép kéo co giãn chiều cao -->
+            <RowDefinition Height="Auto" MinHeight="0" MaxHeight="600" x:Name="rowChiTiet"/> <!-- 3. Panel chi tiết lịch dừng ga bên dưới -->
         </Grid.RowDefinitions>
 
-        <!-- ========================================================================= -->
-        <!-- 1. THANH CÔNG CỤ ĐIỀU ĐỘ CHẠY TÀU (RESPONSIVE COMPACT TOOLBAR)             -->
-        <!-- ========================================================================= -->
+        <!-- 1. THANH CÔNG CỤ ĐIỀU ĐỘ CHẠY TÀU          -->
         <Border Grid.Row="0" 
                 Background="#FFFFFF" 
                 BorderBrush="#CBD5E1" 
@@ -70,7 +69,7 @@
                     <!-- Tiêu đề phân hệ -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Timeline24" FontSize="18" Foreground="#003B73" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="BIỂU ĐỒ CHẠY TÀU ĐIỀU ĐỘ 24H (MAREY STRING CHART)" FontSize="12.5" FontWeight="Bold" Foreground="#003B73" VerticalAlignment="Center"/>
+                        <TextBlock Text="BIỂU ĐỒ CHẠY TÀU ĐIỀU ĐỘ 24H" FontSize="12.5" FontWeight="Bold" Foreground="#003B73" VerticalAlignment="Center"/>
                         <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="2" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="TUYẾN BẮC — NAM" FontSize="10" FontWeight="Bold" Foreground="#003B73"/>
                         </Border>
@@ -90,7 +89,7 @@
 
                         <Border x:Name="bdBadgeXungDot" Background="#DC2626" CornerRadius="2" Padding="8,3" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚠️ " FontSize="10.5" VerticalAlignment="Center"/>
+                                <ui:SymbolIcon Symbol="Warning24" FontSize="12" Foreground="#FFFFFF" Margin="0,0,4,0" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="txtBadgeXungDot" Text="0 Xung Đột" FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
@@ -173,7 +172,7 @@
 
             <!-- CỘT TRÁI: KHUNG VẼ BIỂU ĐỒ MAREY (Canvas giấy trắng kỹ thuật) -->
             <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" ClipToBounds="True">
-                <Grid>
+                <Grid x:Name="grdBieuDoContainer">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
@@ -250,7 +249,7 @@
                                 <TextBlock Text="Cảnh báo đối đầu khu gian" FontSize="10" Foreground="#64748B"/>
                             </StackPanel>
                             <Border x:Name="bdBadgeSideLoi" Grid.Column="1" Background="#DC2626" CornerRadius="2" Padding="8,2" VerticalAlignment="Center">
-                                <TextBlock x:Name="txtSoXungDotSide" Text="0 LỖI" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                <TextBlock x:Name="txtSoXungDotSide" Text="0 Xung Đột" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
                             </Border>
                         </Grid>
                     </Border>
@@ -299,13 +298,26 @@
         </Grid>
 
         <!-- ========================================================================= -->
+        <!-- 2. THANH KÉO CO GIÃN CHIỀU CAO (GRIDSPLITTER)                              -->
+        <!-- ========================================================================= -->
+        <GridSplitter Grid.Row="2" x:Name="splChiTiet" 
+                      Height="5" 
+                      HorizontalAlignment="Stretch" 
+                      VerticalAlignment="Center" 
+                      Background="#CBD5E1" 
+                      Cursor="SizeNS" 
+                      ShowsPreview="False" 
+                      Visibility="Collapsed" 
+                      Margin="0,2,0,2"/>
+
+        <!-- ========================================================================= -->
         <!-- 3. PANEL CHI TIẾT LỊCH DỪNG GA TÀU ĐANG CHỌN (COLLAPSIBLE BOTTOM)          -->
         <!-- ========================================================================= -->
-        <Border Grid.Row="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="12,6">
+        <Border Grid.Row="3" x:Name="bdChiTietLichDung" Visibility="Collapsed" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="12,6">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0" Margin="0,0,0,4">
@@ -316,13 +328,34 @@
                                    FontSize="11.5" FontWeight="Bold" Foreground="#003B73"/>
                     </StackPanel>
 
-                    <Button Click="BtnDongChiTiet_Click" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Padding="4" Cursor="Hand" ToolTip="Đóng">
-                        <ui:SymbolIcon Symbol="Dismiss24" FontSize="12" Foreground="#64748B"/>
-                    </Button>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <!-- Nút Thu Gọn / Mở Rộng Bảng -->
+                        <Button x:Name="btnThuGonChiTiet" Click="BtnThuGonChiTiet_Click" Style="{StaticResource DesktopButton}" Height="24" Padding="8,0" Margin="0,0,8,0"
+                                ToolTip="Thu gọn bảng để tối đa hóa không gian Biểu đồ Marey">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon x:Name="iconThuGon" Symbol="ChevronDown24" FontSize="11" Margin="0,0,4,0" Foreground="#334155"/>
+                                <TextBlock x:Name="txtThuGon" Text="Thu Gọn" FontSize="10.5"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Nút Mở Chuyến Ở Màn Hình Lịch Trình (Missing Link) -->
+                        <Button Click="BtnMoLichTrinh_Click" Style="{StaticResource PrimaryDesktopButton}" Height="24" Padding="8,0" Margin="0,0,8,0"
+                                ToolTip="Chuyển sang màn hình Lập Kế Hoạch &amp; Lịch Trình để quản lý chi tiết chuyến tàu này">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Open24" FontSize="11" Margin="0,0,4,0" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Mở Lịch Trình" FontSize="10.5" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Click="BtnDongChiTiet_Click" Background="Transparent" BorderThickness="0" Padding="4" Cursor="Hand" ToolTip="Đóng">
+                            <ui:SymbolIcon Symbol="Dismiss24" FontSize="12" Foreground="#64748B"/>
+                        </Button>
+                    </StackPanel>
                 </Grid>
 
-                <!-- DataGrid Lịch Dừng Ga Chi Tiết -->
-                <DataGrid Grid.Row="1" x:Name="dgChiTietLichDung" Height="120" 
+                <!-- DataGrid Lịch Dừng Ga Chi Tiết (Tự do co giãn theo GridSplitter và container) -->
+                <DataGrid Grid.Row="1" x:Name="dgChiTietLichDung" 
+                          VerticalAlignment="Stretch"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           CanUserAddRows="False" SelectionMode="Single"
                           HeadersVisibility="Column">

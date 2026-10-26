@@ -11,5 +11,10 @@ namespace ET.VanHanh
         public decimal ThoiGianChuanGio { get; set; }
         public int MucUuTien { get; set; } = 1;
         public bool DangKhaiThac { get; set; } = true;
+
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+        public string NguoiTao { get; set; } = "admin";
+        public DateTime? NgayCapNhat { get; set; }
+        public string? NguoiCapNhat { get; set; }
     }
 }

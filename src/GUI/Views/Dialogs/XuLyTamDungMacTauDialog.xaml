@@ -1,0 +1,245 @@
+<Window x:Class="GUI.Views.Dialogs.XuLyTamDungMacTauDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        mc:Ignorable="d"
+        Title="Xử Lý Chuyến Tàu Kế Hoạch - Tạm Ngừng Mác Tàu"
+        Width="640"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        FontFamily="Segoe UI"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Grid Margin="16">
+        <Border x:Name="bdWindowBorder"
+                Background="#FFFFFF" 
+                BorderBrush="#CBD5E1" 
+                BorderThickness="1" 
+                CornerRadius="8">
+            <Border.Effect>
+                <DropShadowEffect Color="#0F172A" BlurRadius="32" ShadowDepth="8" Opacity="0.30"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="42"/> <!-- 0. Header -->
+                    <RowDefinition Height="*"/>    <!-- 1. Content -->
+                    <RowDefinition Height="Auto"/> <!-- 2. Footer Buttons -->
+                </Grid.RowDefinitions>
+
+                <!-- 0. Header thanh tiêu đề -->
+                <Grid Grid.Row="0" 
+                      x:Name="gridHeader"
+                      Background="#D97706" 
+                      MouseLeftButtonDown="Header_MouseLeftButtonDown"
+                      Cursor="SizeAll">
+                    <Border CornerRadius="7,7,0,0" Background="{Binding Background, ElementName=gridHeader}"/>
+                    
+                    <Grid Margin="16,0,10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <ui:SymbolIcon Symbol="Warning24" FontSize="16" Foreground="#FFFFFF" Margin="0,0,8,0"/>
+                            <TextBlock Text="CẢNH BÁO: XỬ LÝ CHUYẾN TÀU KẾ HOẠCH KHI TẠM NGỪNG MÁC" 
+                                       FontSize="11.5" 
+                                       FontWeight="Bold" 
+                                       Foreground="#FFFFFF" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Button Grid.Column="1" 
+                                Click="BtnHuy_Click"
+                                Width="26" Height="26"
+                                Background="Transparent" 
+                                BorderThickness="0" 
+                                Cursor="Hand" 
+                                ToolTip="Đóng / Hủy bỏ (Esc)">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="Transparent" CornerRadius="4">
+                                                    <TextBlock Text="✕" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" 
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#B45309"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </Grid>
+
+                <!-- 1. Nội dung chính -->
+                <StackPanel Grid.Row="1" Margin="20,16,20,12">
+                    
+                    <!-- Khối thông tin mác tàu & cảnh báo số chuyến -->
+                    <Border Background="#FFFBEB" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="Mác tàu:" FontSize="12" Foreground="#78350F" Margin="0,0,6,0"/>
+                                    <TextBlock x:Name="txtSoHieuMac" Text="SE1" FontSize="13" FontWeight="Bold" Foreground="#92400E" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Hành trình:" FontSize="12" Foreground="#78350F" Margin="0,0,6,0"/>
+                                    <TextBlock x:Name="txtHanhTrinh" Text="Hà Nội → Sài Gòn" FontSize="12" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                </StackPanel>
+                                <TextBlock x:Name="txtMoTaCanhBao" 
+                                           Text="Phát hiện có các chuyến tàu trong tương lai đang ở trạng thái Kế Hoạch. Vui lòng chọn cách xử lý bên dưới." 
+                                           FontSize="11.5" Foreground="#92400E" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <Border Grid.Column="1" Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="4" Padding="10,6" VerticalAlignment="Center">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock x:Name="txtSoChuyenTuongLai" Text="3 chuyến" FontSize="14" FontWeight="Bold" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="chưa chạy" FontSize="10" Foreground="#78350F" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Danh sách các chuyến tàu tương lai -->
+                    <TextBlock Text="DANH SÁCH CÁC CHUYẾN TÀU KẾ HOẠCH BỊ ẢNH HƯỞNG:" 
+                               FontSize="11" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,6"/>
+                    <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" MaxHeight="140" Margin="0,0,0,14">
+                        <DataGrid x:Name="dgChuyenTuongLai" 
+                                  AutoGenerateColumns="False" 
+                                  IsReadOnly="True" 
+                                  CanUserAddRows="False"
+                                  CanUserSortColumns="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#F1F5F9"
+                                  Background="#FFFFFF"
+                                  RowHeight="26"
+                                  FontSize="11.5">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Mã Chuyến" Binding="{Binding MaChuyenTau}" Width="80"/>
+                                <DataGridTextColumn Header="Ngày Khởi Hành" Binding="{Binding NgayXuatPhat, StringFormat={}{0:dd/MM/yyyy}}" Width="120"/>
+                                <DataGridTextColumn Header="Giờ Đi KH" Binding="{Binding GioXuatPhatKH, StringFormat={}{0:HH:mm}}" Width="90"/>
+                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding TrangThaiHienThi}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Lựa chọn phương án A và B -->
+                    <TextBlock Text="CHỌN HƯỚNG XỬ LÝ:" FontSize="11" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,8"/>
+
+                    <!-- Option B: Hủy toàn bộ chuyến tương lai -->
+                    <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                        <StackPanel>
+                            <RadioButton x:Name="radHuyChuyen" 
+                                         GroupName="GrpPhuongAn" 
+                                         IsChecked="True" 
+                                         Checked="RadPhuongAn_Checked">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="[Phương Án B]" FontWeight="Bold" Foreground="#DC2626" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Tự động HỦY toàn bộ các chuyến tàu kế hoạch tương lai này" FontWeight="Bold" Foreground="#1E293B"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <TextBlock Text="• Trạng thái các chuyến sẽ chuyển thành ĐÃ HỦY (DA_HUY), giải phóng điều động toa xe và ngừng bán vé." 
+                                       FontSize="11" Foreground="#64748B" Margin="22,4,0,8" TextWrapping="Wrap"/>
+                            
+                            <!-- Nhập lý do hủy -->
+                            <StackPanel x:Name="pnlLyDoHuy" Margin="22,0,0,0">
+                                <TextBlock Text="Lý do hủy chuyến (bắt buộc):" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="txtLyDoHuy" 
+                                         Height="28" 
+                                         FontSize="12" 
+                                         VerticalContentAlignment="Center" 
+                                         Padding="8,0"
+                                         Text="Tạm ngừng khai thác mác tàu"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Option A: Chỉ tạm ngừng mác, giữ nguyên chuyến -->
+                    <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12">
+                        <StackPanel>
+                            <RadioButton x:Name="radGiuNguyen" 
+                                         GroupName="GrpPhuongAn" 
+                                         Checked="RadPhuongAn_Checked">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="[Phương Án A]" FontWeight="Bold" Foreground="#0284C7" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Chỉ tạm ngừng mác tàu, GIỮ NGUYÊN các chuyến kế hoạch" FontWeight="Bold" Foreground="#1E293B"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <TextBlock Text="• Mác tàu sẽ bị ẩn khỏi danh sách tạo chuyến mới. Các chuyến kế hoạch hiện có vẫn được bảo lưu để Điều độ viên chủ động điều chỉnh hoặc hủy thủ công trên trang Lịch Trình." 
+                                       FontSize="11" Foreground="#64748B" Margin="22,4,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+
+                <!-- 2. Footer Buttons -->
+                <Border Grid.Row="2" 
+                        Background="#F1F5F9" 
+                        BorderBrush="#E2E8F0" 
+                        BorderThickness="0,1,0,0" 
+                        CornerRadius="0,0,7,7" 
+                        Padding="16,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Nhấn Enter để xác nhận, Esc để hủy" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button x:Name="btnHuy" 
+                                    Click="BtnHuy_Click"
+                                    Height="32" Padding="14,0" 
+                                    Margin="0,0,10,0"
+                                    Background="#FFFFFF" 
+                                    BorderBrush="#CBD5E1" 
+                                    BorderThickness="1"
+                                    Foreground="#475569" 
+                                    FontSize="12" 
+                                    FontWeight="SemiBold" 
+                                    Cursor="Hand"
+                                    IsCancel="True">
+                                <TextBlock Text="Hủy Bỏ / Quay Lại"/>
+                            </Button>
+
+                            <Button x:Name="btnXacNhan" 
+                                    Click="BtnXacNhan_Click"
+                                    Height="32" Padding="18,0"
+                                    Background="#D97706" 
+                                    BorderBrush="#B45309" 
+                                    BorderThickness="1"
+                                    Foreground="#FFFFFF" 
+                                    FontSize="12" 
+                                    FontWeight="Bold" 
+                                    Cursor="Hand"
+                                    IsDefault="True">
+                                <TextBlock x:Name="txtNutXacNhan" Text="Xác Nhận Thực Hiện"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

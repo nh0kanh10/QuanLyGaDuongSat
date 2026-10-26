@@ -1,4 +1,4 @@
-﻿using BUS.Services;
+using BUS.Services;
 using DTO.NhanSu;
 using GUI.Helpers;
 using GUI.Views.Dialogs;
@@ -724,6 +724,20 @@ namespace GUI.Views.Pages
                     VeLichCa();
                     break;
             }
+        }
+
+        public void ChonChuyenDePhanCong(int maChuyenTau)
+        {
+            if (tabNhanSu != null)
+            {
+                tabNhanSu.SelectedIndex = 1;
+            }
+            if (_duLieu == null)
+            {
+                _duLieu = TaoDuLieu();
+            }
+            ChonTheoTag(cboLocChuyen, "ALL");
+            LamMoiPhanCong(giuDongChon: false, maChuyenChon: maChuyenTau);
         }
     }
 }
