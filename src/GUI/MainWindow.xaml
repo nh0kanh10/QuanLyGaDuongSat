@@ -160,6 +160,15 @@
                             </Button>
                         </Border>
 
+                        <Border x:Name="tabMacTau" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="MacTau" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch" ToolTip="Quy hoạch danh mục mác tàu mẫu, hành trình chuẩn &amp; thời gian chạy">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabMacTau" Symbol="Navigation24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabMacTau" Text="MÁC TÀU MẪU" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+
                         <Border x:Name="tabNavNhanSu" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
                             <Button Click="NavTab_Click" Tag="NhanSu" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch" ToolTip="Danh mục hồ sơ nhân sự vận hành &amp; kíp trực đường sắt">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -185,7 +194,7 @@
                             <Button Click="NavTab_Click" Tag="BieuDo" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <ui:SymbolIcon x:Name="iconTabBieuDo" Symbol="Timeline24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
-                                    <TextBlock x:Name="txtTabBieuDo" Text="BIỂU ĐỒ 24H (MAREY)" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="txtTabBieuDo" Text="BIỂU ĐỒ 24H" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
@@ -328,7 +337,7 @@
 
                 <Rectangle x:Name="sepScF7" Width="1" Height="14" Fill="#334155" Margin="4,0"/>
 
-                <Button x:Name="btnScF8" Click="BtnShortcut_Click" Tag="F8" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F8: Mở Biểu đồ chạy tàu điều độ 24h (Marey Diagram)">
+                <Button x:Name="btnScF8" Visibility="Collapsed" Click="BtnShortcut_Click" Tag="F8" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F8: Mở Biểu đồ chạy tàu điều độ 24h">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Background="#1E293B" BorderBrush="#475569" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="0,0,5,0">
                             <TextBlock Text="F8" FontSize="10" FontWeight="Bold" Foreground="#F8FAFC"/>
@@ -337,7 +346,7 @@
                     </StackPanel>
                 </Button>
 
-                <Rectangle x:Name="sepScF8" Width="1" Height="14" Fill="#334155" Margin="4,0"/>
+                <Rectangle x:Name="sepScF8" Visibility="Collapsed" Width="1" Height="14" Fill="#334155" Margin="4,0"/>
 
 
                 <Button x:Name="btnScF9" Click="BtnShortcut_Click" Tag="F9" Margin="2,0" Padding="6,3" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="F9: Mở Trung tâm Lập &amp; In Báo Cáo Kỹ Thuật A4">

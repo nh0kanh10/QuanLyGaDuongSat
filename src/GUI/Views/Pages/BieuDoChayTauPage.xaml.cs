@@ -22,11 +22,42 @@ namespace GUI.Views.Pages
         private const double Y_TOP = 45.0;
         private const double ROW_HEIGHT = 44.0; // Khoảng cách cố định giữa 2 ga liên tiếp: Chống đè chữ 100%
 
-        // Bảng ánh xạ tọa độ Y của các ga (sorted by LyTrinhKm)
-        private readonly List<(decimal Km, double Y, string TenGa, string MaCode, string HangGa)> _lyTrinhYList = new();
+        private readonly List<(decimal Km, double Y, string TenGa, string MaCode, string HangGa, bool CoCauQuay)> _lyTrinhYList = new();
         private HanhTrinhTauDTO? _selectedTau;
+        private bool _isBangChiTietThuGon = false;
+        private double _savedChiTietHeight = 260.0;
+        private bool _isLoadingData = false;
 
-        // Quản lý các phần tử trực quan để phục vụ hiệu ứng Hover / Focus / Dimming
+        #region Helpers tối ưu bộ nhớ & Zoom
+        private static SolidColorBrush TaoBrush(Color color)
+        {
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
+
+        private static SolidColorBrush TaoBrushHex(string hex)
+        {
+            var color = (Color)ColorConverter.ConvertFromString(hex);
+            return TaoBrush(color);
+        }
+
+        private void CuonToiViTri(double canvasX, double canvasY)
+        {
+            double scaleX = canvasScale?.ScaleX ?? 1.0;
+            double scaleY = canvasScale?.ScaleY ?? 1.0;
+
+            double targetX = canvasX * scaleX;
+            double targetY = canvasY * scaleY;
+
+            double viewW = svBieuDo.ViewportWidth > 0 ? svBieuDo.ViewportWidth : 800;
+            double viewH = svBieuDo.ViewportHeight > 0 ? svBieuDo.ViewportHeight : 500;
+
+            svBieuDo.ScrollToHorizontalOffset(Math.Max(0, targetX - viewW / 2.0));
+            svBieuDo.ScrollToVerticalOffset(Math.Max(0, targetY - viewH / 2.0));
+        }
+        #endregion
+
         private class TauVisual
         {
             public HanhTrinhTauDTO Tau { get; set; } = null!;
@@ -48,12 +79,13 @@ namespace GUI.Views.Pages
         private readonly List<TauVisual> _tauVisuals = new();
         private readonly List<XungDotVisual> _xungDotVisuals = new();
 
+        public event Action? DuLieuDieuDoThayDoi;
+
         public BieuDoChayTauPage()
         {
             InitializeComponent();
             try
             {
-                // Tự động xác định ngày mặc định từ CSDL: nếu hôm nay có tàu thì lấy hôm nay, nếu không thì lấy ngày gần nhất có tàu
                 dpNgay.SelectedDate = _dieuDoService.LayNgayBieuDoMacDinh();
             }
             catch
@@ -68,9 +100,6 @@ namespace GUI.Views.Pages
             LoadData();
         }
 
-        /// <summary>
-        /// Tải động danh sách các ngày thực tế có chuyến tàu hoạt động trong CSDL lên thanh công cụ
-        /// </summary>
         private void NapDanhSachNgayCoTau()
         {
             try
@@ -80,7 +109,8 @@ namespace GUI.Views.Pages
                 {
                     Text = "Các ngày có tàu:",
                     FontSize = 11,
-                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748B")),
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = TaoBrush(Color.FromRgb(71, 85, 105)),
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(0, 0, 6, 0)
                 });
@@ -88,16 +118,45 @@ namespace GUI.Views.Pages
                 DataTable dtNgay = _dieuDoService.LayDanhSachNgayCoTau();
                 if (dtNgay == null || dtNgay.Rows.Count == 0) return;
 
+                // Nếu ngày hiện tại chưa chọn hoặc không có tàu, tự động chọn ngày có tàu gần nhất
+                DateTime ngayHienTai = dpNgay.SelectedDate ?? DateTime.Today;
+                bool ngayHienTaiCoTau = false;
+                foreach (DataRow row in dtNgay.Rows)
+                {
+                    if (Convert.ToDateTime(row["Ngay"]).Date == ngayHienTai.Date)
+                    {
+                        ngayHienTaiCoTau = true;
+                        break;
+                    }
+                }
+                if (!ngayHienTaiCoTau && dtNgay.Rows.Count > 0)
+                {
+                    dpNgay.SelectedDateChanged -= DpNgay_SelectedDateChanged;
+                    dpNgay.SelectedDate = Convert.ToDateTime(dtNgay.Rows[0]["Ngay"]);
+                    dpNgay.SelectedDateChanged += DpNgay_SelectedDateChanged;
+                    ngayHienTai = dpNgay.SelectedDate.Value;
+                }
+
                 foreach (DataRow row in dtNgay.Rows)
                 {
                     DateTime d = Convert.ToDateTime(row["Ngay"]);
                     int soTau = Convert.ToInt32(row["SoChuyenTau"]);
+                    bool isSelected = (d.Date == ngayHienTai.Date);
 
                     var btn = new Button
                     {
                         Content = $"{d:dd/MM} ({soTau} tàu)",
                         ToolTip = $"Xem biểu đồ ngày {d:dd/MM/yyyy} ({soTau} chuyến tàu)",
-                        Style = (Style)FindResource("DateQuickButton"),
+                        Height = 24,
+                        Padding = new Thickness(9, 0, 9, 0),
+                        FontSize = 11,
+                        FontWeight = isSelected ? FontWeights.Bold : FontWeights.SemiBold,
+                        Background = isSelected ? TaoBrush(Color.FromRgb(0, 59, 115)) : TaoBrush(Color.FromRgb(241, 245, 249)),
+                        Foreground = isSelected ? Brushes.White : TaoBrush(Color.FromRgb(51, 65, 85)),
+                        BorderBrush = isSelected ? TaoBrush(Color.FromRgb(0, 40, 80)) : TaoBrush(Color.FromRgb(203, 213, 225)),
+                        BorderThickness = new Thickness(1),
+                        Cursor = Cursors.Hand,
+                        Margin = new Thickness(0, 0, 4, 0),
                         Tag = d
                     };
 
@@ -106,6 +165,7 @@ namespace GUI.Views.Pages
                         if (s is Button b && b.Tag is DateTime dt)
                         {
                             dpNgay.SelectedDate = dt;
+                            NapDanhSachNgayCoTau();
                         }
                     };
 
@@ -114,16 +174,17 @@ namespace GUI.Views.Pages
             }
             catch
             {
-                // Không chặn giao diện nếu gặp sự cố kết nối
             }
         }
 
         public void LoadData()
         {
-            DateTime ngay = dpNgay.SelectedDate ?? _dieuDoService.LayNgayBieuDoMacDinh();
+            if (_isLoadingData) return;
+            _isLoadingData = true;
 
             try
             {
+                DateTime ngay = dpNgay.SelectedDate ?? _dieuDoService.LayNgayBieuDoMacDinh();
                 _dtGa = _dieuDoService.LayDanhSachGaTuyen();
                 KhoiTaoBangToaDoGa();
 
@@ -134,17 +195,36 @@ namespace GUI.Views.Pages
                 VeBiểuĐồ();
                 HienThiDanhSachXungDot();
                 HienThiDanhSachTau();
+
+                if (_selectedTau != null)
+                {
+                    var updated = _dsHanhTrinh.FirstOrDefault(t => t.MaChuyenTau == _selectedTau.MaChuyenTau);
+                    if (updated != null)
+                    {
+                        ChonChuyenTau(updated);
+                    }
+                    else
+                    {
+                        BtnDongChiTiet_Click(this, new RoutedEventArgs());
+                    }
+                }
+                else
+                {
+                    bdChiTietLichDung.Visibility = Visibility.Collapsed;
+                    splChiTiet.Visibility = Visibility.Collapsed;
+                    rowChiTiet.Height = GridLength.Auto;
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Lỗi khi tải dữ liệu biểu đồ chạy tàu:\n{ex.Message}", "Lỗi CSDL", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                _isLoadingData = false;
+            }
         }
 
-        /// <summary>
-        /// Khởi tạo bảng tọa độ Y cho từng ga đường sắt theo thứ tự lý trình Bắc -> Nam.
-        /// Mỗi ga có một hàng riêng cách đều 44px, triệt tiêu hoàn toàn hiện tượng dính/chồng đè chữ.
-        /// </summary>
         private void KhoiTaoBangToaDoGa()
         {
             _lyTrinhYList.Clear();
@@ -158,13 +238,14 @@ namespace GUI.Views.Pages
             for (int i = 0; i < sorted.Rows.Count; i++)
             {
                 DataRow r = sorted.Rows[i];
-                decimal km = Convert.ToDecimal(r["LyTrinhKm"]);
+                decimal km = r["LyTrinhKm"] != DBNull.Value ? Convert.ToDecimal(r["LyTrinhKm"]) : 0m;
                 string tenGa = r["TenGa"]?.ToString() ?? "";
                 string maCode = r["MaGaCode"]?.ToString() ?? "";
                 string hangGa = r["HangGa"]?.ToString() ?? "";
+                bool coCauQuay = r.Table.Columns.Contains("CoCauQuay") && r["CoCauQuay"] != DBNull.Value && Convert.ToBoolean(r["CoCauQuay"]);
 
                 double y = Y_TOP + i * ROW_HEIGHT;
-                _lyTrinhYList.Add((km, y, tenGa, maCode, hangGa));
+                _lyTrinhYList.Add((km, y, tenGa, maCode, hangGa, coCauQuay));
             }
 
             // Cập nhật chiều cao Canvas phù hợp
@@ -177,7 +258,7 @@ namespace GUI.Views.Pages
         {
             txtTongChuyenTau.Text = $"{_dsHanhTrinh.Count} Chuyến";
             txtBadgeXungDot.Text = $"{_dsXungDot.Count} Xung Đột";
-            txtSoXungDotSide.Text = $"{_dsXungDot.Count} LỖI";
+            txtSoXungDotSide.Text = $"{_dsXungDot.Count} Xung Đột";
 
             if (_dsXungDot.Count > 0)
             {
@@ -216,6 +297,8 @@ namespace GUI.Views.Pages
             cvsBieuDo.Children.Clear();
             _tauVisuals.Clear();
             _xungDotVisuals.Clear();
+
+            double maxY = _lyTrinhYList.Count > 0 ? _lyTrinhYList[^1].Y + 30.0 : 1200.0;
 
             // 1. Vẽ nền cột thước đo ga (Station Ruler background)
             var rulerBg = new Rectangle
@@ -263,7 +346,10 @@ namespace GUI.Views.Pages
             // 6. Tính toán giao điểm hình học chuẩn xác 100% trên Canvas và vẽ đốm đỏ
             VeCacDiemXungDotChuanXac();
 
-            // Thiết lập trạng thái bình thường (Default: Mảnh mờ dịu mắt)
+            // 7. Vẽ vạch thời gian thực "Bây giờ" (Now Line) nếu xem ngày hôm nay
+            VeDuongThoiGianThuc(maxY);
+
+            // Thiết lập trạng thái bình thường (Default: Rõ nét, không mờ nhạt)
             ApDungTrangThaiMacDinh();
         }
 
@@ -286,7 +372,7 @@ namespace GUI.Views.Pages
             {
                 double x = X_LEFT + (h / 24.0) * X_WIDTH;
 
-                // Đường kẻ dọc mốc giờ
+                // Đường kẻ dọc mốc giờ (Tăng tương phản để dễ dò giờ)
                 bool isMajorHour = (h % 6 == 0);
                 var lineGio = new Line
                 {
@@ -294,8 +380,8 @@ namespace GUI.Views.Pages
                     Y1 = Y_TOP - 35,
                     X2 = x,
                     Y2 = maxY,
-                    Stroke = new SolidColorBrush(isMajorHour ? Color.FromRgb(148, 163, 184) : Color.FromRgb(226, 232, 240)),
-                    StrokeThickness = isMajorHour ? 1.5 : 1.0
+                    Stroke = new SolidColorBrush(isMajorHour ? Color.FromRgb(100, 116, 139) : Color.FromRgb(203, 213, 225)),
+                    StrokeThickness = isMajorHour ? 1.8 : 1.0
                 };
                 cvsBieuDo.Children.Add(lineGio);
 
@@ -312,7 +398,7 @@ namespace GUI.Views.Pages
                 Canvas.SetTop(txtGio, Y_TOP - 26);
                 cvsBieuDo.Children.Add(txtGio);
 
-                // Vạch chia 30 phút (nét đứt)
+                // Vạch chia 30 phút (nét đứt rõ ràng hơn)
                 if (h < 24)
                 {
                     double x30 = X_LEFT + ((h + 0.5) / 24.0) * X_WIDTH;
@@ -322,8 +408,8 @@ namespace GUI.Views.Pages
                         Y1 = Y_TOP,
                         X2 = x30,
                         Y2 = maxY,
-                        Stroke = new SolidColorBrush(Color.FromRgb(241, 245, 249)),
-                        StrokeThickness = 0.8,
+                        Stroke = new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                        StrokeThickness = 1.0,
                         StrokeDashArray = new DoubleCollection { 3, 3 }
                     };
                     cvsBieuDo.Children.Add(line30);
@@ -338,41 +424,47 @@ namespace GUI.Views.Pages
             foreach (var item in _lyTrinhYList)
             {
                 double y = item.Y;
-                bool isDauMoi = item.Km == 0 || item.TenGa == "Sài Gòn" || item.TenGa == "Vinh" || item.TenGa == "Đà Nẵng" || item.TenGa == "Nha Trang";
+                bool isDauMoi = item.Km == 0 ||
+                                item.Km == _lyTrinhYList[^1].Km ||
+                                item.CoCauQuay ||
+                                string.Equals(item.HangGa, "HANG_1", StringComparison.OrdinalIgnoreCase) ||
+                                item.HangGa == "1";
+                bool isTrungGian = string.Equals(item.HangGa, "HANG_2", StringComparison.OrdinalIgnoreCase) || item.HangGa == "2";
 
-                // Đường ray ngang qua ga
+                // Đường ray ngang qua ga (Phân cấp động 3 tầng theo CSDL: Cấp 1 đậm, Cấp 2 vừa, Cấp 3 mờ)
                 var lineGa = new Line
                 {
                     X1 = X_LEFT,
                     Y1 = y,
                     X2 = X_LEFT + X_WIDTH,
                     Y2 = y,
-                    Stroke = new SolidColorBrush(isDauMoi ? Color.FromRgb(203, 213, 225) : Color.FromRgb(241, 245, 249)),
-                    StrokeThickness = isDauMoi ? 1.2 : 0.8
+                    Stroke = new SolidColorBrush(isDauMoi ? Color.FromRgb(148, 163, 184) : (isTrungGian ? Color.FromRgb(226, 232, 240) : Color.FromRgb(241, 245, 249))),
+                    StrokeThickness = isDauMoi ? 1.4 : 1.0,
+                    StrokeDashArray = (isDauMoi || isTrungGian) ? null : new DoubleCollection { 2, 4 }
                 };
                 cvsBieuDo.Children.Add(lineGa);
 
-                // Nhãn Tên Ga (Bên trái thước đo)
+                // Nhãn Tên Ga (Bên trái thước đo: Phân cấp kích thước & màu sắc theo Hạng Ga CSDL)
                 var txtGa = new TextBlock
                 {
                     Text = item.TenGa,
-                    FontSize = isDauMoi ? 11.5 : 11,
-                    FontWeight = isDauMoi ? FontWeights.Bold : FontWeights.SemiBold,
-                    Foreground = new SolidColorBrush(isDauMoi ? Color.FromRgb(0, 59, 115) : Color.FromRgb(51, 65, 85)),
+                    FontSize = isDauMoi ? 11.5 : (isTrungGian ? 10.5 : 9.5),
+                    FontWeight = isDauMoi ? FontWeights.Bold : (isTrungGian ? FontWeights.SemiBold : FontWeights.Normal),
+                    Foreground = new SolidColorBrush(isDauMoi ? Color.FromRgb(0, 59, 115) : (isTrungGian ? Color.FromRgb(51, 65, 85) : Color.FromRgb(148, 163, 184))),
                     HorizontalAlignment = HorizontalAlignment.Right,
                     Width = 115,
                     TextAlignment = TextAlignment.Right
                 };
                 Canvas.SetLeft(txtGa, 10);
-                Canvas.SetTop(txtGa, y - 8);
+                Canvas.SetTop(txtGa, y - (isDauMoi ? 8 : 7));
                 cvsBieuDo.Children.Add(txtGa);
 
                 // Nhãn Lý Trình Km
                 var txtKm = new TextBlock
                 {
                     Text = $"{item.Km:F0}km",
-                    FontSize = 10,
-                    Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                    FontSize = isDauMoi ? 10 : 9,
+                    Foreground = new SolidColorBrush(isDauMoi ? Color.FromRgb(71, 85, 105) : Color.FromRgb(148, 163, 184)),
                     FontFamily = new FontFamily("Consolas")
                 };
                 Canvas.SetLeft(txtKm, 135);
@@ -380,16 +472,61 @@ namespace GUI.Views.Pages
                 cvsBieuDo.Children.Add(txtKm);
 
                 // Chấm mốc ga tại trục tọa độ
+                double dotSize = isDauMoi ? 7 : (isTrungGian ? 5 : 3.5);
                 var dotGa = new Ellipse
                 {
-                    Width = isDauMoi ? 7 : 5,
-                    Height = isDauMoi ? 7 : 5,
-                    Fill = new SolidColorBrush(isDauMoi ? Color.FromRgb(0, 59, 115) : Color.FromRgb(148, 163, 184))
+                    Width = dotSize,
+                    Height = dotSize,
+                    Fill = new SolidColorBrush(isDauMoi ? Color.FromRgb(0, 59, 115) : (isTrungGian ? Color.FromRgb(148, 163, 184) : Color.FromRgb(226, 232, 240))),
+                    Stroke = isDauMoi ? Brushes.White : null,
+                    StrokeThickness = isDauMoi ? 1.0 : 0
                 };
-                Canvas.SetLeft(dotGa, X_LEFT - (isDauMoi ? 3.5 : 2.5));
-                Canvas.SetTop(dotGa, y - (isDauMoi ? 3.5 : 2.5));
+                Canvas.SetLeft(dotGa, X_LEFT - dotSize / 2.0);
+                Canvas.SetTop(dotGa, y - dotSize / 2.0);
                 cvsBieuDo.Children.Add(dotGa);
             }
+        }
+
+        private void VeDuongThoiGianThuc(double maxY)
+        {
+            DateTime ngayXem = dpNgay.SelectedDate ?? DateTime.Today;
+            if (ngayXem.Date != DateTime.Today) return;
+
+            DateTime now = DateTime.Now;
+            double phut = now.Hour * 60 + now.Minute;
+            double xNow = X_LEFT + (phut / 1440.0) * X_WIDTH;
+
+            var nowLine = new Line
+            {
+                X1 = xNow,
+                Y1 = Y_TOP - 35,
+                X2 = xNow,
+                Y2 = maxY,
+                Stroke = new SolidColorBrush(Color.FromRgb(239, 68, 68)),
+                StrokeThickness = 2.0,
+                StrokeDashArray = new DoubleCollection { 4, 3 }
+            };
+            cvsBieuDo.Children.Add(nowLine);
+
+            var nowBadge = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(239, 68, 68)),
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(5, 2, 5, 2),
+                ToolTip = $"Thời gian hiện tại thực tế: {now:HH:mm:ss}"
+            };
+            var txtNow = new TextBlock
+            {
+                Text = $"● {now:HH:mm}",
+                FontSize = 9.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White,
+                FontFamily = new FontFamily("Consolas")
+            };
+            nowBadge.Child = txtNow;
+            Canvas.SetLeft(nowBadge, xNow - 25);
+            Canvas.SetTop(nowBadge, Y_TOP - 32);
+            cvsBieuDo.Children.Add(nowBadge);
         }
 
         /// <summary>
@@ -513,6 +650,55 @@ namespace GUI.Views.Pages
                 visual.LabelBorder = bdTag;
             }
 
+            // Gắn nhãn ga cuối / kết thúc hành trình (neo kết thúc, tránh cảm giác nét vẽ bị đứt cụt)
+            var diemCuoi = tau.DanhSachDiem[^1];
+            if (diemCuoi.GioDen >= windowStart && diemCuoi.GioDen <= windowEnd)
+            {
+                double xCuoi = TinhToaDoXKhoangNgay(diemCuoi.GioDen, windowStart);
+                double yCuoi = TinhToaDoY(diemCuoi.LyTrinhKm);
+
+                var dotCuoi = new Ellipse
+                {
+                    Width = 8,
+                    Height = 8,
+                    Fill = brush,
+                    Stroke = Brushes.White,
+                    StrokeThickness = 1.5,
+                    ToolTip = $"{tau.SoHieuMacTau} kết thúc hành trình tại ga {diemCuoi.TenGa} lúc {diemCuoi.GioDen:HH:mm (dd/MM)}",
+                    Cursor = Cursors.Hand
+                };
+                Canvas.SetLeft(dotCuoi, xCuoi - 4);
+                Canvas.SetTop(dotCuoi, yCuoi - 4);
+                cvsBieuDo.Children.Add(dotCuoi);
+                visual.Dots.Add(dotCuoi);
+
+                var bdEndTag = new Border
+                {
+                    Background = new SolidColorBrush(Color.FromArgb(245, 255, 255, 255)),
+                    BorderBrush = brush,
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(2),
+                    Padding = new Thickness(3, 1, 3, 1),
+                    ToolTip = $"{tau.SoHieuMacTau} kết thúc hành trình tại {diemCuoi.TenGa} ({diemCuoi.GioDen:HH:mm})",
+                    Cursor = Cursors.Hand
+                };
+                var txtEnd = new TextBlock
+                {
+                    Text = $"🏁 {diemCuoi.TenGa} ({diemCuoi.GioDen:HH:mm})",
+                    FontSize = 9.5,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = brush
+                };
+                bdEndTag.Child = txtEnd;
+                bdEndTag.MouseEnter += (s, e) => FocusTau(tau);
+                bdEndTag.MouseLeave += (s, e) => UnfocusTau();
+                bdEndTag.MouseDown += (s, e) => ChonChuyenTau(tau);
+
+                Canvas.SetLeft(bdEndTag, Math.Min(xCuoi + 5, X_LEFT + X_WIDTH - 120));
+                Canvas.SetTop(bdEndTag, yCuoi - 9);
+                cvsBieuDo.Children.Add(bdEndTag);
+            }
+
             _tauVisuals.Add(visual);
         }
 
@@ -577,85 +763,24 @@ namespace GUI.Views.Pages
         }
 
         // =========================================================================
-        // THUẬT TOÁN TÍNH GIAO ĐIỂM HÌNH HỌC CHUẨN XÁC 100% TRÊN CANVAS
-        // (SCREEN-SPACE TRUE LINE INTERSECTION)
+        // THUẬT TOÁN ĐỊNH VỊ VÀ RENDER ĐIỂM XUNG ĐỘT TRÊN BIỂU ĐỒ MAREY
+        // (KINEMATIC-ALIGNED TRAIN CONFLICT MARKERS)
         // =========================================================================
 
         private void VeCacDiemXungDotChuanXac()
         {
-            if (_dsXungDot.Count == 0 || _tauVisuals.Count < 2) return;
+            if (_dsXungDot.Count == 0) return;
+            DateTime ngayGoc = dpNgay.SelectedDate ?? DateTime.Today;
 
             foreach (var xd in _dsXungDot)
             {
-                // Tìm visual của 2 đoàn tàu có liên quan đến xung đột này
-                var v1 = _tauVisuals.FirstOrDefault(v => v.Tau.MaChuyenTau == xd.MaChuyenTau1);
-                var v2 = _tauVisuals.FirstOrDefault(v => v.Tau.MaChuyenTau == xd.MaChuyenTau2);
+                // Định vị marker trực tiếp từ mô hình động học chính xác (Thời điểm xung đột & Lý trình Km)
+                // Đảm bảo Marker, Sidebar và Tooltip đồng bộ 100%, không bị ảnh hưởng bởi line clipping hay bộ lọc
+                double x = TinhToaDoXKhoangNgay(xd.ThoiDiemXungDot, ngayGoc.Date);
+                double y = TinhToaDoY(xd.LyTrinhUocTinhKm);
 
-                Point? diemGiaoCanvas = null;
-
-                if (v1 != null && v2 != null)
-                {
-                    // Quét từng cặp đoạn thẳng Line thực tế được vẽ trên Canvas giữa 2 tàu
-                    foreach (var l1 in v1.Lines)
-                    {
-                        Point p1A = new(l1.X1, l1.Y1);
-                        Point p1B = new(l1.X2, l1.Y2);
-
-                        foreach (var l2 in v2.Lines)
-                        {
-                            Point p2A = new(l2.X1, l2.Y1);
-                            Point p2B = new(l2.X2, l2.Y2);
-
-                            Point? pt = TinhGiaoDiem2DoanThang(p1A, p1B, p2A, p2B);
-                            if (pt.HasValue)
-                            {
-                                diemGiaoCanvas = pt.Value;
-                                break;
-                            }
-                        }
-
-                        if (diemGiaoCanvas.HasValue) break;
-                    }
-                }
-
-                // Nếu tìm được giao điểm chính xác trên Canvas: Vẽ đốm đỏ NGAY TẠI TÂM GIAO ĐIỂM ĐÓ!
-                if (diemGiaoCanvas.HasValue)
-                {
-                    VeMarkerXungDot(xd, diemGiaoCanvas.Value);
-                }
-                else
-                {
-                    // Fallback theo thời điểm tính toán nếu đoạn cắt nằm gần mép
-                    DateTime ngayGoc = dpNgay.SelectedDate ?? DateTime.Today;
-                    double x = TinhToaDoXKhoangNgay(xd.ThoiDiemXungDot, ngayGoc.Date);
-                    double y = TinhToaDoY(xd.LyTrinhUocTinhKm);
-                    VeMarkerXungDot(xd, new Point(x, y));
-                }
+                VeMarkerXungDot(xd, new Point(x, y));
             }
-        }
-
-        /// <summary>
-        /// Tính toán giao điểm toán học 2D giữa 2 đoạn thẳng [A1, B1] và [A2, B2] trên Canvas.
-        /// Chuẩn xác 100%, trả về null nếu không cắt nhau hoặc song song.
-        /// </summary>
-        private static Point? TinhGiaoDiem2DoanThang(Point a1, Point a2, Point b1, Point b2)
-        {
-            double dX1 = a2.X - a1.X;
-            double dY1 = a2.Y - a1.Y;
-            double dX2 = b2.X - b1.X;
-            double dY2 = b2.Y - b1.Y;
-
-            double det = dX1 * dY2 - dY1 * dX2;
-            if (Math.Abs(det) < 1e-5) return null; // Song song hoặc trùng nhau
-
-            double t = ((b1.X - a1.X) * dY2 - (b1.Y - a1.Y) * dX2) / det;
-            double u = ((b1.X - a1.X) * dY1 - (b1.Y - a1.Y) * dX1) / det;
-
-            if (t >= -0.001 && t <= 1.001 && u >= -0.001 && u <= 1.001)
-            {
-                return new Point(a1.X + t * dX1, a1.Y + t * dY1);
-            }
-            return null;
         }
 
         private void VeMarkerXungDot(XungDotKhuGianDTO xd, Point pt)
@@ -668,8 +793,8 @@ namespace GUI.Views.Pages
             {
                 Width = 20,
                 Height = 20,
-                Fill = new SolidColorBrush(Color.FromArgb(45, 239, 68, 68)),
-                Stroke = new SolidColorBrush(Color.FromRgb(220, 38, 38)),
+                Fill = TaoBrush(Color.FromArgb(45, 239, 68, 68)),
+                Stroke = TaoBrush(Color.FromRgb(220, 38, 38)),
                 StrokeThickness = 1.5,
                 Cursor = Cursors.Hand,
                 ToolTip = xd.MoTaChiTiet,
@@ -682,7 +807,7 @@ namespace GUI.Views.Pages
             {
                 Width = 7,
                 Height = 7,
-                Fill = new SolidColorBrush(Color.FromRgb(220, 38, 38)),
+                Fill = TaoBrush(Color.FromRgb(220, 38, 38)),
                 Stroke = Brushes.White,
                 StrokeThickness = 1.2,
                 Cursor = Cursors.Hand,
@@ -695,8 +820,8 @@ namespace GUI.Views.Pages
             // Nhãn cảnh báo nổi bên cạnh
             var borderTag = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(254, 242, 242)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(248, 113, 113)),
+                Background = TaoBrush(Color.FromRgb(254, 242, 242)),
+                BorderBrush = TaoBrush(Color.FromRgb(248, 113, 113)),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(2),
                 Padding = new Thickness(5, 1, 5, 1),
@@ -709,7 +834,7 @@ namespace GUI.Views.Pages
                 Text = $"⚠️ {xd.SoHieuMacTau1} x {xd.SoHieuMacTau2}",
                 FontSize = 9.5,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(153, 27, 27))
+                Foreground = TaoBrush(Color.FromRgb(153, 27, 27))
             };
             borderTag.Child = txtTag;
 
@@ -718,11 +843,19 @@ namespace GUI.Views.Pages
 
             MouseButtonEventHandler clickHandler = (s, e) =>
             {
+                string thongTinRay = xd.SoHieuDuongRayDeXuat.HasValue 
+                    ? $"Đường tránh #{xd.SoHieuDuongRayDeXuat.Value}" 
+                    : "Đường tránh chỉ định bởi Trực ban ga";
+
+                string thongTinDung = xd.SoPhutTangLichTrinh > 0 && xd.SoPhutTangLichTrinh != xd.SoPhutDungDeXuat
+                    ? $"chờ tránh +{xd.SoPhutTangLichTrinh} phút, tổng đỗ {xd.SoPhutDungDeXuat} phút"
+                    : $"đỗ {xd.SoPhutDungDeXuat} phút";
+
                 string thongBao = $"{xd.MoTaChiTiet}\n\n" +
                                   $"• Tàu ưu tiên cao hơn: {xd.SoHieuTauUuTien} (Cấp ưu tiên {xd.MucUuTienTauUuTien} — Giữ nguyên lịch chạy)\n" +
                                   $"• Tàu phải dừng tránh: {xd.SoHieuTauBiTranh} (Cấp ưu tiên {xd.MucUuTienTauBiTranh} — Dừng nhường đường)\n" +
                                   $"• Ga đề xuất dừng tránh: Ga {xd.TenGaDeXuatTranh} (Lý trình Km {xd.LyTrinhGaTranhKm:F1})\n" +
-                                  $"• Kế hoạch dừng tránh: Đến {xd.GioDenGaTranh:HH:mm} — Đi {xd.GioDiGaTranh:HH:mm} ({xd.SoPhutDungDeXuat} phút trên Đường tránh #{xd.SoHieuDuongRayDeXuat ?? 2})\n\n" +
+                                  $"• Kế hoạch dừng tránh: Đến {xd.GioDenGaTranh:HH:mm} — Đi {xd.GioDiGaTranh:HH:mm} ({thongTinDung} trên {thongTinRay})\n\n" +
                                   "Bạn có muốn hệ thống tự động dời giờ và xếp tránh an toàn cho đoàn tàu này ngay không?";
 
                 var r = MessageBox.Show(thongBao, "Chi Tiết Xung Đột Khu Gian", MessageBoxButton.YesNo, MessageBoxImage.Warning);
@@ -762,13 +895,13 @@ namespace GUI.Views.Pages
 
                 foreach (var line in v.Lines)
                 {
-                    line.StrokeThickness = isSelected ? 3.5 : 1.8;
-                    line.Opacity = isSelected ? 1.0 : (_selectedTau != null ? 0.30 : 0.55);
+                    line.StrokeThickness = isSelected ? 4.0 : 2.2;
+                    line.Opacity = isSelected ? 1.0 : (_selectedTau != null ? 0.25 : 0.85);
                 }
 
                 foreach (var dot in v.Dots)
                 {
-                    dot.Opacity = isSelected ? 1.0 : (_selectedTau != null ? 0.35 : 0.65);
+                    dot.Opacity = isSelected ? 1.0 : (_selectedTau != null ? 0.35 : 0.85);
                     dot.Width = isSelected ? 8 : 5;
                     dot.Height = isSelected ? 8 : 5;
                 }
@@ -838,6 +971,18 @@ namespace GUI.Views.Pages
             _selectedTau = tau;
             txtChiTietTauTitle.Text = $"CHI TIẾT LỘ TRÌNH DỪNG GA: TÀU {tau.SoHieuMacTau} ({tau.TenGaDi} ➔ {tau.TenGaDen}) • {tau.DanhSachDiem.Count} Ga Dừng";
             dgChiTietLichDung.ItemsSource = tau.DanhSachDiem;
+            bdChiTietLichDung.Visibility = Visibility.Visible;
+            splChiTiet.Visibility = Visibility.Visible;
+            if (_isBangChiTietThuGon)
+            {
+                rowChiTiet.Height = GridLength.Auto;
+                dgChiTietLichDung.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                rowChiTiet.Height = new GridLength(Math.Max(200, _savedChiTietHeight), GridUnitType.Pixel);
+                dgChiTietLichDung.Visibility = Visibility.Visible;
+            }
             ApDungTrangThaiMacDinh();
         }
 
@@ -853,8 +998,21 @@ namespace GUI.Views.Pages
         {
             if (bdHoverTooltip.Visibility == Visibility.Visible)
             {
-                Point pos = e.GetPosition(this);
-                bdHoverTooltip.Margin = new Thickness(pos.X + 15, pos.Y + 15, 0, 0);
+                Point pos = e.GetPosition(grdBieuDoContainer);
+                double left = pos.X + 15;
+                double top = pos.Y + 15;
+                double containerWidth = grdBieuDoContainer.ActualWidth;
+                double containerHeight = grdBieuDoContainer.ActualHeight;
+
+                if (containerWidth > 0 && bdHoverTooltip.ActualWidth > 0 && left + bdHoverTooltip.ActualWidth > containerWidth - 10)
+                {
+                    left = Math.Max(10, pos.X - bdHoverTooltip.ActualWidth - 15);
+                }
+                if (containerHeight > 0 && bdHoverTooltip.ActualHeight > 0 && top + bdHoverTooltip.ActualHeight > containerHeight - 10)
+                {
+                    top = Math.Max(10, pos.Y - bdHoverTooltip.ActualHeight - 15);
+                }
+                bdHoverTooltip.Margin = new Thickness(left, top, 0, 0);
             }
         }
 
@@ -943,7 +1101,7 @@ namespace GUI.Views.Pages
 
                 var txtTitle = new TextBlock
                 {
-                    Text = $"⚠ {xd.SoHieuMacTau1} ✕ {xd.SoHieuMacTau2}",
+                    Text = $"{xd.SoHieuMacTau1} ✕ {xd.SoHieuMacTau2}",
                     FontWeight = FontWeights.Bold,
                     FontSize = 11.5,
                     Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42)) // Slate đậm rõ ràng
@@ -977,26 +1135,32 @@ namespace GUI.Views.Pages
                     Text = $"{xd.TenGaDau} — {xd.TenGaCuoi} (Km {xd.LyTrinhUocTinhKm:F1}) | {xd.ThoiDiemXungDot:HH:mm}",
                     FontSize = 10.5,
                     Foreground = new SolidColorBrush(Color.FromRgb(71, 85, 105)),
-                    Margin = new Thickness(0, 3, 0, 4)
+                    Margin = new Thickness(0, 3, 0, 4),
+                    TextWrapping = TextWrapping.Wrap
                 };
                 contentPanel.Children.Add(txtKhuGian);
 
                 // Dòng 3: Khung đề xuất giải quyết điều độ kỹ thuật
                 var boxDeXuat = new Border
                 {
-                    Background = new SolidColorBrush(Color.FromRgb(241, 245, 249)), // #F1F5F9
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                    Background = TaoBrush(Color.FromRgb(241, 245, 249)), // #F1F5F9
+                    BorderBrush = TaoBrush(Color.FromRgb(226, 232, 240)),
                     BorderThickness = new Thickness(1),
                     CornerRadius = new CornerRadius(2),
                     Padding = new Thickness(6, 4, 6, 4),
                     Margin = new Thickness(0, 0, 0, 6)
                 };
+                string rayDeXuat = xd.SoHieuDuongRayDeXuat.HasValue ? $"đường #{xd.SoHieuDuongRayDeXuat.Value}" : "đường tránh phân bổ";
+                string thoiGianTheHien = xd.SoPhutTangLichTrinh > 0 && xd.SoPhutTangLichTrinh != xd.SoPhutDungDeXuat
+                    ? $"chờ +{xd.SoPhutTangLichTrinh}p, tổng đỗ {xd.SoPhutDungDeXuat}p"
+                    : $"{xd.SoPhutDungDeXuat} phút";
                 var txtDeXuat = new TextBlock
                 {
-                    Text = $"🎯 Đề xuất: Tàu {xd.SoHieuTauBiTranh} dừng Ga {xd.TenGaDeXuatTranh} ({xd.SoPhutDungDeXuat} phút, đường #{xd.SoHieuDuongRayDeXuat ?? 2})",
+                    Text = $"Đề xuất: Tàu {xd.SoHieuTauBiTranh} dừng Ga {xd.TenGaDeXuatTranh} ({thoiGianTheHien}, {rayDeXuat})",
                     FontSize = 10,
                     FontWeight = FontWeights.SemiBold,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0, 59, 115)) // Xanh VNR
+                    Foreground = TaoBrush(Color.FromRgb(0, 59, 115)), // Xanh VNR
+                    TextWrapping = TextWrapping.Wrap
                 };
                 boxDeXuat.Child = txtDeXuat;
                 contentPanel.Children.Add(boxDeXuat);
@@ -1014,23 +1178,25 @@ namespace GUI.Views.Pages
                     FontSize = 10.5,
                     FontWeight = FontWeights.SemiBold,
                     Background = Brushes.White,
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(203, 213, 225)),
+                    BorderBrush = TaoBrush(Color.FromRgb(203, 213, 225)),
                     BorderThickness = new Thickness(1),
-                    Foreground = new SolidColorBrush(Color.FromRgb(51, 65, 85)),
+                    Foreground = TaoBrush(Color.FromRgb(51, 65, 85)),
                     Cursor = Cursors.Hand
                 };
-                btnXem.Click += (s, e) =>
+                Action focusAction = () =>
                 {
                     var visual = _xungDotVisuals.FirstOrDefault(v => v.Xd.MaXungDot == xd.MaXungDot);
                     double xFocus = visual != null ? visual.ViTriGiao.X : TinhToaDoXKhoangNgay(xd.ThoiDiemXungDot, dpNgay.SelectedDate ?? DateTime.Today);
                     double yFocus = visual != null ? visual.ViTriGiao.Y : TinhToaDoY(xd.LyTrinhUocTinhKm);
 
-                    svBieuDo.ScrollToHorizontalOffset(Math.Max(0, xFocus - 350));
-                    svBieuDo.ScrollToVerticalOffset(Math.Max(0, yFocus - 200));
+                    CuonToiViTri(xFocus, yFocus);
 
                     var v1 = _tauVisuals.FirstOrDefault(v => v.Tau.MaChuyenTau == xd.MaChuyenTau1);
                     if (v1 != null) FocusTau(v1.Tau);
                 };
+                btnXem.Click += (s, e) => focusAction();
+                card.Cursor = Cursors.Hand;
+                card.MouseDown += (s, e) => focusAction();
                 Grid.SetColumn(btnXem, 0);
 
                 var btnApDung = new Button
@@ -1039,12 +1205,17 @@ namespace GUI.Views.Pages
                     Height = 24,
                     FontSize = 10.5,
                     FontWeight = FontWeights.Bold,
-                    Background = new SolidColorBrush(Color.FromRgb(0, 59, 115)), // Xanh VNR
+                    Background = TaoBrush(Color.FromRgb(0, 59, 115)), // Xanh VNR
                     BorderThickness = new Thickness(0),
                     Foreground = Brushes.White,
-                    Cursor = Cursors.Hand
+                    Cursor = Cursors.Hand,
+                    ToolTip = $"Áp dụng phương án: Tàu {xd.SoHieuTauBiTranh} dừng tránh tại {xd.TenGaDeXuatTranh}"
                 };
-                btnApDung.Click += (s, e) => ApDungGiaiQuyetXungDot(xd);
+                btnApDung.Click += (s, e) =>
+                {
+                    e.Handled = true;
+                    ApDungGiaiQuyetXungDot(xd);
+                };
                 Grid.SetColumn(btnApDung, 2);
 
                 btnGrid.Children.Add(btnXem);
@@ -1065,8 +1236,8 @@ namespace GUI.Views.Pages
             {
                 var border = new Border
                 {
-                    Background = new SolidColorBrush(Color.FromRgb(248, 250, 252)),
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                    Background = TaoBrush(Color.FromRgb(248, 250, 252)),
+                    BorderBrush = TaoBrush(Color.FromRgb(226, 232, 240)),
                     BorderThickness = new Thickness(1),
                     CornerRadius = new CornerRadius(3),
                     Padding = new Thickness(6, 4, 6, 4),
@@ -1084,7 +1255,7 @@ namespace GUI.Views.Pages
                 {
                     Width = 8,
                     Height = 8,
-                    Fill = new SolidColorBrush(c),
+                    Fill = TaoBrush(c),
                     Margin = new Thickness(0, 0, 6, 0),
                     VerticalAlignment = VerticalAlignment.Center
                 };
@@ -1094,7 +1265,7 @@ namespace GUI.Views.Pages
                     Text = tau.SoHieuMacTau,
                     FontWeight = FontWeights.Bold,
                     FontSize = 11,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0, 59, 115)),
+                    Foreground = TaoBrush(Color.FromRgb(0, 59, 115)),
                     Width = 50,
                     VerticalAlignment = VerticalAlignment.Center
                 };
@@ -1103,7 +1274,7 @@ namespace GUI.Views.Pages
                 {
                     Text = $"{tau.TenGaDi} ➔ {tau.TenGaDen}",
                     FontSize = 10,
-                    Foreground = new SolidColorBrush(Color.FromRgb(71, 85, 105)),
+                    Foreground = TaoBrush(Color.FromRgb(71, 85, 105)),
                     VerticalAlignment = VerticalAlignment.Center
                 };
 
@@ -1122,6 +1293,24 @@ namespace GUI.Views.Pages
 
         private void ApDungGiaiQuyetXungDot(XungDotKhuGianDTO xd)
         {
+            string rayApDung = xd.SoHieuDuongRayDeXuat.HasValue ? $"đường #{xd.SoHieuDuongRayDeXuat.Value}" : "đường tránh phân bổ";
+            string thoiGianChiTiet = xd.SoPhutTangLichTrinh > 0 && xd.SoPhutTangLichTrinh != xd.SoPhutDungDeXuat
+                ? $"chờ tránh +{xd.SoPhutTangLichTrinh} phút (tổng đỗ {xd.SoPhutDungDeXuat} phút tại ga, gồm thời gian tác nghiệp sẵn có)"
+                : $"{xd.SoPhutDungDeXuat} phút";
+
+            var r = MessageBox.Show(
+                $"XÁC NHẬN ĐIỀU ĐỘ XẾP TRÁNH:\n\n" +
+                $"• Cặp xung đột: {xd.SoHieuMacTau1} ✕ {xd.SoHieuMacTau2}\n" +
+                $"• Khu gian: {xd.TenGaDau} — {xd.TenGaCuoi} (Km {xd.LyTrinhUocTinhKm:F1})\n" +
+                $"• Phương án: Tàu {xd.SoHieuTauBiTranh} sẽ dừng tránh tại Ga {xd.TenGaDeXuatTranh} ({thoiGianChiTiet}, {rayApDung})\n" +
+                $"• Tác động: Cập nhật giờ chạy và lịch dừng trong CSDL vận hành.\n\n" +
+                $"Bạn có chắc chắn muốn áp dụng phương án xếp tránh này?",
+                "Xác Nhận Điều Độ Xếp Tránh",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (r != MessageBoxResult.Yes) return;
+
             try
             {
                 bool ok = _dieuDoService.GiaiQuyetMotXungDot(xd, out string baoCao);
@@ -1129,6 +1318,7 @@ namespace GUI.Views.Pages
                 {
                     MessageBox.Show(baoCao, "Điều Độ Xếp Tránh Thành Công", MessageBoxButton.OK, MessageBoxImage.Information);
                     LoadData();
+                    DuLieuDieuDoThayDoi?.Invoke();
                 }
                 else
                 {
@@ -1138,6 +1328,41 @@ namespace GUI.Views.Pages
             catch (Exception ex)
             {
                 MessageBox.Show($"Lỗi khi xếp tránh tàu:\n{ex.Message}", "Lỗi Cơ Sở Dữ Liệu", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public void ChonChuyenTauTheoId(int maChuyenTau, DateTime? ngay = null)
+        {
+            if (ngay.HasValue && dpNgay.SelectedDate != ngay.Value.Date)
+            {
+                dpNgay.SelectedDate = ngay.Value.Date;
+            }
+            else
+            {
+                LoadData();
+            }
+
+            var tau = _dsHanhTrinh.FirstOrDefault(t => t.MaChuyenTau == maChuyenTau);
+            if (tau != null)
+            {
+                ChonChuyenTau(tau);
+                FocusTau(tau);
+
+                var v = _tauVisuals.FirstOrDefault(tv => tv.Tau.MaChuyenTau == maChuyenTau);
+                if (v != null && v.Lines.Count > 0)
+                {
+                    double x = v.Lines[0].X1;
+                    double y = v.Lines[0].Y1;
+                    CuonToiViTri(x, y);
+                }
+            }
+        }
+
+        private void BtnMoLichTrinh_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedTau != null && Application.Current.MainWindow is MainWindow mw)
+            {
+                mw.NavigateToLichTrinh(_selectedTau.MaChuyenTau, dpNgay.SelectedDate);
             }
         }
 
@@ -1166,27 +1391,45 @@ namespace GUI.Views.Pages
 
             if (r == MessageBoxResult.Yes)
             {
-                bool ok = _dieuDoService.TuDongGiaiQuyetTranhTau(ngay, out string baoCao);
-                MessageBox.Show(baoCao, ok ? "Xếp Tránh Tàu Thành Công" : "Thông Báo", MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
-                LoadData();
+                try
+                {
+                    bool ok = _dieuDoService.TuDongGiaiQuyetTranhTau(ngay, out string baoCao);
+                    MessageBox.Show(baoCao, ok ? "Xếp Tránh Tàu Thành Công" : "Thông Báo", MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    LoadData();
+                    if (ok)
+                    {
+                        DuLieuDieuDoThayDoi?.Invoke();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi trong quá trình tự động xếp tránh tàu:\n{ex.Message}", "Lỗi Thực Thi", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
         private void BtnKiemTraXungDot_Click(object sender, RoutedEventArgs e)
         {
-            DateTime ngay = dpNgay.SelectedDate ?? DateTime.Today;
-            _dsXungDot = _dieuDoService.KiemTraXungDotToanTuyen(ngay);
-            CapNhatThongKe();
-            VeBiểuĐồ();
-            HienThiDanhSachXungDot();
+            try
+            {
+                DateTime ngay = dpNgay.SelectedDate ?? DateTime.Today;
+                _dsXungDot = _dieuDoService.KiemTraXungDotToanTuyen(ngay);
+                CapNhatThongKe();
+                VeBiểuĐồ();
+                HienThiDanhSachXungDot();
 
-            if (_dsXungDot.Count == 0)
-            {
-                MessageBox.Show($"Kiểm tra an toàn toàn tuyến ngày {ngay:dd/MM/yyyy}: Không phát hiện xung đột nào!", "An Toàn Tuyệt Đối", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (_dsXungDot.Count == 0)
+                {
+                    MessageBox.Show($"Kiểm tra an toàn toàn tuyến ngày {ngay:dd/MM/yyyy}: Không phát hiện xung đột nào!", "An Toàn Tuyệt Đối", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show($"Phát hiện {_dsXungDot.Count} xung đột khu gian cần giải quyết!\nVui lòng xem danh sách cảnh báo ở cột bên phải.", "Cảnh Báo Xung Đột", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show($"Phát hiện {_dsXungDot.Count} xung đột khu gian cần giải quyết!\nVui lòng xem danh sách cảnh báo ở cột bên phải.", "Cảnh Báo Xung Đột", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Lỗi khi kiểm tra xung đột an toàn:\n{ex.Message}", "Lỗi Kiểm Tra", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1195,12 +1438,12 @@ namespace GUI.Views.Pages
             LoadData();
         }
 
-        private void DpNgay_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        private void DpNgay_SelectedDateChanged(object? sender, SelectionChangedEventArgs e)
         {
             if (IsLoaded) LoadData();
         }
 
-        private void CboLocLoaiTau_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void CboLocLoaiTau_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
             if (IsLoaded) VeBiểuĐồ();
         }
@@ -1215,11 +1458,39 @@ namespace GUI.Views.Pages
             }
         }
 
+        private void BtnThuGonChiTiet_Click(object sender, RoutedEventArgs e)
+        {
+            _isBangChiTietThuGon = !_isBangChiTietThuGon;
+            if (_isBangChiTietThuGon)
+            {
+                if (rowChiTiet.ActualHeight > 80)
+                {
+                    _savedChiTietHeight = rowChiTiet.ActualHeight;
+                }
+                dgChiTietLichDung.Visibility = Visibility.Collapsed;
+                splChiTiet.Visibility = Visibility.Collapsed;
+                rowChiTiet.Height = GridLength.Auto;
+                txtThuGon.Text = "Mở Rộng";
+                iconThuGon.Symbol = Wpf.Ui.Controls.SymbolRegular.ChevronUp24;
+            }
+            else
+            {
+                dgChiTietLichDung.Visibility = Visibility.Visible;
+                splChiTiet.Visibility = Visibility.Visible;
+                rowChiTiet.Height = new GridLength(Math.Max(180, _savedChiTietHeight), GridUnitType.Pixel);
+                txtThuGon.Text = "Thu Gọn";
+                iconThuGon.Symbol = Wpf.Ui.Controls.SymbolRegular.ChevronDown24;
+            }
+        }
+
         private void BtnDongChiTiet_Click(object sender, RoutedEventArgs e)
         {
             _selectedTau = null;
             txtChiTietTauTitle.Text = "CHI TIẾT LỘ TRÌNH DỪNG GA: Vui lòng click chọn một đường tàu trên biểu đồ";
             dgChiTietLichDung.ItemsSource = null;
+            bdChiTietLichDung.Visibility = Visibility.Collapsed;
+            splChiTiet.Visibility = Visibility.Collapsed;
+            rowChiTiet.Height = GridLength.Auto;
             ApDungTrangThaiMacDinh();
         }
     }

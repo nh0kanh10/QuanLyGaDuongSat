@@ -157,11 +157,35 @@ namespace GUI.Views.Dialogs
         private static Window? TimCuaSoCha(Window? owner = null)
         {
             if (owner != null && owner.IsLoaded && owner.IsVisible) return owner;
+
+            if (Application.Current != null)
+            {
+                foreach (Window win in Application.Current.Windows)
+                {
+                    if (win != null && win.IsActive && win.IsLoaded && win.IsVisible && !(win is ThongBaoDialog))
+                    {
+                        return win;
+                    }
+                }
+            }
+
             if (Application.Current?.MainWindow != null && Application.Current.MainWindow.IsLoaded && Application.Current.MainWindow.IsVisible)
             {
                 return Application.Current.MainWindow;
             }
             return null;
+        }
+
+        public static bool Show(string thongDiep, string tieuDe = "Thông Báo", LoaiThongBao loai = LoaiThongBao.ThongTin, Window? owner = null)
+        {
+            var winOwner = TimCuaSoCha(owner);
+            var dialog = new ThongBaoDialog(thongDiep, tieuDe, loai, "Đã hiểu")
+            {
+                Owner = winOwner,
+                WindowStartupLocation = winOwner != null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen
+            };
+            dialog.ShowDialog();
+            return dialog.KetQuaXacNhan;
         }
 
         public static void Loi(string thongDiep, string tieuDe = "Lỗi Thao Tác", Window? owner = null)

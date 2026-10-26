@@ -545,13 +545,7 @@ namespace DAL.Repositories
                        tx.LoaiToa,
                        tx.ThuTuToa,
                        tx.SucChua,
-                       CASE tx.LoaiToa
-                           WHEN 'NC'  THEN N'Ngồi cứng'
-                           WHEN 'NML' THEN N'Ngồi mềm điều hòa'
-                           WHEN 'BN'  THEN N'Giường nằm khoang 6'
-                           WHEN 'AN'  THEN N'Giường nằm khoang 4'
-                           ELSE tx.LoaiToa
-                       END AS TenLoaiToa,
+                       ISNULL(cl.TenMoTa, tx.LoaiToa) AS TenLoaiToa,
                        ISNULL(cl.ChieuDaiChuanM, 20.0) AS ChieuDaiToaM,
                        ISNULL((SELECT COUNT(*) FROM vantai.ChoNgoi cn WHERE cn.MaToaXeKhach = tx.MaToaXeKhach), 0) AS SoGheDaThietLap,
                        -- Dem GHE (khong dem ve): mot ghe ban nhieu chang khong giao nhau van la 1 ghe
@@ -568,11 +562,6 @@ namespace DAL.Repositories
             return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@ct", maChuyenTau) });
         }
 
-        // So do cho ngoi cua mot toa: DUNG MOT DONG CHO MOI GHE.
-        //
-        // Luu y nghiep vu: mot cho ngoi co the duoc ban cho NHIEU hanh khach tren cac
-        // chang khong giao nhau (vi du Ha Noi-Vinh va Vinh-Sai Gon). Vi vay phai gom
-        // nhom theo MaChoNgoi, neu khong so do se bi nhan doi o nhung ghe ban nhieu chang.
         public DataTable LaySoDoGhe(int maToaXeKhach, int maChuyenTau)
         {
             string sql = @"

@@ -21,6 +21,7 @@ namespace GUI
         private readonly PhuongTienPage _phuongTienPage = new();
         private readonly BaoTriPage _baoTriPage = new();
         private readonly NhanSuPage _nhanSuPage = new();
+        private readonly MacTauPage _macTauPage = new();
 
         private string _currentTag = "MangLuoiGa";
         private readonly System.Windows.Threading.DispatcherTimer _timer;
@@ -29,6 +30,7 @@ namespace GUI
         {
             { "MangLuoiGa", "MasterData" },
             { "KhuGian", "MasterData" },
+            { "MacTau", "MasterData" },
             { "NhanSu", "MasterData" },
             { "LichTrinh", "VanHanh" },
             { "BieuDo", "VanHanh" },
@@ -50,6 +52,7 @@ namespace GUI
         public MainWindow()
         {
             InitializeComponent();
+            _bieuDoPage.DuLieuDieuDoThayDoi += () => _lichTrinhPage.LoadData();
             NavigateTo("MangLuoiGa");
             
             _timer = new System.Windows.Threading.DispatcherTimer
@@ -127,13 +130,36 @@ namespace GUI
                     }
                     break;
 
+                case "MacTau":
+                    MainFrame.Navigate(_macTauPage);
+                    if (focusId.HasValue && focusId.Value > 0)
+                    {
+                        _macTauPage.ChonMacTauTheoId(focusId.Value);
+                    }
+                    break;
+
                 case "LichTrinh":
                     MainFrame.Navigate(_lichTrinhPage);
+                    if (focusId.HasValue && focusId.Value > 0)
+                    {
+                        _lichTrinhPage.ChonChuyenTauTheoId(focusId.Value);
+                    }
+                    else
+                    {
+                        _lichTrinhPage.LoadData();
+                    }
                     break;
 
                 case "BieuDo":
                     MainFrame.Navigate(_bieuDoPage);
-                    _bieuDoPage.LoadData();
+                    if (focusId.HasValue && focusId.Value > 0)
+                    {
+                        _bieuDoPage.ChonChuyenTauTheoId(focusId.Value);
+                    }
+                    else
+                    {
+                        _bieuDoPage.LoadData();
+                    }
                     break;
 
                 case "BanVe":
@@ -158,16 +184,58 @@ namespace GUI
 
                 case "NhanSu":
                     MainFrame.Navigate(_nhanSuPage);
+                    if (focusId.HasValue && focusId.Value > 0)
+                    {
+                        _nhanSuPage.ChonChuyenDePhanCong(focusId.Value);
+                    }
                     break;
             }
 
             CapNhatThanhPhimTatTheoPhanHe(tag);
         }
 
+        public void NavigateToBieuDo(int? focusMaChuyenTau = null, DateTime? ngay = null)
+        {
+            NavigateTo("BieuDo", focusMaChuyenTau);
+            if (focusMaChuyenTau.HasValue && focusMaChuyenTau.Value > 0)
+            {
+                _bieuDoPage.ChonChuyenTauTheoId(focusMaChuyenTau.Value, ngay);
+            }
+        }
+
+        public void NavigateToLichTrinh(int? focusMaChuyenTau = null, DateTime? ngay = null)
+        {
+            NavigateTo("LichTrinh", focusMaChuyenTau);
+            if (focusMaChuyenTau.HasValue && focusMaChuyenTau.Value > 0)
+            {
+                _lichTrinhPage.ChonChuyenTauTheoId(focusMaChuyenTau.Value, ngay);
+            }
+        }
+
+        public void NavigateToLapDoanTau(int? focusMaChuyenTau = null)
+        {
+            NavigateTo("PhuongTien");
+            if (focusMaChuyenTau.HasValue && focusMaChuyenTau.Value > 0)
+            {
+                _phuongTienPage.ChonChuyenTauDeLapTau(focusMaChuyenTau.Value);
+            }
+        }
+
+        public void NavigateToPhanCongKip(int? focusMaChuyenTau = null)
+        {
+            NavigateTo("NhanSu", focusMaChuyenTau);
+            if (focusMaChuyenTau.HasValue && focusMaChuyenTau.Value > 0)
+            {
+                _nhanSuPage.ChonChuyenDePhanCong(focusMaChuyenTau.Value);
+            }
+        }
+
         private void CapNhatThanhPhimTatTheoPhanHe(string tag)
         {
             btnScF7.Visibility = Visibility.Collapsed;
             sepScF7.Visibility = Visibility.Collapsed;
+            btnScF8.Visibility = Visibility.Collapsed;
+            sepScF8.Visibility = Visibility.Collapsed;
 
             switch (tag)
             {
@@ -235,6 +303,44 @@ namespace GUI
                     btnScF9.ToolTip = "F9: Xem bảng tổng hợp kỹ thuật hạ tầng đường ray các ga";
                     break;
 
+                case "MacTau":
+                    btnScF2.Visibility = Visibility.Visible;
+                    sepScF2.Visibility = Visibility.Visible;
+                    txtScF2.Text = "Thêm Mác Tàu";
+                    btnScF2.ToolTip = "F2: Khai báo thêm mác tàu mẫu mới trên tuyến";
+
+                    btnScF3.Visibility = Visibility.Visible;
+                    sepScF3.Visibility = Visibility.Visible;
+                    txtScF3.Text = "Tra Cứu Mác";
+                    btnScF3.ToolTip = "F3 hoặc Ctrl+K: Focus con trỏ vào ô tìm kiếm mác tàu";
+
+                    btnScF4.Visibility = Visibility.Visible;
+                    sepScF4.Visibility = Visibility.Visible;
+                    txtScF4.Text = "Tự Tính Giờ";
+                    btnScF4.ToolTip = "F4: Tự động tính thời gian chuẩn hành trình theo cự ly và tốc độ định mức VNR";
+
+                    btnScF5.Visibility = Visibility.Visible;
+                    sepScF5.Visibility = Visibility.Visible;
+                    txtScF5.Text = "Nạp Lại";
+                    btnScF5.ToolTip = "F5: Tải lại danh sách mác tàu mẫu từ CSDL";
+
+                    btnScF6.Visibility = Visibility.Visible;
+                    sepScF6.Visibility = Visibility.Visible;
+                    txtScF6.Text = "Xuất CSV";
+                    btnScF6.ToolTip = "F6: Xuất danh sách mác tàu ra file CSV";
+
+                    btnScF7.Visibility = Visibility.Visible;
+                    sepScF7.Visibility = Visibility.Visible;
+                    txtScF7.Text = "Định Mức Vận Tốc";
+                    btnScF7.ToolTip = "F7: Cấu hình định mức vận tốc lữ hành các loại tàu (chuẩn VNR / UIC)";
+
+                    btnScF8.Visibility = Visibility.Collapsed;
+                    sepScF8.Visibility = Visibility.Collapsed;
+
+                    btnScF9.Visibility = Visibility.Collapsed;
+                    sepScF9.Visibility = Visibility.Collapsed;
+                    break;
+
                 case "LichTrinh":
                     btnScF2.Visibility = Visibility.Visible;
                     sepScF2.Visibility = Visibility.Visible;
@@ -256,6 +362,11 @@ namespace GUI
 
                     btnScF6.Visibility = Visibility.Collapsed;
                     sepScF6.Visibility = Visibility.Collapsed;
+
+                    btnScF8.Visibility = Visibility.Visible;
+                    sepScF8.Visibility = Visibility.Visible;
+                    txtScF8.Text = "Biểu Đồ 24h";
+                    btnScF8.ToolTip = "F8: Mở Biểu đồ chạy tàu điều độ 24h";
 
                     btnScF9.Visibility = Visibility.Collapsed;
                     sepScF9.Visibility = Visibility.Collapsed;
@@ -474,6 +585,7 @@ namespace GUI
             {
                 case "MangLuoiGa": SetTabActive(tabGa, txtTabGa, iconTabGa); break;
                 case "KhuGian": SetTabActive(tabKhuGian, txtTabKhuGian, iconTabKhuGian); break;
+                case "MacTau": SetTabActive(tabMacTau, txtTabMacTau, iconTabMacTau); break;
                 case "NhanSu": SetTabActive(tabNavNhanSu, txtTabNhanSu, iconTabNhanSu); break;
                 case "LichTrinh": SetTabActive(tabLichTrinh, txtTabLichTrinh, iconTabLichTrinh); break;
                 case "BieuDo": SetTabActive(tabBieuDo, txtTabBieuDo, iconTabBieuDo); break;
@@ -521,6 +633,12 @@ namespace GUI
             txtTabKhuGian.Foreground = inactiveFg;
             txtTabKhuGian.FontWeight = FontWeights.SemiBold;
             iconTabKhuGian.Foreground = inactiveIconFg;
+
+            tabMacTau.Background = inactiveBg;
+            tabMacTau.BorderBrush = inactiveBorder;
+            txtTabMacTau.Foreground = inactiveFg;
+            txtTabMacTau.FontWeight = FontWeights.SemiBold;
+            iconTabMacTau.Foreground = inactiveIconFg;
 
             tabLichTrinh.Background = inactiveBg;
             tabLichTrinh.BorderBrush = inactiveBorder;
@@ -646,6 +764,7 @@ namespace GUI
                     ThucHienSoatVe();
                     break;
                 case Key.F8:
+                    if (btnScF8.Visibility != Visibility.Visible) return;
                     e.Handled = true;
                     NavigateTo("BieuDo");
                     break;
@@ -678,7 +797,7 @@ namespace GUI
                     case "F5": if (btnScF5.Visibility == Visibility.Visible) ThucHienNapLai(); break;
                     case "F6": if (btnScF6.Visibility == Visibility.Visible) ThucHienXuatTep(); break;
                     case "F7": if (btnScF7.Visibility == Visibility.Visible) ThucHienSoatVe(); break;
-                    case "F8": NavigateTo("BieuDo"); break;
+                    case "F8": if (btnScF8.Visibility == Visibility.Visible) NavigateTo("BieuDo"); break;
                     case "F9": if (btnScF9.Visibility == Visibility.Visible) ThucHienBaoCao(); break;
 
                     case "F11": ThucHienToanManHinh(); break;
@@ -697,6 +816,9 @@ namespace GUI
                     break;
                 case "KhuGian":
                     _khuGianPage.FocusTimKiem();
+                    break;
+                case "MacTau":
+                    _macTauPage.FocusTimKiem();
                     break;
                 case "LichTrinh":
                     _lichTrinhPage.FocusTimKiem();
@@ -732,6 +854,9 @@ namespace GUI
                 case "KhuGian":
                     _khuGianPage.KichHoatThemMoi();
                     break;
+                case "MacTau":
+                    _macTauPage.KichHoatThemMoi();
+                    break;
                 case "LichTrinh":
                     _lichTrinhPage.KichHoatThemMoi();
                     break;
@@ -762,6 +887,9 @@ namespace GUI
                     break;
                 case "KhuGian":
                     _khuGianPage.KichHoatNapLai();
+                    break;
+                case "MacTau":
+                    _macTauPage.KichHoatNapLai();
                     break;
                 case "LichTrinh":
                     _lichTrinhPage.KichHoatNapLai();
@@ -800,6 +928,9 @@ namespace GUI
                 case "KhuGian":
                     _khuGianPage.KichHoatNhapTep();
                     break;
+                case "MacTau":
+                    _macTauPage.KichHoatTuTinhGioChuan();
+                    break;
             }
         }
 
@@ -812,6 +943,9 @@ namespace GUI
                     break;
                 case "KhuGian":
                     _khuGianPage.KichHoatXuatTep();
+                    break;
+                case "MacTau":
+                    _macTauPage.KichHoatXuatTep();
                     break;
                 case "BanVe":
                     _banVePage.KichHoatXuatTep();
@@ -853,6 +987,9 @@ namespace GUI
                 case "KhuGian":
                     _khuGianPage.KichHoatHuy();
                     break;
+                case "MacTau":
+                    _macTauPage.KichHoatHuy();
+                    break;
                 case "PhuongTien":
                     _phuongTienPage.KichHoatHuy();
                     break;
@@ -876,6 +1013,11 @@ namespace GUI
 
         private void ThucHienSoatVe()
         {
+            if (_currentTag == "MacTau")
+            {
+                _macTauPage.KichHoatDinhMucVanToc();
+                return;
+            }
             NavigateTo("SoatVe");
             _soatVePage.FocusScanner();
         }

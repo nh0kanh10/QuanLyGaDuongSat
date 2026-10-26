@@ -13,7 +13,7 @@ namespace DAL.Repositories
                     ct.MaChuyenTau, ct.NgayXuatPhat, ct.GioXuatPhatKH, ct.GioVeDichKH, ct.TrangThai,
                     mt.SoHieuMacTau, mt.LoaiTau, mt.HuongChay, mt.MucUuTien,
                     gDi.TenGa AS TenGaDi, gDen.TenGa AS TenGaDen,
-                    ISNULL(dt.TongChieuDaiM, 250.0) AS TongChieuDaiM,
+                    ISNULL(dt.TongChieuDaiM, 0.0) AS TongChieuDaiM,
                     ld.MaDiemDung, ld.ThuTuDung, ld.MaGa, ld.GioDenKeHoach, ld.GioDiKeHoach, 
                     ld.LaDiemTranh, ld.MaDuongRay,
                     g.TenGa, g.MaGaCode, g.LyTrinhKm,
@@ -26,9 +26,8 @@ namespace DAL.Repositories
                 JOIN vanhanh.LichDungGa ld ON ct.MaChuyenTau = ld.MaChuyenTau
                 JOIN hatang.Ga g ON ld.MaGa = g.MaGa
                 LEFT JOIN hatang.DuongRayGa dr ON ld.MaDuongRay = dr.MaDuongRay
-                WHERE (ct.NgayXuatPhat = @ngay 
-                       OR CAST(ct.GioXuatPhatKH AS DATE) = @ngay 
-                       OR (@ngay >= CAST(ct.GioXuatPhatKH AS DATE) AND @ngay <= CAST(ct.GioVeDichKH AS DATE)))
+                WHERE ct.GioXuatPhatKH < DATEADD(DAY, 1, @ngay)
+                  AND ct.GioVeDichKH >= @ngay
                   AND ct.TrangThai <> 'DA_HUY'
                 ORDER BY ct.MaChuyenTau, ld.ThuTuDung ASC";
 
@@ -80,7 +79,7 @@ namespace DAL.Repositories
 
         public DataTable LayDanhSachGaTuyen()
         {
-            string sql = @"SELECT g.MaGa, g.MaGaCode, g.TenGa, g.LyTrinhKm, g.HangGa
+            string sql = @"SELECT g.MaGa, g.MaGaCode, g.TenGa, g.LyTrinhKm, g.HangGa, g.CoCauQuay
                            FROM hatang.Ga g
                            WHERE g.DangKhaiThac = 1
                            ORDER BY g.LyTrinhKm ASC";
@@ -114,55 +113,97 @@ namespace DAL.Repositories
             return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@chieuDai", chieuDaiM) });
         }
 
-        public DataTable LayDuongTranhKhaDung(int maGa, decimal chieuDaiM)
+        public DataTable LayDuongTranhKhaDung(int maGa, decimal chieuDaiM, DateTime? gioDen = null, DateTime? gioDi = null, int? excludeMaChuyen = null)
         {
             string sql = @"
                 SELECT TOP 1 dr.MaDuongRay, dr.SoHieuDuong, dr.ChieuDaiHuuDungM, dr.LoaiDuong
                 FROM hatang.DuongRayGa dr
                 WHERE dr.MaGa = @maGa
                   AND dr.LoaiDuong = 'DUONG_TRANH'
+                  AND dr.TrangThai <> 'BAO_TRI'
                   AND dr.ChieuDaiHuuDungM >= @chieuDai
+                  AND (@gioDen IS NULL OR @gioDi IS NULL OR NOT EXISTS (
+                      -- Kiểm tra trùng lặp thời gian chiếm dụng với bất kỳ chuyến tàu nào khác
+                      SELECT 1 
+                      FROM vanhanh.LichDungGa ld
+                      JOIN vanhanh.ChuyenTau ct ON ld.MaChuyenTau = ct.MaChuyenTau
+                      WHERE ld.MaDuongRay = dr.MaDuongRay
+                        AND ct.TrangThai <> 'DA_HUY'
+                        AND (@excludeCt IS NULL OR ld.MaChuyenTau <> @excludeCt)
+                        AND ld.GioDenKeHoach < @gioDi
+                        AND ld.GioDiKeHoach > @gioDen
+                  ))
                 ORDER BY dr.ChieuDaiHuuDungM ASC";
 
             return DatabaseHelper.ExecuteQuery(sql, new[]
             {
                 new SqlParameter("@maGa", maGa),
-                new SqlParameter("@chieuDai", chieuDaiM)
+                new SqlParameter("@chieuDai", chieuDaiM),
+                new SqlParameter("@gioDen", (object?)gioDen ?? DBNull.Value),
+                new SqlParameter("@gioDi", (object?)gioDi ?? DBNull.Value),
+                new SqlParameter("@excludeCt", (object?)excludeMaChuyen ?? DBNull.Value)
             });
         }
 
         public bool CapNhatLichTranhTau(int maChuyenTau, int maGa, DateTime gioDenMoi, DateTime gioDiMoi, int? maDuongRay, int soPhutTang, string lyDo)
         {
             string sql = @"
+                SET XACT_ABORT ON;
                 BEGIN TRANSACTION;
                 BEGIN TRY
-                    -- Vô hiệu hóa tạm thời trigger kiểm tra thời gian để thực hiện cập nhật tịnh tiến đồng bộ
-                    ALTER TABLE vanhanh.LichDungGa DISABLE TRIGGER trg_LichDungGa_CheckThoiGian;
+                    -- Khóa độc quyền chuyến tàu đang cập nhật để chống xung đột điều độ đồng thời
+                    IF NOT EXISTS (SELECT 1 FROM vanhanh.ChuyenTau WITH (UPDLOCK, ROWLOCK) WHERE MaChuyenTau = @ct AND TrangThai <> 'DA_HUY')
+                    BEGIN
+                        RAISERROR(N'Chuyến tàu không tồn tại hoặc đã bị hủy.', 16, 1);
+                        ROLLBACK TRANSACTION;
+                        RETURN;
+                    END
 
                     DECLARE @thuTuHienTai INT = NULL;
                     SELECT @thuTuHienTai = ThuTuDung 
                     FROM vanhanh.LichDungGa 
                     WHERE MaChuyenTau = @ct AND MaGa = @ga;
 
+                    -- Tính số phút tịnh tiến thực tế dựa trên độ chênh lệch giữa giờ đi mới và giờ đi cũ
+                    DECLARE @phutTangThucTe INT = @soPhutTang;
+
                     IF @thuTuHienTai IS NOT NULL
                     BEGIN
-                        -- Ga này đã có sẵn trong lịch
-                        -- 1. Tịnh tiến giờ các ga phía sau TRƯỚC
-                        IF @soPhutTang > 0
-                        BEGIN
-                            UPDATE vanhanh.LichDungGa
-                            SET GioDenKeHoach = DATEADD(MINUTE, @soPhutTang, GioDenKeHoach),
-                                GioDiKeHoach = DATEADD(MINUTE, @soPhutTang, GioDiKeHoach)
-                            WHERE MaChuyenTau = @ct AND ThuTuDung > @thuTuHienTai;
-                        END
+                        DECLARE @gioDiCu DATETIME = NULL;
+                        SELECT @gioDiCu = GioDiKeHoach 
+                        FROM vanhanh.LichDungGa 
+                        WHERE MaChuyenTau = @ct AND ThuTuDung = @thuTuHienTai;
 
-                        -- 2. Cập nhật tại ga dừng tránh
+                        IF @gioDiCu IS NOT NULL
+                        BEGIN
+                            DECLARE @diff INT = DATEDIFF(MINUTE, @gioDiCu, @gioDi);
+                            IF @diff > @phutTangThucTe SET @phutTangThucTe = @diff;
+                            IF @phutTangThucTe < 0 SET @phutTangThucTe = 0;
+                        END
+                    END
+
+                    IF @thuTuHienTai IS NOT NULL
+                    BEGIN
+                        -- Ga này đã có sẵn trong lịch -> Cập nhật đồng bộ tại ga dừng tránh VÀ tất cả các ga phía sau trong CÙNG MỘT LỆNH UPDATE NGUYÊN TỬ
+                        -- Giữ nguyên khoảng cách chạy giữa các ga (running time), trigger trg_LichDungGa_CheckThoiGian kiểm tra sau lệnh UPDATE sẽ thỏa mãn 100%
                         UPDATE vanhanh.LichDungGa
-                        SET GioDenKeHoach = @gioDen,
-                            GioDiKeHoach = @gioDi,
-                            LaDiemTranh = 1,
-                            MaDuongRay = @ray
-                        WHERE MaChuyenTau = @ct AND MaGa = @ga;
+                        SET GioDenKeHoach = CASE 
+                                WHEN ThuTuDung = @thuTuHienTai THEN @gioDen
+                                ELSE DATEADD(MINUTE, @phutTangThucTe, GioDenKeHoach)
+                            END,
+                            GioDiKeHoach = CASE 
+                                WHEN ThuTuDung = @thuTuHienTai THEN @gioDi
+                                ELSE DATEADD(MINUTE, @phutTangThucTe, GioDiKeHoach)
+                            END,
+                            LaDiemTranh = CASE 
+                                WHEN ThuTuDung = @thuTuHienTai THEN 1 
+                                ELSE LaDiemTranh 
+                            END,
+                            MaDuongRay = CASE 
+                                WHEN ThuTuDung = @thuTuHienTai THEN ISNULL(@ray, MaDuongRay) 
+                                ELSE MaDuongRay 
+                            END
+                        WHERE MaChuyenTau = @ct AND ThuTuDung >= @thuTuHienTai;
                     END
                     ELSE
                     BEGIN
@@ -178,7 +219,6 @@ namespace DAL.Repositories
 
                         IF @huongChay = 'BAC_NAM'
                         BEGIN
-                            -- Hướng Bắc -> Nam: LyTrinhKm tăng dần, tìm điểm dừng có LyTrinhKm nhỏ hơn @lyTrinhGa lớn nhất
                             SELECT TOP 1 @thuTuHienTai = ld.ThuTuDung + 1
                             FROM vanhanh.LichDungGa ld
                             JOIN hatang.Ga g ON ld.MaGa = g.MaGa
@@ -187,7 +227,6 @@ namespace DAL.Repositories
                         END
                         ELSE
                         BEGIN
-                            -- Hướng Nam -> Bắc: LyTrinhKm giảm dần, tìm điểm dừng có LyTrinhKm lớn hơn @lyTrinhGa nhỏ nhất
                             SELECT TOP 1 @thuTuHienTai = ld.ThuTuDung + 1
                             FROM vanhanh.LichDungGa ld
                             JOIN hatang.Ga g ON ld.MaGa = g.MaGa
@@ -197,47 +236,44 @@ namespace DAL.Repositories
 
                         IF @thuTuHienTai IS NULL SET @thuTuHienTai = 1;
 
-                        -- 1. Tịnh tiến giờ các ga sau TRƯỚC (để giờ đến của ga sau luôn lớn hơn giờ đi của ga chèn mới)
-                        IF @soPhutTang > 0
+                        -- 1. Tịnh tiến giờ các ga sau và tăng thứ tự +1
+                        IF @phutTangThucTe > 0
                         BEGIN
                             UPDATE vanhanh.LichDungGa
-                            SET GioDenKeHoach = DATEADD(MINUTE, @soPhutTang, GioDenKeHoach),
-                                GioDiKeHoach = DATEADD(MINUTE, @soPhutTang, GioDiKeHoach)
+                            SET GioDenKeHoach = DATEADD(MINUTE, @phutTangThucTe, GioDenKeHoach),
+                                GioDiKeHoach = DATEADD(MINUTE, @phutTangThucTe, GioDiKeHoach),
+                                ThuTuDung = ThuTuDung + 1
+                            WHERE MaChuyenTau = @ct AND ThuTuDung >= @thuTuHienTai;
+                        END
+                        ELSE
+                        BEGIN
+                            UPDATE vanhanh.LichDungGa
+                            SET ThuTuDung = ThuTuDung + 1
                             WHERE MaChuyenTau = @ct AND ThuTuDung >= @thuTuHienTai;
                         END
 
-                        -- 2. Đẩy thứ tự các ga sau lên +1
-                        UPDATE vanhanh.LichDungGa
-                        SET ThuTuDung = ThuTuDung + 1
-                        WHERE MaChuyenTau = @ct AND ThuTuDung >= @thuTuHienTai;
-
-                        -- 3. Chèn điểm dừng tránh mới
+                        -- 2. Chèn điểm dừng tránh mới
                         INSERT INTO vanhanh.LichDungGa (MaChuyenTau, MaGa, ThuTuDung, GioDenKeHoach, GioDiKeHoach, LaDiemTranh, MaDuongRay)
                         VALUES (@ct, @ga, @thuTuHienTai, @gioDen, @gioDi, 1, @ray);
                     END
 
                     -- Cập nhật giờ về đích và số phút trễ lũy kế của chuyến tàu
-                    IF @soPhutTang > 0
+                    IF @phutTangThucTe > 0
                     BEGIN
                         UPDATE vanhanh.ChuyenTau
-                        SET GioVeDichKH = DATEADD(MINUTE, @soPhutTang, GioVeDichKH),
-                            SoPhutTreLuyKe = SoPhutTreLuyKe + @soPhutTang
+                        SET GioVeDichKH = (SELECT MAX(GioDenKeHoach) FROM vanhanh.LichDungGa WHERE MaChuyenTau = @ct),
+                            SoPhutTreLuyKe = SoPhutTreLuyKe + @phutTangThucTe
                         WHERE MaChuyenTau = @ct;
                     END
 
                     -- Ghi nhật ký vận hành
                     INSERT INTO vanhanh.NhatKyChamGio (MaChuyenTau, MaGa, LoaiSuCo, SoPhutCham, GhiChuXuLy, ThoiDiemBaoCao)
-                    VALUES (@ct, @ga, 'CHO_TRANH_TAU', @soPhutTang, @lyDo, SYSDATETIME());
-
-                    -- Kích hoạt lại trigger sau khi hoàn thành cập nhật toàn vẹn
-                    ALTER TABLE vanhanh.LichDungGa ENABLE TRIGGER trg_LichDungGa_CheckThoiGian;
+                    VALUES (@ct, @ga, 'CHO_TRANH_TAU', @phutTangThucTe, @lyDo, SYSDATETIME());
 
                     COMMIT TRANSACTION;
                 END TRY
                 BEGIN CATCH
-                    -- Đảm bảo trigger luôn được kích hoạt lại nếu xảy ra lỗi
-                    ALTER TABLE vanhanh.LichDungGa ENABLE TRIGGER trg_LichDungGa_CheckThoiGian;
-                    ROLLBACK TRANSACTION;
+                    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
                     THROW;
                 END CATCH;";
 

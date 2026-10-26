@@ -1,4 +1,4 @@
-﻿using GUI.ViewModels.KyThuat;
+using GUI.ViewModels.KyThuat;
 using GUI.Helpers;
 using GUI.Views.Dialogs;
 using System.Data;
@@ -1412,5 +1412,11 @@ namespace GUI.Views.Pages
         public void KichHoatNapLai() => NapToanBoDuLieu();
 
         public void KichHoatHuy() => BtnXoaLocDauMay_Click(this, new RoutedEventArgs());
+
+        public void ChonChuyenTauDeLapTau(int maChuyenTau)
+        {
+            tabPhuongTien.SelectedIndex = 2; // Tab 3: Lập Đoàn Tàu
+            ChonLaiTheoTag(cboChuyenTauLapTau, maChuyenTau.ToString());
+        }
     }
 }
