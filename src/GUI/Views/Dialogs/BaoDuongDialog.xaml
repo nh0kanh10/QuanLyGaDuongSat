@@ -77,6 +77,12 @@
                     <ComboBox x:Name="cboPhuongTien" DisplayMemberPath="TenHienThi"
                               SelectionChanged="CboPhuongTien_SelectionChanged"/>
                     <TextBlock x:Name="txtLoiPhuongTien" Style="{StaticResource KtLoiTruong}"/>
+                    <!-- Phương tiện đang "Bảo dưỡng": lưu phiếu xong thì đưa về "Sẵn sàng" (24/10) -->
+                    <CheckBox x:Name="chkDuaVeSanSang" Visibility="Collapsed" IsChecked="True" Margin="0,-2,0,8"
+                              ToolTip="Phiếu bảo dưỡng ghi khi đã làm xong: đưa phương tiện trở lại khai thác ngay">
+                        <TextBlock x:Name="txtDuaVeSanSang" FontSize="11" TextWrapping="Wrap"
+                                   Text="Đang ở trạng thái Bảo dưỡng — đưa về Sẵn sàng sau khi lưu"/>
+                    </CheckBox>
 
                     <TextBlock Text="CẤP BẢO DƯỠNG &amp; KẾT QUẢ" Style="{StaticResource KtTieuDeMuc}" Margin="0,0,0,8"/>
 
@@ -175,7 +181,7 @@
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
-                        <TextBlock Text="Giai đoạn giao diện: phiếu chỉ hiển thị trên màn hình, chưa ghi vào CSDL."
+                        <TextBlock Text="Lưu là ghi vào CSDL. Chỉ sửa được phiếu mới nhất của mỗi phương tiện."
                                    FontSize="10" Foreground="#64748B" VerticalAlignment="Center"/>
                     </StackPanel>
 

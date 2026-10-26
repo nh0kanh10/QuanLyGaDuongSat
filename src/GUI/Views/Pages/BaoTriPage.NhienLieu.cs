@@ -1,4 +1,5 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using DTO.BaoTri;
+using GUI.ViewModels.KyThuat;
 using GUI.Helpers;
 using GUI.Views.Dialogs;
 using System.Windows;
@@ -12,33 +13,18 @@ namespace GUI.Views.Pages
     // BAO TRI - TAB 2: CAP PHAT NHIEN LIEU (baotri.NhatKyCapNhienLieu)
     //
     // Cung mau voi tab 1: the tom tat theo dau may (bam = loc, nhap dup = cap
-    // phat), luoi phieu + panel chi tiet, lap / sua giu trong "thay doi tam".
-    // Suat tieu hao va co vuot muc tinh theo DinhMucNhienLieu (dinh muc tham khao).
+    // phat), luoi phieu + panel chi tiet. Tu 24/10 lap / sua ghi thang CSDL qua
+    // BaoTriService (sua theo PhienBan); Service tinh SFC + co vuot muc theo dinh muc
+    // cua dong may (DongDauMay.DinhMucSFC, tham khao).
     // =========================================================================
     public partial class BaoTriPage
     {
-        // Khoa am = phieu lap moi, khoa duong = phieu goc da bi sua
-        private readonly Dictionary<int, CapNhienLieuHienThi> _capDauTam = new();
-
         // Loc theo dau may khi bam the (null = tat ca)
         private int? _maDauMayLoc;
 
-        // Du lieu goc (thay cho doc CSDL) + ban sua tam + ban lap moi
-        private List<CapNhienLieuHienThi> LayToanBoCapDau()
-        {
-            var ds = new List<CapNhienLieuHienThi>();
-            var maDaCo = new HashSet<int>();
+        private List<CapNhienLieuHienThi> LayToanBoCapDau() => _duLieu.CapDau;
 
-            foreach (var nl in DanhMucMauBaoTri.LayNhatKyCapDau())
-            {
-                maDaCo.Add(nl.MaNhatKyDau);
-                ds.Add(_capDauTam.TryGetValue(nl.MaNhatKyDau, out var banTam) ? banTam : nl);
-            }
-            ds.AddRange(_capDauTam.Values.Where(nl => !maDaCo.Contains(nl.MaNhatKyDau)));
-            return ds;
-        }
-
-        // Nap lai the + luoi; giu dong dang chon neu con trong danh sach
+        // Ve lai the + luoi tu anh chup; giu dong dang chon neu con trong danh sach
         private void LamMoiNhienLieu(bool giuDongChon, int? maChonSau = null)
         {
             int? maDangChon = maChonSau ?? (giuDongChon ? (dgCapDau.SelectedItem as CapNhienLieuHienThi)?.MaNhatKyDau : null);
@@ -49,8 +35,6 @@ namespace GUI.Views.Pages
 
             if (!(maDangChon.HasValue && ChonDongCapDau(maDangChon.Value)) && dgCapDau.Items.Count > 0)
                 dgCapDau.SelectedIndex = 0;
-
-            CapNhatNhanThayDoiTam();
         }
 
         // =====================================================================
@@ -59,10 +43,10 @@ namespace GUI.Views.Pages
 
         private void NapTinhTrangNhienLieu(List<CapNhienLieuHienThi> toanBo)
         {
-            var ds = DanhMucMauBaoTri.DauMay.Select(dm =>
+            var ds = _duLieu.DauMayKhaiThac.Select(dm =>
             {
                 var cuaDauMay = toanBo.Where(nl => nl.MaDauMay == dm.MaDauMay)
-                                      .OrderByDescending(nl => nl.ThoiDiemBomDau)
+                                      .OrderByDescending(nl => nl.ThoiDiemBomDau).ThenByDescending(nl => nl.MaNhatKyDau)
                                       .ToList();
                 return new TinhTrangNhienLieuHienThi
                 {
@@ -114,14 +98,14 @@ namespace GUI.Views.Pages
             string muc = LayTagDangChon(cboMucTieuHao) ?? "ALL";
 
             var danhSach = toanBo.Where(nl => KhopBoLocCapDau(nl, tuKhoa, muc, _maDauMayLoc))
-                                 .OrderByDescending(nl => nl.ThoiDiemBomDau)
+                                 .OrderByDescending(nl => nl.ThoiDiemBomDau).ThenByDescending(nl => nl.MaNhatKyDau)
                                  .ToList();
 
             dgCapDau.ItemsSource = danhSach;
             txtBadgeCapDau.Text = danhSach.Count.ToString();
             txtTrongCapDau.Visibility = danhSach.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
-            var dmLoc = _maDauMayLoc.HasValue ? DanhMucMauBaoTri.TimDauMay(_maDauMayLoc.Value) : null;
+            var dmLoc = _maDauMayLoc.HasValue ? _duLieu.TimDauMay(_maDauMayLoc.Value) : null;
             bdLocDauMay.Visibility = dmLoc != null ? Visibility.Visible : Visibility.Collapsed;
             txtLocDauMay.Text = dmLoc != null ? $"Đầu máy: {dmLoc.SoHieuDauMay}" : "";
         }
@@ -204,7 +188,7 @@ namespace GUI.Views.Pages
 
             txtNlTieuDe.Text = $"{nl.SoHieuDauMay} · {nl.NoiCapDau}";
             txtNlMoTa.Text = $"Bơm lúc {nl.ThoiDiemBomDau:HH:mm dd/MM/yyyy} · {nl.TenNguoiCap}";
-            txtNlMa.Text = nl.LaThayDoiTam ? $"{nl.MaPhieu} · tạm" : nl.MaPhieu;
+            txtNlMa.Text = nl.MaPhieu;
 
             // --- Ket luan ---
             string muc = nl.MucDo;
@@ -242,7 +226,7 @@ namespace GUI.Views.Pages
 
             // --- Lich su cua dau may (moi nhat truoc) ---
             var lichSu = LayToanBoCapDau().Where(x => x.MaDauMay == nl.MaDauMay)
-                                          .OrderByDescending(x => x.ThoiDiemBomDau)
+                                          .OrderByDescending(x => x.ThoiDiemBomDau).ThenByDescending(x => x.MaNhatKyDau)
                                           .ToList();
             icNlLichSu.ItemsSource = lichSu;
             txtNlTieuDeLichSu.Text = $"LỊCH SỬ TIÊU HAO CỦA {nl.SoHieuDauMay} ({lichSu.Count})";
@@ -268,9 +252,9 @@ namespace GUI.Views.Pages
             var pnl = pnlNlSoLieu;
             pnl.Children.Clear();
             ThemDongThongSo(pnl, "Số lít trả nạp", $"{nl.SoLitTraNap:N2} lít");
-            ThemDongThongSo(pnl, "Thành tiền (chi phí)", nl.SoLitTraNap > 0
-                ? $"{nl.ChiPhi:N0} đ · {nl.ChiPhi / nl.SoLitTraNap:N0} đ/lít"
-                : $"{nl.ChiPhi:N0} đ");
+            ThemDongThongSo(pnl, "Thành tiền (chi phí)", nl.DonGiaVndLit > 0
+                ? $"{nl.ChiPhi:N0} đ · {nl.DonGiaVndLit:N0} đ/lít"
+                : "Không ghi đơn giá");
             ThemDongThongSo(pnl, "Mức nạp so với bồn", nl.DungTichBonDauLit > 0
                 ? $"{nl.TyLeBon:N1}% của {nl.DungTichBonDauLit:N0} lít"
                 : "—");
@@ -304,70 +288,78 @@ namespace GUI.Views.Pages
         private void CapPhatNhienLieu(int? maDauMay = null)
         {
             tabBaoTri.SelectedIndex = 1;
+            if (!KiemTraKetNoi()) return;
 
-            var dlg = new CapNhienLieuDialog(null, maDauMay) { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() != true || dlg.KetQua == null) return;
+            CapNhienLieuDTO? daLuu = null;
+            string? Luu(CapNhienLieuDTO nl)
+            {
+                if (!_service.LuuCapDau(nl, out string loi)) return loi;
+                daLuu = nl;
+                return null;
+            }
 
-            var nl = dlg.KetQua;
-            nl.MaNhatKyDau = _maTamKeTiep--;
-            _capDauTam[nl.MaNhatKyDau] = nl;
+            var dlg = new CapNhienLieuDialog(null, _duLieu, Luu, maDauMay) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true || daLuu == null) return;
 
-            LamMoiSauKhiLuuCapDau(nl);
-            BaoKetQuaLuuCapDau(nl, laLapMoi: true);
+            SauKhiLuuCapDau(daLuu.MaNhatKyDau, laLapMoi: true);
         }
 
         private void SuaCapDau()
         {
             if (dgCapDau.SelectedItem is not CapNhienLieuHienThi dangChon) return;
+            if (!KiemTraKetNoi()) return;
 
-            var dlg = new CapNhienLieuDialog(dangChon.SaoChep()) { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() != true || dlg.KetQua == null) return;
+            CapNhienLieuDTO? daLuu = null;
+            string? Luu(CapNhienLieuDTO nl)
+            {
+                if (!_service.LuuCapDau(nl, out string loi)) return loi;
+                daLuu = nl;
+                return null;
+            }
 
-            var nl = dlg.KetQua;
-            _capDauTam[nl.MaNhatKyDau] = nl;
+            var dlg = new CapNhienLieuDialog(dangChon.SaoChep(), _duLieu, Luu) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true || daLuu == null) return;
 
-            LamMoiSauKhiLuuCapDau(nl);
-            BaoKetQuaLuuCapDau(nl, laLapMoi: false);
+            SauKhiLuuCapDau(daLuu.MaNhatKyDau, laLapMoi: false);
         }
 
-        private void LamMoiSauKhiLuuCapDau(CapNhienLieuHienThi nl)
+        // Doc lai CSDL, ve lai 5 tab, chon phieu vua luu (xoa loc neu bi an) roi bao ket qua
+        private void SauKhiLuuCapDau(int maNhatKyDau, bool laLapMoi)
         {
-            LamMoiNhienLieu(giuDongChon: false, maChonSau: nl.MaNhatKyDau);
-
-            // Bo loc hien tai an mat phieu vua luu thi xoa loc de nguoi dung thay ngay
-            if ((dgCapDau.SelectedItem as CapNhienLieuHienThi)?.MaNhatKyDau != nl.MaNhatKyDau)
+            NapLaiTuCsdl();
+            LamMoiTatCa();
+            if (!ChonDongCapDau(maNhatKyDau))
             {
+                var vuaLuu = _duLieu.CapDau.FirstOrDefault(x => x.MaNhatKyDau == maNhatKyDau);
                 _dangNapDuLieu = true;
                 txtTimCapDau.Text = string.Empty;
                 cboMucTieuHao.SelectedIndex = 0;
                 _dangNapDuLieu = false;
-                if (_maDauMayLoc.HasValue && _maDauMayLoc != nl.MaDauMay) _maDauMayLoc = null;
-
-                LamMoiNhienLieu(giuDongChon: false, maChonSau: nl.MaNhatKyDau);
+                if (_maDauMayLoc.HasValue && _maDauMayLoc != vuaLuu?.MaDauMay) _maDauMayLoc = null;
+                LamMoiNhienLieu(giuDongChon: false, maChonSau: maNhatKyDau);
             }
 
-            LamMoiCanhBao();
+            var nl = _duLieu.CapDau.FirstOrDefault(x => x.MaNhatKyDau == maNhatKyDau);
+            if (nl != null) BaoKetQuaLuuCapDau(nl, laLapMoi);
         }
 
         private static void BaoKetQuaLuuCapDau(CapNhienLieuHienThi nl, bool laLapMoi)
         {
             string hanhDong = laLapMoi ? "Đã lập" : "Đã cập nhật";
-            string soLieu = $"{nl.SoLitTraNap:N0} lít · suất tiêu hao {nl.SuatTieuHaoSFC:N2} lít/10,000 tấn·km " +
+            string soLieu = $"{nl.SoLitTraNap:N0} lít · {nl.ChiPhi:N0} đ · suất tiêu hao {nl.SuatTieuHaoSFC:N2} lít/10,000 tấn·km " +
                             $"({nl.TyLeDinhMuc:N0}% định mức {nl.DinhMucSfc:N0}).";
 
             if (nl.CanhBaoVuotMuc)
             {
                 ThongBaoDialog.CanhBao(
-                    $"{hanhDong} phiếu cấp phát cho đầu máy {nl.SoHieuDauMay}: {soLieu}\n\n" +
-                    $"Tiêu hao VƯỢT ĐỊNH MỨC {nl.TyLeDinhMuc - 100m:N1}% — đã bật cờ cảnh báo vượt mức.\n" +
-                    "Phiếu đang hiển thị trên màn hình, chưa ghi vào CSDL.",
+                    $"{hanhDong} phiếu {nl.MaPhieu} cho đầu máy {nl.SoHieuDauMay}: {soLieu}\n\n" +
+                    $"Tiêu hao VƯỢT ĐỊNH MỨC {nl.TyLeDinhMuc - 100m:N1}% — đã bật cờ cảnh báo vượt mức.",
                     "Tiêu hao vượt định mức");
             }
             else
             {
                 ThongBaoDialog.ThanhCong(
-                    $"{hanhDong} phiếu cấp phát cho đầu máy {nl.SoHieuDauMay}: {soLieu}\n\n" +
-                    "Phiếu đang hiển thị trên màn hình, chưa ghi vào CSDL.",
+                    $"{hanhDong} phiếu {nl.MaPhieu} cho đầu máy {nl.SoHieuDauMay}: {soLieu}",
                     "Lưu phiếu cấp phát");
             }
         }

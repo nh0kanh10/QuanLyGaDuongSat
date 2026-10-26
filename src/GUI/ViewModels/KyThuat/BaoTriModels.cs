@@ -1,30 +1,31 @@
-﻿using GUI.Helpers;
+﻿using BUS.Services;
+using DTO.BaoTri;
+using GUI.Helpers;
 using System.Windows;
 using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
 
 namespace GUI.ViewModels.KyThuat
 {
     // =========================================================================
-    // Cac lop HIEN THI cua phan he Bao tri ky thuat & Canh bao an toan.
-    // Ten thuoc tinh trung ten cot trong schema baotri (script_tao_csdl_v2.sql)
-    // de sau nay doc DataRow that khong phai doi binding.
+    // Cac lop HIEN THI cua phan he Bao tri & sua chua.
+    // Ten thuoc tinh trung ten cot trong schema baotri (giu tu giai doan giao dien de khong doi binding).
+    // Tu 24/10 (back-end): du lieu doc tu CSDL qua BaoTriService (DTO.BaoTri) roi doi sang cac lop o day
+    // (BaoTriDuLieu); nguong / cong thuc / chu ky goi BUS.Services.QuyTacBaoTri - mot nguon duy nhat cho
+    // giao dien, Service va KiemTraXuatBenService. O day chi them mau, bieu tuong, chu hien thi.
     // =========================================================================
 
     // -------------------------------------------------------------------------
-    // NGUONG KHAM XE - trung cot tinh toan baotri.KhamXeKyThuat.DuDieuKienXuatBen:
-    //   ApLucHamBar >= 4.8 AND DoSutApBarPhut <= 0.20 AND DaCapNuoc = 1 AND DaXaVeSinh = 1
+    // NGUONG KHAM XE - trung cot tinh toan baotri.KhamXeKyThuat.DuDieuKienXuatBen
     // -------------------------------------------------------------------------
     public static class NguongKhamXe
     {
-        public const decimal ApLucHamToiThieuBar = 4.8m;
-        public const decimal DoSutApToiDaBarPhut = 0.20m;
-
-        // Rang buoc CHECK cua cot (khong phai nguong dat / khong dat)
-        public const decimal ApLucHamGioiHanBar = 10.0m;      // ApLucHamBar > 0 AND <= 10.0, DECIMAL(3,1)
-        public const decimal DoSutApGioiHanBarPhut = 5.0m;    // DoSutApBarPhut >= 0 AND <= 5.0, DECIMAL(3,2)
+        public const decimal ApLucHamToiThieuBar = QuyTacBaoTri.ApLucHamToiThieuBar;
+        public const decimal DoSutApToiDaBarPhut = QuyTacBaoTri.DoSutApToiDaBarPhut;
+        public const decimal ApLucHamGioiHanBar = QuyTacBaoTri.ApLucHamGioiHanBar;
+        public const decimal DoSutApGioiHanBarPhut = QuyTacBaoTri.DoSutApGioiHanBarPhut;
 
         public static bool DuDieuKienXuatBen(decimal apLuc, decimal sutAp, bool daCapNuoc, bool daXaVeSinh)
-            => apLuc >= ApLucHamToiThieuBar && sutAp <= DoSutApToiDaBarPhut && daCapNuoc && daXaVeSinh;
+            => QuyTacBaoTri.DuDieuKienXuatBen(apLuc, sutAp, daCapNuoc, daXaVeSinh);
 
         // Bon hang muc doi chieu; gia tri null = chua nhap (dung cho xem truoc trong dialog).
         // Dinh dang "0.0##" / "0.00#" de khong lam tron so dang go do (4.85 khong hien thanh 4.9).
@@ -59,26 +60,35 @@ namespace GUI.ViewModels.KyThuat
     }
 
     // -------------------------------------------------------------------------
-    // 1. DOAN TAU CAN KHAM (vanhanh.DoanTau JOIN ChuyenTau, MacTauMau, Ga, DauMay)
+    // 1. DOAN TAU (vanhanh.DoanTau JOIN ChuyenTau, MacTauMau, Ga, DauMay)
     // -------------------------------------------------------------------------
-    public record DoanTauKhamXe(
-        int MaDoanTau,
-        int MaChuyenTau,
-        string SoHieuMacTau,
-        string LoaiTau,
-        DateTime NgayXuatPhat,
-        DateTime GioXuatPhatKH,
-        string TenGaDi,
-        string TenGaDen,
-        string SoHieuDauMayChinh,
-        string? SoHieuDauMayDay,
-        int TongSoToa,
-        decimal TongChieuDaiM,
-        decimal TongTrongLuongTan,
-        bool DaDuyetAnToan,
-        string TrangThaiChuyen)
+    public class DoanTauKhamXe
     {
-        public string HanhTrinh => $"{TenGaDi} → {TenGaDen}";
+        public DoanTauKhamXe(DoanTauBaoTriDTO goc) { Goc = goc; }
+
+        public DoanTauBaoTriDTO Goc { get; }
+
+        public int MaDoanTau => Goc.MaDoanTau;
+        public int MaChuyenTau => Goc.MaChuyenTau;
+        public string SoHieuMacTau => Goc.SoHieuMacTau;
+        public string LoaiTau => Goc.LoaiTau;
+        public DateTime NgayXuatPhat => Goc.NgayXuatPhat;
+        public DateTime GioXuatPhatKH => Goc.GioXuatPhatKH;
+        public string TenGaDi => Goc.TenGaDi;
+        public string TenGaDen => Goc.TenGaDen;
+        public int MaDauMayChinh => Goc.MaDauMayChinh;
+        public int? MaDauMayDay => Goc.MaDauMayDay;
+        public string SoHieuDauMayChinh => Goc.SoHieuDauMayChinh;
+        public string? SoHieuDauMayDay => Goc.SoHieuDauMayDay;
+        public int TongSoToa => Goc.TongSoToa;
+        public decimal TongChieuDaiM => Goc.TongChieuDaiM;
+        public decimal TongTrongLuongTan => Goc.TongTrongLuongTan;
+        public bool DaDuyetAnToan => Goc.DaDuyetAnToan;
+        public string TrangThaiChuyen => Goc.TrangThaiChuyen;
+        public bool DaXuatPhat => Goc.DaXuatPhat;
+        public bool DaKetThuc => Goc.DaKetThuc;
+
+        public string HanhTrinh => Goc.HanhTrinh;
         public string TenHienThi => $"{SoHieuMacTau} · {NgayXuatPhat:dd/MM/yyyy} · {HanhTrinh}";
 
         public string NhanDauMay => string.IsNullOrEmpty(SoHieuDauMayDay)
@@ -100,15 +110,15 @@ namespace GUI.ViewModels.KyThuat
         public override string ToString() => TenHienThi;
     }
 
-    // Tai khoan (phanquyen.TaiKhoan) kem don vi de hien thi: nguoi kham xe, nguoi cap dau
+    // Tai khoan ky phieu (phanquyen.TaiKhoan vai tro KY_THUAT) kem don vi de hien thi
     public record TaiKhoanMau(int MaTaiKhoan, string TenDangNhap, string HoTenHienThi, string DonVi)
     {
-        public string TenHienThi => $"{HoTenHienThi} — {DonVi}";
+        public string TenHienThi => DonVi.Length > 0 ? $"{HoTenHienThi} — {DonVi}" : HoTenHienThi;
         public override string ToString() => TenHienThi;
     }
 
     // -------------------------------------------------------------------------
-    // 2. BIEN BAN KHAM XE KY THUAT (baotri.KhamXeKyThuat)
+    // 2. BIEN BAN KHAM XE KY THUAT (baotri.KhamXeKyThuat) - chi lap moi, khong sua (quyet dinh 24/10)
     // -------------------------------------------------------------------------
     public class KhamXeHienThi
     {
@@ -122,11 +132,7 @@ namespace GUI.ViewModels.KyThuat
         public bool DaXaVeSinh { get; set; }
         public string GhiChuKyThuat { get; set; } = "";
         public DateTime ThoiDiemKham { get; set; }
-
-        // Chi phi kham xe / sua chua phat sinh (VND) - khong co cot rieng trong CSDL,
-        // them tren giao dien de phuc vu tab "Chi phi & Hieu qua" (F7). Cho phep = 0
-        // (kham dinh ky khong phat sinh chi phi khac phuc).
-        public decimal ChiPhi { get; set; }
+        public decimal ChiPhi { get; set; }      // VND, migration V20261024_1000
 
         // --- Cot JOIN de hien thi ---
         public string SoHieuMacTau { get; set; } = "";
@@ -135,9 +141,6 @@ namespace GUI.ViewModels.KyThuat
         public string TenGaDen { get; set; } = "";
         public string SoHieuDauMayChinh { get; set; } = "";
         public string TenNguoiKham { get; set; } = "";
-
-        // Trang goi dat co nay cho ban ghi them / sua tren giao dien (chua ghi CSDL)
-        public bool LaThayDoiTam { get; set; }
 
         // Cot tinh toan PERSISTED trong CSDL: tinh lai dung cong thuc
         public bool DuDieuKienXuatBen
@@ -149,25 +152,14 @@ namespace GUI.ViewModels.KyThuat
         public int SoHangMucDat
             => (DatApLucHam ? 1 : 0) + (DatSutAp ? 1 : 0) + (DaCapNuoc ? 1 : 0) + (DaXaVeSinh ? 1 : 0);
 
-        public string MaBienBan => MaKhamXe > 0 ? $"BB-{MaKhamXe:0000}" : $"MỚI-{-MaKhamXe:00}";
+        public string MaBienBan => $"BB-{MaKhamXe:0000}";
         public string HanhTrinh => $"{TenGaDi} → {TenGaDen}";
 
         public string MauApLuc => DatApLucHam ? "#15803D" : "#B91C1C";
         public string MauSutAp => DatSutAp ? "#15803D" : "#B91C1C";
 
         // Tom tat cac hang muc khong dat (hien trong luoi va the doan tau)
-        public string TomTatLoi
-        {
-            get
-            {
-                var loi = new List<string>();
-                if (!DatApLucHam) loi.Add($"Áp lực hãm {ApLucHamBar:0.0} bar");
-                if (!DatSutAp) loi.Add($"Sụt áp {DoSutApBarPhut:0.00} bar/phút");
-                if (!DaCapNuoc) loi.Add("Chưa cấp nước");
-                if (!DaXaVeSinh) loi.Add("Chưa xả vệ sinh");
-                return loi.Count == 0 ? "Đạt toàn bộ hạng mục" : string.Join(" · ", loi);
-            }
-        }
+        public string TomTatLoi => QuyTacBaoTri.TomTatLoi(ToDTO());
 
         public List<HangMucKhamXe> HangMuc
             => NguongKhamXe.TaoHangMuc(ApLucHamBar, DoSutApBarPhut, DaCapNuoc, DaXaVeSinh);
@@ -182,8 +174,12 @@ namespace GUI.ViewModels.KyThuat
             SoHieuDauMayChinh = dt.SoHieuDauMayChinh;
         }
 
-        // Ban sao de dialog sua tren do, bam Huy thi ban goc khong bi anh huong
-        public KhamXeHienThi SaoChep() => (KhamXeHienThi)MemberwiseClone();
+        public KhamXeDTO ToDTO() => new()
+        {
+            MaKhamXe = MaKhamXe, MaDoanTau = MaDoanTau, MaNguoiKham = MaNguoiKham, ApLucHamBar = ApLucHamBar,
+            DoSutApBarPhut = DoSutApBarPhut, DaCapNuoc = DaCapNuoc, DaXaVeSinh = DaXaVeSinh,
+            GhiChuKyThuat = GhiChuKyThuat, ThoiDiemKham = ThoiDiemKham, ChiPhi = ChiPhi
+        };
     }
 
     // -------------------------------------------------------------------------
@@ -230,48 +226,19 @@ namespace GUI.ViewModels.KyThuat
 
     // =========================================================================
     // 4. NHIEN LIEU (baotri.NhatKyCapNhienLieu)
-    //
-    // CSDL chi luu SuatTieuHaoSFC NHAP TAY va khong co cot dinh muc
-    // (xem Phan_Tich_CSDL_QuanLyDuongSatV2.md muc F7 va de xuat them DongDauMay.DinhMucSFC).
-    // Giao dien tinh: SFC = so lit x 10.000 / (tan keo x km)  [lit / 10.000 tan-km]
-    // roi so voi dinh muc THAM KHAO theo dong may de dat CanhBaoVuotMuc.
+    // SFC = so lit x 10.000 / (tan keo x km), dinh muc theo dong may (DongDauMay.DinhMucSFC, tham khao).
     // =========================================================================
     public static class DinhMucNhienLieu
     {
-        public const decimal HeSoQuyDoi = 10_000m;
-
-        // Don gia dau DO tham khao (VND/lit) - du lieu mau de tinh "Thanh tien" trong
-        // dialog cap nhien lieu, CHUA doi chieu gia thi truong / hop dong cung cap thuc te.
-        public const decimal DonGiaMacDinhVndLit = 21_000m;
-        public const decimal NguongSatDinhMuc = 90m;      // % dinh muc: tu day tro len coi la "sat dinh muc"
+        public const decimal HeSoQuyDoi = QuyTacBaoTri.HeSoQuyDoi;
+        public const decimal DonGiaMacDinhVndLit = QuyTacBaoTri.DonGiaGoiY;
+        public const decimal NguongSatDinhMuc = QuyTacBaoTri.NguongSatDinhMuc;
         public const decimal ThangHienThiToiDa = 150m;    // thanh tien do ve tu 0 den 150% dinh muc
+        public const decimal SfcGioiHan = QuyTacBaoTri.SfcGioiHan;
 
-        // Gioi han theo kieu cot
-        public const decimal SoLitGioiHan = 999_999.99m;     // DECIMAL(8,2), CHECK > 0
-        public const decimal TrongLuongGioiHan = 99_999.99m; // DECIMAL(7,2), CHECK > 0
-        public const decimal CuLyGioiHan = 99_999.9m;        // DECIMAL(6,1), CHECK > 0
-        public const decimal SfcGioiHan = 999.99m;           // DECIMAL(5,2), CHECK >= 0
-
-        // Dinh muc THAM KHAO de mo phong - chua doi chieu dinh muc chinh thuc,
-        // can kiem lai truoc khi dua vao bao cao (giong TaiTrongTrucToiDaTan).
-        public static decimal LayDinhMuc(string? maDongCode) => maDongCode?.ToUpperInvariant() switch
-        {
-            "D19E" => 90m,
-            "D13E" => 100m,
-            _ => 95m
-        };
-
-        public static decimal? TinhSfc(decimal soLit, decimal tanKeo, decimal cuLyKm)
-            => soLit > 0 && tanKeo > 0 && cuLyKm > 0
-                ? Math.Round(soLit * HeSoQuyDoi / (tanKeo * cuLyKm), 2)
-                : null;
-
-        public static decimal TinhTyLe(decimal sfc, decimal dinhMuc)
-            => dinhMuc > 0 ? Math.Round(sfc / dinhMuc * 100m, 1) : 0m;
-
-        // VUOT | SAT | DAT
-        public static string XepMuc(decimal tyLe)
-            => tyLe > 100m ? "VUOT" : tyLe >= NguongSatDinhMuc ? "SAT" : "DAT";
+        public static decimal? TinhSfc(decimal soLit, decimal tanKeo, decimal cuLyKm) => QuyTacBaoTri.TinhSfc(soLit, tanKeo, cuLyKm);
+        public static decimal TinhTyLe(decimal sfc, decimal dinhMuc) => QuyTacBaoTri.TinhTyLe(sfc, dinhMuc);
+        public static string XepMuc(decimal tyLe) => QuyTacBaoTri.XepMuc(tyLe);
 
         public static string MauChu(string muc) => muc switch { "VUOT" => "#B91C1C", "SAT" => "#B45309", "DAT" => "#15803D", _ => "#64748B" };
         public static string MauNen(string muc) => muc switch { "VUOT" => "#FEF2F2", "SAT" => "#FFFBEB", "DAT" => "#F0FDF4", _ => "#F8FAFC" };
@@ -293,11 +260,12 @@ namespace GUI.ViewModels.KyThuat
         }
     }
 
-    // Dau may kem dung tich bon dau cua dong may (phuongtien.DauMay JOIN DongDauMay)
+    // Dau may (phuongtien.DauMay JOIN DongDauMay) - dung chung cho cap dau, bao duong, canh bao
     public record DauMayCapDau(int MaDauMay, string SoHieuDauMay, string MaDongCode, string DonViQuanLy,
-                               string TrangThai, int DungTichBonDauLit)
+                               string TrangThai, int DungTichBonDauLit, decimal DinhMucSfc, int CongSuatHP,
+                               decimal SoKmTichLuy)
     {
-        public decimal DinhMucSfc => DinhMucNhienLieu.LayDinhMuc(MaDongCode);
+        public bool NgungKhaiThac => TrangThai == PhuongTienService.NgungKhaiThac;
         public string TenHienThi => $"{SoHieuDauMay} — {DonViQuanLy}";
         public override string ToString() => TenHienThi;
     }
@@ -315,24 +283,21 @@ namespace GUI.ViewModels.KyThuat
         public bool CanhBaoVuotMuc { get; set; }
         public int? MaNguoiCap { get; set; }
         public DateTime ThoiDiemBomDau { get; set; }
-
-        // Thanh tien = so lit x don gia/lit (VND) - don gia la du lieu mau, khong co cot
-        // rieng trong CSDL. Them de phuc vu tab "Chi phi & Hieu qua" (F7).
-        public decimal ChiPhi { get; set; }
+        public decimal DonGiaVndLit { get; set; }
+        public decimal ChiPhi { get; set; }          // cot tinh = so lit x don gia
+        public byte[]? PhienBan { get; set; }
 
         // --- Cot JOIN de hien thi ---
         public string SoHieuDauMay { get; set; } = "";
         public string MaDongCode { get; set; } = "";
         public int DungTichBonDauLit { get; set; }
+        public decimal DinhMucSfc { get; set; }
         public string TenNguoiCap { get; set; } = "";
 
-        public bool LaThayDoiTam { get; set; }
-
-        public decimal DinhMucSfc => DinhMucNhienLieu.LayDinhMuc(MaDongCode);
         public decimal TyLeDinhMuc => DinhMucNhienLieu.TinhTyLe(SuatTieuHaoSFC, DinhMucSfc);
         public string MucDo => DinhMucNhienLieu.XepMuc(TyLeDinhMuc);
 
-        public string MaPhieu => MaNhatKyDau > 0 ? $"NL-{MaNhatKyDau:0000}" : $"MỚI-{-MaNhatKyDau:00}";
+        public string MaPhieu => $"NL-{MaNhatKyDau:0000}";
         public string NhanCongTac => $"{TrongLuongKeoTan:N0} t · {CuLyChayKm:N0} km";
         public string NhanTyLe => $"{TyLeDinhMuc:N0}% ĐM";
         public string NhanMucDo => DinhMucNhienLieu.NhanMuc(MucDo);
@@ -351,14 +316,16 @@ namespace GUI.ViewModels.KyThuat
             SoHieuDauMay = dm.SoHieuDauMay;
             MaDongCode = dm.MaDongCode;
             DungTichBonDauLit = dm.DungTichBonDauLit;
+            DinhMucSfc = dm.DinhMucSfc;
         }
 
-        // Tinh lai 2 cot SuatTieuHaoSFC + CanhBaoVuotMuc tu so do (CSDL de nhap tay)
-        public void TinhLaiSuatTieuHao()
+        public CapNhienLieuDTO ToDTO() => new()
         {
-            SuatTieuHaoSFC = DinhMucNhienLieu.TinhSfc(SoLitTraNap, TrongLuongKeoTan, CuLyChayKm) ?? 0m;
-            CanhBaoVuotMuc = SuatTieuHaoSFC > DinhMucSfc;
-        }
+            MaNhatKyDau = MaNhatKyDau, MaDauMay = MaDauMay, NoiCapDau = NoiCapDau, SoLitTraNap = SoLitTraNap,
+            TrongLuongKeoTan = TrongLuongKeoTan, CuLyChayKm = CuLyChayKm, SuatTieuHaoSFC = SuatTieuHaoSFC,
+            CanhBaoVuotMuc = CanhBaoVuotMuc, MaNguoiCap = MaNguoiCap, ThoiDiemBomDau = ThoiDiemBomDau,
+            DonGiaVndLit = DonGiaVndLit, ChiPhi = ChiPhi, PhienBan = PhienBan
+        };
 
         public CapNhienLieuHienThi SaoChep() => (CapNhienLieuHienThi)MemberwiseClone();
     }
@@ -414,41 +381,22 @@ namespace GUI.ViewModels.KyThuat
     }
 
     // =========================================================================
-    // 5. BAO DUONG DINH KY (baotri.NhatKyBaoDuong)
-    //
-    // CSDL chi ghi tung lan bao duong (cap R1/R2/D1/D2) va khong co bang chu ky
-    // (Phan_Tich_CSDL de xuat bang DinhMucBaoDuong). Quy uoc giao dien:
-    //   - Dau may: R1 moi 50,000 km, R2 moi 150,000 km (dung hang so cua
-    //     PhuongTienService); R2 bao gom R1. Tinh tu lan bao duong gan nhat,
-    //     chua co lich su thi tinh tu 0 km (=> D13E-701 qua han R2, khop Q4_4).
-    //   - Toa xe (CSDL khong co dong ho km cho toa): D1 moi 180 ngay, D2 moi 360
-    //     ngay, D2 bao gom D1 - CHU KY THAM KHAO, chua doi chieu quy trinh VNR.
+    // 5. BAO DUONG DINH KY (baotri.NhatKyBaoDuong) - chu ky o QuyTacBaoTri (tham khao):
+    //   dau may R1 50,000 km, R2 150,000 km (R2 bao gom R1), tinh tu lan bao duong gan nhat, chua co
+    //   lich su thi tinh tu 0 km; toa xe D1 180 ngay, D2 360 ngay (D2 bao gom D1).
     // =========================================================================
     public static class ChuKyBaoDuong
     {
-        public const decimal ChuKyR1Km = BUS.Services.PhuongTienService.MocBaoDuongR1;   // 50,000
-        public const decimal ChuKyR2Km = BUS.Services.PhuongTienService.MocBaoDuongR2;   // 150,000
-        public const int ChuKyD1Ngay = 180;
-        public const int ChuKyD2Ngay = 360;
-        public const decimal NguongSapToi = 90m;            // % chu ky: tu day tro len la "sap toi han"
-        public const decimal SoKmGioiHan = 99_999_999.9m;   // DECIMAL(9,1), CHECK >= 0
+        public const decimal ChuKyR1Km = QuyTacBaoTri.ChuKyR1Km;
+        public const decimal ChuKyR2Km = QuyTacBaoTri.ChuKyR2Km;
+        public const int ChuKyD1Ngay = QuyTacBaoTri.ChuKyD1Ngay;
+        public const int ChuKyD2Ngay = QuyTacBaoTri.ChuKyD2Ngay;
+        public const decimal NguongSapToi = QuyTacBaoTri.NguongSapToi;
+        public const decimal SoKmGioiHan = QuyTacBaoTri.SoKmGioiHan;
 
-        public static string[] CapCua(string loaiPhuongTien)
-            => loaiPhuongTien == "DAU_MAY" ? new[] { "R1", "R2" } : new[] { "D1", "D2" };
-
-        // Chi phi binh quan THAM KHAO theo cap bao duong (VND), dung lam gia tri de xuat
-        // trong dialog va de du phong chi phi ky toi o tab "Chi phi & Hieu qua" (F7).
-        // Chua doi chieu don gia vat tu / nhan cong thuc te - chi mo phong R2 > R1, D2 > D1.
-        public static decimal ChiPhiThamKhao(string cap) => cap switch
-        {
-            "R1" => 8_000_000m,
-            "R2" => 25_000_000m,
-            "D1" => 5_000_000m,
-            "D2" => 15_000_000m,
-            _ => 0m
-        };
-
-        public static bool LaCapCao(string cap) => cap is "R2" or "D2";
+        public static string[] CapCua(string loaiPhuongTien) => QuyTacBaoTri.CapCua(loaiPhuongTien);
+        public static decimal ChiPhiThamKhao(string cap) => QuyTacBaoTri.ChiPhiThamKhao(cap);
+        public static bool LaCapCao(string cap) => QuyTacBaoTri.LaCapCao(cap);
 
         public static string MoTaChuKy(string cap) => cap switch
         {
@@ -468,67 +416,44 @@ namespace GUI.ViewModels.KyThuat
             "R1" => "#EFF6FF", "R2" => "#F5F3FF", "D1" => "#F0FDFA", "D2" => "#FFFBEB", _ => "#F1F5F9"
         };
 
-        // Tien do tung cap cua mot phuong tien, dua tren lich su bao duong cua chinh no
+        // Tien do tung cap cua mot phuong tien (goi QuyTacBaoTri.TinhTienDo roi gan lai phieu hien thi)
         public static List<TienDoCapBaoDuong> TinhTienDo(PhuongTienBaoDuong pt, IEnumerable<BaoDuongHienThi> lichSuCuaPhuongTien)
         {
-            var lichSu = lichSuCuaPhuongTien.OrderByDescending(x => x.ThoiDiemHoanThanh).ToList();
-            var ketQua = new List<TienDoCapBaoDuong>();
-
-            foreach (string cap in CapCua(pt.LoaiPhuongTien))
-            {
-                // Cap thap duoc "lam moi" boi ca cap cao (R2 bao gom R1, D2 bao gom D1)
-                var lanGanNhat = lichSu.FirstOrDefault(x => x.CapBaoDuong == cap ||
-                                                            (!LaCapCao(cap) && LaCapCao(x.CapBaoDuong)));
-
-                if (pt.LoaiPhuongTien == "DAU_MAY")
-                {
-                    decimal chuKy = cap == "R1" ? ChuKyR1Km : ChuKyR2Km;
-                    decimal moc = (lanGanNhat?.SoKmTaiThoiDiem ?? 0m) + chuKy;
-                    decimal daChay = pt.SoKmTichLuy - (lanGanNhat?.SoKmTaiThoiDiem ?? 0m);
-                    ketQua.Add(new TienDoCapBaoDuong(cap, lanGanNhat, true, chuKy, daChay, moc));
-                }
-                else
-                {
-                    int chuKy = cap == "D1" ? ChuKyD1Ngay : ChuKyD2Ngay;
-                    if (lanGanNhat == null)
-                    {
-                        // Toa khong co ngay dua vao khai thac => khong co moc de tinh
-                        ketQua.Add(new TienDoCapBaoDuong(cap, null, false, chuKy, null, null));
-                    }
-                    else
-                    {
-                        decimal soNgay = (decimal)(DateTime.Now - lanGanNhat.ThoiDiemHoanThanh).TotalDays;
-                        ketQua.Add(new TienDoCapBaoDuong(cap, lanGanNhat, false, chuKy, Math.Floor(soNgay), chuKy));
-                    }
-                }
-            }
-            return ketQua;
+            var theoDto = lichSuCuaPhuongTien.Select(x => (Dto: x.ToDTO(), HienThi: x)).ToList();
+            var tienDo = QuyTacBaoTri.TinhTienDo(pt.LoaiPhuongTien, pt.SoKmTichLuy, theoDto.Select(x => x.Dto), DateTime.Now);
+            return tienDo.Select(t => new TienDoCapBaoDuong(t, theoDto.FirstOrDefault(x => ReferenceEquals(x.Dto, t.LanGanNhat)).HienThi))
+                         .ToList();
         }
 
         // Cap can chu y nhat: qua han > sap toi > binh thuong > chua co; cung muc thi uu tien cap cao, roi % lon
         public static TienDoCapBaoDuong? CapCanChuY(IEnumerable<TienDoCapBaoDuong> tienDo)
-            => tienDo.OrderByDescending(t => t.MucNghiemTrong)
-                     .ThenByDescending(t => LaCapCao(t.Cap) && t.MucNghiemTrong >= 2)
-                     .ThenByDescending(t => t.TyLe)
-                     .FirstOrDefault();
+        {
+            var ds = tienDo.ToList();
+            var chon = QuyTacBaoTri.CapCanChuY(ds.Select(t => t.Goc));
+            return chon == null ? null : ds.First(t => ReferenceEquals(t.Goc, chon));
+        }
     }
 
-    // Tien do mot cap bao duong. Dau may tinh theo km, toa xe theo ngay.
-    // DaDung: km da chay / so ngay ke tu lan bao duong gan nhat; null = chua co moc.
-    public record TienDoCapBaoDuong(string Cap, BaoDuongHienThi? LanGanNhat, bool TheoKm,
-                                    decimal ChuKy, decimal? DaDung, decimal? MocKeTiep)
+    // Tien do mot cap bao duong (bao lop BUS TienDoBaoDuongDTO, them chu / mau / thanh %)
+    public class TienDoCapBaoDuong
     {
-        public decimal TyLe => DaDung.HasValue && ChuKy > 0 ? Math.Round(DaDung.Value / ChuKy * 100m, 1) : 0m;
+        public TienDoCapBaoDuong(TienDoBaoDuongDTO goc, BaoDuongHienThi? lanGanNhat)
+        {
+            Goc = goc;
+            LanGanNhat = lanGanNhat;
+        }
 
-        // QUA_HAN | SAP_TOI | BINH_THUONG | CHUA_CO
-        public string TrangThai => !DaDung.HasValue ? "CHUA_CO"
-                                 : TyLe >= 100m ? "QUA_HAN"
-                                 : TyLe >= ChuKyBaoDuong.NguongSapToi ? "SAP_TOI"
-                                 : "BINH_THUONG";
+        public TienDoBaoDuongDTO Goc { get; }
+        public BaoDuongHienThi? LanGanNhat { get; }
 
-        public int MucNghiemTrong => TrangThai switch { "QUA_HAN" => 3, "SAP_TOI" => 2, "BINH_THUONG" => 1, _ => 0 };
-
-        private string DonVi => TheoKm ? "km" : "ngày";
+        public string Cap => Goc.Cap;
+        public bool TheoKm => Goc.TheoKm;
+        public decimal ChuKy => Goc.ChuKy;
+        public decimal? DaDung => Goc.DaDung;
+        public decimal? MocKeTiep => Goc.MocKeTiep;
+        public decimal TyLe => Goc.TyLe;
+        public string TrangThai => Goc.TrangThai;
+        public int MucNghiemTrong => Goc.MucNghiemTrong;
 
         public string NhanTrangThai => TrangThai switch
         {
@@ -548,15 +473,7 @@ namespace GUI.ViewModels.KyThuat
         };
 
         // "còn 1,500 km" / "quá 60,000 km" / "còn 12 ngày"
-        public string ConLai
-        {
-            get
-            {
-                if (!DaDung.HasValue) return "—";
-                decimal con = ChuKy - DaDung.Value;
-                return con >= 0 ? $"còn {con:N0} {DonVi}" : $"quá {-con:N0} {DonVi}";
-            }
-        }
+        public string ConLai => DaDung.HasValue ? KiemTraXuatBenService.MoTaConLai(Goc) : "—";
 
         public string MoTaMoc => !MocKeTiep.HasValue ? $"Chưa có lần {Cap} để tính mốc · {ChuKyBaoDuong.MoTaChuKy(Cap)}"
             : TheoKm ? $"Mốc kế tiếp {MocKeTiep:N0} km · {ChuKyBaoDuong.MoTaChuKy(Cap)}"
@@ -574,9 +491,10 @@ namespace GUI.ViewModels.KyThuat
 
     // Phuong tien co the bao duong: dau may (phuongtien.DauMay) hoac toa xe (phuongtien.ToaXe)
     public record PhuongTienBaoDuong(string LoaiPhuongTien, int MaPhuongTien, string SoHieu, string MoTa,
-                                     decimal SoKmTichLuy)
+                                     decimal SoKmTichLuy, string TrangThai, bool DangChay)
     {
         public bool LaDauMay => LoaiPhuongTien == "DAU_MAY";
+        public bool NgungKhaiThac => TrangThai == PhuongTienService.NgungKhaiThac;
         public string Khoa => $"{LoaiPhuongTien}:{MaPhuongTien}";
         public string NhanLoai => LaDauMay ? "Đầu máy" : "Toa xe";
         public string TenHienThi => $"{SoHieu} — {MoTa}";
@@ -595,21 +513,17 @@ namespace GUI.ViewModels.KyThuat
         public string GhiChuKyThuat { get; set; } = "";
         public int? MaNguoiThucHien { get; set; }
         public DateTime ThoiDiemHoanThanh { get; set; }
-
-        // Chi phi bao duong (VND) - du lieu mau/tham khao, khong co cot rieng trong CSDL.
-        // Them de phuc vu tab "Chi phi & Hieu qua" (F7).
-        public decimal ChiPhi { get; set; }
+        public decimal ChiPhi { get; set; }      // VND, migration V20261024_1000
+        public byte[]? PhienBan { get; set; }
 
         // --- Cot JOIN de hien thi ---
         public string SoHieuPhuongTien { get; set; } = "";
         public string MoTaPhuongTien { get; set; } = "";
         public string TenNguoiThucHien { get; set; } = "";
 
-        public bool LaThayDoiTam { get; set; }
-
         public bool LaDauMay => LoaiPhuongTien == "DAU_MAY";
         public string KhoaPhuongTien => $"{LoaiPhuongTien}:{(LaDauMay ? MaDauMay : MaToaXe)}";
-        public string MaPhieu => MaBaoDuong > 0 ? $"BD-{MaBaoDuong:0000}" : $"MỚI-{-MaBaoDuong:00}";
+        public string MaPhieu => $"BD-{MaBaoDuong:0000}";
         public string NhanLoai => LaDauMay ? "Đầu máy" : "Toa xe";
         public SymbolRegular BieuTuongLoai => LaDauMay ? SymbolRegular.Engine24 : SymbolRegular.VehicleSubway24;
         public string MauCap => ChuKyBaoDuong.MauCap(CapBaoDuong);
@@ -624,6 +538,13 @@ namespace GUI.ViewModels.KyThuat
             SoHieuPhuongTien = pt.SoHieu;
             MoTaPhuongTien = pt.MoTa;
         }
+
+        public BaoDuongDTO ToDTO() => new()
+        {
+            MaBaoDuong = MaBaoDuong, LoaiPhuongTien = LoaiPhuongTien, MaDauMay = MaDauMay, MaToaXe = MaToaXe,
+            CapBaoDuong = CapBaoDuong, SoKmTaiThoiDiem = SoKmTaiThoiDiem, GhiChuKyThuat = GhiChuKyThuat,
+            MaNguoiThucHien = MaNguoiThucHien, ThoiDiemHoanThanh = ThoiDiemHoanThanh, ChiPhi = ChiPhi, PhienBan = PhienBan
+        };
 
         public BaoDuongHienThi SaoChep() => (BaoDuongHienThi)MemberwiseClone();
     }

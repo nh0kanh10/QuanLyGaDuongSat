@@ -165,6 +165,10 @@ namespace DTO.Common
         public const string QuanLyHoSoNhanVien = "STAFF_EDIT";      // them / sua ho so nhan vien
         public const string PhanCongKipLai = "CREW_ASSIGN";         // lap / sua / huy kip lai
         public const string NhanBanKipLai = "CREW_CHECKIN";         // kiem tra len ban, nhan ban, ban giao
+
+        // Phan he Bao tri (Dat, Sprint 2). Kham xe + duyet an toan dung NghiemThuKhamXe (da co trong seed);
+        // ma duoi de xuat, cung lo trinh nhu tren (SRS: KY_THUAT, QUAN_LY)
+        public const string GhiNhatKyBaoTri = "MAINTENANCE_LOG";    // cap nhien lieu, bao duong dinh ky
     }
 
     // =========================================================================

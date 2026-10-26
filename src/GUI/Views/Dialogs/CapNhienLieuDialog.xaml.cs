@@ -1,4 +1,6 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using BUS.Services;
+using DTO.BaoTri;
+using GUI.ViewModels.KyThuat;
 using GUI.Helpers;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,32 +14,34 @@ namespace GUI.Views.Dialogs
     // =========================================================================
     // DIALOG LAP / CAP NHAT PHIEU CAP PHAT NHIEN LIEU (baotri.NhatKyCapNhienLieu)
     //
-    // Giai doan dung giao dien: chi kiem tra du lieu nhap va tra ve doi tuong
-    // CapNhienLieuHienThi. Suat tieu hao (SFC) va co vuot dinh muc duoc TINH
-    // tu so lit / tan keo / cu ly (CSDL hien de nhap tay) - xem DinhMucNhienLieu.
+    // Tu 24/10: kiem tra bang QuyTacBaoTri.KiemTraCapDau (cung ham Service dung) roi goi ham
+    // luu cua trang (BaoTriService.LuuCapDau). Suat tieu hao (SFC) + co vuot dinh muc + thanh
+    // tien do Service tinh lai khi ghi; o day chi xem truoc. Dinh muc + dung tich bon doc tu
+    // dong may (phuongtien.DongDauMay). Sua: giu dau may + thoi diem bom, ghi theo PhienBan.
     // =========================================================================
     public partial class CapNhienLieuDialog : Window
     {
         private readonly CapNhienLieuHienThi? _banGoc;   // null = lap phieu moi
+        private readonly BaoTriDuLieu _duLieu;
+        private readonly Func<CapNhienLieuDTO, string?> _luu;
         private readonly bool _dangKhoiTao;
 
-        public CapNhienLieuHienThi? KetQua { get; private set; }
-
-        public CapNhienLieuDialog(CapNhienLieuHienThi? banGoc, int? maDauMayMacDinh = null)
+        public CapNhienLieuDialog(CapNhienLieuHienThi? banGoc, BaoTriDuLieu duLieu, Func<CapNhienLieuDTO, string?> luu,
+                                  int? maDauMayMacDinh = null)
         {
             _dangKhoiTao = true;
             InitializeComponent();
 
             _banGoc = banGoc;
+            _duLieu = duLieu;
+            _luu = luu;
 
             ONhapSoThucHelper.Gan(txtSoLit, 2, coDinhSoLe: false);
             ONhapSoThucHelper.Gan(txtTanKeo, 2, coDinhSoLe: false);
             ONhapSoThucHelper.Gan(txtCuLy, 1, coDinhSoLe: false);
             ONhapSoThucHelper.Gan(txtDonGia, 0, coDinhSoLe: false);
 
-            cboDauMay.ItemsSource = DanhMucMauBaoTri.DauMay;
-            cboNoiCap.ItemsSource = DanhMucMauBaoTri.NoiCapDau;
-            cboNguoiCap.ItemsSource = DanhMucMauBaoTri.NguoiCapDau;
+            cboNoiCap.ItemsSource = duLieu.NoiCapDau;
 
             if (banGoc == null)
                 KhoiTaoThemMoi(maDauMayMacDinh);
@@ -62,11 +66,18 @@ namespace GUI.Views.Dialogs
             txtTieuDePhu.Text = "Ghi nhận lượng dầu trả nạp và tính suất tiêu hao so với định mức";
             txtNutLuu.Text = "Lưu Phiếu Cấp Phát";
             txtThoiDiem.Text = DateTime.Now.ToString("HH:mm dd/MM/yyyy");
-            txtGoiYThoiDiem.Text = "Tự ghi khi lưu";
+            txtGoiYThoiDiem.Text = "Giờ máy chủ lúc lưu";
 
-            cboDauMay.SelectedItem = maDauMay.HasValue ? DanhMucMauBaoTri.TimDauMay(maDauMay.Value) : null;
+            // Dau may ngung khai thac khong cap dau nua
+            var dsDauMay = _duLieu.DauMayKhaiThac;
+            cboDauMay.ItemsSource = dsDauMay;
+            cboNguoiCap.ItemsSource = _duLieu.NguoiKyThuat;
+
+            cboDauMay.SelectedItem = maDauMay.HasValue ? dsDauMay.FirstOrDefault(d => d.MaDauMay == maDauMay) : null;
             cboNoiCap.SelectedIndex = 0;
-            cboNguoiCap.SelectedIndex = 0;
+            cboNguoiCap.SelectedIndex = _duLieu.NguoiKyThuat.Count > 0 ? 0 : -1;
+            if (_duLieu.NguoiKyThuat.Count == 0)
+                txtLoiNguoiCap.Text = "Chưa có tài khoản kỹ thuật (vai trò KY_THUAT) đang hoạt động.";
             txtDonGia.Text = DinhMucNhienLieu.DonGiaMacDinhVndLit.ToString("0", FormatHelper.TechnicalCulture);
         }
 
@@ -78,17 +89,23 @@ namespace GUI.Views.Dialogs
             txtThoiDiem.Text = nl.ThoiDiemBomDau.ToString("HH:mm dd/MM/yyyy");
             txtGoiYThoiDiem.Text = "Giữ nguyên thời điểm gốc";
 
-            cboDauMay.SelectedItem = DanhMucMauBaoTri.TimDauMay(nl.MaDauMay);
+            var dm = _duLieu.TimDauMay(nl.MaDauMay);
+            cboDauMay.ItemsSource = dm != null ? new List<DauMayCapDau> { dm } : new List<DauMayCapDau>();
+            cboDauMay.SelectedItem = dm;
             cboDauMay.IsEnabled = false;
             cboNoiCap.Text = nl.NoiCapDau;
-            cboNguoiCap.SelectedItem = DanhMucMauBaoTri.TimNguoiCapDau(nl.MaNguoiCap);
+
+            // Nguoi cap cu khong con trong danh sach chon duoc (vd admin o seed goc) thi van hien de giu nguyen
+            var dsNguoi = _duLieu.NguoiKyThuat.ToList();
+            if (nl.MaNguoiCap.HasValue && dsNguoi.All(n => n.MaTaiKhoan != nl.MaNguoiCap))
+                dsNguoi.Insert(0, new TaiKhoanMau(nl.MaNguoiCap.Value, "", nl.TenNguoiCap.Length > 0 ? nl.TenNguoiCap : $"Tài khoản #{nl.MaNguoiCap}", "người cấp cũ"));
+            cboNguoiCap.ItemsSource = dsNguoi;
+            cboNguoiCap.SelectedItem = dsNguoi.FirstOrDefault(n => n.MaTaiKhoan == nl.MaNguoiCap);
 
             txtSoLit.Text = nl.SoLitTraNap.ToString("0.##", FormatHelper.TechnicalCulture);
             txtTanKeo.Text = nl.TrongLuongKeoTan.ToString("0.##", FormatHelper.TechnicalCulture);
             txtCuLy.Text = nl.CuLyChayKm.ToString("0.#", FormatHelper.TechnicalCulture);
-
-            // Suy nguoc don gia tu chi phi da luu (phieu chi luu ChiPhi, khong luu rieng don gia)
-            decimal donGia = nl.SoLitTraNap > 0 ? Math.Round(nl.ChiPhi / nl.SoLitTraNap, 0) : DinhMucNhienLieu.DonGiaMacDinhVndLit;
+            decimal donGia = nl.DonGiaVndLit > 0 ? nl.DonGiaVndLit : DinhMucNhienLieu.DonGiaMacDinhVndLit;
             txtDonGia.Text = donGia.ToString("0", FormatHelper.TechnicalCulture);
         }
 
@@ -101,8 +118,8 @@ namespace GUI.Views.Dialogs
             var dm = cboDauMay.SelectedItem as DauMayCapDau;
             var ds = dm == null
                 ? new List<DoanTauKhamXe>()
-                : DanhMucMauBaoTri.DoanTau.Where(d => d.SoHieuDauMayChinh == dm.SoHieuDauMay ||
-                                                      d.SoHieuDauMayDay == dm.SoHieuDauMay).ToList();
+                : _duLieu.DoanTau.Where(d => d.MaDauMayChinh == dm.MaDauMay || d.MaDauMayDay == dm.MaDauMay)
+                                 .OrderByDescending(d => d.GioXuatPhatKH).ToList();
 
             cboDoanTau.ItemsSource = ds;
             cboDoanTau.SelectedIndex = ds.Count > 0 ? 0 : -1;
@@ -160,12 +177,12 @@ namespace GUI.Views.Dialogs
             decimal? tan = ONhapSoThucHelper.Lay(txtTanKeo);
             decimal? km = ONhapSoThucHelper.Lay(txtCuLy);
 
-            decimal dinhMuc = dm?.DinhMucSfc ?? DinhMucNhienLieu.LayDinhMuc(null);
+            decimal dinhMuc = dm?.DinhMucSfc ?? 0m;
             decimal? sfc = soLit.HasValue && tan.HasValue && km.HasValue
                 ? DinhMucNhienLieu.TinhSfc(soLit.Value, tan.Value, km.Value)
                 : null;
 
-            txtNhanDinhMuc.Text = $"▲ định mức {dinhMuc:N0}";
+            txtNhanDinhMuc.Text = dm != null ? $"▲ định mức {dinhMuc:N0}" : "▲ định mức (chọn đầu máy)";
 
             // --- Suat tieu hao + thanh so voi dinh muc ---
             if (sfc.HasValue)
@@ -253,8 +270,7 @@ namespace GUI.Views.Dialogs
             pnlDauMay.Children.Clear();
             if (dm != null)
             {
-                var dong = DanhMucMauPhuongTien.TimDongDauMay(dm.MaDongCode);
-                ThemDongThongSo("Dòng máy", dong != null ? $"{dm.MaDongCode} · {dong.CongSuatHP:N0} HP" : dm.MaDongCode);
+                ThemDongThongSo("Dòng máy", $"{dm.MaDongCode} · {dm.CongSuatHP:N0} HP");
                 ThemDongThongSo("Xí nghiệp", dm.DonViQuanLy);
                 ThemDongThongSo("Dung tích bồn dầu", $"{dm.DungTichBonDauLit:N0} lít");
                 ThemDongThongSo("Định mức (tham khảo)", $"{dm.DinhMucSfc:N0} L/10,000 t·km", laDongCuoi: true);
@@ -311,113 +327,65 @@ namespace GUI.Views.Dialogs
 
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
-            if (!KiemTraHopLe(out var dauMay, out string noiCap, out var nguoiCap,
-                              out decimal soLit, out decimal tanKeo, out decimal cuLy, out decimal donGia))
+            if (!KiemTraHopLe(out var nl)) return;
+
+            // Ghi CSDL qua trang (BaoTriService). Loi nghiep vu / CSDL: bao va giu dialog de sua.
+            string? loi = _luu(nl);
+            if (loi != null)
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa lưu được phiếu cấp phát");
                 return;
-
-            var kq = _banGoc?.SaoChep() ?? new CapNhienLieuHienThi { ThoiDiemBomDau = DateTime.Now };
-
-            kq.GanDauMay(dauMay);
-            kq.NoiCapDau = noiCap;
-            kq.MaNguoiCap = nguoiCap.MaTaiKhoan;
-            kq.TenNguoiCap = nguoiCap.HoTenHienThi;
-            kq.SoLitTraNap = soLit;
-            kq.TrongLuongKeoTan = tanKeo;
-            kq.CuLyChayKm = cuLy;
-            kq.TinhLaiSuatTieuHao();
-            kq.ChiPhi = soLit * donGia;
-            kq.LaThayDoiTam = true;
-
-            KetQua = kq;
+            }
             DialogResult = true;
         }
 
-        private bool KiemTraHopLe(out DauMayCapDau dauMay, out string noiCap, out TaiKhoanMau nguoiCap,
-                                  out decimal soLit, out decimal tanKeo, out decimal cuLy, out decimal donGia)
+        private bool KiemTraHopLe(out CapNhienLieuDTO nl)
         {
             bool hopLe = true;
             Control? oLoiDauTien = null;
 
             void BaoLoi(TextBlock tbLoi, string thongDiep, Control o)
             {
-                tbLoi.Text = thongDiep;
+                if (tbLoi.Text.Length == 0) tbLoi.Text = thongDiep;
                 hopLe = false;
                 oLoiDauTien ??= o;
             }
 
-            // Dau may (FK MaDauMay NOT NULL)
-            dauMay = (cboDauMay.SelectedItem as DauMayCapDau)!;
-            if (dauMay == null)
-                BaoLoi(txtLoiDauMay, "Vui lòng chọn đầu máy được cấp dầu.", cboDauMay);
+            foreach (var tb in new[] { txtLoiDauMay, txtLoiNoiCap, txtLoiNguoiCap, txtLoiSoLit, txtLoiTanKeo, txtLoiCuLy, txtLoiDonGia })
+                tb.Text = "";
 
-            // Noi cap dau (NVARCHAR(100) NOT NULL)
-            noiCap = cboNoiCap.Text.Trim();
-            if (noiCap.Length == 0)
-                BaoLoi(txtLoiNoiCap, "Vui lòng chọn hoặc nhập nơi cấp dầu.", cboNoiCap);
-            else if (noiCap.Length > 100)
-                BaoLoi(txtLoiNoiCap, $"Tối đa 100 ký tự (đang có {noiCap.Length}).", cboNoiCap);
-            else
-                txtLoiNoiCap.Text = "";
+            decimal? soLit = ONhapSoThucHelper.Lay(txtSoLit);
+            decimal? tan = ONhapSoThucHelper.Lay(txtTanKeo);
+            decimal? km = ONhapSoThucHelper.Lay(txtCuLy);
+            decimal? donGia = ONhapSoThucHelper.Lay(txtDonGia);
+            if (!soLit.HasValue) BaoLoi(txtLoiSoLit, "Vui lòng nhập số lít trả nạp.", txtSoLit);
+            if (!tan.HasValue) BaoLoi(txtLoiTanKeo, "Vui lòng nhập trọng lượng kéo.", txtTanKeo);
+            if (!km.HasValue) BaoLoi(txtLoiCuLy, "Vui lòng nhập cự ly đã chạy.", txtCuLy);
+            if (!donGia.HasValue) BaoLoi(txtLoiDonGia, "Vui lòng nhập đơn giá dầu.", txtDonGia);
 
-            // Nguoi cap (FK TaiKhoan - CSDL cho NULL nhung giao dien yeu cau ghi ro)
-            nguoiCap = (cboNguoiCap.SelectedItem as TaiKhoanMau)!;
-            if (nguoiCap == null)
-                BaoLoi(txtLoiNguoiCap, "Vui lòng chọn người cấp phát.", cboNguoiCap);
+            var dm = cboDauMay.SelectedItem as DauMayCapDau;
+            nl = _banGoc?.ToDTO() ?? new CapNhienLieuDTO();
+            nl.MaDauMay = dm?.MaDauMay ?? 0;
+            nl.NoiCapDau = cboNoiCap.Text.Trim();
+            nl.MaNguoiCap = (cboNguoiCap.SelectedItem as TaiKhoanMau)?.MaTaiKhoan;
+            nl.SoLitTraNap = soLit ?? 1m;
+            nl.TrongLuongKeoTan = tan ?? 1m;
+            nl.CuLyChayKm = km ?? 1m;
+            nl.DonGiaVndLit = donGia ?? 1m;
 
-            // So lit: CHECK > 0, DECIMAL(8,2), khong vuot dung tich bon cua dong may
-            soLit = 0m;
-            decimal? l = ONhapSoThucHelper.Lay(txtSoLit);
-            if (!l.HasValue)
-                BaoLoi(txtLoiSoLit, "Vui lòng nhập số lít trả nạp.", txtSoLit);
-            else if (l <= 0 || l > DinhMucNhienLieu.SoLitGioiHan)
-                BaoLoi(txtLoiSoLit, "Số lít phải lớn hơn 0.", txtSoLit);
-            else if (ONhapSoThucHelper.QuaSoChuSoLe(l.Value, 2))
-                BaoLoi(txtLoiSoLit, "Tối đa 2 chữ số thập phân (DECIMAL(8,2)).", txtSoLit);
-            else if (dauMay != null && dauMay.DungTichBonDauLit > 0 && l > dauMay.DungTichBonDauLit)
-                BaoLoi(txtLoiSoLit, $"Vượt dung tích bồn dầu {dauMay.DungTichBonDauLit:N0} lít của dòng {dauMay.MaDongCode}.", txtSoLit);
-            else
-                soLit = l.Value;
-
-            // Trong luong keo: CHECK > 0, DECIMAL(7,2)
-            tanKeo = 0m;
-            decimal? t = ONhapSoThucHelper.Lay(txtTanKeo);
-            if (!t.HasValue)
-                BaoLoi(txtLoiTanKeo, "Vui lòng nhập trọng lượng kéo.", txtTanKeo);
-            else if (t <= 0 || t > DinhMucNhienLieu.TrongLuongGioiHan)
-                BaoLoi(txtLoiTanKeo, $"Trọng lượng phải lớn hơn 0 và không quá {DinhMucNhienLieu.TrongLuongGioiHan:N2} tấn.", txtTanKeo);
-            else if (ONhapSoThucHelper.QuaSoChuSoLe(t.Value, 2))
-                BaoLoi(txtLoiTanKeo, "Tối đa 2 chữ số thập phân (DECIMAL(7,2)).", txtTanKeo);
-            else
-                tanKeo = t.Value;
-
-            // Cu ly: CHECK > 0, DECIMAL(6,1)
-            cuLy = 0m;
-            decimal? k = ONhapSoThucHelper.Lay(txtCuLy);
-            if (!k.HasValue)
-                BaoLoi(txtLoiCuLy, "Vui lòng nhập cự ly đã chạy.", txtCuLy);
-            else if (k <= 0 || k > DinhMucNhienLieu.CuLyGioiHan)
-                BaoLoi(txtLoiCuLy, $"Cự ly phải lớn hơn 0 và không quá {DinhMucNhienLieu.CuLyGioiHan:N1} km.", txtCuLy);
-            else if (ONhapSoThucHelper.QuaSoChuSoLe(k.Value, 1))
-                BaoLoi(txtLoiCuLy, "Tối đa 1 chữ số thập phân (DECIMAL(6,1)).", txtCuLy);
-            else
-                cuLy = k.Value;
-
-            // Don gia / lit (khong co cot CSDL - du lieu mau de tinh Thanh tien)
-            donGia = DinhMucNhienLieu.DonGiaMacDinhVndLit;
-            decimal? dg = ONhapSoThucHelper.Lay(txtDonGia);
-            if (!dg.HasValue)
-                BaoLoi(txtLoiDonGia, "Vui lòng nhập đơn giá dầu.", txtDonGia);
-            else if (dg < 0)
-                BaoLoi(txtLoiDonGia, "Đơn giá không được âm.", txtDonGia);
-            else
-                donGia = dg.Value;
-
-            // Suat tieu hao tinh ra phai vua cot DECIMAL(5,2)
-            if (hopLe)
+            // Cung luat voi Service (dialog chi doi ten truong sang o nhap)
+            foreach (var l in QuyTacBaoTri.KiemTraCapDau(nl, dm != null ? _duLieu.Goc.TimDauMay(dm.MaDauMay) : null))
             {
-                decimal sfc = DinhMucNhienLieu.TinhSfc(soLit, tanKeo, cuLy) ?? 0m;
-                if (sfc > DinhMucNhienLieu.SfcGioiHan)
-                    BaoLoi(txtLoiCuLy, $"Suất tiêu hao tính ra {sfc:N2} vượt giới hạn 999.99 — kiểm tra lại cự ly / trọng lượng.", txtCuLy);
+                switch (l.Truong)
+                {
+                    case "DauMay": BaoLoi(txtLoiDauMay, l.ThongDiep, cboDauMay); break;
+                    case "NoiCap": BaoLoi(txtLoiNoiCap, l.ThongDiep, cboNoiCap); break;
+                    case "NguoiCap": BaoLoi(txtLoiNguoiCap, l.ThongDiep, cboNguoiCap); break;
+                    case "SoLit" when soLit.HasValue: BaoLoi(txtLoiSoLit, l.ThongDiep, txtSoLit); break;
+                    case "TanKeo" when tan.HasValue: BaoLoi(txtLoiTanKeo, l.ThongDiep, txtTanKeo); break;
+                    case "CuLy" when km.HasValue && soLit.HasValue && tan.HasValue: BaoLoi(txtLoiCuLy, l.ThongDiep, txtCuLy); break;
+                    case "DonGia" when donGia.HasValue: BaoLoi(txtLoiDonGia, l.ThongDiep, txtDonGia); break;
+                }
             }
 
             if (!hopLe) oLoiDauTien?.Focus();

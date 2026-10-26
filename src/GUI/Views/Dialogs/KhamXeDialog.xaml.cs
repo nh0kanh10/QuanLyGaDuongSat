@@ -1,4 +1,6 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using BUS.Services;
+using DTO.BaoTri;
+using GUI.ViewModels.KyThuat;
 using GUI.Helpers;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,39 +12,53 @@ using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
 namespace GUI.Views.Dialogs
 {
     // =========================================================================
-    // DIALOG LAP / CAP NHAT BIEN BAN KHAM XE KY THUAT (baotri.KhamXeKyThuat)
+    // DIALOG LAP BIEN BAN KHAM XE KY THUAT (baotri.KhamXeKyThuat)
     //
-    // Giai doan dung giao dien: chi kiem tra du lieu nhap va tra ve doi tuong
-    // KhamXeHienThi, trang goi tu cap nhat danh sach tren man hinh.
+    // Tu 24/10: chi LAP MOI (bien ban da lap khong sua - sai thi lap bien ban moi). Kiem tra
+    // truong nhap bang QuyTacBaoTri.KiemTraKhamXe (cung ham Service dung), roi goi ham luu
+    // cua trang (BaoTriService.LapBienBan): loi tu Service thi bao va giu dialog mo.
     // Ket luan "du dieu kien xuat ben" tinh dung cong thuc cot PERSISTED
     // DuDieuKienXuatBen (NguongKhamXe), xem truoc ngay khi go.
     // =========================================================================
     public partial class KhamXeDialog : Window
     {
-        private readonly KhamXeHienThi? _banGoc;   // null = lap bien ban moi
+        private readonly BaoTriDuLieu _duLieu;
+        private readonly Func<KhamXeDTO, string?> _luu;
         private readonly bool _dangKhoiTao;
 
-        public KhamXeHienThi? KetQua { get; private set; }
-
         // maDoanTauMacDinh / maNguoiKhamMacDinh: chon san khi lap tu the doan tau hoac "Kham lai"
-        public KhamXeDialog(KhamXeHienThi? banGoc, int? maDoanTauMacDinh = null, int? maNguoiKhamMacDinh = null)
+        public KhamXeDialog(BaoTriDuLieu duLieu, Func<KhamXeDTO, string?> luu,
+                            int? maDoanTauMacDinh = null, int? maNguoiKhamMacDinh = null)
         {
             _dangKhoiTao = true;
             InitializeComponent();
 
-            _banGoc = banGoc;
+            _duLieu = duLieu;
+            _luu = luu;
 
             ONhapSoThucHelper.Gan(txtApLuc, 1);
             ONhapSoThucHelper.Gan(txtSutAp, 2);
             ONhapSoThucHelper.Gan(txtChiPhi, 0, coDinhSoLe: false);
 
-            cboDoanTau.ItemsSource = DanhMucMauBaoTri.DoanTau;
-            cboNguoiKham.ItemsSource = DanhMucMauBaoTri.NguoiKham;
+            var dsDoanTau = duLieu.DoanTauDangDieuHanh;
+            cboDoanTau.ItemsSource = dsDoanTau;
+            cboNguoiKham.ItemsSource = duLieu.NguoiKyThuat;
 
-            if (banGoc == null)
-                KhoiTaoThemMoi(maDoanTauMacDinh, maNguoiKhamMacDinh);
-            else
-                KhoiTaoCapNhat(banGoc);
+            txtTieuDe.Text = "LẬP BIÊN BẢN KHÁM XE KỸ THUẬT";
+            txtTieuDePhu.Text = "Thử hãm gió, kiểm tra cấp nước và vệ sinh trước khi xuất bến";
+            txtNutLuu.Text = "Lưu Biên Bản";
+            txtThoiDiemKham.Text = DateTime.Now.ToString("HH:mm dd/MM/yyyy");
+            txtGoiYThoiDiem.Text = "Giờ máy chủ lúc lưu";
+
+            cboDoanTau.SelectedItem = maDoanTauMacDinh.HasValue ? dsDoanTau.FirstOrDefault(d => d.MaDoanTau == maDoanTauMacDinh) : null;
+            cboNguoiKham.SelectedItem = duLieu.TimNguoiKyThuat(maNguoiKhamMacDinh) ?? duLieu.NguoiKyThuat.FirstOrDefault();
+            if (duLieu.NguoiKyThuat.Count == 0)
+                txtLoiNguoiKham.Text = "Chưa có tài khoản kỹ thuật (vai trò KY_THUAT) đang hoạt động để ký biên bản.";
+
+            // Kham lai thuong da xu ly xong phan phuc vu, nhung van de nguoi kham tu tick
+            chkCapNuoc.IsChecked = false;
+            chkXaVeSinh.IsChecked = false;
+            txtChiPhi.Text = "0";
 
             _dangKhoiTao = false;
             CapNhatXemTruoc();
@@ -53,43 +69,6 @@ namespace GUI.Views.Dialogs
                 oDau.Focus();
                 if (oDau is TextBox tb) tb.SelectAll();
             };
-        }
-
-        private void KhoiTaoThemMoi(int? maDoanTau, int? maNguoiKham)
-        {
-            txtTieuDe.Text = "LẬP BIÊN BẢN KHÁM XE KỸ THUẬT";
-            txtTieuDePhu.Text = "Thử hãm gió, kiểm tra cấp nước và vệ sinh trước khi xuất bến";
-            txtNutLuu.Text = "Lưu Biên Bản";
-            txtThoiDiemKham.Text = DateTime.Now.ToString("HH:mm dd/MM/yyyy");
-            txtGoiYThoiDiem.Text = "Tự ghi khi lưu";
-
-            cboDoanTau.SelectedItem = maDoanTau.HasValue ? DanhMucMauBaoTri.TimDoanTau(maDoanTau.Value) : null;
-            cboNguoiKham.SelectedItem = DanhMucMauBaoTri.TimNguoiKham(maNguoiKham ?? 0) ?? DanhMucMauBaoTri.NguoiKham[0];
-
-            // Kham lai thuong da xu ly xong phan phuc vu, nhung van de nguoi kham tu tick
-            chkCapNuoc.IsChecked = false;
-            chkXaVeSinh.IsChecked = false;
-            txtChiPhi.Text = "0";
-        }
-
-        private void KhoiTaoCapNhat(KhamXeHienThi bb)
-        {
-            txtTieuDe.Text = $"CẬP NHẬT BIÊN BẢN {bb.MaBienBan} — {bb.SoHieuMacTau}";
-            txtTieuDePhu.Text = "Đoàn tàu và thời điểm khám là thông tin gốc của biên bản nên không sửa";
-            txtNutLuu.Text = "Lưu Thay Đổi";
-            txtThoiDiemKham.Text = bb.ThoiDiemKham.ToString("HH:mm dd/MM/yyyy");
-            txtGoiYThoiDiem.Text = "Giữ nguyên thời điểm gốc";
-
-            cboDoanTau.SelectedItem = DanhMucMauBaoTri.TimDoanTau(bb.MaDoanTau);
-            cboDoanTau.IsEnabled = false;
-            cboNguoiKham.SelectedItem = DanhMucMauBaoTri.TimNguoiKham(bb.MaNguoiKham);
-
-            txtApLuc.Text = bb.ApLucHamBar.ToString("0.0", FormatHelper.TechnicalCulture);
-            txtSutAp.Text = bb.DoSutApBarPhut.ToString("0.00", FormatHelper.TechnicalCulture);
-            chkCapNuoc.IsChecked = bb.DaCapNuoc;
-            chkXaVeSinh.IsChecked = bb.DaXaVeSinh;
-            txtGhiChu.Text = bb.GhiChuKyThuat;
-            txtChiPhi.Text = bb.ChiPhi.ToString("0", FormatHelper.TechnicalCulture);
         }
 
         private static decimal? LaySo(TextBox tb) => ONhapSoThucHelper.Lay(tb);
@@ -267,88 +246,64 @@ namespace GUI.Views.Dialogs
 
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
-            if (!KiemTraHopLe(out var doanTau, out var nguoiKham, out decimal apLuc, out decimal sutAp, out decimal chiPhi))
+            if (!KiemTraHopLe(out var bb)) return;
+
+            // Ghi CSDL qua trang (BaoTriService). Loi nghiep vu / CSDL: bao va giu dialog de sua.
+            string? loi = _luu(bb);
+            if (loi != null)
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa lưu được biên bản");
                 return;
-
-            var kq = _banGoc?.SaoChep() ?? new KhamXeHienThi { ThoiDiemKham = DateTime.Now };
-
-            kq.GanDoanTau(doanTau);
-            kq.MaNguoiKham = nguoiKham.MaTaiKhoan;
-            kq.TenNguoiKham = nguoiKham.HoTenHienThi;
-            kq.ApLucHamBar = apLuc;
-            kq.DoSutApBarPhut = sutAp;
-            kq.DaCapNuoc = chkCapNuoc.IsChecked == true;
-            kq.DaXaVeSinh = chkXaVeSinh.IsChecked == true;
-            kq.GhiChuKyThuat = txtGhiChu.Text.Trim();
-            kq.ChiPhi = chiPhi;
-            kq.LaThayDoiTam = true;
-
-            KetQua = kq;
+            }
             DialogResult = true;
         }
 
-        private bool KiemTraHopLe(out DoanTauKhamXe doanTau, out TaiKhoanMau nguoiKham, out decimal apLuc, out decimal sutAp,
-                                  out decimal chiPhi)
+        private bool KiemTraHopLe(out KhamXeDTO bb)
         {
             bool hopLe = true;
             Control? oLoiDauTien = null;
 
             void BaoLoi(TextBlock tbLoi, string thongDiep, Control o)
             {
-                tbLoi.Text = thongDiep;
+                if (tbLoi.Text.Length == 0) tbLoi.Text = thongDiep;
                 hopLe = false;
                 oLoiDauTien ??= o;
             }
 
-            // Doan tau (FK MaDoanTau NOT NULL)
-            doanTau = (cboDoanTau.SelectedItem as DoanTauKhamXe)!;
-            if (doanTau == null)
-                BaoLoi(txtLoiDoanTau, "Vui lòng chọn đoàn tàu được khám.", cboDoanTau);
+            foreach (var tb in new[] { txtLoiDoanTau, txtLoiNguoiKham, txtLoiApLuc, txtLoiSutAp, txtLoiGhiChu, txtLoiChiPhi })
+                tb.Text = "";
 
-            // Nguoi kham (FK MaNguoiKham NOT NULL)
-            nguoiKham = (cboNguoiKham.SelectedItem as TaiKhoanMau)!;
-            if (nguoiKham == null)
-                BaoLoi(txtLoiNguoiKham, "Vui lòng chọn nhân viên khám xe.", cboNguoiKham);
+            decimal? apLuc = LaySo(txtApLuc);
+            decimal? sutAp = LaySo(txtSutAp);
+            decimal? chiPhi = LaySo(txtChiPhi);
+            if (!apLuc.HasValue) BaoLoi(txtLoiApLuc, "Vui lòng nhập áp lực hãm.", txtApLuc);
+            if (!sutAp.HasValue) BaoLoi(txtLoiSutAp, "Vui lòng nhập độ sụt áp.", txtSutAp);
+            if (!chiPhi.HasValue) BaoLoi(txtLoiChiPhi, "Chi phí không hợp lệ (nhập 0 nếu không phát sinh).", txtChiPhi);
 
-            // Ap luc ham: CHECK (> 0 AND <= 10.0), DECIMAL(3,1)
-            apLuc = 0m;
-            decimal? a = LaySo(txtApLuc);
-            if (!a.HasValue)
-                BaoLoi(txtLoiApLuc, "Vui lòng nhập áp lực hãm.", txtApLuc);
-            else if (a <= 0 || a > NguongKhamXe.ApLucHamGioiHanBar)
-                BaoLoi(txtLoiApLuc, $"Áp lực hãm phải lớn hơn 0 và không quá {NguongKhamXe.ApLucHamGioiHanBar:0.0} bar.", txtApLuc);
-            else if (decimal.Round(a.Value, 1) != a.Value)
-                BaoLoi(txtLoiApLuc, "Chỉ ghi 1 chữ số thập phân (ví dụ 4.8), CSDL lưu DECIMAL(3,1).", txtApLuc);
-            else
-                apLuc = a.Value;
-
-            // Do sut ap: CHECK (>= 0 AND <= 5.0), DECIMAL(3,2)
-            sutAp = 0m;
-            decimal? s = LaySo(txtSutAp);
-            if (!s.HasValue)
-                BaoLoi(txtLoiSutAp, "Vui lòng nhập độ sụt áp.", txtSutAp);
-            else if (s < 0 || s > NguongKhamXe.DoSutApGioiHanBarPhut)
-                BaoLoi(txtLoiSutAp, $"Độ sụt áp phải từ 0 đến {NguongKhamXe.DoSutApGioiHanBarPhut:0.00} bar/phút.", txtSutAp);
-            else if (decimal.Round(s.Value, 2) != s.Value)
-                BaoLoi(txtLoiSutAp, "Chỉ ghi 2 chữ số thập phân (ví dụ 0.18), CSDL lưu DECIMAL(3,2).", txtSutAp);
-            else
-                sutAp = s.Value;
-
-            // Chi phi: khong bat buoc, mac dinh 0, khong am
-            chiPhi = 0m;
-            decimal? cp = LaySo(txtChiPhi);
-            if (!cp.HasValue)
-                BaoLoi(txtLoiChiPhi, "Chi phí không hợp lệ (nhập 0 nếu không phát sinh).", txtChiPhi);
-            else if (cp < 0)
-                BaoLoi(txtLoiChiPhi, "Chi phí không được âm.", txtChiPhi);
-            else
-                chiPhi = cp.Value;
-
-            // Khong dat thi phai ghi nguyen nhan / bien phap (quy uoc giao dien, CSDL cho phep NULL)
-            if (hopLe && txtGhiChu.Text.Trim().Length == 0 &&
-                !NguongKhamXe.DuDieuKienXuatBen(apLuc, sutAp, chkCapNuoc.IsChecked == true, chkXaVeSinh.IsChecked == true))
+            bb = new KhamXeDTO
             {
-                BaoLoi(txtLoiGhiChu, "Biên bản không đạt: ghi rõ nguyên nhân và biện pháp xử lý (có thể bấm \"Tạo từ kết quả\").", txtGhiChu);
+                MaDoanTau = (cboDoanTau.SelectedItem as DoanTauKhamXe)?.MaDoanTau ?? 0,
+                MaNguoiKham = (cboNguoiKham.SelectedItem as TaiKhoanMau)?.MaTaiKhoan ?? 0,
+                ApLucHamBar = apLuc ?? NguongKhamXe.ApLucHamToiThieuBar,
+                DoSutApBarPhut = sutAp ?? 0m,
+                DaCapNuoc = chkCapNuoc.IsChecked == true,
+                DaXaVeSinh = chkXaVeSinh.IsChecked == true,
+                GhiChuKyThuat = txtGhiChu.Text.Trim(),
+                ChiPhi = chiPhi ?? 0m
+            };
+
+            // Cung luat voi Service (dialog chi doi ten truong sang o nhap)
+            foreach (var l in QuyTacBaoTri.KiemTraKhamXe(bb))
+            {
+                switch (l.Truong)
+                {
+                    case "DoanTau": BaoLoi(txtLoiDoanTau, l.ThongDiep, cboDoanTau); break;
+                    case "NguoiKham": BaoLoi(txtLoiNguoiKham, l.ThongDiep, cboNguoiKham); break;
+                    case "ApLuc" when apLuc.HasValue: BaoLoi(txtLoiApLuc, l.ThongDiep, txtApLuc); break;
+                    case "SutAp" when sutAp.HasValue: BaoLoi(txtLoiSutAp, l.ThongDiep, txtSutAp); break;
+                    case "GhiChu" when apLuc.HasValue && sutAp.HasValue: BaoLoi(txtLoiGhiChu, l.ThongDiep, txtGhiChu); break;
+                    case "ChiPhi" when chiPhi.HasValue: BaoLoi(txtLoiChiPhi, l.ThongDiep, txtChiPhi); break;
+                }
             }
 
             if (!hopLe) oLoiDauTien?.Focus();

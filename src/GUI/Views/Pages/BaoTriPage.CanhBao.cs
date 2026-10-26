@@ -1,4 +1,5 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using BUS.Services;
+using GUI.ViewModels.KyThuat;
 using GUI.Helpers;
 using GUI.Views.Dialogs;
 using System.Windows;
@@ -9,11 +10,12 @@ namespace GUI.Views.Pages
     // =========================================================================
     // BAO TRI - TAB 4: CANH BAO AN TOAN
     //
-    // Chi tong hop (khong co ban ghi rieng): lay du lieu da tron thay doi tam
-    // cua 3 tab kia, dua qua TongHopCanhBao roi hien:
+    // Chi tong hop (khong co ban ghi rieng): lay anh chup CSDL cua 3 tab kia + kip lai
+    // (Nhan su), dua qua TongHopCanhBao roi hien:
     //   - danh sach canh bao (loc theo muc do / nhom / tu khoa / doan tau),
     //     moi canh bao co nut xu ly mo dialog ngay tai tab nay;
-    //   - bang san sang xuat ben theo tung doan tau.
+    //   - bang san sang xuat ben theo tung doan tau (cung luat KiemTraXuatBenService ma
+    //     man hinh Lich trinh dung de chan doi trang thai) + nut DUYET AN TOAN (24/10).
     // Duoc tinh lai sau moi lan luu o tab khac va moi lan mo tab.
     // =========================================================================
     public partial class BaoTriPage
@@ -26,14 +28,10 @@ namespace GUI.Views.Pages
         private void LamMoiCanhBao()
         {
             DateTime bayGio = DateTime.Now;
-            var khamXe = LayToanBoKhamXe();
-            var capDau = LayToanBoCapDau();
-            var baoDuong = LayToanBoBaoDuong();
-
-            _tatCaCanhBao = TongHopCanhBao.TaoCanhBao(khamXe, capDau, baoDuong, bayGio);
+            _tatCaCanhBao = TongHopCanhBao.TaoCanhBao(_duLieu, _duLieuNhanSu, bayGio);
 
             // --- Bang san sang xuat ben ---
-            var sanSang = TongHopCanhBao.TaoSanSang(khamXe, capDau, baoDuong, bayGio);
+            var sanSang = TongHopCanhBao.TaoSanSang(_duLieu, _duLieuNhanSu, bayGio);
             foreach (var s in sanSang) s.DangChon = s.DoanTau.SoHieuMacTau == _macTauLoc;
             icSanSang.ItemsSource = sanSang;
 
@@ -41,7 +39,9 @@ namespace GUI.Views.Pages
             int biChan = sapChay.Count(s => s.KetLuan == "CHAN");
             txtTomTatXuatBen.Text = $"{sapChay.Count} đoàn tàu sắp chạy · {biChan} bị chặn xuất bến";
             txtTomTatXuatBen.Foreground = Mau(biChan > 0 ? "#B91C1C" : "#15803D");
-            txtCapNhatCanhBao.Text = $"Tổng hợp từ 3 tab · cập nhật lúc {bayGio:HH:mm:ss}";
+            txtCapNhatCanhBao.Text = _duLieuNhanSu == null
+                ? $"Tổng hợp từ 3 tab · chưa đọc được kíp lái · cập nhật lúc {bayGio:HH:mm:ss}"
+                : $"Tổng hợp từ 3 tab + kíp lái · cập nhật lúc {bayGio:HH:mm:ss}";
 
             // --- Dem theo muc do ---
             int soNghiemTrong = _tatCaCanhBao.Count(c => c.MucDo == "NGHIEM_TRONG");
@@ -78,7 +78,7 @@ namespace GUI.Views.Pages
 
             bdTrongCanhBao.Visibility = ds.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             txtTrongCanhBao.Text = _tatCaCanhBao.Count == 0
-                ? "An toàn: không có cảnh báo nào ở cả 3 nhóm khám xe, nhiên liệu, bảo dưỡng."
+                ? "An toàn: không có cảnh báo nào về khám xe, duyệt an toàn, kíp lái, nhiên liệu, bảo dưỡng."
                 : _macTauLoc != null
                     ? $"Không có cảnh báo nào liên quan tới {_macTauLoc} khớp bộ lọc."
                     : "Không có cảnh báo nào khớp bộ lọc.";
@@ -190,11 +190,67 @@ namespace GUI.Views.Pages
                     LamMoiBaoDuong(giuDongChon: false);
                     break;
 
+                case "DUYET":
+                    if (int.TryParse(cb.KhoaXuLy, out int maDoan)) DuyetAnToan(maDoan);
+                    break;
+
                 case "MO_PHUONG_TIEN":
-                    // Duyet an toan lap tau thuoc phan he Phuong tien (tab Lap Doan Tau)
                     (Window.GetWindow(this) as MainWindow)?.NavigateTo("PhuongTien");
                     break;
+
+                case "MO_NHAN_SU":
+                    // Phan cong kip / thay nguoi thuoc phan he Nhan su
+                    (Window.GetWindow(this) as MainWindow)?.NavigateTo("NhanSu");
+                    break;
             }
+        }
+
+        // =====================================================================
+        // DUYET AN TOAN DOAN TAU (UC-BT-03)
+        // =====================================================================
+
+        private void BtnDuyetAnToan_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is SanSangXuatBenHienThi s) DuyetAnToan(s.DoanTau.MaDoanTau);
+        }
+
+        private void DuyetAnToan(int maDoanTau)
+        {
+            if (!KiemTraKetNoi()) return;
+            var dt = _duLieu.TimDoanTau(maDoanTau);
+            if (dt == null) return;
+
+            var dk = KiemTraXuatBenService.DieuKienDuyet(_duLieu.Goc, dt.Goc);
+            if (!dk.CoTheDuyet)
+            {
+                ThongBaoDialog.CanhBao(dk.LyDoKhongDuyet ?? $"Chưa duyệt được đoàn tàu {dt.SoHieuMacTau}:\n\n{dk.MoTaChan}",
+                                       "Chưa đủ điều kiện duyệt");
+                return;
+            }
+
+            bool dongY = ThongBaoDialog.XacNhan(
+                $"Duyệt an toàn đoàn tàu {dt.SoHieuMacTau} ngày {dt.NgayXuatPhat:dd/MM/yyyy} ({dt.HanhTrinh})?\n\n" +
+                string.Join("\n", dk.CacMuc.Select(m => $"• {m.Ten}: {m.KetQua}")) +
+                "\n\nKíp lái vẫn được kiểm tra riêng khi chuyển chuyến sang \"Sẵn sàng\". " +
+                "Sửa thành phần đoàn tàu hoặc lập biên bản không đạt sau này sẽ tự bỏ duyệt.",
+                "Duyệt an toàn đoàn tàu", nutDongY: "Duyệt", nutHuy: "Để sau");
+            if (!dongY) return;
+
+            if (!_service.DuyetAnToan(maDoanTau, dt.Goc.PhienBan, out string loi))
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa duyệt được");
+                NapToanBoDuLieu();
+                return;
+            }
+
+            NapToanBoDuLieu();
+            var kq = KiemTraXuatBenService.DanhGia(_duLieu.Goc, _duLieuNhanSu, dt.MaChuyenTau);
+            ThongBaoDialog.ThanhCong(
+                $"Đã duyệt an toàn đoàn tàu {dt.SoHieuMacTau}.\n\n" +
+                (kq.DuocXuatBen
+                    ? "Chuyến đã đủ điều kiện xuất bến."
+                    : "Vẫn chưa xuất bến được vì:\n" + string.Join("\n", kq.LyDoChan.Select(l => "• " + l))),
+                "Duyệt an toàn");
         }
     }
 }

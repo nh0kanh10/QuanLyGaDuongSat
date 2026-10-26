@@ -139,7 +139,7 @@
                     <TextBox x:Name="txtChiPhi" MaxLength="12" TextChanged="TruongNhap_TextChanged"
                              ToolTip="Chi phí kiểm tra định kỳ (thường nhỏ) hoặc chi phí khắc phục khi không đạt. Để 0 nếu không phát sinh."/>
                     <TextBlock x:Name="txtLoiChiPhi" Style="{StaticResource KtLoiTruong}"/>
-                    <TextBlock Text="Dữ liệu mẫu/tham khảo, chưa nối kế toán chi phí thực tế." Style="{StaticResource KtGoiY}" Margin="0,2,0,10"/>
+                    <TextBlock Text="Tính theo đồng, không có số lẻ." Style="{StaticResource KtGoiY}" Margin="0,2,0,10"/>
 
                     <Grid Margin="0,0,0,4">
                         <TextBlock x:Name="txtNhanGhiChu" Text="Ghi chú kỹ thuật" Style="{StaticResource KtNhanTruong}"
@@ -239,7 +239,7 @@
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
-                        <TextBlock Text="Giai đoạn giao diện: biên bản chỉ hiển thị trên màn hình, chưa ghi vào CSDL."
+                        <TextBlock Text="Lưu là ghi vào CSDL. Biên bản đã lập không sửa — sai thì lập biên bản mới (khám lại)."
                                    FontSize="10" Foreground="#64748B" VerticalAlignment="Center"/>
                     </StackPanel>
 

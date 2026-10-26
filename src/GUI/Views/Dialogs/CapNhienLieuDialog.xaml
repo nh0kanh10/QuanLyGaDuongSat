@@ -291,7 +291,7 @@
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
-                        <TextBlock Text="Giai đoạn giao diện: phiếu chỉ hiển thị trên màn hình, chưa ghi vào CSDL. Định mức là số tham khảo."
+                        <TextBlock Text="Lưu là ghi vào CSDL; suất tiêu hao do hệ thống tính. Định mức theo dòng máy là số tham khảo."
                                    FontSize="10" Foreground="#64748B" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="480"/>
                     </StackPanel>
 
