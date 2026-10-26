@@ -46,7 +46,7 @@ namespace BUS.Services
             loi = "";
             try
             {
-                var dl = _repo.LayDuLieu();
+                var dl = _repo.LayDuLieu(kemDoanhThu: true);
                 dl.NoiCapDau.AddRange(NoiCapDauMacDinh.Where(n => !dl.NoiCapDau.Contains(n)).ToList());
                 duLieu = dl;
                 return true;

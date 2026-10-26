@@ -163,19 +163,50 @@ namespace Tests.BaoTri
             var bd = BD("D1", 100_000m, 0, 0);
             Assert.Contains(QuyTacBaoTri.KiemTraBaoDuong(bd, 150_000m, Array.Empty<BaoDuongDTO>()), l => l.Truong == "Cap");
 
-            bd = BD("R2", 160_000m, 0, 0);
+            // Sua phieu cu (MaBaoDuong > 0): km khong vuot dong ho, khong lui so voi lan truoc
+            bd = BD("R2", 160_000m, 0, 9);
             Assert.Contains(QuyTacBaoTri.KiemTraBaoDuong(bd, 150_000m, Array.Empty<BaoDuongDTO>()), l => l.Truong == "SoKm" && l.ThongDiep.Contains("km tích lũy"));
 
-            bd = BD("R1", 110_000m, 0, 0);
+            bd = BD("R1", 110_000m, 0, 9);
             Assert.Contains(QuyTacBaoTri.KiemTraBaoDuong(bd, 150_000m, new[] { BD("R1", 120_000m, 30, 1) }),
                             l => l.Truong == "SoKm" && l.ThongDiep.Contains("lần bảo dưỡng trước"));
 
-            bd = BD("R1", 130_000m, 0, 0);
+            bd = BD("R1", 130_000m, 0, 9);
             Assert.Empty(QuyTacBaoTri.KiemTraBaoDuong(bd, 150_000m, new[] { BD("R1", 120_000m, 30, 1) }));
 
             bd.MaNguoiThucHien = null; bd.ChiPhi = -1m;
             var loi = QuyTacBaoTri.KiemTraBaoDuong(bd, 150_000m, Array.Empty<BaoDuongDTO>()).Select(l => l.Truong).ToList();
             Assert.Equal(new[] { "NguoiThucHien", "ChiPhi" }, loi);
+        }
+
+        // Quyet dinh 26/10: phieu MOI cua dau may ghi dung km dong ho hien tai (vd khong ghi R2 o 1 km khi
+        // dong ho 210.000 km); toa xe khong co dong ho thi van go tay
+        [Theory]
+        [InlineData(1, true)]
+        [InlineData(209_999.9, true)]
+        [InlineData(210_000.1, true)]
+        [InlineData(210_000, false)]
+        public void BaoDuong_PhieuMoiDauMay_PhaiDungKmDongHo(double km, bool coLoi)
+        {
+            var bd = BD("R2", (decimal)km, 0, 0);
+            var loi = QuyTacBaoTri.KiemTraBaoDuong(bd, 210_000m, Array.Empty<BaoDuongDTO>());
+            Assert.Equal(coLoi, loi.Any(l => l.Truong == "SoKm"));
+            if (coLoi) Assert.Contains(loi, l => l.ThongDiep.Contains("Phương tiện"));
+        }
+
+        [Fact]
+        public void BaoDuong_PhieuMoiDauMay_DungDongHoNhungLuiSoVoiLanTruoc_VanBaoLoi()
+        {
+            var bd = BD("R1", 100_000m, 0, 0);
+            Assert.Contains(QuyTacBaoTri.KiemTraBaoDuong(bd, 100_000m, new[] { BD("R1", 120_000m, 30, 1) }),
+                            l => l.Truong == "SoKm" && l.ThongDiep.Contains("lần bảo dưỡng trước"));
+        }
+
+        [Fact]
+        public void BaoDuong_PhieuMoiToaXe_KmGoTay()
+        {
+            var bd = BD("D1", 45_000m, 0, 0, "TOA_XE");
+            Assert.Empty(QuyTacBaoTri.KiemTraBaoDuong(bd, null, new[] { BD("D1", 40_000m, 200, 1, "TOA_XE") }));
         }
 
         [Fact]

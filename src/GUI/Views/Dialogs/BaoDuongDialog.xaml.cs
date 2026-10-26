@@ -62,11 +62,12 @@ namespace GUI.Views.Dialogs
                 KhoiTaoCapNhat(banGoc);
 
             _dangKhoiTao = false;
+            CapNhatOSoKm();
             CapNhatXemTruoc();
 
             Loaded += (_, _) =>
             {
-                Control oDau = cboPhuongTien.SelectedItem == null ? cboPhuongTien : txtSoKm;
+                Control oDau = cboPhuongTien.SelectedItem == null ? cboPhuongTien : KmTheoDongHo ? txtChiPhi : txtSoKm;
                 oDau.Focus();
                 if (oDau is TextBox tb) tb.SelectAll();
             };
@@ -126,6 +127,22 @@ namespace GUI.Views.Dialogs
 
         private string LoaiDangChon => rdoToaXe.IsChecked == true ? "TOA_XE" : "DAU_MAY";
 
+        // Phieu MOI cua dau may ghi tai km dong ho hien tai (quyet dinh 26/10, cung luat QuyTacBaoTri) -> o km
+        // chi doc, tu dien theo dau may. Toa xe (CSDL khong theo doi km toa) va sua phieu cu thi van go tay.
+        private bool KmTheoDongHo => _banGoc == null && LoaiDangChon == "DAU_MAY";
+
+        private void CapNhatOSoKm()
+        {
+            bool khoa = KmTheoDongHo;
+            txtSoKm.IsReadOnly = khoa;
+            txtSoKm.IsTabStop = !khoa;
+            if (khoa) txtSoKm.Background = Mau("#F1F5F9");
+            else txtSoKm.ClearValue(BackgroundProperty);
+            txtSoKm.ToolTip = khoa
+                ? "Phiếu mới ghi tại km tích lũy hiện tại của đầu máy (tự điền, không sửa ở đây). Đồng hồ sai thì sửa ở màn Phương tiện trước."
+                : "Số km tích lũy của phương tiện lúc hoàn thành bảo dưỡng, 1 chữ số thập phân";
+        }
+
         private void NapPhuongTien(string loai)
         {
             runNhanPhuongTien.Text = loai == "DAU_MAY" ? "Đầu máy" : "Toa xe";
@@ -160,6 +177,7 @@ namespace GUI.Views.Dialogs
             txtLoiCap.Text = "";
             NapPhuongTien(LoaiDangChon);
             txtSoKm.Text = "";
+            CapNhatOSoKm();
             CapNhatODuaVeSanSang();
             CapNhatXemTruoc();
         }
@@ -305,9 +323,11 @@ namespace GUI.Views.Dialogs
             var lanTruoc = lichSuKhac.Where(x => x.ThoiDiemHoanThanh < _thoiDiem)
                                      .OrderByDescending(x => x.ThoiDiemHoanThanh).FirstOrDefault();
             string truoc = lanTruoc != null ? $"Lần trước: {lanTruoc.SoKmTaiThoiDiem:N0} km ({lanTruoc.CapBaoDuong})." : "Chưa có lần bảo dưỡng trước.";
-            txtGoiYSoKm.Text = pt.LaDauMay
-                ? $"Km tích lũy hiện tại: {pt.SoKmTichLuy:N0} km. {truoc}"
-                : $"CSDL không theo dõi km của toa — nhập theo lý lịch toa. {truoc}";
+            txtGoiYSoKm.Text = !pt.LaDauMay
+                ? $"CSDL không theo dõi km của toa — nhập theo lý lịch toa. {truoc}"
+                : KmTheoDongHo
+                    ? $"Lấy theo km tích lũy hiện tại của đầu máy ({pt.SoKmTichLuy:N0} km). {truoc}"
+                    : $"Km tích lũy hiện tại: {pt.SoKmTichLuy:N0} km. {truoc}";
         }
 
         private void HienGoiYCap(PhuongTienBaoDuong pt, TienDoCapBaoDuong? chuY, string? capChon)
@@ -395,7 +415,9 @@ namespace GUI.Views.Dialogs
             var pt = cboPhuongTien.SelectedItem as PhuongTienBaoDuong;
             decimal? km = ONhapSoThucHelper.Lay(txtSoKm);
             decimal? chiPhi = ONhapSoThucHelper.Lay(txtChiPhi);
-            if (!km.HasValue) BaoLoi(txtLoiSoKm, "Vui lòng nhập số km tại thời điểm bảo dưỡng.", txtSoKm);
+            // O km tu dien theo dau may (chi doc): chua chon dau may thi chi bao o o phuong tien
+            if (!km.HasValue && !(KmTheoDongHo && pt == null))
+                BaoLoi(txtLoiSoKm, "Vui lòng nhập số km tại thời điểm bảo dưỡng.", txtSoKm);
             if (!chiPhi.HasValue) BaoLoi(txtLoiChiPhi, "Chi phí không hợp lệ (nhập 0 nếu không có).", txtChiPhi);
             if (_banGoc == null && pt?.DangChay == true)
                 BaoLoi(txtLoiPhuongTien, pt.LaDauMay ? $"{pt.SoHieu} đang kéo tàu, chưa ghi nhận bảo dưỡng được."

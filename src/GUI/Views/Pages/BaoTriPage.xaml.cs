@@ -511,7 +511,7 @@ namespace GUI.Views.Pages
                 1 => txtTimCapDau,
                 2 => txtTimBaoDuong,
                 3 => txtTimCanhBao,
-                4 => txtTimTuyen,
+                4 => txtTimMacTau,
                 _ => txtTimKhamXe
             };
             o.Focus();
@@ -540,7 +540,7 @@ namespace GUI.Views.Pages
                 case 1: BtnXoaLocCapDau_Click(this, new RoutedEventArgs()); break;
                 case 2: BtnXoaLocBaoDuong_Click(this, new RoutedEventArgs()); break;
                 case 3: BtnXoaLocCanhBao_Click(this, new RoutedEventArgs()); break;
-                case 4: BtnXoaLocTuyen_Click(this, new RoutedEventArgs()); break;
+                case 4: BtnXoaLocMacTau_Click(this, new RoutedEventArgs()); break;
             }
         }
     }

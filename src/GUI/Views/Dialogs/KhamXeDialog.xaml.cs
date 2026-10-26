@@ -214,7 +214,11 @@ namespace GUI.Views.Dialogs
             });
         }
 
-        // Dien ghi chu tu cac hang muc khong dat (giu lai phan nguoi dung da go)
+        // Cac dong nut "Tao tu ket qua" da dien trong dialog nay (de bam lai thi thay, khong noi them)
+        private readonly HashSet<string> _dongGhiChuDaTao = new();
+
+        // Dien ghi chu tu cac hang muc khong dat. Giu lai phan nguoi dung tu go; dong do nut nay
+        // dien truoc do (ke ca dong cu da khac ket qua hien tai) thi bo, dien lai theo ket qua moi.
         private void BtnTaoGhiChu_Click(object sender, RoutedEventArgs e)
         {
             decimal? apLuc = LaySo(txtApLuc);
@@ -233,9 +237,13 @@ namespace GUI.Views.Dialogs
             if (dong.Count == 0)
                 dong.Add("Đạt chuẩn an toàn kỹ thuật xuất bến.");
 
-            string hienTai = txtGhiChu.Text.Trim();
-            txtGhiChu.Text = hienTai.Length == 0 ? string.Join(Environment.NewLine, dong)
-                                                 : hienTai + Environment.NewLine + string.Join(Environment.NewLine, dong);
+            // Dong nao trung dong nut tao (lan nay hoac lan truoc) thi bo, con lai la chu nguoi dung tu go
+            _dongGhiChuDaTao.UnionWith(dong);
+            var dongTuGo = txtGhiChu.Text.Split('\n')
+                                         .Select(d => d.TrimEnd('\r'))
+                                         .Where(d => d.Trim().Length > 0 && !_dongGhiChuDaTao.Contains(d.Trim()))
+                                         .ToList();
+            txtGhiChu.Text = string.Join(Environment.NewLine, dongTuGo.Concat(dong));
             txtGhiChu.Focus();
             txtGhiChu.CaretIndex = txtGhiChu.Text.Length;
         }

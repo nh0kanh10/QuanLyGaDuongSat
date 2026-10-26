@@ -1787,7 +1787,7 @@
             </TabItem>
 
             <!-- ============================================================= -->
-            <!-- TAB 5: CHI PHÍ & HIỆU QUẢ (theo tuyến đường / mác tàu)         -->
+            <!-- TAB 5: CHI PHÍ & HIỆU QUẢ (theo mác tàu, số liệu thật)         -->
             <!-- ============================================================= -->
             <TabItem Style="{StaticResource KtTabItem}">
                 <TabItem.Header>
@@ -1809,11 +1809,13 @@
 
                     <!-- Tóm tắt -->
                     <Grid Grid.Row="0" Margin="0,0,0,8">
-                        <TextBlock Text="CHI PHÍ BẢO TRÌ &amp; HIỆU QUẢ THEO TUYẾN ĐƯỜNG" Style="{StaticResource KtSectionHeader}" Margin="0"/>
+                        <TextBlock Text="CHI PHÍ BẢO TRÌ &amp; HIỆU QUẢ THEO MÁC TÀU" Style="{StaticResource KtSectionHeader}" Margin="0"/>
                         <StackPanel HorizontalAlignment="Right">
                             <TextBlock x:Name="txtTomTatChiPhi" Text="—" FontSize="12" FontWeight="SemiBold" Foreground="#0F172A"
                                        HorizontalAlignment="Right"/>
                             <TextBlock x:Name="txtCapNhatChiPhi" Text="—" FontSize="10" Foreground="#64748B" HorizontalAlignment="Right"/>
+                            <TextBlock x:Name="txtPhanBoChiPhi" Text="—" FontSize="10" Foreground="#64748B" HorizontalAlignment="Right"
+                                       TextDecorations="Underline" Cursor="Help" ToolTipService.ShowDuration="30000"/>
                         </StackPanel>
                     </Grid>
 
@@ -1830,8 +1832,8 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Column="0" Text="Tra cứu:" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Grid.Column="1" x:Name="txtTimTuyen" TextChanged="TxtTimTuyen_TextChanged"
-                                     ToolTip="Tìm theo tên tuyến, hành trình hoặc mác tàu"/>
+                            <TextBox Grid.Column="1" x:Name="txtTimMacTau" TextChanged="TxtTimMacTau_TextChanged"
+                                     ToolTip="Tìm theo mác tàu, hành trình (tên ga) hoặc loại tàu"/>
 
                             <TextBlock Grid.Column="2" Text="Kỳ:" Style="{StaticResource FieldLabel}" Margin="12,0,6,0"/>
                             <ComboBox Grid.Column="3" x:Name="cboKyChiPhi" Width="170" SelectionChanged="CboKyChiPhi_SelectionChanged"
@@ -1844,15 +1846,15 @@
 
                             <Border Grid.Column="4" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="3"
                                     Padding="8,3" Margin="12,0,8,0" HorizontalAlignment="Left" VerticalAlignment="Center"
-                                    ToolTip="Bảng tổng hợp chỉ đọc — doanh thu là dữ liệu mẫu, chưa nối bán vé/hàng hoá thật.">
+                                    ToolTip="Bảng tổng hợp chỉ đọc — doanh thu là tiền vé thực thu trừ tiền đã hoàn, của các chuyến có ngày chạy trong kỳ.">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="Info24" FontSize="11" Foreground="#1D4ED8" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Chỉ đọc · doanh thu là dữ liệu mẫu, chưa nối bán vé/hàng hoá thật."
+                                    <TextBlock Text="Chỉ đọc · doanh thu = tiền vé thuần của các chuyến chạy trong kỳ."
                                                FontSize="10" Foreground="#1D4ED8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                             </Border>
 
-                            <Button Grid.Column="5" Click="BtnXoaLocTuyen_Click" Style="{StaticResource DesktopButton}" Margin="0"
+                            <Button Grid.Column="5" Click="BtnXoaLocMacTau_Click" Style="{StaticResource DesktopButton}" Margin="0"
                                     ToolTip="Xóa điều kiện tra cứu (Esc)">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="Dismiss24" FontSize="12" Margin="0,0,5,0" Foreground="#64748B"/>
@@ -1870,15 +1872,15 @@
                             <ColumnDefinition Width="380" MinWidth="330" MaxWidth="440"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- CỘT TRÁI: thẻ từng tuyến -->
+                        <!-- CỘT TRÁI: thẻ từng mác tàu -->
                         <Border Grid.Column="0" Style="{StaticResource KtCard}">
                             <Grid>
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,8">
-                                    <ItemsControl x:Name="icTuyenChiPhi">
+                                    <ItemsControl x:Name="icMacTauChiPhi">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Button Style="{StaticResource KtNutThe}" Click="TheTuyenChiPhi_Click" Margin="0,0,0,8"
-                                                        ToolTip="Bấm để xem chi tiết chi phí của tuyến này">
+                                                <Button Style="{StaticResource KtNutThe}" Click="TheMacTauChiPhi_Click" Margin="0,0,0,8"
+                                                        ToolTip="Bấm để xem chi tiết doanh thu và chi phí của mác tàu này">
                                                     <Border Background="#FFFFFF" BorderBrush="{Binding MauVien}"
                                                             BorderThickness="{Binding DoDayVien}" CornerRadius="4" Padding="12,9">
                                                         <Grid>
@@ -1888,8 +1890,8 @@
                                                             </Grid.ColumnDefinitions>
 
                                                             <StackPanel Grid.Column="0">
-                                                                <TextBlock Text="{Binding Tuyen.TenTuyen}" FontSize="13" FontWeight="Bold" Foreground="#0F172A"/>
-                                                                <TextBlock Text="{Binding Tuyen.HanhTrinh}" FontSize="10" Foreground="#64748B"/>
+                                                                <TextBlock Text="{Binding TieuDe}" FontSize="13" FontWeight="Bold" Foreground="#0F172A"/>
+                                                                <TextBlock Text="{Binding MoTaNgan}" FontSize="10" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
                                                                 <Grid Margin="0,6,0,0">
                                                                     <Grid.ColumnDefinitions>
                                                                         <ColumnDefinition Width="*"/>
@@ -1925,14 +1927,14 @@
                                     </ItemsControl>
                                 </ScrollViewer>
 
-                                <TextBlock x:Name="txtTrongTuyenChiPhi" Visibility="Collapsed"
-                                           Text="Không có tuyến nào khớp điều kiện tra cứu."
+                                <TextBlock x:Name="txtTrongMacTauChiPhi" Visibility="Collapsed"
+                                           Text="Không có mác tàu nào khớp điều kiện tra cứu."
                                            FontSize="11" Foreground="#94A3B8" FontStyle="Italic"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
-                        <!-- CỘT PHẢI: chi tiết tuyến -->
+                        <!-- CỘT PHẢI: chi tiết mác tàu -->
                         <Border Grid.Column="2" Style="{StaticResource KtCard}">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -1953,7 +1955,7 @@
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock x:Name="txtCpTieuDe" Text="CHI PHÍ &amp; HIỆU QUẢ"
                                                        FontSize="12" FontWeight="Bold" Foreground="#003B73" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock x:Name="txtCpMoTa" Text="Chọn một tuyến để xem chi tiết"
+                                            <TextBlock x:Name="txtCpMoTa" Text="Chọn một mác tàu để xem chi tiết"
                                                        FontSize="11" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </Grid>
@@ -1961,7 +1963,7 @@
 
                                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12,10">
                                     <StackPanel>
-                                        <TextBlock x:Name="txtChiPhiTrong" Text="Chưa chọn tuyến."
+                                        <TextBlock x:Name="txtChiPhiTrong" Text="Chưa chọn mác tàu."
                                                    FontSize="11" Foreground="#94A3B8" FontStyle="Italic" Margin="0,4,0,0"/>
 
                                         <StackPanel x:Name="pnlChiPhiChiTiet" Visibility="Collapsed">
@@ -1992,8 +1994,38 @@
                                                 <StackPanel x:Name="pnlCpSoLieu"/>
                                             </Border>
 
+                                            <TextBlock x:Name="txtCpTieuDeChuyen" Text="DOANH THU THEO CHUYẾN" Style="{StaticResource KtSectionHeader}"/>
+                                            <TextBlock x:Name="txtCpTrongChuyen" Text="Mác tàu này chưa có chuyến nào chạy trong kỳ."
+                                                       FontSize="10" Foreground="#94A3B8" FontStyle="Italic" Margin="0,0,0,8" Visibility="Collapsed"/>
+                                            <ItemsControl x:Name="icCpChuyen" Margin="0,0,0,8">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1"
+                                                                CornerRadius="3" Padding="8,5" Margin="0,0,0,4">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <ui:SymbolIcon Grid.Column="0" Symbol="TicketDiagonal24" FontSize="13" Foreground="#475569"
+                                                                               Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding TieuDe}" FontSize="10" FontWeight="SemiBold" Foreground="#0F172A"
+                                                                               TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Text="{Binding MoTa}" FontSize="9" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                                                                </StackPanel>
+                                                                <TextBlock Grid.Column="2" Text="{Binding DoanhThu, StringFormat={}{0:N0} đ}"
+                                                                           FontSize="11" FontWeight="Bold" Foreground="#15803D"
+                                                                           VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
                                             <TextBlock x:Name="txtCpTieuDeDaChi" Text="CHI PHÍ ĐÃ CHI" Style="{StaticResource KtSectionHeader}"/>
-                                            <TextBlock x:Name="txtCpTrongDaChi" Text="Chưa có khoản chi phí nào ghi nhận cho tuyến này."
+                                            <TextBlock x:Name="txtCpTrongDaChi" Text="Chưa có khoản chi phí nào ghi nhận cho mác tàu này trong kỳ."
                                                        FontSize="10" Foreground="#94A3B8" FontStyle="Italic" Margin="0,0,0,8" Visibility="Collapsed"/>
                                             <ItemsControl x:Name="icCpDaChi" Margin="0,0,0,8">
                                                 <ItemsControl.ItemTemplate>
@@ -2028,7 +2060,7 @@
                                             </ItemsControl>
 
                                             <TextBlock x:Name="txtCpTieuDeDuPhong" Text="CHI PHÍ DỰ PHÓNG" Style="{StaticResource KtSectionHeader}"/>
-                                            <TextBlock x:Name="txtCpTrongDuPhong" Text="Không có phương tiện nào sắp / đã đến hạn bảo dưỡng cho tuyến này."
+                                            <TextBlock x:Name="txtCpTrongDuPhong" Text="Không có đầu máy nào của mác tàu này sắp / đã đến hạn bảo dưỡng."
                                                        FontSize="10" Foreground="#94A3B8" FontStyle="Italic" Margin="0,0,0,8" Visibility="Collapsed"/>
                                             <ItemsControl x:Name="icCpDuPhong" Margin="0,0,0,8">
                                                 <ItemsControl.ItemTemplate>
