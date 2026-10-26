@@ -5,12 +5,11 @@ namespace GUI.ViewModels.KyThuat
     // =========================================================================
     // BAO TRI - TAB 5: CHI PHI & HIEU QUA (theo tuyen duong / mac tau)
     //
-    // Khong co bang rieng trong CSDL: tong hop ChiPhi da them o 3 tab truoc
-    // (KhamXeHienThi, CapNhienLieuHienThi, BaoDuongHienThi) TRONG KY dang chon,
-    // roi phan bo theo TUYEN ma phuong tien dang phuc vu (tra qua
+    // Khong co bang rieng trong CSDL: tong hop ChiPhi cua 3 bang baotri (tu 24/10 doc CSDL that qua
+    // BaoTriDuLieu) TRONG KY dang chon, roi phan bo theo TUYEN ma phuong tien dang phuc vu (tra qua
     // vanhanh.DoanTau.SoHieuMacTau).
-    // Doanh thu la DU LIEU MAU TINH minh hoa, CHUA noi du lieu ban ve / hang hoa
-    // that (phan hanh khach / hang hoa cua A Ba chua lam xong).
+    // Doanh thu van la DU LIEU MAU TINH minh hoa, CHUA noi du lieu ban ve / hang hoa that (quyet dinh
+    // 24/10: lam sau cung, gom theo mac tau + doanh thu tu vantai.Ve khi A Ba xong Ban ve).
     // =========================================================================
 
     // Mot tuyen duong / nhom mac tau mau. Mot mac tau chi thuoc dung 1 tuyen.
@@ -165,9 +164,9 @@ namespace GUI.ViewModels.KyThuat
         // Chi phi cua mot dau may duoc CHIA cho cac tuyen theo so doan tau (chinh / day) ma no
         // keo tren moi tuyen, de tong chi phi cac tuyen cong lai dung bang so tien thuc chi.
         // Vd D19E-901 keo SE1, SE3, SE19 => moi tuyen T1, T2, T3 chiu 1/3.
-        public static List<PhanBoTuyen> PhanBoDauMay(string soHieuDauMay)
+        public static List<PhanBoTuyen> PhanBoDauMay(BaoTriDuLieu dl, string soHieuDauMay)
         {
-            var tuyenCuaDoan = DanhMucMauBaoTri.DoanTau
+            var tuyenCuaDoan = dl.DoanTau
                 .Where(d => d.SoHieuDauMayChinh == soHieuDauMay || d.SoHieuDauMayDay == soHieuDauMay)
                 .Select(d => TimTuyenTheoMacTau(d.SoHieuMacTau))
                 .Where(t => t != null)
@@ -180,14 +179,15 @@ namespace GUI.ViewModels.KyThuat
         }
 
         // ---------------------------------------------------------------------
-        // Tong hop chi phi theo tuyen tu du lieu 3 tab truoc (da tron thay doi tam).
+        // Tong hop chi phi theo tuyen tu du lieu 3 tab truoc (anh chup CSDL).
         // Chi phi da chi: chi lay phieu co thoi diem trong [tuNgay, bay gio].
         // Du phong: trang thai bao duong HIEN TAI, khong phu thuoc ky.
         // ---------------------------------------------------------------------
-        public static List<TuyenChiPhiHienThi> TaoTongHop(
-            List<KhamXeHienThi> khamXe, List<CapNhienLieuHienThi> capDau, List<BaoDuongHienThi> baoDuong,
-            int soNgayKy, DateTime tuNgay)
+        public static List<TuyenChiPhiHienThi> TaoTongHop(BaoTriDuLieu dl, int soNgayKy, DateTime tuNgay)
         {
+            var khamXe = dl.KhamXe;
+            var capDau = dl.CapDau;
+            var baoDuong = dl.BaoDuong;
             var theoTuyen = Tuyen.ToDictionary(t => t.MaTuyen, t => new TuyenChiPhiHienThi { Tuyen = t, SoNgayKy = soNgayKy });
 
             void ThemDaChi(PhanBoTuyen pb, string nguon, string maPhieu, string moTa, decimal soTien, DateTime thoiDiem)
@@ -210,7 +210,7 @@ namespace GUI.ViewModels.KyThuat
             // 2) Nhien lieu: chia theo so doan tau dau may keo tren tung tuyen
             foreach (var nl in capDau)
             {
-                foreach (var pb in PhanBoDauMay(nl.SoHieuDauMay))
+                foreach (var pb in PhanBoDauMay(dl, nl.SoHieuDauMay))
                     ThemDaChi(pb, "NHIEN_LIEU", nl.MaPhieu,
                         $"Cấp dầu {nl.SoHieuDauMay} · {nl.SoLitTraNap:N0} lít",
                         nl.ChiPhi, nl.ThoiDiemBomDau);
@@ -220,7 +220,7 @@ namespace GUI.ViewModels.KyThuat
             //    rieng cho tuyen nao trong du lieu mau hien tai)
             foreach (var bd in baoDuong.Where(x => x.LaDauMay))
             {
-                foreach (var pb in PhanBoDauMay(bd.SoHieuPhuongTien))
+                foreach (var pb in PhanBoDauMay(dl, bd.SoHieuPhuongTien))
                     ThemDaChi(pb, "BAO_DUONG", bd.MaPhieu,
                         $"Bảo dưỡng {bd.CapBaoDuong} · {bd.SoHieuPhuongTien}",
                         bd.ChiPhi, bd.ThoiDiemHoanThanh);
@@ -228,9 +228,9 @@ namespace GUI.ViewModels.KyThuat
 
             // 4) Du phong: dau may nao dang SAP_TOI / QUA_HAN cap ke tiep -> uoc tinh theo
             //    chi phi tham khao cua cap do, chia cho cac tuyen nhu nhien lieu
-            foreach (var dm in DanhMucMauBaoTri.DauMay)
+            foreach (var dm in dl.DauMayKhaiThac)
             {
-                var pt = DanhMucMauBaoTri.TimPhuongTien($"DAU_MAY:{dm.MaDauMay}");
+                var pt = dl.TimPhuongTien($"DAU_MAY:{dm.MaDauMay}");
                 if (pt == null) continue;
 
                 var lichSu = baoDuong.Where(x => x.KhoaPhuongTien == pt.Khoa);
@@ -238,7 +238,7 @@ namespace GUI.ViewModels.KyThuat
                 if (chuY == null || chuY.TrangThai is not ("QUA_HAN" or "SAP_TOI")) continue;
 
                 decimal uocTinh = ChuKyBaoDuong.ChiPhiThamKhao(chuY.Cap);
-                foreach (var pb in PhanBoDauMay(dm.SoHieuDauMay))
+                foreach (var pb in PhanBoDauMay(dl, dm.SoHieuDauMay))
                 {
                     string phanBo = pb.Nhan.Length == 0 ? "" : $" · phân bổ {pb.Nhan} của {uocTinh:N0} đ";
                     theoTuyen[pb.Tuyen.MaTuyen].ChiTietDuPhong.Add(new KhoanChiPhiDuPhong(

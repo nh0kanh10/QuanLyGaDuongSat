@@ -18,10 +18,8 @@
                 <Setter Property="MinWidth" Value="128"/>
             </Style>
 
-            <!-- Dòng biên bản: nhấp đúp để cập nhật -->
-            <Style x:Key="DongKhamXeStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                <EventSetter Event="MouseDoubleClick" Handler="DongKhamXe_MouseDoubleClick"/>
-            </Style>
+            <!-- Dòng biên bản: biên bản đã lập không sửa (24/10) nên không có nhấp đúp -->
+            <Style x:Key="DongKhamXeStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}"/>
             <Style x:Key="DongCapDauStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                 <EventSetter Event="MouseDoubleClick" Handler="DongCapDau_MouseDoubleClick"/>
             </Style>
@@ -61,24 +59,8 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Nhãn báo có thay đổi tạm trên giao diện (chưa ghi CSDL) -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
-                            VerticalAlignment="Center" Margin="12,0,12,0">
-                    <Border x:Name="bdThayDoiTam" Visibility="Collapsed"
-                            Background="#FFFBEB" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="14" Padding="10,4,4,4"
-                            ToolTip="Biên bản vừa lập / sửa hiện chỉ lưu trên màn hình, chưa ghi vào CSDL">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="7" Height="7" Fill="#F59E0B" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="txtThayDoiTam" Text="0 thay đổi tạm" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="#92400E" VerticalAlignment="Center"/>
-                            <Button Click="BtnHuyThayDoiTam_Click" Style="{StaticResource DesktopButton}"
-                                    Height="22" Margin="8,0,0,0" Padding="8,0"
-                                    ToolTip="Bỏ toàn bộ thay đổi tạm, hiển thị lại dữ liệu gốc">
-                                <TextBlock Text="Hoàn tác" FontSize="10" FontWeight="SemiBold" Foreground="#92400E"/>
-                            </Button>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
+                <!-- Cột giữa để trống (trước 24/10 là nhãn "thay đổi tạm"; giờ mọi thao tác ghi thẳng CSDL) -->
+                <StackPanel Grid.Column="1"/>
 
                 <!-- Chỉ số cần xử lý của 3 tab. Bấm để chuyển tới tab tương ứng (kèm bộ lọc). -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -179,7 +161,7 @@
                         <ItemsControl Grid.Row="1" x:Name="icTinhTrangDoanTau">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <UniformGrid Rows="1"/>
+                                    <UniformGrid Columns="6"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
@@ -261,11 +243,12 @@
                                         <TextBlock Text="Lập Biên Bản"/>
                                     </StackPanel>
                                 </Button>
-                                <Button x:Name="btnSuaBienBan" Click="BtnSuaBienBan_Click" IsEnabled="False"
-                                        Style="{StaticResource DesktopButton}" ToolTip="Cập nhật biên bản đang chọn (nhấp đúp vào dòng)">
+                                <Button x:Name="btnKhamLaiDoanTau" Click="BtnKhamLai_Click" IsEnabled="False"
+                                        Style="{StaticResource DesktopButton}"
+                                        ToolTip="Lập biên bản mới cho đoàn tàu của biên bản đang chọn (biên bản đã lập không sửa)">
                                     <StackPanel Orientation="Horizontal">
-                                        <ui:SymbolIcon Symbol="Edit24" FontSize="12" Margin="0,0,5,0" Foreground="#003B73"/>
-                                        <TextBlock Text="Sửa"/>
+                                        <ui:SymbolIcon Symbol="ArrowRepeatAll24" FontSize="12" Margin="0,0,5,0" Foreground="#003B73"/>
+                                        <TextBlock Text="Khám Lại"/>
                                     </StackPanel>
                                 </Button>
                                 <Border Width="1" Background="#CBD5E1" Margin="2,4,8,4"/>
@@ -303,15 +286,7 @@
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,0,0">
                                                         <TextBlock Text="{Binding MaBienBan}" FontWeight="Bold" FontSize="11"
                                                                    Foreground="#0F172A" VerticalAlignment="Center"/>
-                                                        <Ellipse x:Name="chamTam" Width="6" Height="6" Fill="#F59E0B" Margin="5,0,0,0"
-                                                                 VerticalAlignment="Center" Visibility="Collapsed"
-                                                                 ToolTip="Thay đổi tạm, chưa ghi CSDL"/>
                                                     </StackPanel>
-                                                    <DataTemplate.Triggers>
-                                                        <DataTrigger Binding="{Binding LaThayDoiTam}" Value="True">
-                                                            <Setter TargetName="chamTam" Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </DataTemplate.Triggers>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -484,11 +459,6 @@
                                                     CornerRadius="2" Padding="8,2" VerticalAlignment="Center">
                                                 <TextBlock x:Name="txtChiTietMa" Text="—" FontSize="10" FontWeight="SemiBold" Foreground="#475569"/>
                                             </Border>
-                                            <Button x:Name="btnSuaChiTiet" Click="BtnSuaBienBan_Click" IsEnabled="False"
-                                                    Style="{StaticResource DesktopButton}" Height="24" Width="28" Padding="0" Margin="6,0,0,0"
-                                                    ToolTip="Cập nhật biên bản này">
-                                                <ui:SymbolIcon Symbol="Edit24" FontSize="13" Foreground="#003B73"/>
-                                            </Button>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -629,7 +599,7 @@
                         <ItemsControl Grid.Row="1" x:Name="icTinhTrangNhienLieu">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <UniformGrid Rows="1"/>
+                                    <UniformGrid Columns="5"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
@@ -777,15 +747,7 @@
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,0,0">
                                                         <TextBlock Text="{Binding MaPhieu}" FontWeight="Bold" FontSize="11"
                                                                    Foreground="#0F172A" VerticalAlignment="Center"/>
-                                                        <Ellipse x:Name="chamTam" Width="6" Height="6" Fill="#F59E0B" Margin="5,0,0,0"
-                                                                 VerticalAlignment="Center" Visibility="Collapsed"
-                                                                 ToolTip="Thay đổi tạm, chưa ghi CSDL"/>
                                                     </StackPanel>
-                                                    <DataTemplate.Triggers>
-                                                        <DataTrigger Binding="{Binding LaThayDoiTam}" Value="True">
-                                                            <Setter TargetName="chamTam" Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </DataTemplate.Triggers>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -1114,7 +1076,7 @@
                         <ItemsControl Grid.Row="1" Grid.Column="0" x:Name="icTinhTrangBaoDuong">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <UniformGrid Rows="1"/>
+                                    <UniformGrid Columns="4"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
@@ -1283,15 +1245,7 @@
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,0,0">
                                                         <TextBlock Text="{Binding MaPhieu}" FontWeight="Bold" FontSize="11"
                                                                    Foreground="#0F172A" VerticalAlignment="Center"/>
-                                                        <Ellipse x:Name="chamTam" Width="6" Height="6" Fill="#F59E0B" Margin="5,0,0,0"
-                                                                 VerticalAlignment="Center" Visibility="Collapsed"
-                                                                 ToolTip="Thay đổi tạm, chưa ghi CSDL"/>
                                                     </StackPanel>
-                                                    <DataTemplate.Triggers>
-                                                        <DataTrigger Binding="{Binding LaThayDoiTam}" Value="True">
-                                                            <Setter TargetName="chamTam" Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </DataTemplate.Triggers>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -1762,7 +1716,7 @@
                                         </Border>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock Text="SẴN SÀNG XUẤT BẾN" FontSize="12" FontWeight="Bold" Foreground="#003B73"/>
-                                            <TextBlock Text="Khám xe · duyệt lập tàu · bảo dưỡng · nhiên liệu đầu máy" FontSize="10"
+                                            <TextBlock Text="Khám xe · duyệt an toàn · bảo dưỡng · nhiên liệu · kíp lái" FontSize="10"
                                                        Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </Grid>
@@ -1808,6 +1762,17 @@
                                                                     </DataTemplate>
                                                                 </ItemsControl.ItemTemplate>
                                                             </ItemsControl>
+                                                            <!-- Duyệt an toàn (UC-BT-03): chỉ bật khi khám xe + bảo dưỡng đầu máy đã đạt -->
+                                                            <Button Click="BtnDuyetAnToan_Click" Visibility="{Binding HienNutDuyet}"
+                                                                    IsEnabled="{Binding CoTheDuyet}" ToolTip="{Binding GoiYNutDuyet}"
+                                                                    ToolTipService.ShowOnDisabled="True"
+                                                                    Style="{StaticResource DesktopButton}" Height="26" Margin="0,6,0,0"
+                                                                    HorizontalAlignment="Stretch">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <ui:SymbolIcon Symbol="ShieldCheckmark24" FontSize="13" Foreground="#15803D" Margin="0,0,6,0"/>
+                                                                    <TextBlock Text="{Binding NhanNutDuyet}" FontWeight="SemiBold" Foreground="#15803D"/>
+                                                                </StackPanel>
+                                                            </Button>
                                                         </StackPanel>
                                                     </Border>
                                                 </Button>

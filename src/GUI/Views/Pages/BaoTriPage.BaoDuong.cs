@@ -1,4 +1,5 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using DTO.BaoTri;
+using GUI.ViewModels.KyThuat;
 using GUI.Helpers;
 using GUI.Views.Dialogs;
 using System.Windows;
@@ -11,31 +12,17 @@ namespace GUI.Views.Pages
     // BAO TRI - TAB 3: BAO DUONG DINH KY (baotri.NhatKyBaoDuong)
     //
     // Cung mau voi tab 1 - 2. Tinh trang den han tinh theo chu ky tu lan bao
-    // duong gan nhat cua tung phuong tien (ChuKyBaoDuong), nen phieu vua ghi
-    // nhan tren giao dien lam moi ngay moc ke tiep cua the / KPI.
+    // duong gan nhat cua tung phuong tien (ChuKyBaoDuong -> QuyTacBaoTri), nen phieu
+    // vua ghi lam moi ngay moc ke tiep cua the / KPI. Tu 24/10 ghi thang CSDL qua
+    // BaoTriService: chi sua duoc phieu MOI NHAT cua moi phuong tien; ghi phieu moi cho
+    // phuong tien dang "Bao duong" thi co the dua ve "San sang" cung luc.
     // =========================================================================
     public partial class BaoTriPage
     {
-        // Khoa am = phieu ghi nhan moi, khoa duong = phieu goc da bi sua
-        private readonly Dictionary<int, BaoDuongHienThi> _baoDuongTam = new();
-
         // Loc theo mot phuong tien (khoa "DAU_MAY:2" / "TOA_XE:4"), null = tat ca
         private string? _khoaPhuongTienLoc;
 
-        // Du lieu goc (thay cho doc CSDL) + ban sua tam + ban ghi nhan moi
-        private List<BaoDuongHienThi> LayToanBoBaoDuong()
-        {
-            var ds = new List<BaoDuongHienThi>();
-            var maDaCo = new HashSet<int>();
-
-            foreach (var bd in DanhMucMauBaoTri.LayNhatKyBaoDuong())
-            {
-                maDaCo.Add(bd.MaBaoDuong);
-                ds.Add(_baoDuongTam.TryGetValue(bd.MaBaoDuong, out var banTam) ? banTam : bd);
-            }
-            ds.AddRange(_baoDuongTam.Values.Where(bd => !maDaCo.Contains(bd.MaBaoDuong)));
-            return ds;
-        }
+        private List<BaoDuongHienThi> LayToanBoBaoDuong() => _duLieu.BaoDuong;
 
         private void LamMoiBaoDuong(bool giuDongChon, int? maChonSau = null)
         {
@@ -47,8 +34,6 @@ namespace GUI.Views.Pages
 
             if (!(maDangChon.HasValue && ChonDongBaoDuong(maDangChon.Value)) && dgBaoDuong.Items.Count > 0)
                 dgBaoDuong.SelectedIndex = 0;
-
-            CapNhatNhanThayDoiTam();
         }
 
         // =====================================================================
@@ -62,16 +47,16 @@ namespace GUI.Views.Pages
             {
                 PhuongTien = pt,
                 TienDo = ChuKyBaoDuong.TinhTienDo(pt, cuaPt),
-                LanGanNhat = cuaPt.OrderByDescending(x => x.ThoiDiemHoanThanh).FirstOrDefault(),
+                LanGanNhat = cuaPt.OrderByDescending(x => x.ThoiDiemHoanThanh).ThenByDescending(x => x.MaBaoDuong).FirstOrDefault(),
                 DangChon = _khoaPhuongTienLoc == pt.Khoa
             };
         }
 
         private void NapTinhTrangBaoDuong(List<BaoDuongHienThi> toanBo)
         {
-            var tatCa = DanhMucMauBaoTri.PhuongTien.Select(pt => TaoTinhTrang(pt, toanBo)).ToList();
+            var tatCa = _duLieu.PhuongTien.Where(pt => !pt.NgungKhaiThac).Select(pt => TaoTinhTrang(pt, toanBo)).ToList();
 
-            // 4 the dau may
+            // The dau may (con khai thac)
             icTinhTrangBaoDuong.ItemsSource = tatCa.Where(t => t.PhuongTien.LaDauMay).ToList();
 
             // The tong hop toa xe
@@ -141,7 +126,7 @@ namespace GUI.Views.Pages
             string cap = LayTagDangChon(cboCapBaoDuong) ?? "ALL";
 
             var danhSach = toanBo.Where(bd => KhopBoLocBaoDuong(bd, tuKhoa, loai, cap, _khoaPhuongTienLoc))
-                                 .OrderByDescending(bd => bd.ThoiDiemHoanThanh)
+                                 .OrderByDescending(bd => bd.ThoiDiemHoanThanh).ThenByDescending(bd => bd.MaBaoDuong)
                                  .ToList();
 
             dgBaoDuong.ItemsSource = danhSach;
@@ -151,7 +136,7 @@ namespace GUI.Views.Pages
                 ? "Phương tiện này chưa có phiếu bảo dưỡng nào — nhấp đúp vào thẻ để ghi nhận."
                 : "Không có phiếu bảo dưỡng nào khớp điều kiện lọc.";
 
-            var ptLoc = _khoaPhuongTienLoc != null ? DanhMucMauBaoTri.TimPhuongTien(_khoaPhuongTienLoc) : null;
+            var ptLoc = _khoaPhuongTienLoc != null ? _duLieu.TimPhuongTien(_khoaPhuongTienLoc) : null;
             bdLocPhuongTien.Visibility = ptLoc != null ? Visibility.Visible : Visibility.Collapsed;
             txtLocPhuongTien.Text = ptLoc != null ? $"{ptLoc.NhanLoai}: {ptLoc.SoHieu}" : "";
         }
@@ -214,8 +199,18 @@ namespace GUI.Views.Pages
         private void DgBaoDuong_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var bd = dgBaoDuong.SelectedItem as BaoDuongHienThi;
-            btnSuaBaoDuong.IsEnabled = bd != null;
-            btnSuaBaoDuongChiTiet.IsEnabled = bd != null;
+
+            // Chi sua duoc phieu moi nhat cua phuong tien (phieu cu da la moc tinh chu ky cho phieu sau)
+            var moiHon = bd != null ? PhieuMoiHon(bd) : null;
+            btnSuaBaoDuong.IsEnabled = bd != null && moiHon == null;
+            btnSuaBaoDuongChiTiet.IsEnabled = bd != null && moiHon == null;
+            string goiYSua = moiHon != null
+                ? $"Chỉ sửa được phiếu mới nhất của {bd!.SoHieuPhuongTien} (đã có {moiHon.MaPhieu} ghi sau)"
+                : "Cập nhật phiếu đang chọn (nhấp đúp vào dòng)";
+            btnSuaBaoDuong.ToolTip = goiYSua;
+            btnSuaBaoDuongChiTiet.ToolTip = goiYSua;
+            ToolTipService.SetShowOnDisabled(btnSuaBaoDuong, true);
+            ToolTipService.SetShowOnDisabled(btnSuaBaoDuongChiTiet, true);
 
             if (bd == null)
             {
@@ -236,7 +231,7 @@ namespace GUI.Views.Pages
 
             txtBdTieuDe.Text = $"{bd.SoHieuPhuongTien} · Bảo dưỡng {bd.CapBaoDuong}";
             txtBdMoTa.Text = $"Hoàn thành {bd.ThoiDiemHoanThanh:HH:mm dd/MM/yyyy} · {bd.TenNguoiThucHien}";
-            txtBdMa.Text = bd.LaThayDoiTam ? $"{bd.MaPhieu} · tạm" : bd.MaPhieu;
+            txtBdMa.Text = bd.MaPhieu;
 
             // --- Cap da lam ---
             bdBdCapNhan.Background = Mau(bd.NenCap);
@@ -248,9 +243,9 @@ namespace GUI.Views.Pages
                 : $"Ngày {bd.ThoiDiemHoanThanh:dd/MM/yyyy} · {ChuKyBaoDuong.MoTaChuKy(bd.CapBaoDuong)}";
 
             // --- Tinh trang hien tai cua phuong tien ---
-            var pt = DanhMucMauBaoTri.TimPhuongTien(bd.KhoaPhuongTien);
+            var pt = _duLieu.TimPhuongTien(bd.KhoaPhuongTien);
             var lichSu = LayToanBoBaoDuong().Where(x => x.KhoaPhuongTien == bd.KhoaPhuongTien)
-                                            .OrderByDescending(x => x.ThoiDiemHoanThanh)
+                                            .OrderByDescending(x => x.ThoiDiemHoanThanh).ThenByDescending(x => x.MaBaoDuong)
                                             .ToList();
             var tienDo = pt != null ? ChuKyBaoDuong.TinhTienDo(pt, lichSu) : new List<TienDoCapBaoDuong>();
             icBdTienDo.ItemsSource = tienDo;
@@ -271,6 +266,16 @@ namespace GUI.Views.Pages
             if (bd.LaDauMay && pt != null)
                 ThemDongThongSo(pnl, "Đã chạy kể từ phiếu này", $"{Math.Max(0, pt.SoKmTichLuy - bd.SoKmTaiThoiDiem):N0} km");
             ThemDongThongSo(pnl, "Số ngày kể từ phiếu này", $"{Math.Max(0, (DateTime.Now - bd.ThoiDiemHoanThanh).Days):N0} ngày");
+            if (pt != null)
+                ThemDongThongSo(pnl, "Trạng thái phương tiện", pt.TrangThai switch
+                {
+                    "SAN_SANG" => "Sẵn sàng",
+                    "DANG_CHAY" => "Đang chạy",
+                    "DA_NOI" => "Đã nối vào đoàn tàu",
+                    "BAO_DUONG" => "Đang bảo dưỡng",
+                    "NGUNG_KHAI_THAC" => "Ngừng khai thác",
+                    _ => pt.TrangThai
+                });
             ThemDongThongSo(pnl, "Người thực hiện", string.IsNullOrEmpty(bd.TenNguoiThucHien) ? "(không ghi)" : bd.TenNguoiThucHien);
             ThemDongThongSo(pnl, "Khóa tham chiếu", bd.LaDauMay ? $"MaDauMay #{bd.MaDauMay} · MaToaXe trống"
                                                                 : $"MaToaXe #{bd.MaToaXe} · MaDauMay trống", laDongCuoi: true);
@@ -311,56 +316,74 @@ namespace GUI.Views.Pages
         private void GhiNhanBaoDuong(string? khoaPhuongTien = null, bool chuyenTab = true)
         {
             if (chuyenTab) tabBaoTri.SelectedIndex = 2;
+            if (!KiemTraKetNoi()) return;
 
-            var dlg = new BaoDuongDialog(null, LayToanBoBaoDuong(), khoaPhuongTien) { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() != true || dlg.KetQua == null) return;
+            KetQuaGhiBaoDuong? kq = null;
+            string? Luu(BaoDuongDTO bd, bool duaVeSanSang)
+                => _service.LuuBaoDuong(bd, duaVeSanSang, out string loi, out kq) ? null : loi;
 
-            var bd = dlg.KetQua;
-            bd.MaBaoDuong = _maTamKeTiep--;
-            _baoDuongTam[bd.MaBaoDuong] = bd;
+            var dlg = new BaoDuongDialog(null, _duLieu, Luu, khoaPhuongTien) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true || kq == null) return;
 
-            LamMoiSauKhiLuuBaoDuong(bd);
-            BaoKetQuaLuuBaoDuong(bd, laLapMoi: true);
+            SauKhiLuuBaoDuong(kq, laLapMoi: true);
         }
 
         private void SuaBaoDuong()
         {
             if (dgBaoDuong.SelectedItem is not BaoDuongHienThi dangChon) return;
+            if (!KiemTraKetNoi()) return;
+            if (PhieuMoiHon(dangChon) is { } moiHon)
+            {
+                ThongBaoDialog.ThongTin(
+                    $"Chỉ sửa được phiếu bảo dưỡng mới nhất của {dangChon.SoHieuPhuongTien}: {moiHon.MaPhieu} " +
+                    $"({moiHon.CapBaoDuong}, {moiHon.ThoiDiemHoanThanh:dd/MM/yyyy}) đã ghi sau phiếu {dangChon.MaPhieu}.",
+                    "Không sửa phiếu cũ");
+                return;
+            }
 
-            var dlg = new BaoDuongDialog(dangChon.SaoChep(), LayToanBoBaoDuong()) { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() != true || dlg.KetQua == null) return;
+            KetQuaGhiBaoDuong? kq = null;
+            string? Luu(BaoDuongDTO bd, bool duaVeSanSang)
+                => _service.LuuBaoDuong(bd, duaVeSanSang, out string loi, out kq) ? null : loi;
 
-            var bd = dlg.KetQua;
-            _baoDuongTam[bd.MaBaoDuong] = bd;
+            var dlg = new BaoDuongDialog(dangChon.SaoChep(), _duLieu, Luu) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true || kq == null) return;
 
-            LamMoiSauKhiLuuBaoDuong(bd);
-            BaoKetQuaLuuBaoDuong(bd, laLapMoi: false);
+            SauKhiLuuBaoDuong(kq, laLapMoi: false);
         }
 
-        private void LamMoiSauKhiLuuBaoDuong(BaoDuongHienThi bd)
-        {
-            LamMoiBaoDuong(giuDongChon: false, maChonSau: bd.MaBaoDuong);
+        // Phieu cung phuong tien ghi sau phieu nay (null = day la phieu moi nhat)
+        private BaoDuongHienThi? PhieuMoiHon(BaoDuongHienThi bd)
+            => _duLieu.BaoDuong.Where(x => x.KhoaPhuongTien == bd.KhoaPhuongTien && x.MaBaoDuong != bd.MaBaoDuong
+                                           && (x.ThoiDiemHoanThanh > bd.ThoiDiemHoanThanh
+                                               || (x.ThoiDiemHoanThanh == bd.ThoiDiemHoanThanh && x.MaBaoDuong > bd.MaBaoDuong)))
+                               .OrderByDescending(x => x.ThoiDiemHoanThanh).ThenByDescending(x => x.MaBaoDuong)
+                               .FirstOrDefault();
 
-            // Bo loc hien tai an mat phieu vua luu thi xoa loc de nguoi dung thay ngay
-            if ((dgBaoDuong.SelectedItem as BaoDuongHienThi)?.MaBaoDuong != bd.MaBaoDuong)
+        // Doc lai CSDL, ve lai 5 tab, chon phieu vua luu (xoa loc neu bi an) roi bao ket qua
+        private void SauKhiLuuBaoDuong(KetQuaGhiBaoDuong kq, bool laLapMoi)
+        {
+            NapLaiTuCsdl();
+            LamMoiTatCa();
+            if (!ChonDongBaoDuong(kq.MaBaoDuong))
             {
+                var vuaLuu = _duLieu.BaoDuong.FirstOrDefault(x => x.MaBaoDuong == kq.MaBaoDuong);
                 _dangNapDuLieu = true;
                 txtTimBaoDuong.Text = string.Empty;
                 cboLoaiPhuongTien.SelectedIndex = 0;
                 cboCapBaoDuong.SelectedIndex = 0;
                 _dangNapDuLieu = false;
-                if (_khoaPhuongTienLoc != null && _khoaPhuongTienLoc != bd.KhoaPhuongTien) _khoaPhuongTienLoc = null;
-
-                LamMoiBaoDuong(giuDongChon: false, maChonSau: bd.MaBaoDuong);
+                if (_khoaPhuongTienLoc != null && _khoaPhuongTienLoc != vuaLuu?.KhoaPhuongTien) _khoaPhuongTienLoc = null;
+                LamMoiBaoDuong(giuDongChon: false, maChonSau: kq.MaBaoDuong);
             }
 
-            LamMoiCanhBao();
+            var bd = _duLieu.BaoDuong.FirstOrDefault(x => x.MaBaoDuong == kq.MaBaoDuong);
+            if (bd != null) BaoKetQuaLuuBaoDuong(bd, kq, laLapMoi);
         }
 
-        private void BaoKetQuaLuuBaoDuong(BaoDuongHienThi bd, bool laLapMoi)
+        private void BaoKetQuaLuuBaoDuong(BaoDuongHienThi bd, KetQuaGhiBaoDuong kq, bool laLapMoi)
         {
             // Moc ke tiep sau khi ghi nhan, de nguoi dung thay ngay tac dung cua phieu
-            var pt = DanhMucMauBaoTri.TimPhuongTien(bd.KhoaPhuongTien);
+            var pt = _duLieu.TimPhuongTien(bd.KhoaPhuongTien);
             string mocKeTiep = "";
             if (pt != null)
             {
@@ -369,10 +392,10 @@ namespace GUI.Views.Pages
             }
 
             ThongBaoDialog.ThanhCong(
-                $"{(laLapMoi ? "Đã ghi nhận" : "Đã cập nhật")} bảo dưỡng cấp {bd.CapBaoDuong} cho " +
+                $"{(laLapMoi ? "Đã ghi nhận" : "Đã cập nhật")} bảo dưỡng cấp {bd.CapBaoDuong} ({bd.MaPhieu}) cho " +
                 $"{bd.NhanLoai.ToLower()} {bd.SoHieuPhuongTien} tại {bd.SoKmTaiThoiDiem:N0} km.\n\n" +
-                (mocKeTiep.Length > 0 ? $"Tình trạng sau khi ghi nhận:\n{mocKeTiep}\n\n" : "") +
-                "Phiếu đang hiển thị trên màn hình, chưa ghi vào CSDL.",
+                (mocKeTiep.Length > 0 ? $"Tình trạng sau khi ghi nhận:\n{mocKeTiep}" : "") +
+                (kq.TrangThaiMoi == "SAN_SANG" ? $"\n\n{bd.SoHieuPhuongTien} đã chuyển từ \"Bảo dưỡng\" sang \"Sẵn sàng\"." : ""),
                 "Lưu phiếu bảo dưỡng");
         }
     }

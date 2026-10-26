@@ -21,7 +21,7 @@ namespace DAL.Repositories
 
     // =========================================================================
     // Bo dich loi SQL cho cac bang cua Dat: Phuong tien (phuongtien.*, vanhanh.DoanTau,
-    // vanhanh.ChiTietDoanTau) va Nhan su (nhansu.*, tu 11/10). UNIQUE / CHECK khong dat ten trong script goc nen ten rang
+    // vanhanh.ChiTietDoanTau), Nhan su (nhansu.*, tu 11/10) va Bao tri (baotri.*, tu 24/10). UNIQUE / CHECK khong dat ten trong script goc nen ten rang
     // buoc do SQL Server tu sinh (UQ__DauMay__...) -> nhan dien theo ten bang + ten cot.
     //
     // KE_HOACH §2.5 du kien SqlLoiHelper dung chung (viec nen cua A Ba, chua co). Khi co thi
@@ -154,6 +154,10 @@ namespace DAL.Repositories
                     "FK_VanDon_ToaXe" => laXoa ? "Toa xe đã có vận đơn hàng hóa, không xóa được (chuyển sang \"Ngừng khai thác\")." : "Toa xe không tồn tại.",
                     "FK_TaiKhoan_NhanVien" => laXoa ? "Nhân viên đã có tài khoản đăng nhập, không xóa được (chuyển sang \"Đã nghỉ việc\")." : "Nhân viên không tồn tại.",
                     "FK_LichSuMa_NhanVien" => laXoa ? "Nhân viên đã có lịch sử đổi mã, không xóa được (chuyển sang \"Đã nghỉ việc\")." : "Nhân viên không tồn tại.",
+                    // 24/10: Bao tri
+                    "FK_KhamXe_DoanTau" => laXoa ? "Đoàn tàu đã có biên bản khám xe." : "Đoàn tàu không tồn tại.",
+                    "FK_KhamXe_NguoiKham" or "FK_CapDau_NguoiCap" or "FK_BaoDuong_NguoiThucHien"
+                        => laXoa ? "Tài khoản đã ký phiếu bảo trì, không xóa được." : "Tài khoản người ký phiếu không tồn tại.",
                     _ => laXoa ? "Bản ghi đang được dữ liệu khác tham chiếu, không xoá được."
                                : "Dữ liệu tham chiếu không tồn tại."
                 };
@@ -165,6 +169,12 @@ namespace DAL.Repositories
                 return "Lái tàu, phụ lái và trưởng tàu phải là ba người khác nhau.";
             if (rangBuoc.Equals("CK_NhanVien_NgaySinh", StringComparison.OrdinalIgnoreCase))
                 return "Ngày sinh không hợp lệ: nhân viên phải đủ 18 tuổi tại ngày lập hồ sơ.";
+            if (rangBuoc is "CK_KhamXe_ChiPhi" or "CK_BaoDuong_ChiPhi")
+                return "Chi phí không được âm.";
+            if (rangBuoc.Equals("CK_CapDau_DonGia", StringComparison.OrdinalIgnoreCase))
+                return "Đơn giá dầu không được âm.";
+            if (rangBuoc.Equals("CK_PhuongTien_Ref", StringComparison.OrdinalIgnoreCase))
+                return "Phiếu bảo dưỡng phải gắn đúng một đầu máy hoặc một toa xe theo loại phương tiện.";
 
             // CHECK do SQL Server tu dat ten: nhan dien theo cot
             return cot switch
@@ -180,6 +190,15 @@ namespace DAL.Repositories
                 "ThuTuNoi" => "Thứ tự móc nối phải từ 1 trở lên.",
                 "NongDoConMgL" => "Nồng độ cồn không được âm.",
                 "SoGioNghiTruocCa" => "Số giờ nghỉ trước ca không được âm.",
+                "ApLucHamBar" => "Áp lực hãm phải lớn hơn 0 và không quá 10.0 bar.",
+                "DoSutApBarPhut" => "Độ sụt áp phải từ 0 đến 5.00 bar/phút.",
+                "SoLitTraNap" => "Số lít trả nạp phải lớn hơn 0.",
+                "TrongLuongKeoTan" => "Trọng lượng kéo phải lớn hơn 0.",
+                "CuLyChayKm" => "Cự ly đã chạy phải lớn hơn 0.",
+                "SuatTieuHaoSFC" => "Suất tiêu hao không được âm.",
+                "SoKmTaiThoiDiem" => "Số km tại thời điểm bảo dưỡng không được âm.",
+                "CapBaoDuong" => "Cấp bảo dưỡng phải là R1, R2, D1 hoặc D2.",
+                "LoaiPhuongTien" => "Loại phương tiện không hợp lệ.",
                 _ => $"Dữ liệu vi phạm ràng buộc {(rangBuoc.Length > 0 ? rangBuoc : "của CSDL")}."
             };
         }

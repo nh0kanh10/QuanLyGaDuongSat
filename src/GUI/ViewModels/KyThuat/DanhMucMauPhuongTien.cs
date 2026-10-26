@@ -14,8 +14,7 @@ namespace GUI.ViewModels.KyThuat
     // Con lai o day:
     //   1. Phan TRINH BAY theo chung loai toa (mau the toa, ten ngan, suc chua tham khao,
     //      tu trong / tai trong goi y khi them toa) - CSDL khong co cac cot nay.
-    //   2. DongDauMay / DauMayMau / ChungLoaiToa tinh: man hinh BAO TRI (DanhMucMauBaoTri,
-    //      CapNhienLieuDialog) con dung. Sprint 2 noi CSDL cho Bao tri thi bo DauMayMau.
+    //   2. DongDauMay / ChungLoaiToa tinh: thong so trinh bay (Bao tri doc dau may tu CSDL tu 24/10).
     // =========================================================================
     public static class DanhMucMauPhuongTien
     {
@@ -26,15 +25,6 @@ namespace GUI.ViewModels.KyThuat
         {
             new DongDauMayMau(1, "D19E", "CSR Ziyang (Trung Quốc)", 1900, 120, 1200.0m, 4000, 78.0m, 16.5m),
             new DongDauMayMau(2, "D13E", "CKD Praha (Tiệp Khắc)",   1350, 100,  900.0m, 3200, 84.0m, 15.8m)
-        };
-
-        // Dau may cua seed goc - CHI con man hinh Bao tri dung (Sprint 2 bo)
-        public static readonly IReadOnlyList<(string SoHieu, string MaDong, string DonVi, string TrangThai)> DauMayMau = new[]
-        {
-            ("D19E-901", "D19E", "Xí nghiệp Đầu máy Hà Nội",  "SAN_SANG"),
-            ("D19E-902", "D19E", "Xí nghiệp Đầu máy Hà Nội",  "SAN_SANG"),
-            ("D19E-903", "D19E", "Xí nghiệp Đầu máy Đà Nẵng", "SAN_SANG"),
-            ("D13E-701", "D13E", "Xí nghiệp Đầu máy Sài Gòn", "SAN_SANG")
         };
 
         // ---------------------------------------------------------------------

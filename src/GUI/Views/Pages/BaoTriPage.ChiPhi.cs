@@ -27,8 +27,7 @@ namespace GUI.Views.Pages
             int soNgay = SoNgayKyChiPhi;
             var bayGio = DateTime.Now;
             var tuNgay = bayGio.AddDays(-soNgay);
-            _tatCaTuyenChiPhi = ChiPhiHieuQua.TaoTongHop(LayToanBoKhamXe(), LayToanBoCapDau(), LayToanBoBaoDuong(),
-                                                         soNgay, tuNgay);
+            _tatCaTuyenChiPhi = ChiPhiHieuQua.TaoTongHop(_duLieu, soNgay, tuNgay);
 
             int soCanXemXet = _tatCaTuyenChiPhi.Count(t => t.CanXemXet);
             int soLo = _tatCaTuyenChiPhi.Count(t => t.CoDuLieuChiPhi && !t.CoLai);

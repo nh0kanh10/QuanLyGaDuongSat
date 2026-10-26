@@ -1,4 +1,6 @@
-﻿using GUI.ViewModels.KyThuat;
+﻿using BUS.Services;
+using DTO.BaoTri;
+using GUI.ViewModels.KyThuat;
 using GUI.Helpers;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,11 +17,15 @@ namespace GUI.Views.Dialogs
     // - Loai phuong tien quyet dinh FK va cap hop le: dau may -> R1/R2,
     //   toa xe -> D1/D2 (CK_PhuongTien_Ref; ghep cap theo loai la quy uoc giao dien).
     // - Tu goi y cap can lam nhat, xem truoc moc ke tiep sau khi ghi nhan.
-    // - Chi tra ve BaoDuongHienThi, trang goi tu cap nhat danh sach (chua ghi CSDL).
+    // - Tu 24/10: kiem tra bang QuyTacBaoTri.KiemTraBaoDuong (cung ham Service dung) roi goi ham luu
+    //   cua trang (BaoTriService.LuuBaoDuong). Phuong tien dang "Bao duong" -> o "Dua ve San sang".
+    //   Phuong tien ngung khai thac khong hien trong danh sach (khong ghi bao duong).
     // =========================================================================
     public partial class BaoDuongDialog : Window
     {
         private readonly BaoDuongHienThi? _banGoc;                 // null = ghi nhan moi
+        private readonly BaoTriDuLieu _duLieu;
+        private readonly Func<BaoDuongDTO, bool, string?> _luu;
         private readonly IReadOnlyList<BaoDuongHienThi> _toanBoLichSu;
         private readonly DateTime _thoiDiem;
         private bool _dangKhoiTao;
@@ -28,21 +34,27 @@ namespace GUI.Views.Dialogs
         private bool _chiPhiTuDong = true;
         private bool _dangTuDienChiPhi;
 
-        public BaoDuongHienThi? KetQua { get; private set; }
-
-        public BaoDuongDialog(BaoDuongHienThi? banGoc, IReadOnlyList<BaoDuongHienThi> toanBoLichSu,
+        // luu(phieu, duaVeSanSang): tra null khi ghi duoc, nguoc lai la loi de hien
+        public BaoDuongDialog(BaoDuongHienThi? banGoc, BaoTriDuLieu duLieu, Func<BaoDuongDTO, bool, string?> luu,
                               string? khoaPhuongTienMacDinh = null)
         {
             _dangKhoiTao = true;
             InitializeComponent();
 
             _banGoc = banGoc;
-            _toanBoLichSu = toanBoLichSu;
+            _duLieu = duLieu;
+            _luu = luu;
+            _toanBoLichSu = duLieu.BaoDuong;
             _thoiDiem = banGoc?.ThoiDiemHoanThanh ?? DateTime.Now;
 
             ONhapSoThucHelper.Gan(txtSoKm, 1, coDinhSoLe: false);
             ONhapSoThucHelper.Gan(txtChiPhi, 0, coDinhSoLe: false);
-            cboNguoi.ItemsSource = DanhMucMauBaoTri.NguoiBaoDuong;
+
+            // Nguoi thuc hien cu khong con trong danh sach chon duoc thi van hien de giu nguyen khi sua
+            var dsNguoi = duLieu.NguoiKyThuat.ToList();
+            if (banGoc?.MaNguoiThucHien is int maCu && dsNguoi.All(n => n.MaTaiKhoan != maCu))
+                dsNguoi.Insert(0, new TaiKhoanMau(maCu, "", banGoc.TenNguoiThucHien.Length > 0 ? banGoc.TenNguoiThucHien : $"Tài khoản #{maCu}", "người thực hiện cũ"));
+            cboNguoi.ItemsSource = dsNguoi;
 
             if (banGoc == null)
                 KhoiTaoThemMoi(khoaPhuongTienMacDinh);
@@ -65,18 +77,22 @@ namespace GUI.Views.Dialogs
             txtTieuDe.Text = "GHI NHẬN BẢO DƯỠNG ĐỊNH KỲ";
             txtTieuDePhu.Text = "Đầu máy cấp R1 / R2 · toa xe cấp D1 / D2";
             txtNutLuu.Text = "Lưu Phiếu Bảo Dưỡng";
-            txtThoiDiem.Text = $"Hoàn thành: {_thoiDiem:HH:mm dd/MM/yyyy} (tự ghi)";
+            txtThoiDiem.Text = "Hoàn thành: giờ máy chủ lúc lưu";
             txtTieuDeHienTai.Text = "TÌNH TRẠNG HIỆN TẠI";
 
-            var ptMacDinh = khoaMacDinh != null ? DanhMucMauBaoTri.TimPhuongTien(khoaMacDinh) : null;
+            var ptMacDinh = khoaMacDinh != null ? _duLieu.TimPhuongTien(khoaMacDinh) : null;
+            if (ptMacDinh?.NgungKhaiThac == true) ptMacDinh = null;
             string loai = ptMacDinh?.LoaiPhuongTien ?? "DAU_MAY";
 
             (loai == "DAU_MAY" ? rdoDauMay : rdoToaXe).IsChecked = true;
             NapPhuongTien(loai);
             cboPhuongTien.SelectedItem = ptMacDinh;
-            cboNguoi.SelectedIndex = 0;
+            cboNguoi.SelectedIndex = _duLieu.NguoiKyThuat.Count > 0 ? 0 : -1;
+            if (_duLieu.NguoiKyThuat.Count == 0)
+                txtLoiNguoi.Text = "Chưa có tài khoản kỹ thuật (vai trò KY_THUAT) đang hoạt động.";
 
             if (ptMacDinh != null) DienGoiYTheoPhuongTien();
+            CapNhatODuaVeSanSang();
         }
 
         private void KhoiTaoCapNhat(BaoDuongHienThi bd)
@@ -91,12 +107,14 @@ namespace GUI.Views.Dialogs
             rdoDauMay.IsEnabled = false;
             rdoToaXe.IsEnabled = false;
             NapPhuongTien(bd.LoaiPhuongTien);
-            cboPhuongTien.SelectedItem = DanhMucMauBaoTri.TimPhuongTien(bd.KhoaPhuongTien);
+            var pt = _duLieu.TimPhuongTien(bd.KhoaPhuongTien);
+            cboPhuongTien.ItemsSource = pt != null ? new List<PhuongTienBaoDuong> { pt } : new List<PhuongTienBaoDuong>();
+            cboPhuongTien.SelectedItem = pt;
             cboPhuongTien.IsEnabled = false;
 
             ChonCap(bd.CapBaoDuong);
             txtSoKm.Text = bd.SoKmTaiThoiDiem.ToString("0.#", FormatHelper.TechnicalCulture);
-            cboNguoi.SelectedItem = DanhMucMauBaoTri.TimNguoiKham(bd.MaNguoiThucHien ?? 0);
+            cboNguoi.SelectedItem = (cboNguoi.ItemsSource as IEnumerable<TaiKhoanMau>)?.FirstOrDefault(n => n.MaTaiKhoan == bd.MaNguoiThucHien);
             txtGhiChu.Text = bd.GhiChuKyThuat;
             txtChiPhi.Text = bd.ChiPhi.ToString("0", FormatHelper.TechnicalCulture);
             _chiPhiTuDong = false;      // dang sua: giu dung chi phi da luu, khong tu doi theo cap
@@ -111,7 +129,8 @@ namespace GUI.Views.Dialogs
         private void NapPhuongTien(string loai)
         {
             runNhanPhuongTien.Text = loai == "DAU_MAY" ? "Đầu máy" : "Toa xe";
-            cboPhuongTien.ItemsSource = DanhMucMauBaoTri.PhuongTien.Where(p => p.LoaiPhuongTien == loai).ToList();
+            // Phuong tien ngung khai thac khong ghi bao duong
+            cboPhuongTien.ItemsSource = _duLieu.PhuongTien.Where(p => p.LoaiPhuongTien == loai && !p.NgungKhaiThac).ToList();
             cboPhuongTien.SelectedIndex = -1;
 
             string[] cap = ChuKyBaoDuong.CapCua(loai);
@@ -141,6 +160,7 @@ namespace GUI.Views.Dialogs
             txtLoiCap.Text = "";
             NapPhuongTien(LoaiDangChon);
             txtSoKm.Text = "";
+            CapNhatODuaVeSanSang();
             CapNhatXemTruoc();
         }
 
@@ -149,7 +169,26 @@ namespace GUI.Views.Dialogs
             if (_dangKhoiTao) return;
             txtLoiPhuongTien.Text = "";
             DienGoiYTheoPhuongTien();
+            CapNhatODuaVeSanSang();
             CapNhatXemTruoc();
+        }
+
+        // Phuong tien dang "Bao duong": phieu ghi khi da lam xong -> hoi dua ve "San sang" (mac dinh co).
+        // Dang chay: Service khong cho ghi - bao truoc o day.
+        private void CapNhatODuaVeSanSang()
+        {
+            var pt = cboPhuongTien.SelectedItem as PhuongTienBaoDuong;
+            bool hien = _banGoc == null && pt?.TrangThai == "BAO_DUONG";
+            chkDuaVeSanSang.Visibility = hien ? Visibility.Visible : Visibility.Collapsed;
+            if (hien)
+            {
+                chkDuaVeSanSang.IsChecked = true;
+                txtDuaVeSanSang.Text = $"{pt!.SoHieu} đang ở trạng thái Bảo dưỡng — đưa về Sẵn sàng sau khi lưu";
+            }
+            if (_banGoc == null && pt?.DangChay == true)
+                txtLoiPhuongTien.Text = pt.LaDauMay
+                    ? $"{pt.SoHieu} đang kéo tàu, chưa ghi nhận bảo dưỡng được."
+                    : $"Toa {pt.SoHieu} đang chạy trong đoàn tàu, chưa ghi nhận bảo dưỡng được.";
         }
 
         // Lap moi: chon san cap can lam nhat + dien san so km
@@ -325,83 +364,70 @@ namespace GUI.Views.Dialogs
 
         private void BtnLuu_Click(object sender, RoutedEventArgs e)
         {
-            if (!KiemTraHopLe(out var pt, out string cap, out decimal soKm, out var nguoi, out decimal chiPhi)) return;
+            if (!KiemTraHopLe(out var bd)) return;
 
-            var kq = _banGoc?.SaoChep() ?? new BaoDuongHienThi { ThoiDiemHoanThanh = _thoiDiem };
-            kq.GanPhuongTien(pt);
-            kq.CapBaoDuong = cap;
-            kq.SoKmTaiThoiDiem = soKm;
-            kq.MaNguoiThucHien = nguoi.MaTaiKhoan;
-            kq.TenNguoiThucHien = nguoi.HoTenHienThi;
-            kq.GhiChuKyThuat = txtGhiChu.Text.Trim();
-            kq.ChiPhi = chiPhi;
-            kq.LaThayDoiTam = true;
-
-            KetQua = kq;
+            // Ghi CSDL qua trang (BaoTriService). Loi nghiep vu / CSDL: bao va giu dialog de sua.
+            bool duaVeSanSang = chkDuaVeSanSang.Visibility == Visibility.Visible && chkDuaVeSanSang.IsChecked == true;
+            string? loi = _luu(bd, duaVeSanSang);
+            if (loi != null)
+            {
+                ThongBaoDialog.CanhBao(loi, "Chưa lưu được phiếu bảo dưỡng");
+                return;
+            }
             DialogResult = true;
         }
 
-        private bool KiemTraHopLe(out PhuongTienBaoDuong pt, out string cap, out decimal soKm, out TaiKhoanMau nguoi,
-                                  out decimal chiPhi)
+        private bool KiemTraHopLe(out BaoDuongDTO bd)
         {
             bool hopLe = true;
             Control? oLoiDauTien = null;
 
             void BaoLoi(TextBlock tbLoi, string thongDiep, Control o)
             {
-                tbLoi.Text = thongDiep;
+                if (tbLoi.Text.Length == 0) tbLoi.Text = thongDiep;
                 hopLe = false;
                 oLoiDauTien ??= o;
             }
 
-            // Phuong tien (CK_PhuongTien_Ref: dung mot FK theo loai)
-            pt = (cboPhuongTien.SelectedItem as PhuongTienBaoDuong)!;
-            if (pt == null)
-                BaoLoi(txtLoiPhuongTien, $"Vui lòng chọn {(LoaiDangChon == "DAU_MAY" ? "đầu máy" : "toa xe")}.", cboPhuongTien);
+            foreach (var tb in new[] { txtLoiPhuongTien, txtLoiCap, txtLoiSoKm, txtLoiNguoi, txtLoiChiPhi })
+                tb.Text = "";
 
-            // Cap (CHECK R1/R2/D1/D2)
-            cap = CapDangChon ?? "";
-            if (cap.Length == 0)
-                BaoLoi(txtLoiCap, "Vui lòng chọn cấp bảo dưỡng.", rdoCap1);
+            var pt = cboPhuongTien.SelectedItem as PhuongTienBaoDuong;
+            decimal? km = ONhapSoThucHelper.Lay(txtSoKm);
+            decimal? chiPhi = ONhapSoThucHelper.Lay(txtChiPhi);
+            if (!km.HasValue) BaoLoi(txtLoiSoKm, "Vui lòng nhập số km tại thời điểm bảo dưỡng.", txtSoKm);
+            if (!chiPhi.HasValue) BaoLoi(txtLoiChiPhi, "Chi phí không hợp lệ (nhập 0 nếu không có).", txtChiPhi);
+            if (_banGoc == null && pt?.DangChay == true)
+                BaoLoi(txtLoiPhuongTien, pt.LaDauMay ? $"{pt.SoHieu} đang kéo tàu, chưa ghi nhận bảo dưỡng được."
+                                                     : $"Toa {pt.SoHieu} đang chạy trong đoàn tàu, chưa ghi nhận bảo dưỡng được.", cboPhuongTien);
 
-            // So km: CHECK >= 0, DECIMAL(9,1)
-            soKm = 0m;
-            decimal? k = ONhapSoThucHelper.Lay(txtSoKm);
-            if (!k.HasValue)
-                BaoLoi(txtLoiSoKm, "Vui lòng nhập số km tại thời điểm bảo dưỡng.", txtSoKm);
-            else if (k < 0 || k > ChuKyBaoDuong.SoKmGioiHan)
-                BaoLoi(txtLoiSoKm, "Số km không hợp lệ.", txtSoKm);
-            else if (ONhapSoThucHelper.QuaSoChuSoLe(k.Value, 1))
-                BaoLoi(txtLoiSoKm, "Tối đa 1 chữ số thập phân (DECIMAL(9,1)).", txtSoKm);
-            else if (pt != null && pt.LaDauMay && k > pt.SoKmTichLuy)
-                BaoLoi(txtLoiSoKm, $"Lớn hơn km tích lũy hiện tại của đầu máy ({pt.SoKmTichLuy:N0} km).", txtSoKm);
-            else if (pt != null)
+            bd = _banGoc?.ToDTO() ?? new BaoDuongDTO();
+            bd.LoaiPhuongTien = pt?.LoaiPhuongTien ?? LoaiDangChon;
+            bd.MaDauMay = pt != null && pt.LaDauMay ? pt.MaPhuongTien : null;
+            bd.MaToaXe = pt != null && !pt.LaDauMay ? pt.MaPhuongTien : null;
+            bd.CapBaoDuong = CapDangChon ?? "";
+            bd.SoKmTaiThoiDiem = km ?? 0m;
+            bd.MaNguoiThucHien = (cboNguoi.SelectedItem as TaiKhoanMau)?.MaTaiKhoan;
+            bd.GhiChuKyThuat = txtGhiChu.Text.Trim();
+            bd.ChiPhi = chiPhi ?? 0m;
+
+            // Lich su truoc phieu nay cua cung phuong tien (khi sua: phieu dang sua la moi nhat)
+            var lichSuTruoc = pt != null
+                ? LichSuCua(pt, boQuaBanGoc: true).Select(x => x.ToDTO()).ToList()
+                : new List<BaoDuongDTO>();
+
+            // Cung luat voi Service (dialog chi doi ten truong sang o nhap)
+            foreach (var l in QuyTacBaoTri.KiemTraBaoDuong(bd, pt?.LaDauMay == true ? pt.SoKmTichLuy : null, lichSuTruoc))
             {
-                // Km khong duoc lui so voi lan bao duong truoc do cua cung phuong tien
-                var lanTruoc = LichSuCua(pt, boQuaBanGoc: true)
-                    .Where(x => x.ThoiDiemHoanThanh < _thoiDiem)
-                    .OrderByDescending(x => x.SoKmTaiThoiDiem).FirstOrDefault();
-                if (lanTruoc != null && k < lanTruoc.SoKmTaiThoiDiem)
-                    BaoLoi(txtLoiSoKm, $"Nhỏ hơn số km ở lần bảo dưỡng trước ({lanTruoc.SoKmTaiThoiDiem:N0} km, " +
-                                       $"{lanTruoc.CapBaoDuong} ngày {lanTruoc.ThoiDiemHoanThanh:dd/MM/yyyy}).", txtSoKm);
-                else
-                    soKm = k.Value;
+                switch (l.Truong)
+                {
+                    case "PhuongTien": BaoLoi(txtLoiPhuongTien, l.ThongDiep, cboPhuongTien); break;
+                    case "Cap": BaoLoi(txtLoiCap, l.ThongDiep, rdoCap1); break;
+                    case "SoKm" when km.HasValue: BaoLoi(txtLoiSoKm, l.ThongDiep, txtSoKm); break;
+                    case "NguoiThucHien": BaoLoi(txtLoiNguoi, l.ThongDiep, cboNguoi); break;
+                    case "ChiPhi" when chiPhi.HasValue: BaoLoi(txtLoiChiPhi, l.ThongDiep, txtChiPhi); break;
+                }
             }
-
-            // Nguoi thuc hien (CSDL cho NULL, giao dien yeu cau ghi ro)
-            nguoi = (cboNguoi.SelectedItem as TaiKhoanMau)!;
-            if (nguoi == null)
-                BaoLoi(txtLoiNguoi, "Vui lòng chọn người thực hiện.", cboNguoi);
-
-            // Chi phi bao duong (khong co cot CSDL - du lieu mau/tham khao)
-            chiPhi = 0m;
-            decimal? cp = ONhapSoThucHelper.Lay(txtChiPhi);
-            if (!cp.HasValue)
-                BaoLoi(txtLoiChiPhi, "Chi phí không hợp lệ (nhập 0 nếu không có).", txtChiPhi);
-            else if (cp < 0)
-                BaoLoi(txtLoiChiPhi, "Chi phí không được âm.", txtChiPhi);
-            else
-                chiPhi = cp.Value;
 
             if (!hopLe) oLoiDauTien?.Focus();
             return hopLe;
