@@ -1129,6 +1129,8 @@
                                 </Border>
 
                                 <CheckBox x:Name="chkDaDuyetAnToan" 
+                                          IsEnabled="False" ToolTipService.ShowOnDisabled="True"
+                                          ToolTip="Chỉ hiển thị. Duyệt an toàn đoàn tàu làm ở phân hệ Bảo trì &amp; Sửa chữa (tab Cảnh báo an toàn) sau khi biên bản khám xe đạt."
                                           Content="Đã nghiệm thu an toàn hãm &amp; kẹp chì đoàn tàu (Áp suất 5.0 bar)" 
                                           FontWeight="SemiBold" Foreground="#003B73" FontSize="11" VerticalAlignment="Center" Margin="0,0,0,10"/>
 
@@ -1269,6 +1271,18 @@
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="ArrowLeft24" FontSize="11" Margin="0,0,5,0" Foreground="#475569"/>
                                 <TextBlock Text="Bước Trước" FontSize="11" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- [Đạt 30/10] Chuyển trạng thái chuyến (code: LichTrinhPage.TrangThai.cs).
+                             Sang Sẵn sàng / Đang chạy phải đủ điều kiện xuất bến (Bảo trì + Nhân sự, hợp đồng §7.2). -->
+                        <Button Grid.Column="1" x:Name="btnDoiTrangThai" Click="BtnDoiTrangThai_Click" Loaded="BtnDoiTrangThai_Loaded"
+                                HorizontalAlignment="Left" Margin="8,0,8,0" Visibility="Collapsed"
+                                Style="{StaticResource DesktopButton}" Height="30" Padding="10,0"
+                                ToolTip="Chuyển trạng thái chuyến tàu. Sang Sẵn sàng / Đang chạy cần đủ điều kiện xuất bến (khám xe, duyệt an toàn, bảo dưỡng, kíp lái).">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="ArrowSwap24" FontSize="11" Margin="0,0,5,0" Foreground="#003B73"/>
+                                <TextBlock Text="Chuyển Trạng Thái" FontSize="11" FontWeight="SemiBold" Foreground="#003B73"/>
                             </StackPanel>
                         </Button>
 

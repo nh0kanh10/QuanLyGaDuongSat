@@ -182,6 +182,13 @@ namespace BUS.Services
                 thongBaoLoi = $"Mác tàu này đã được lập lịch cho ngày {ct.NgayXuatPhat:dd/MM/yyyy} trên một chuyến khác!";
                 return false;
             }
+            // [Đạt 30/10] Sang Sẵn sàng / Đang chạy phải qua kiểm tra xuất bến (hợp đồng §7.2)
+            string? lyDoChanXuatBen = LyDoChanXuatBen(ct.MaChuyenTau, _repo.LayTrangThai(ct.MaChuyenTau), ct.TrangThai);
+            if (lyDoChanXuatBen != null)
+            {
+                thongBaoLoi = lyDoChanXuatBen;
+                return false;
+            }
             bool kq = _repo.CapNhat(ct) > 0;
             if (!kq) thongBaoLoi = "Không thể cập nhật chuyến tàu vào CSDL.";
             return kq;
@@ -223,7 +230,55 @@ namespace BUS.Services
         public bool CapNhatTrangThai(int maChuyenTau, string trangThai)
         {
             if (maChuyenTau <= 0) return false;
+            if (LyDoChanXuatBen(maChuyenTau, _repo.LayTrangThai(maChuyenTau), trangThai) != null) return false;   // [Đạt 30/10]
             return _repo.CapNhatTrangThai(maChuyenTau, trangThai) > 0;
+        }
+
+        // ===== [Đạt 30/10] Kiểm tra xuất bến — hợp đồng §7.2 KE_HOACH_BACK_END =====
+        // Chuyến đang Đã lên lịch / Sẵn sàng mà chuyển sang Sẵn sàng / Đang chạy thì phải qua KiemTraXuatBenService:
+        // biên bản khám xe đạt (lập sau lần sửa đoàn tàu gần nhất), đã duyệt an toàn ở Bảo trì, đầu máy không quá hạn
+        // bảo dưỡng, chặng đầu có kíp lái đủ điều kiện. Chặn cứng, không có nút vượt (Q11).
+        public static bool CanKiemTraXuatBen(string trangThaiCu, string trangThaiMoi)
+            => trangThaiMoi != trangThaiCu
+               && (trangThaiMoi is "SAN_SANG" or "DANG_CHAY")
+               && (trangThaiCu is "DA_LEN_LICH" or "SAN_SANG");
+
+        // null = được chuyển; khác null = lý do bị chặn (nhiều dòng, đọc được ngay trên hộp thông báo)
+        public string? LyDoChanXuatBen(int maChuyenTau, string trangThaiCu, string trangThaiMoi)
+        {
+            if (!CanKiemTraXuatBen(trangThaiCu, trangThaiMoi)) return null;
+            var kq = new KiemTraXuatBenService().KiemTra(maChuyenTau);
+            return kq.DuocXuatBen ? null : kq.MoTaChan;
+        }
+
+        // Các trạng thái được chuyển tới từ trạng thái hiện tại (theo HopLeChuyenTrangThai), trừ chính nó
+        public static List<string> LayTrangThaiKeTiep(string trangThaiHienTai)
+            => HopLeChuyenTrangThai.TryGetValue(trangThaiHienTai, out var ds)
+                ? ds.Where(t => t != trangThaiHienTai).ToList()
+                : new List<string>();
+
+        // Đổi riêng trạng thái (nút "Chuyển Trạng Thái" ở Lịch trình): đọc trạng thái hiện tại trong CSDL,
+        // kiểm quy trình chuyển + kiểm tra xuất bến rồi mới ghi.
+        public bool DoiTrangThai(int maChuyenTau, string trangThaiMoi, out string thongBaoLoi)
+        {
+            thongBaoLoi = string.Empty;
+            string trangThaiCu = _repo.LayTrangThai(maChuyenTau);
+            if (string.IsNullOrEmpty(trangThaiCu))
+            {
+                thongBaoLoi = "Không tìm thấy chuyến tàu trong CSDL!";
+                return false;
+            }
+            if (!KiemTraChuyenTrangThai(trangThaiCu, trangThaiMoi, out thongBaoLoi)) return false;
+
+            string? lyDo = LyDoChanXuatBen(maChuyenTau, trangThaiCu, trangThaiMoi);
+            if (lyDo != null)
+            {
+                thongBaoLoi = lyDo;
+                return false;
+            }
+            bool kq = _repo.CapNhatTrangThai(maChuyenTau, trangThaiMoi) > 0;
+            if (!kq) thongBaoLoi = "Không thể cập nhật trạng thái chuyến tàu vào CSDL.";
+            return kq;
         }
 
         public bool CapNhatGioThucTe(int maDiemDung, DateTime? gioDenTT, DateTime? gioDiTT)
