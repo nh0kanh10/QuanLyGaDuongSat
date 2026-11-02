@@ -18,10 +18,15 @@ namespace DAL.Repositories
     //             tra ve so dong, 0 = nguoi khac vua sua.
     // Thoi gian : gio Viet Nam - ghi bang SYSDATETIME() cua may chu (quyet dinh 24/10, nhu Nhan su).
     //             kiemtoan.NhatKyHeThong ghi gio UTC (thu tuc cua A Ba) -> doi sang gio may chu khi doc.
+    // Doanh thu: kemDoanhThu = true (trang nap, tab Chi phi) thi doc them mac tau + doanh thu ve tung chuyen
+    //             + van don (bang cua A Ba, CHI DOC). Service nap lai trong giao dich thi khong can.
     // =========================================================================
     public class BaoTriRepository
     {
-        public DuLieuBaoTri LayDuLieu(PhienGiaoDich? gd = null)
+        // Doanh thu doc lui toi da 400 ngay (ky dai nhat tren tab Chi phi la 12 thang)
+        private const int SoNgayDoanhThuToiDa = 400;
+
+        public DuLieuBaoTri LayDuLieu(PhienGiaoDich? gd = null, bool kemDoanhThu = false)
         {
             DateTime bayGio = LayGioMayChu(gd);
 
@@ -197,7 +202,7 @@ namespace DAL.Repositories
                 SELECT NoiCapDau FROM baotri.NhatKyCapNhienLieu GROUP BY NoiCapDau ORDER BY COUNT(*) DESC, NoiCapDau")
                 .Rows.Cast<DataRow>().Select(r => Chuoi(r, "NoiCapDau")).ToList();
 
-            return new DuLieuBaoTri
+            var dl = new DuLieuBaoTri
             {
                 DoanTau = doanTau,
                 DauMay = dauMay,
@@ -209,6 +214,77 @@ namespace DAL.Repositories
                 NoiCapDau = noiCap,
                 BayGio = bayGio
             };
+            if (kemDoanhThu) NapDoanhThu(dl, gd);
+            return dl;
+        }
+
+        // Mac tau + doanh thu ve tung chuyen da chay (theo ngay chay, toi hom nay) + van don hang hoa.
+        // Ve DA_HUY (ve cu khi doi ghe - VeRepository.DoiGheCungChuyen) khong tinh: ve moi cung gia da thay.
+        // Ve DA_HOAN_VE: tinh thuc thu roi tru tien da tra lai (con lai = le phi hoan).
+        private static void NapDoanhThu(DuLieuBaoTri dl, PhienGiaoDich? gd)
+        {
+            dl.MacTau.AddRange(PhienGiaoDich.TruyVan(gd, @"
+                SELECT mt.MaMacTau, mt.SoHieuMacTau, mt.LoaiTau, gdi.TenGa AS TenGaDi, gden.TenGa AS TenGaDen, mt.DangKhaiThac
+                FROM vanhanh.MacTauMau mt
+                JOIN hatang.Ga gdi ON gdi.MaGa = mt.MaGaDi
+                JOIN hatang.Ga gden ON gden.MaGa = mt.MaGaDen
+                ORDER BY mt.MaMacTau")
+                .Rows.Cast<DataRow>().Select(r => new MacTauBaoTriDTO
+                {
+                    MaMacTau = Convert.ToInt32(r["MaMacTau"]),
+                    SoHieuMacTau = Chuoi(r, "SoHieuMacTau"),
+                    LoaiTau = Chuoi(r, "LoaiTau"),
+                    TenGaDi = Chuoi(r, "TenGaDi"),
+                    TenGaDen = Chuoi(r, "TenGaDen"),
+                    DangKhaiThac = Convert.ToBoolean(r["DangKhaiThac"])
+                }));
+
+            dl.DoanhThuChuyen.AddRange(PhienGiaoDich.TruyVan(gd, @"
+                SELECT ct.MaChuyenTau, mt.SoHieuMacTau, ct.NgayXuatPhat, ct.GioXuatPhatKH, ct.TrangThai,
+                       ISNULL(tk.SoGhe, 0) AS SoGhe,
+                       ISNULL(ve.SoVeHieuLuc, 0) AS SoVeHieuLuc, ISNULL(ve.SoVeHoan, 0) AS SoVeHoan,
+                       ISNULL(ve.SoVeHuy, 0) AS SoVeHuy, ISNULL(ve.ThucThu, 0) AS ThucThu, ISNULL(ve.TienHoan, 0) AS TienHoan
+                FROM vanhanh.ChuyenTau ct
+                JOIN vanhanh.MacTauMau mt ON mt.MaMacTau = ct.MaMacTau
+                OUTER APPLY (SELECT SUM(t.SucChua) AS SoGhe
+                             FROM vantai.ToaXeKhach t WHERE t.MaChuyenTau = ct.MaChuyenTau) tk
+                OUTER APPLY (SELECT SUM(CASE WHEN v.TrangThai IN ('DA_DAT', 'DA_LEN_TAU') THEN 1 ELSE 0 END) AS SoVeHieuLuc,
+                                    SUM(CASE WHEN v.TrangThai = 'DA_HOAN_VE' THEN 1 ELSE 0 END) AS SoVeHoan,
+                                    SUM(CASE WHEN v.TrangThai = 'DA_HUY' THEN 1 ELSE 0 END) AS SoVeHuy,
+                                    SUM(CASE WHEN v.TrangThai <> 'DA_HUY' THEN v.GiaVeThucThu ELSE 0 END) AS ThucThu,
+                                    SUM(CASE WHEN v.TrangThai <> 'DA_HUY' THEN ISNULL(h.SoTienThucHoan, 0) ELSE 0 END) AS TienHoan
+                             FROM vantai.Ve v
+                             LEFT JOIN vantai.HoanHuyVe h ON h.MaVe = v.MaVe
+                             WHERE v.MaChuyenTau = ct.MaChuyenTau) ve
+                WHERE ct.TrangThai <> 'DA_HUY'
+                  AND ct.NgayXuatPhat >= DATEADD(DAY, -@soNgay, CAST(SYSDATETIME() AS DATE))
+                  AND ct.NgayXuatPhat <= CAST(SYSDATETIME() AS DATE)
+                ORDER BY ct.GioXuatPhatKH, ct.MaChuyenTau",
+                new SqlParameter("@soNgay", SoNgayDoanhThuToiDa))
+                .Rows.Cast<DataRow>().Select(r => new DoanhThuChuyenDTO
+                {
+                    MaChuyenTau = Convert.ToInt32(r["MaChuyenTau"]),
+                    SoHieuMacTau = Chuoi(r, "SoHieuMacTau"),
+                    NgayXuatPhat = Convert.ToDateTime(r["NgayXuatPhat"]),
+                    GioXuatPhatKH = Convert.ToDateTime(r["GioXuatPhatKH"]),
+                    TrangThaiChuyen = Chuoi(r, "TrangThai"),
+                    SoGhe = Convert.ToInt32(r["SoGhe"]),
+                    SoVeHieuLuc = Convert.ToInt32(r["SoVeHieuLuc"]),
+                    SoVeHoan = Convert.ToInt32(r["SoVeHoan"]),
+                    SoVeHuy = Convert.ToInt32(r["SoVeHuy"]),
+                    ThucThu = Convert.ToDecimal(r["ThucThu"]),
+                    TienHoan = Convert.ToDecimal(r["TienHoan"])
+                }));
+
+            // VanDonHang.ThoiDiemTao ghi gio UTC (DEFAULT SYSUTCDATETIME) -> doi sang gio may chu
+            dl.VanDon.AddRange(PhienGiaoDich.TruyVan(gd, @"
+                SELECT MaVanDon, CuocPhi,
+                       DATEADD(MINUTE, DATEDIFF(MINUTE, SYSUTCDATETIME(), SYSDATETIME()), ThoiDiemTao) AS ThoiDiemTao
+                FROM vantai.VanDonHang
+                WHERE ThoiDiemTao >= DATEADD(DAY, -@soNgay, SYSUTCDATETIME())",
+                new SqlParameter("@soNgay", SoNgayDoanhThuToiDa))
+                .Rows.Cast<DataRow>().Select(r => new VanDonDoanhThuDTO(
+                    Convert.ToInt32(r["MaVanDon"]), Convert.ToDateTime(r["ThoiDiemTao"]), Convert.ToDecimal(r["CuocPhi"]))));
         }
 
         public DateTime LayGioMayChu(PhienGiaoDich? gd = null)

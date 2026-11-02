@@ -149,6 +149,11 @@ namespace DTO.BaoTri
         public List<string> NoiCapDau { get; init; } = new();
         public DateTime BayGio { get; init; }
 
+        // Cho tab Chi phi (chi doc khi trang nap; Service nap lai trong giao dich thi de rong)
+        public List<MacTauBaoTriDTO> MacTau { get; init; } = new();
+        public List<DoanhThuChuyenDTO> DoanhThuChuyen { get; init; } = new();
+        public List<VanDonDoanhThuDTO> VanDon { get; init; } = new();
+
         public static DuLieuBaoTri Rong(DateTime bayGio) => new() { BayGio = bayGio };
 
         public DoanTauBaoTriDTO? TimDoanTau(int maDoanTau) => DoanTau.FirstOrDefault(d => d.MaDoanTau == maDoanTau);

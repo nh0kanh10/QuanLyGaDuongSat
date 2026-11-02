@@ -251,6 +251,11 @@ namespace BUS.Services
                 ds.Add(new("SoKm", "Số km không hợp lệ."));
             else if (QuaSoChuSoLe(bd.SoKmTaiThoiDiem, 1))
                 ds.Add(new("SoKm", "Tối đa 1 chữ số thập phân (DECIMAL(9,1))."));
+            // Phieu MOI ghi thoi diem hoan thanh = bay gio => km phai la dong ho hien tai cua dau may
+            // (quyet dinh 26/10; dong ho sai thi sua o Phuong tien truoc). Sua phieu cu giu luat cu.
+            else if (bd.LaDauMay && soKmTichLuy.HasValue && bd.MaBaoDuong <= 0 && bd.SoKmTaiThoiDiem != soKmTichLuy.Value)
+                ds.Add(new("SoKm", $"Phiếu mới ghi tại km tích lũy hiện tại của đầu máy ({soKmTichLuy.Value:N1} km). " +
+                                   "Đồng hồ sai thì sửa ở màn Phương tiện trước."));
             else if (bd.LaDauMay && soKmTichLuy.HasValue && bd.SoKmTaiThoiDiem > soKmTichLuy.Value)
                 ds.Add(new("SoKm", $"Lớn hơn km tích lũy hiện tại của đầu máy ({soKmTichLuy.Value:N0} km)."));
             else
