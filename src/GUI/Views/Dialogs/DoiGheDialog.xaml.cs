@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using BUS.Services;
+using DTO.Common;
 using GUI.Views.Dialogs;
 
 namespace GUI.Views.Dialogs
@@ -264,7 +265,8 @@ namespace GUI.Views.Dialogs
 
             if (!dongY) return;
 
-            if (_veService.DoiGheCungChuyen(_maVeCu, _maChoMoi, 3, out string maVeMoi, out string thongBaoLoi))
+            int maNhanVien = PhienLamViec.MaNhanVien ?? (PhienLamViec.MaTaiKhoan > 0 ? PhienLamViec.MaTaiKhoan : 3);
+            if (_veService.DoiGheCungChuyen(_maVeCu, _maChoMoi, _giaVeMoi, maNhanVien, out string maVeMoi, out string thongBaoLoi))
             {
                 MaVeMoi = maVeMoi;
                 ThongBaoDialog.ThanhCong(

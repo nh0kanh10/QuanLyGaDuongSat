@@ -254,5 +254,61 @@ namespace Tests.VanHanh
             Assert.NotNull(dt);
             Assert.Empty(dt.Rows);
         }
+
+        [Fact]
+        public void SinhSoHieuMacTauGoiY_TauNhanh_BacNam_SinhSoLeChuaTonTai()
+        {
+            var service = new MacTauService();
+            string maGoiY = service.SinhSoHieuMacTauGoiY("TAU_NHANH", "BAC_NAM");
+
+            // Phải bắt đầu bằng SE
+            Assert.StartsWith("SE", maGoiY);
+            // Phải là số lẻ
+            int num = int.Parse(maGoiY.Substring(2));
+            Assert.True(num % 2 == 1, $"Số hiệu chiều vào Nam phải là số lẻ (thực tế: {maGoiY})");
+        }
+
+        [Fact]
+        public void SinhSoHieuMacTauGoiY_TauNhanh_NamBac_SinhSoChanChuaTonTai()
+        {
+            var service = new MacTauService();
+            string maGoiY = service.SinhSoHieuMacTauGoiY("TAU_NHANH", "NAM_BAC");
+
+            // Phải bắt đầu bằng SE
+            Assert.StartsWith("SE", maGoiY);
+            // Phải là số chẵn
+            int num = int.Parse(maGoiY.Substring(2));
+            Assert.True(num % 2 == 0, $"Số hiệu chiều ra Bắc phải là số chẵn (thực tế: {maGoiY})");
+        }
+
+        [Fact]
+        public void SinhSoHieuMacTauGoiY_TauCho_SinhPrefixTuDuLieuCSDL()
+        {
+            var service = new MacTauService();
+            // Hệ thống tự động học từ CSDL có mác tàu NA1 thuộc TAU_CHO -> sinh prefix NA
+            string maGoiY = service.SinhSoHieuMacTauGoiY("TAU_CHO", "BAC_NAM");
+
+            Assert.StartsWith("NA", maGoiY);
+            int num = int.Parse(maGoiY.Substring(2));
+            Assert.True(num % 2 == 1, $"Tàu NA vào Nam phải là số lẻ (thực tế: {maGoiY})");
+        }
+
+        [Fact]
+        public void SinhSoHieuMacTauGoiY_TauHang_SinhPrefixHBN()
+        {
+            var service = new MacTauService();
+            string maGoiY = service.SinhSoHieuMacTauGoiY("TAU_HANG", "BAC_NAM");
+
+            Assert.StartsWith("HBN", maGoiY);
+        }
+
+        [Theory]
+        [InlineData(1726.2, "TAU_NHANH", 32.6)] // 1726.2 / 53 ~ 32.57 -> 32.6h
+        [InlineData(319.2, "TAU_CHO", 7.6)]     // 319.2 / 42 ~ 7.6h
+        public void TinhGioChuanGoiY_TinhDungKhoaHoc(double cuLy, string loaiTau, double tgMongDoi)
+        {
+            decimal tg = MacTauService.TinhGioChuanGoiY((decimal)cuLy, loaiTau);
+            Assert.Equal((decimal)tgMongDoi, tg);
+        }
     }
 }

@@ -149,21 +149,21 @@
                             </Grid.ColumnDefinitions>
 
                             <!-- Lọc Ngày -->
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
                                 <TextBlock Text="Ngày chạy:" Style="{StaticResource FieldLabel}"/>
-                                <DatePicker x:Name="dpLocNgay" Width="125" SelectedDateChanged="DpLocNgay_SelectedDateChanged"/>
+                                <DatePicker x:Name="dpLocNgay" Width="135" SelectedDateChanged="DpLocNgay_SelectedDateChanged"/>
                             </StackPanel>
 
-                            <!-- Lọc Mác Tàu -->
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                            <!-- Lọc Mác Tàu (Width 195 để hiển thị trọn vẹn "Tất cả mác tàu" trên mọi DPI) -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
                                 <TextBlock Text="Mác tàu:" Style="{StaticResource FieldLabel}"/>
-                                <ComboBox x:Name="cboLocMacTau" Width="135" DisplayMemberPath="SoHieuMacTau" SelectedValuePath="MaMacTau" SelectionChanged="CboLocMacTau_SelectionChanged"/>
+                                <ComboBox x:Name="cboLocMacTau" Width="195" DisplayMemberPath="SoHieuMacTau" SelectedValuePath="MaMacTau" SelectionChanged="CboLocMacTau_SelectionChanged"/>
                             </StackPanel>
 
-                            <!-- Lọc Trạng Thái -->
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                            <!-- Lọc Trạng Thái (Width 200 để hiển thị trọn vẹn "Tất cả trạng thái" trên mọi DPI) -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
                                 <TextBlock Text="Trạng thái:" Style="{StaticResource FieldLabel}"/>
-                                <ComboBox x:Name="cboLocTrangThai" Width="145" SelectionChanged="CboLocTrangThai_SelectionChanged">
+                                <ComboBox x:Name="cboLocTrangThai" Width="200" SelectionChanged="CboLocTrangThai_SelectionChanged">
                                     <ComboBoxItem Content="Tất cả trạng thái" Tag="ALL" IsSelected="True"/>
                                     <ComboBoxItem Content="Đã lên lịch" Tag="DA_LEN_LICH"/>
                                     <ComboBoxItem Content="Sẵn sàng" Tag="SAN_SANG"/>

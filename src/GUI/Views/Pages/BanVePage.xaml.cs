@@ -9,6 +9,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using BUS.Services;
+using DTO.Common;
 using ET.VanTai;
 using GUI.Views.Dialogs;
 using GUI.Helpers;
@@ -655,24 +656,24 @@ namespace GUI.Views.Pages
                 switch (route)
                 {
                     case "HN-SG":
-                        cboGaDi.SelectedValue = 1;
-                        cboGaDen.SelectedValue = 27;
+                        ChonGaMacDinhLinhHoat(cboGaDi, new[] { "Hà Nội", "HNI", "HNO" }, 0);
+                        ChonGaMacDinhLinhHoat(cboGaDen, new[] { "Sài Gòn", "SGO", "Hồ Chí Minh" }, _cachedDsGa?.Rows.Count - 1 ?? 0);
                         break;
                     case "HN-VIN":
-                        cboGaDi.SelectedValue = 1;
-                        cboGaDen.SelectedValue = 7;
+                        ChonGaMacDinhLinhHoat(cboGaDi, new[] { "Hà Nội", "HNI", "HNO" }, 0);
+                        ChonGaMacDinhLinhHoat(cboGaDen, new[] { "Vinh", "VIN" }, 0);
                         break;
                     case "HN-DNA":
-                        cboGaDi.SelectedValue = 1;
-                        cboGaDen.SelectedValue = 14;
+                        ChonGaMacDinhLinhHoat(cboGaDi, new[] { "Hà Nội", "HNI", "HNO" }, 0);
+                        ChonGaMacDinhLinhHoat(cboGaDen, new[] { "Đà Nẵng", "DAN", "DNA" }, 0);
                         break;
                     case "SG-NTR":
-                        cboGaDi.SelectedValue = 27;
-                        cboGaDen.SelectedValue = 22;
+                        ChonGaMacDinhLinhHoat(cboGaDi, new[] { "Sài Gòn", "SGO", "Hồ Chí Minh" }, 0);
+                        ChonGaMacDinhLinhHoat(cboGaDen, new[] { "Nha Trang", "NTR" }, 0);
                         break;
                     case "SG-DNA":
-                        cboGaDi.SelectedValue = 27;
-                        cboGaDen.SelectedValue = 14;
+                        ChonGaMacDinhLinhHoat(cboGaDi, new[] { "Sài Gòn", "SGO", "Hồ Chí Minh" }, 0);
+                        ChonGaMacDinhLinhHoat(cboGaDen, new[] { "Đà Nẵng", "DAN", "DNA" }, 0);
                         break;
                 }
                 TimChuyenTau();
@@ -2185,7 +2186,7 @@ namespace GUI.Views.Pages
                 TongTien = tongTien,
                 HinhThucTT = httt,
                 TrangThaiTT = "DA_THANH_TOAN",
-                MaNhanVienBan = 3
+                MaNhanVienBan = PhienLamViec.MaNhanVien ?? (PhienLamViec.MaTaiKhoan > 0 ? PhienLamViec.MaTaiKhoan : 3)
             };
 
             var listVe = new List<Ve>();
@@ -2941,7 +2942,8 @@ namespace GUI.Views.Pages
 
                 if (xacNhan)
                 {
-                    if (_veService.HoanVe(maVe, tyLeLePhi, $"Khách hoàn vé tại ga ({quyDinhVnr})", "TIEN_MAT", 3, out string err))
+                    int maNhanVien = PhienLamViec.MaNhanVien ?? (PhienLamViec.MaTaiKhoan > 0 ? PhienLamViec.MaTaiKhoan : 3);
+                    if (_veService.HoanVe(maVe, tyLeLePhi, $"Khách hoàn vé tại ga ({quyDinhVnr})", "TIEN_MAT", maNhanVien, out string err))
                     {
                         ThongBaoDialog.ThanhCong(
                             $"ĐÃ HOÀN TRẢ VÉ #{maCode} THÀNH CÔNG!\n\n" +

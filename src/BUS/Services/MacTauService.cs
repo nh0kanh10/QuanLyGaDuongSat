@@ -166,6 +166,111 @@ namespace BUS.Services
             return rounded;
         }
 
+        /// <summary>
+        /// Xác định tiền tố mác tàu (Prefix) hoàn toàn tự động dựa trên dữ liệu CSDL (Data-Driven),
+        /// tuyệt đối KHÔNG hardcode tên địa phương hay tên ga trong mã nguồn.
+        /// - Ưu tiên 1: Lấy tiền tố từ mác tàu đã có trên chính tuyến (Ga Đi - Ga Đến) trong CSDL.
+        /// - Ưu tiên 2: Lấy tiền tố phổ biến nhất của các mác tàu cùng Loại Tàu trong CSDL.
+        /// - Fallback: Trích xuất mã quy chuẩn trong ngoặc đơn từ bảng danh mục định mức loại tàu.
+        /// </summary>
+        public string LayTienToMacTauTuCSDL(DataTable? dtMacTau, string loaiTau, int maGaDi = 0, int maGaDen = 0)
+        {
+            if (dtMacTau != null && dtMacTau.Rows.Count > 0)
+            {
+                // 1. Nếu cùng tuyến (Ga Đi - Ga Đến) đã có mác tàu trong CSDL, ưu tiên tái sử dụng tiền tố đó
+                if (maGaDi > 0 && maGaDen > 0)
+                {
+                    foreach (DataRow r in dtMacTau.Rows)
+                    {
+                        int gDi = r["MaGaDi"] != DBNull.Value ? Convert.ToInt32(r["MaGaDi"]) : 0;
+                        int gDen = r["MaGaDen"] != DBNull.Value ? Convert.ToInt32(r["MaGaDen"]) : 0;
+                        if ((gDi == maGaDi && gDen == maGaDen) || (gDi == maGaDen && gDen == maGaDi))
+                        {
+                            string s = r["SoHieuMacTau"]?.ToString()?.Trim() ?? "";
+                            var m = System.Text.RegularExpressions.Regex.Match(s, @"^([A-Za-z]+)");
+                            if (m.Success) return m.Groups[1].Value.ToUpperInvariant();
+                        }
+                    }
+                }
+
+                // 2. Tìm tiền tố xuất hiện phổ biến nhất của cùng Loại Tàu (loaiTau) trong CSDL
+                var demTienTo = new System.Collections.Generic.Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                foreach (DataRow r in dtMacTau.Rows)
+                {
+                    string loai = r["LoaiTau"]?.ToString() ?? "";
+                    if (string.Equals(loai, loaiTau, StringComparison.OrdinalIgnoreCase))
+                    {
+                        string s = r["SoHieuMacTau"]?.ToString()?.Trim() ?? "";
+                        var m = System.Text.RegularExpressions.Regex.Match(s, @"^([A-Za-z]+)");
+                        if (m.Success)
+                        {
+                            string p = m.Groups[1].Value.ToUpperInvariant();
+                            demTienTo[p] = demTienTo.TryGetValue(p, out int count) ? count + 1 : 1;
+                        }
+                    }
+                }
+
+                if (demTienTo.Count > 0)
+                {
+                    return demTienTo.OrderByDescending(x => x.Value).First().Key;
+                }
+            }
+
+            // 3. Fallback: Trích xuất mã viết tắt trong ngoặc đơn từ bảng danh mục định mức loại tàu
+            var (_, tenLoai, _) = DinhMucVanTocService.LayThongSoDinhMuc(loaiTau);
+            var matchNgoac = System.Text.RegularExpressions.Regex.Match(tenLoai, @"\(([A-Za-z]+)");
+            if (matchNgoac.Success)
+            {
+                return matchNgoac.Groups[1].Value.ToUpperInvariant();
+            }
+
+            return "SE";
+        }
+
+        /// <summary>
+        /// Tự động sinh số hiệu mác tàu gợi ý chuẩn quy cách ĐSVN:
+        /// - Tiền tố (Prefix) được lấy 100% tự động từ CSDL theo tuyến và loại tàu.
+        /// - Hướng Bắc -> Nam: Chiều Lẻ (1, 3, 5, 7, 9...)
+        /// - Hướng Nam -> Bắc: Chiều Chẵn (2, 4, 6, 8, 10...)
+        /// Tự động tìm số nhỏ nhất chưa tồn tại trong hệ thống.
+        /// </summary>
+        public string SinhSoHieuMacTauGoiY(string loaiTau, string huongChay, int maGaDi = 0, int maGaDen = 0)
+        {
+            DataTable dt = _repo.LayDanhSach(null);
+            var dsSoHieu = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (dt != null)
+            {
+                foreach (DataRow r in dt.Rows)
+                {
+                    string s = r["SoHieuMacTau"]?.ToString()?.Trim() ?? "";
+                    if (!string.IsNullOrEmpty(s))
+                    {
+                        dsSoHieu.Add(s);
+                    }
+                }
+            }
+
+            // Lấy tiền tố hoàn toàn từ dữ liệu CSDL (Data-Driven), không hardcode tên địa danh
+            string prefix = LayTienToMacTauTuCSDL(dt, loaiTau, maGaDi, maGaDen);
+
+            // Hướng Bắc -> Nam: Chiều Lẻ (1, 3, 5, 7, 9...)
+            // Hướng Nam -> Bắc: Chiều Chẵn (2, 4, 6, 8, 10...)
+            bool laChieuLe = huongChay != "NAM_BAC";
+            int num = laChieuLe ? 1 : 2;
+
+            while (num < 1000)
+            {
+                string candidate = $"{prefix}{num}";
+                if (!dsSoHieu.Contains(candidate))
+                {
+                    return candidate;
+                }
+                num += 2;
+            }
+
+            return $"{prefix}{(laChieuLe ? 99 : 98)}";
+        }
+
         public bool Luu(MacTauMau m, bool laThemMoi, out string loi, string nguoiThucHien = "admin")
         {
             if (!KiemTraHopLe(m, laThemMoi, out loi))

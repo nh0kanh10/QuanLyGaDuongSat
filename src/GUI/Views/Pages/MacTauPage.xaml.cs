@@ -21,6 +21,7 @@ namespace GUI.Views.Pages
         private DataTable? _cachedMacTau;
         private DataTable? _cachedGa;
         private bool _isAddingNew = false;
+        private bool _isSoHieuMacUserEdited = false;
         private int _selectedMaMacTau = 0;
         private bool _selectedDangKhaiThacGoc = true;
         private string _currentHuongChay = "BAC_NAM";
@@ -260,6 +261,12 @@ namespace GUI.Views.Pages
                 txtSoHieuMac.IsReadOnly = true;
                 txtSoHieuMac.Background = (Brush)new BrushConverter().ConvertFrom("#F1F5F9")!;
                 txtSoHieuMac.ToolTip = "Số hiệu mác tàu là mã định danh cố định, không thể thay đổi sau khi đã lưu (khóa cố định giống Mã Ga).";
+                if (btnTuSinhSoHieuMac != null) btnTuSinhSoHieuMac.IsEnabled = false;
+                if (txtGiaiThichSoHieuMac != null)
+                {
+                    txtGiaiThichSoHieuMac.Text = "Mã định danh duy nhất của mác tàu đã lưu (không thể thay đổi).";
+                    txtGiaiThichSoHieuMac.Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139));
+                }
 
                 // Đổ dữ liệu AUDIT chuẩn
                 string nguoiTao = row["NguoiTao"]?.ToString() ?? "admin";
@@ -289,15 +296,17 @@ namespace GUI.Views.Pages
         public void KichHoatThemMoi()
         {
             _isAddingNew = true;
+            _isSoHieuMacUserEdited = false;
             _selectedMaMacTau = 0;
             dgMacTau.SelectedItem = null;
 
             inspectorHeader.SetCreateMode("KHAI BÁO MÁC TÀU MỚI", "Nhập thông số hành trình cho mác tàu mới trên tuyến");
 
-            txtSoHieuMac.Text = "";
             txtSoHieuMac.IsReadOnly = false;
             txtSoHieuMac.Background = Brushes.White;
-            txtSoHieuMac.ToolTip = "Nhập số hiệu định danh mác tàu (ví dụ: SE1, NA1, LP3, HBN1)";
+            txtSoHieuMac.ToolTip = "Số hiệu mác tàu (tự động gợi ý chuẩn VNR: SE + số lẻ vào Nam, số chẵn ra Bắc). Bạn có thể chỉnh sửa tự do theo ý muốn.";
+            if (btnTuSinhSoHieuMac != null) btnTuSinhSoHieuMac.IsEnabled = true;
+
             cboLoaiTau.SelectedIndex = 0;
 
             if (_cachedGa != null && _cachedGa.Rows.Count >= 2)
@@ -314,8 +323,13 @@ namespace GUI.Views.Pages
             txtNguoiTao.Text = "admin (đang tạo mới)";
             txtNgayCapNhat.Text = "Chưa lưu";
 
+            // Tự tính cự ly, hướng chạy và thời gian chuẩn
             ApDungTinhGioChuanTuDong();
+            // Tự động sinh số hiệu mác tàu (SE + num) theo loại tàu và chiều chạy
+            ApDungGoiYSoHieuMacTuDong();
+
             txtSoHieuMac.Focus();
+            txtSoHieuMac.SelectAll();
         }
 
         private void CboLoaiTau_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -325,6 +339,7 @@ namespace GUI.Views.Pages
             if (_isAddingNew)
             {
                 ApDungTinhGioChuanTuDong();
+                ApDungGoiYSoHieuMacTuDong();
             }
             else
             {
@@ -339,6 +354,7 @@ namespace GUI.Views.Pages
             if (_isAddingNew)
             {
                 ApDungTinhGioChuanTuDong();
+                ApDungGoiYSoHieuMacTuDong();
             }
             else
             {
@@ -349,6 +365,48 @@ namespace GUI.Views.Pages
         private void BtnTuTinhGioChuan_Click(object sender, RoutedEventArgs e)
         {
             ApDungTinhGioChuanTuDong();
+        }
+
+        private void BtnTuSinhSoHieuMac_Click(object sender, RoutedEventArgs e)
+        {
+            _isSoHieuMacUserEdited = false;
+            ApDungGoiYSoHieuMacTuDong(batBuocGhiDe: true);
+        }
+
+        private void TxtSoHieuMac_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!_isInitialized || !_isAddingNew) return;
+
+            if (txtSoHieuMac.IsFocused)
+            {
+                _isSoHieuMacUserEdited = true;
+                if (txtGiaiThichSoHieuMac != null)
+                {
+                    txtGiaiThichSoHieuMac.Text = "✍ Đang dùng số hiệu tùy chỉnh của bạn. Bấm [Tự sinh] nếu muốn lấy lại mã gợi ý VNR.";
+                    txtGiaiThichSoHieuMac.Foreground = new SolidColorBrush(Color.FromRgb(217, 119, 6)); // Cam thân thiện
+                }
+            }
+        }
+
+        private void ApDungGoiYSoHieuMacTuDong(bool batBuocGhiDe = false)
+        {
+            if (!_isInitialized || !_isAddingNew || txtSoHieuMac == null) return;
+            if (_isSoHieuMacUserEdited && !batBuocGhiDe && !string.IsNullOrWhiteSpace(txtSoHieuMac.Text)) return;
+
+            string loai = (cboLoaiTau?.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "TAU_NHANH";
+            string huong = _currentHuongChay ?? "BAC_NAM";
+            int maGaDi = cboGaDi?.SelectedValue != null ? Convert.ToInt32(cboGaDi.SelectedValue) : 0;
+            int maGaDen = cboGaDen?.SelectedValue != null ? Convert.ToInt32(cboGaDen.SelectedValue) : 0;
+
+            string maGoiY = _macTauService.SinhSoHieuMacTauGoiY(loai, huong, maGaDi, maGaDen);
+            txtSoHieuMac.Text = maGoiY;
+
+            string huongMoTa = huong == "NAM_BAC" ? "Chiều Chẵn • Nam → Bắc" : "Chiều Lẻ • Bắc → Nam";
+            if (txtGiaiThichSoHieuMac != null)
+            {
+                txtGiaiThichSoHieuMac.Text = $" Tự động gợi ý: {maGoiY} ({huongMoTa}) - Bạn có thể sửa lại nếu muốn.";
+                txtGiaiThichSoHieuMac.Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            }
         }
 
         private void ApDungTinhGioChuanTuDong()
@@ -371,7 +429,7 @@ namespace GUI.Views.Pages
 
                 if (txtGiaiThichDinhMuc != null)
                 {
-                    txtGiaiThichDinhMuc.Text = $"⚡ Tự tính ({tenLoai}): {cuLy:F1} km ÷ {vanToc:F0} km/h = {tgGoiY:F1}h";
+                    txtGiaiThichDinhMuc.Text = $" Tự tính ({tenLoai}): {cuLy:F1} km ÷ {vanToc:F0} km/h = {tgGoiY:F1}h";
                     txtGiaiThichDinhMuc.ToolTip = $"{tenLoai} - {vanToc:F1} km/h: {moTa}";
                     txtGiaiThichDinhMuc.Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199));
                 }
@@ -453,6 +511,34 @@ namespace GUI.Views.Pages
             {
                 if (val < 0.2m) val = 0.2m;
                 if (val > 100.0m) val = 100.0m;
+
+                // Giới hạn vận tốc tối đa 200 km/h: Nếu quá 200 km/h thì tự động trả lại giờ chuẩn bình thường theo định mức
+                if (cboGaDi?.SelectedItem is DataRowView rDi && cboGaDen?.SelectedItem is DataRowView rDen)
+                {
+                    decimal kmDi = rDi["LyTrinhKm"] != DBNull.Value ? Convert.ToDecimal(rDi["LyTrinhKm"]) : 0;
+                    decimal kmDen = rDen["LyTrinhKm"] != DBNull.Value ? Convert.ToDecimal(rDen["LyTrinhKm"]) : 0;
+                    decimal cuLy = Math.Abs(kmDen - kmDi);
+
+                    if (cuLy > 0 && val > 0)
+                    {
+                        decimal vtb = cuLy / val;
+                        if (vtb > 200m)
+                        {
+                            // Vận tốc vượt quá 200 km/h -> tự động trả lại giờ chuẩn bình thường theo định mức khoa học
+                            string loai = (cboLoaiTau?.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "TAU_NHANH";
+                            decimal tgBinhThuong = MacTauService.TinhGioChuanGoiY(cuLy, loai);
+                            val = tgBinhThuong;
+
+                            if (txtGiaiThichDinhMuc != null)
+                            {
+                                var (_, tenLoai, _) = DinhMucVanTocService.LayThongSoDinhMuc(loai);
+                                txtGiaiThichDinhMuc.Text = $"⚠ Vận tốc ~{vtb:F1} km/h vượt quá giới hạn 200 km/h! Hệ thống tự động trả lại giờ chuẩn bình thường ({tenLoai}): {tgBinhThuong:F1}h.";
+                                txtGiaiThichDinhMuc.Foreground = new SolidColorBrush(Color.FromRgb(217, 119, 6)); // Cam thân thiện
+                            }
+                        }
+                    }
+                }
+
                 txtThoiGianChuan.Text = val.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
             }
             else
@@ -509,13 +595,8 @@ namespace GUI.Views.Pages
 
                     if (vtb > 200m)
                     {
-                        txtKpiVanToc.Foreground = new SolidColorBrush(Color.FromRgb(185, 28, 28)); // Đỏ cảnh báo
-                        txtKpiVanToc.ToolTip = $" CẢNH BÁO AN TOÀN:\nVận tốc lữ hành ~{vtb:F1} km/h vượt quá tốc độ tối đa cho phép của hạ tầng đường sắt (ngưỡng tối đa 200 km/h)!\nVui lòng tăng thời gian chạy chuẩn cho phù hợp.";
-                    }
-                    else if (vtb > 120m)
-                    {
-                        txtKpiVanToc.Foreground = new SolidColorBrush(Color.FromRgb(194, 65, 12)); // Cam đậm
-                        txtKpiVanToc.ToolTip = $" CHÚ Ý VẬN TỐC CAO:\nVận tốc lữ hành ~{vtb:F1} km/h ở mức cao (trên 120 km/h, chỉ dành cho mác tàu nhanh/cao tốc nâng cấp).";
+                        txtKpiVanToc.Foreground = new SolidColorBrush(Color.FromRgb(185, 28, 28)); // Đỏ cảnh báo quá 200 km/h
+                        txtKpiVanToc.ToolTip = $" CẢNH BÁO AN TOÀN:\nVận tốc lữ hành ~{vtb:F1} km/h vượt quá tốc độ tối đa cho phép của hạ tầng (ngưỡng tối đa 200 km/h)!\nKhi rời ô giờ, hệ thống sẽ tự động khôi phục về giờ chuẩn bình thường.";
                     }
                     else if (vtb < 10m && cuLy > 30m)
                     {
@@ -524,8 +605,9 @@ namespace GUI.Views.Pages
                     }
                     else
                     {
+                        // Giới hạn bình thường là đến 200 km/h: Hiển thị xanh chuẩn
                         txtKpiVanToc.Foreground = new SolidColorBrush(Color.FromRgb(15, 118, 110)); // Xanh chuẩn
-                        txtKpiVanToc.ToolTip = $"Tốc độ trung bình lữ hành: ~{vtb:F1} km/h (Hành trình {cuLy:F1} km trong {tg:F1} giờ).";
+                        txtKpiVanToc.ToolTip = $"Tốc độ trung bình lữ hành: ~{vtb:F1} km/h (Hành trình {cuLy:F1} km trong {tg:F1} giờ - Tốc độ hợp lệ ≤ 200 km/h).";
                     }
                 }
                 else

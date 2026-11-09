@@ -757,25 +757,15 @@ namespace GUI.Views.Pages
                 return;
             }
 
-            int successCount = 0;
-            foreach (var row in khachChuaLen)
+            if (_veService.SoatVeTheoLo(_currentSoatMaChuyenTau, _currentSoatMaGa, out int successCount, out string thongBaoLoi))
             {
-                int maVe = Convert.ToInt32(row["MaVe"]);
-                if (_veService.SoatVe(maVe, _currentSoatMaGa, out _))
-                {
-                    row["TrangThai"] = "DA_LEN_TAU";
-                    row["ThoiDiemSoatVe"] = DateTime.Now;
-                    if (cboGaKiemSoat.SelectedItem is DataRowView drv)
-                    {
-                        row["TenGaSoat"] = drv["TenGa"];
-                    }
-                    successCount++;
-                }
+                LoadManifestChuyenTau();
+                ThongBaoDialog.ThanhCong($"Đã xác nhận lên tàu thành công cho {successCount} hành khách đón tại ga!", "Hoàn Tất");
             }
-
-            CapNhatKpiSoatVe();
-            ApDungLocManifest();
-            ThongBaoDialog.ThanhCong($"Đã xác nhận lên tàu thành công cho {successCount} hành khách đón tại ga!", "Hoàn Tất");
+            else
+            {
+                ThongBaoDialog.Loi($"Lỗi khi xác nhận lên tàu theo lô: {thongBaoLoi}", "Thất Bại");
+            }
         }
 
         private void BtnInDanhSachManifest_Click(object sender, RoutedEventArgs e)

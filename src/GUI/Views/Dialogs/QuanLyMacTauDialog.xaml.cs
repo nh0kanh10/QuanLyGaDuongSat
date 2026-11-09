@@ -17,6 +17,7 @@ namespace GUI.Views.Dialogs
         private DataTable? _cachedMacTau;
         private DataTable? _cachedGa;
         private bool _isAddingNew = false;
+        private bool _isSoHieuMacUserEdited = false;
         private int _currentMaMacTau = 0;
         private string _currentHuongChay = "BAC_NAM";
 
@@ -185,6 +186,12 @@ namespace GUI.Views.Dialogs
 
                 txtSoHieuMac.Text = row["SoHieuMacTau"]?.ToString() ?? "";
                 txtSoHieuMac.IsReadOnly = false;
+                if (btnTuSinhSoHieuMac != null) btnTuSinhSoHieuMac.IsEnabled = false;
+                if (txtGiaiThichSoHieuMac != null)
+                {
+                    txtGiaiThichSoHieuMac.Text = "Mã định danh duy nhất của mác tàu đã lưu.";
+                    txtGiaiThichSoHieuMac.Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139));
+                }
 
                 string loai = row["LoaiTau"]?.ToString() ?? "TAU_NHANH";
                 foreach (ComboBoxItem item in cboLoaiTau.Items)
@@ -240,6 +247,7 @@ namespace GUI.Views.Dialogs
         private void BtnThemMoi_Click(object sender, RoutedEventArgs e)
         {
             _isAddingNew = true;
+            _isSoHieuMacUserEdited = false;
             _currentMaMacTau = 0;
             dgMacTau.SelectedItem = null;
 
@@ -248,8 +256,8 @@ namespace GUI.Views.Dialogs
             bdFormBadge.Background = new SolidColorBrush(Color.FromRgb(239, 246, 255));
             txtFormBadge.Foreground = new SolidColorBrush(Color.FromRgb(29, 78, 216));
 
-            txtSoHieuMac.Text = "";
             txtSoHieuMac.IsReadOnly = false;
+            if (btnTuSinhSoHieuMac != null) btnTuSinhSoHieuMac.IsEnabled = true;
             cboLoaiTau.SelectedIndex = 0;
 
             if (_cachedGa != null && _cachedGa.Rows.Count >= 2)
@@ -258,20 +266,150 @@ namespace GUI.Views.Dialogs
                 cboGaDen.SelectedIndex = _cachedGa.Rows.Count - 1;
             }
 
-            txtThoiGianChuan.Text = "32.5";
             cboMucUuTien.SelectedIndex = 0;
             chkDangKhaiThac.IsChecked = true;
 
             btnXoa.IsEnabled = false;
             CapNhatNutTrangThai(true);
+
             CapNhatHuongVaHanhTrinh();
+            ApDungTinhGioChuanTuDong();
+            ApDungGoiYSoHieuMacTuDong();
 
             txtSoHieuMac.Focus();
+            txtSoHieuMac.SelectAll();
+        }
+
+        private void CboLoaiTau_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isAddingNew)
+            {
+                CapNhatHuongVaHanhTrinh();
+                ApDungTinhGioChuanTuDong();
+                ApDungGoiYSoHieuMacTuDong();
+            }
         }
 
         private void CboGa_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             CapNhatHuongVaHanhTrinh();
+            if (_isAddingNew)
+            {
+                ApDungTinhGioChuanTuDong();
+                ApDungGoiYSoHieuMacTuDong();
+            }
+        }
+
+        private void BtnTuTinhGioChuan_Click(object sender, RoutedEventArgs e)
+        {
+            ApDungTinhGioChuanTuDong();
+        }
+
+        private void TxtThoiGianChuan_LostFocus(object sender, RoutedEventArgs e)
+        {
+            string raw = txtThoiGianChuan.Text.Trim().Replace(',', '.');
+            if (decimal.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal val))
+            {
+                if (val < 0.2m) val = 0.2m;
+                if (val > 100.0m) val = 100.0m;
+
+                if (cboGaDi?.SelectedItem is DataRowView rDi && cboGaDen?.SelectedItem is DataRowView rDen)
+                {
+                    decimal kmDi = rDi["LyTrinhKm"] != DBNull.Value ? Convert.ToDecimal(rDi["LyTrinhKm"]) : 0;
+                    decimal kmDen = rDen["LyTrinhKm"] != DBNull.Value ? Convert.ToDecimal(rDen["LyTrinhKm"]) : 0;
+                    decimal cuLy = Math.Abs(kmDen - kmDi);
+
+                    if (cuLy > 0 && val > 0)
+                    {
+                        decimal vtb = cuLy / val;
+                        if (vtb > 200m)
+                        {
+                            string loai = (cboLoaiTau?.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "TAU_NHANH";
+                            decimal tgBinhThuong = MacTauService.TinhGioChuanGoiY(cuLy, loai);
+                            val = tgBinhThuong;
+
+                            if (txtGiaiThichDinhMuc != null)
+                            {
+                                var (_, tenLoai, _) = DinhMucVanTocService.LayThongSoDinhMuc(loai);
+                                txtGiaiThichDinhMuc.Text = $"⚠ Vận tốc ~{vtb:F1} km/h vượt quá giới hạn 200 km/h! Hệ thống tự động trả lại giờ chuẩn bình thường ({tenLoai}): {tgBinhThuong:F1}h.";
+                                txtGiaiThichDinhMuc.Foreground = new SolidColorBrush(Color.FromRgb(217, 119, 6));
+                            }
+                        }
+                    }
+                }
+
+                txtThoiGianChuan.Text = val.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                txtThoiGianChuan.Text = "1.0";
+            }
+            CapNhatHuongVaHanhTrinh();
+        }
+
+        private void BtnTuSinhSoHieuMac_Click(object sender, RoutedEventArgs e)
+        {
+            _isSoHieuMacUserEdited = false;
+            ApDungGoiYSoHieuMacTuDong(batBuocGhiDe: true);
+        }
+
+        private void TxtSoHieuMac_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!_isAddingNew) return;
+
+            if (txtSoHieuMac.IsFocused)
+            {
+                _isSoHieuMacUserEdited = true;
+                if (txtGiaiThichSoHieuMac != null)
+                {
+                    txtGiaiThichSoHieuMac.Text = "Đang nhập số hiệu tùy chỉnh của bạn. Bấm [Tự sinh] nếu muốn lấy lại mã gợi ý VNR.";
+                    txtGiaiThichSoHieuMac.Foreground = new SolidColorBrush(Color.FromRgb(217, 119, 6));
+                }
+            }
+        }
+
+        private void ApDungGoiYSoHieuMacTuDong(bool batBuocGhiDe = false)
+        {
+            if (!_isAddingNew || txtSoHieuMac == null) return;
+            if (_isSoHieuMacUserEdited && !batBuocGhiDe && !string.IsNullOrWhiteSpace(txtSoHieuMac.Text)) return;
+
+            string loai = (cboLoaiTau?.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "TAU_NHANH";
+            string huong = _currentHuongChay ?? "BAC_NAM";
+            int maGaDi = cboGaDi?.SelectedValue != null ? Convert.ToInt32(cboGaDi.SelectedValue) : 0;
+            int maGaDen = cboGaDen?.SelectedValue != null ? Convert.ToInt32(cboGaDen.SelectedValue) : 0;
+
+            string maGoiY = _macTauService.SinhSoHieuMacTauGoiY(loai, huong, maGaDi, maGaDen);
+            txtSoHieuMac.Text = maGoiY;
+
+            string huongMoTa = huong == "NAM_BAC" ? "Chiều Chẵn • Nam → Bắc" : "Chiều Lẻ • Bắc → Nam";
+            if (txtGiaiThichSoHieuMac != null)
+            {
+                txtGiaiThichSoHieuMac.Text = $"Tự động gợi ý: {maGoiY} ({huongMoTa}) - Bạn có thể sửa lại nếu muốn.";
+                txtGiaiThichSoHieuMac.Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            }
+        }
+
+        private void ApDungTinhGioChuanTuDong()
+        {
+            if (cboGaDi?.SelectedItem is DataRowView rDi && cboGaDen?.SelectedItem is DataRowView rDen)
+            {
+                decimal kmDi = rDi["LyTrinhKm"] != DBNull.Value ? Convert.ToDecimal(rDi["LyTrinhKm"]) : 0;
+                decimal kmDen = rDen["LyTrinhKm"] != DBNull.Value ? Convert.ToDecimal(rDen["LyTrinhKm"]) : 0;
+                decimal cuLy = Math.Abs(kmDen - kmDi);
+
+                string loai = (cboLoaiTau?.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "TAU_NHANH";
+                decimal tgGoiY = MacTauService.TinhGioChuanGoiY(cuLy, loai);
+
+                txtThoiGianChuan.Text = tgGoiY.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+
+                var (vanToc, tenLoai, moTa) = DinhMucVanTocService.LayThongSoDinhMuc(loai);
+                if (txtGiaiThichDinhMuc != null)
+                {
+                    txtGiaiThichDinhMuc.Text = $"Tự tính ({tenLoai}): {cuLy:F1} km ÷ {vanToc:F0} km/h = {tgGoiY:F1}h";
+                    txtGiaiThichDinhMuc.ToolTip = $"{tenLoai} - {vanToc:F1} km/h: {moTa}. Bạn có thể tự do chỉnh sửa lại số giờ theo ý muốn.";
+                    txtGiaiThichDinhMuc.Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                }
+            }
         }
 
         private void CapNhatHuongVaHanhTrinh()

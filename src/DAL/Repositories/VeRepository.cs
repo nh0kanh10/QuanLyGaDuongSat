@@ -279,12 +279,16 @@ namespace DAL.Repositories
 
             try
             {
-                // 1. Kiem tra hoac tao moi KhachHang
+                // 1. Kiem tra hoac tao moi KhachHang (tra cuu linh hoat theo CCCD hoac SDT)
                 int maKhachHang = 0;
-                string checkKhSql = "SELECT MaKhachHang FROM vantai.KhachHang WHERE SoCCCD = @cccd";
+                string checkKhSql = @"SELECT TOP 1 MaKhachHang FROM vantai.KhachHang 
+                                      WHERE (SoCCCD = @cccd AND @cccd <> '') 
+                                         OR (SoDienThoai = @sdt AND @sdt <> '')
+                                      ORDER BY MaKhachHang DESC";
                 using (var cmdCheckKh = new SqlCommand(checkKhSql, conn, trans))
                 {
-                    cmdCheckKh.Parameters.AddWithValue("@cccd", khachHang.SoCCCD);
+                    cmdCheckKh.Parameters.AddWithValue("@cccd", khachHang.SoCCCD ?? "");
+                    cmdCheckKh.Parameters.AddWithValue("@sdt", khachHang.SoDienThoai ?? "");
                     object? res = cmdCheckKh.ExecuteScalar();
                     if (res != null && res != DBNull.Value)
                     {
@@ -532,7 +536,7 @@ namespace DAL.Repositories
             return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@cccd", cccd) });
         }
 
-        public bool DoiGheCungChuyen(int maVeCu, int maChoNgoiMoi, int maNhanVien, out string maVeCodeMoi, out string thongBaoLoi)
+        public bool DoiGheCungChuyen(int maVeCu, int maChoNgoiMoi, decimal giaVeGocMoi, int maNhanVien, out string maVeCodeMoi, out string thongBaoLoi)
         {
             maVeCodeMoi = string.Empty;
             thongBaoLoi = string.Empty;
@@ -579,6 +583,13 @@ namespace DAL.Repositories
                     giamGia = Convert.ToDecimal(r["SoTienGiam"]);
                 }
 
+                // Tinh toan gia ve moi va chenh lech tai chinh
+                decimal tyLeGiam = (giaGoc > 0) ? (giamGia / giaGoc) : 0m;
+                decimal giamGiaMoi = Math.Round(giaVeGocMoi * tyLeGiam, 0);
+                decimal thucThuCu = giaGoc - giamGia;
+                decimal thucThuMoi = giaVeGocMoi - giamGiaMoi;
+                decimal chenhLech = thucThuMoi - thucThuCu;
+
                 // 2. Chuyen trang thai ve cu sang DA_HUY de giai phong ghe cu
                 string updateCu = "UPDATE vantai.Ve SET TrangThai = 'DA_HUY' WHERE MaVe = @id";
                 using (var cmdUp = new SqlCommand(updateCu, conn, trans))
@@ -598,8 +609,8 @@ namespace DAL.Repositories
                     cmdSP.Parameters.AddWithValue("@MaGaDen", maGaDen);
                     cmdSP.Parameters.AddWithValue("@TenHanhKhach", tenHk);
                     cmdSP.Parameters.AddWithValue("@CCCDHanhKhach", cccdHk);
-                    cmdSP.Parameters.AddWithValue("@GiaVeGoc", giaGoc);
-                    cmdSP.Parameters.AddWithValue("@SoTienGiam", giamGia);
+                    cmdSP.Parameters.AddWithValue("@GiaVeGoc", giaVeGocMoi);
+                    cmdSP.Parameters.AddWithValue("@SoTienGiam", giamGiaMoi);
 
                     var pOut = cmdSP.Parameters.Add("@MaVeCodeOutput", SqlDbType.VarChar, 30);
                     pOut.Direction = ParameterDirection.InputOutput;
@@ -607,6 +618,20 @@ namespace DAL.Repositories
 
                     cmdSP.ExecuteNonQuery();
                     maVeCodeMoi = pOut.Value?.ToString() ?? "";
+                }
+
+                // 4. Cap nhat chenh lech tai chinh vao DonDatVe
+                if (chenhLech != 0)
+                {
+                    string updateDon = @"UPDATE vantai.DonDatVe 
+                                         SET TongTien = CASE WHEN TongTien + @diff < 0 THEN 0 ELSE TongTien + @diff END 
+                                         WHERE MaDonVe = @maDonVe";
+                    using (var cmdDon = new SqlCommand(updateDon, conn, trans))
+                    {
+                        cmdDon.Parameters.AddWithValue("@diff", chenhLech);
+                        cmdDon.Parameters.AddWithValue("@maDonVe", maDonVe);
+                        cmdDon.ExecuteNonQuery();
+                    }
                 }
 
                 trans.Commit();
@@ -643,6 +668,33 @@ namespace DAL.Repositories
                     new SqlParameter("@maGaSoat", (object?)maGaSoat ?? DBNull.Value)
                 });
                 return rows > 0;
+            }
+            catch (Exception ex)
+            {
+                thongBaoLoi = ex.Message;
+                return false;
+            }
+        }
+
+        public bool SoatVeTheoLo(int maChuyenTau, int maGaSoat, out int soVeDaSoat, out string thongBaoLoi)
+        {
+            soVeDaSoat = 0;
+            thongBaoLoi = string.Empty;
+            try
+            {
+                string sql = @"UPDATE vantai.Ve 
+                               SET TrangThai = 'DA_LEN_TAU',
+                                   ThoiDiemSoatVe = SYSDATETIME(),
+                                   MaGaSoat = @maGaSoat
+                               WHERE MaChuyenTau = @maChuyenTau
+                                 AND MaGaDi = @maGaSoat
+                                 AND TrangThai = 'DA_DAT'";
+                soVeDaSoat = DatabaseHelper.ExecuteNonQuery(sql, new[]
+                {
+                    new SqlParameter("@maChuyenTau", maChuyenTau),
+                    new SqlParameter("@maGaSoat", maGaSoat)
+                });
+                return true;
             }
             catch (Exception ex)
             {

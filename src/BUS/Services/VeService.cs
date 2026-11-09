@@ -171,7 +171,7 @@ namespace BUS.Services
             return _repo.LayDanhSachVeTheoCCCD(cccd.Trim());
         }
 
-        public bool DoiGheCungChuyen(int maVeCu, int maChoNgoiMoi, int maNhanVien, out string maVeCodeMoi, out string thongBaoLoi)
+        public bool DoiGheCungChuyen(int maVeCu, int maChoNgoiMoi, decimal giaVeGocMoi, int maNhanVien, out string maVeCodeMoi, out string thongBaoLoi)
         {
             if (maVeCu <= 0 || maChoNgoiMoi <= 0)
             {
@@ -179,7 +179,7 @@ namespace BUS.Services
                 thongBaoLoi = "Mã vé hoặc mã chỗ ngồi mới không hợp lệ!";
                 return false;
             }
-            return _repo.DoiGheCungChuyen(maVeCu, maChoNgoiMoi, maNhanVien, out maVeCodeMoi, out thongBaoLoi);
+            return _repo.DoiGheCungChuyen(maVeCu, maChoNgoiMoi, giaVeGocMoi, maNhanVien, out maVeCodeMoi, out thongBaoLoi);
         }
 
         #region NGHIỆP VỤ SOÁT VÉ & KIỂM SOÁT LÊN TÀU
@@ -192,6 +192,17 @@ namespace BUS.Services
                 return false;
             }
             return _repo.CapNhatTrangThaiSoatVe(maVe, "DA_LEN_TAU", maGaSoat, out thongBaoLoi);
+        }
+
+        public bool SoatVeTheoLo(int maChuyenTau, int maGaSoat, out int soVeDaSoat, out string thongBaoLoi)
+        {
+            if (maChuyenTau <= 0 || maGaSoat <= 0)
+            {
+                soVeDaSoat = 0;
+                thongBaoLoi = "Mã chuyến tàu hoặc ga kiểm soát không hợp lệ!";
+                return false;
+            }
+            return _repo.SoatVeTheoLo(maChuyenTau, maGaSoat, out soVeDaSoat, out thongBaoLoi);
         }
 
         public bool HuySoatVe(int maVe, out string thongBaoLoi)
