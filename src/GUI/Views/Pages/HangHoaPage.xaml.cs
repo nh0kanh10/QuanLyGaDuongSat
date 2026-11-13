@@ -76,6 +76,29 @@ namespace GUI.Views.Pages
                 // 3. Khởi tạo mã vận đơn mới
                 SinhMaVanDonMoi();
 
+                // Gắn bộ lọc chống dán ký tự lạ cho các ô số thực
+                DataObject.AddPastingHandler(txtTrongLuong, (s, e) =>
+                {
+                    if (e.DataObject.GetDataPresent(DataFormats.Text))
+                    {
+                        string paste = e.DataObject.GetData(DataFormats.Text)?.ToString() ?? "";
+                        if (!FormatHelper.TryParseDecimal(paste, out _))
+                            e.CancelCommand();
+                    }
+                    else e.CancelCommand();
+                });
+
+                DataObject.AddPastingHandler(txtTheTich, (s, e) =>
+                {
+                    if (e.DataObject.GetDataPresent(DataFormats.Text))
+                    {
+                        string paste = e.DataObject.GetData(DataFormats.Text)?.ToString() ?? "";
+                        if (!FormatHelper.TryParseDecimal(paste, out _))
+                            e.CancelCommand();
+                    }
+                    else e.CancelCommand();
+                });
+
                 // 4. Đồng bộ loại hàng theo hình thức ban đầu (XE_MAY)
                 ApDungHinhThucVanChuyen();
 
@@ -322,13 +345,22 @@ namespace GUI.Views.Pages
             decimal cuLyKm = Math.Abs(lyTrinhNhan - lyTrinhGui);
             txtCuLyKm.Text = $"{cuLyKm:N1} km";
 
-            // Trọng lượng
-            if (!FormatHelper.TryParseWeight(txtTrongLuong.Text, out decimal trongLuongTan))
-                trongLuongTan = 0.15m;
+            // Ràng buộc Trọng lượng & Thể tích
+            bool hopLeTrongLuong = FormatHelper.TryParseWeight(txtTrongLuong.Text, out decimal trongLuongTan) && trongLuongTan > 0;
+            bool hopLeTheTich = decimal.TryParse(txtTheTich.Text.Trim(), out decimal theTichM3) && theTichM3 >= 0;
 
-            decimal theTichM3 = 0;
-            decimal.TryParse(txtTheTich.Text.Trim(), out theTichM3);
-            if (theTichM3 < 0) theTichM3 = 0;
+            if (!hopLeTrongLuong)
+            {
+                txtTrongLuongTinhCuoc.Text = "Chưa hợp lệ";
+                txtCuocPhiText.Text = "0 VNĐ";
+                txtGiaiTrinhCuoc.Text = "Vui lòng nhập trọng lượng thực tế hợp lệ (> 0 tấn)";
+                return;
+            }
+
+            if (!hopLeTheTich)
+            {
+                theTichM3 = 0;
+            }
 
             decimal quyDoiTan = theTichM3 * 0.333m;
             decimal trongLuongTinhCuoc = Math.Max(trongLuongTan, quyDoiTan);
@@ -354,17 +386,67 @@ namespace GUI.Views.Pages
         private void CboGa_SelectionChanged(object sender, SelectionChangedEventArgs e) => CapNhatTinhCuoc();
         private void CboLoaiHang_SelectionChanged(object sender, SelectionChangedEventArgs e) => CapNhatTinhCuoc();
 
+        private static readonly System.Text.RegularExpressions.Regex _decimalRegex = new(@"^[0-9\.,]+$");
+
+        private void TxtSoThuc_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!_decimalRegex.IsMatch(e.Text))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (sender is TextBox tb && (e.Text == "." || e.Text == ","))
+            {
+                string curText = tb.Text;
+                if (tb.SelectionLength > 0)
+                {
+                    curText = curText.Remove(tb.SelectionStart, tb.SelectionLength);
+                }
+                if (curText.Contains('.') || curText.Contains(','))
+                {
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void TxtSoThuc_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space)
+            {
+                e.Handled = true;
+            }
+        }
+
         private void TxtTrongLuong_LostFocus(object sender, RoutedEventArgs e)
         {
             if (FormatHelper.TryParseWeight(txtTrongLuong.Text, out decimal weight))
+            {
                 txtTrongLuong.Text = FormatHelper.FormatWeight(weight);
+            }
+            else
+            {
+                string loaiVC = LayLoaiVanChuyenHienTai();
+                txtTrongLuong.Text = loaiVC switch
+                {
+                    "XE_MAY" => "0.15",
+                    "CONTAINER" => "20.00",
+                    _ => "1.00"
+                };
+            }
             CapNhatTinhCuoc();
         }
 
         private void TxtTheTich_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (decimal.TryParse(txtTheTich.Text.Trim(), out decimal m3))
+            if (decimal.TryParse(txtTheTich.Text.Trim(), out decimal m3) && m3 >= 0)
+            {
                 txtTheTich.Text = $"{m3:0.00}";
+            }
+            else
+            {
+                txtTheTich.Text = "0.00";
+            }
             CapNhatTinhCuoc();
         }
 
@@ -467,13 +549,21 @@ namespace GUI.Views.Pages
             // Trọng lượng & cước phí
             if (!FormatHelper.TryParseWeight(txtTrongLuong.Text, out decimal tl) || tl <= 0)
             {
-                MessageBox.Show("Trọng lượng hàng hóa phải lớn hơn 0.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Trọng lượng hàng hóa không hợp lệ. Vui lòng nhập số thực lớn hơn 0 (tấn).", "Cảnh Báo Nhập Liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
                 txtTrongLuong.Focus();
+                txtTrongLuong.SelectAll();
+                return;
+            }
+            if (!decimal.TryParse(txtTheTich.Text.Trim(), out decimal tt) || tt < 0)
+            {
+                MessageBox.Show("Thể tích hàng hóa không hợp lệ. Vui lòng nhập số thực không âm (m³).", "Cảnh Báo Nhập Liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtTheTich.Focus();
+                txtTheTich.SelectAll();
                 return;
             }
             if (!FormatHelper.TryParseCurrency(txtCuocPhiText.Text, out decimal cuoc) || cuoc <= 0)
             {
-                MessageBox.Show("Cước phí chưa được tính hợp lệ.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Cước phí chưa được tính hợp lệ. Vui lòng kiểm tra lại thông số quy cách cước và cự ly vận chuyển.", "Cảnh Báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

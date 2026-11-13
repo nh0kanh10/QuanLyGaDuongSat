@@ -41,6 +41,7 @@ namespace GUI.Converters
                     "DA_DAT" => SymbolRegular.TicketDiagonal24,
                     "DA_HOAN_VE" => SymbolRegular.ArrowUndo24,
                     "DA_HUY" => SymbolRegular.DismissCircle24,
+                    "HET_HAN" => SymbolRegular.Timer24,
                     _ => SymbolRegular.TicketDiagonal24
                 };
             }
@@ -53,6 +54,7 @@ namespace GUI.Converters
                     "DA_DAT" => BlueText,
                     "DA_HOAN_VE" => AmberText,
                     "DA_HUY" => RedText,
+                    "HET_HAN" => AmberText,
                     _ => GrayText
                 };
             }
@@ -65,6 +67,7 @@ namespace GUI.Converters
                     "DA_DAT" => BlueBg,
                     "DA_HOAN_VE" => AmberBg,
                     "DA_HUY" => RedBg,
+                    "HET_HAN" => AmberBg,
                     _ => GrayBg
                 };
             }
@@ -77,6 +80,7 @@ namespace GUI.Converters
                     "DA_DAT" => BlueBorder,
                     "DA_HOAN_VE" => AmberBorder,
                     "DA_HUY" => RedBorder,
+                    "HET_HAN" => AmberBorder,
                     _ => GrayBorder
                 };
             }
@@ -87,6 +91,7 @@ namespace GUI.Converters
                 "DA_DAT" => "Chưa Lên Tàu",
                 "DA_HOAN_VE" => "Đã Hoàn",
                 "DA_HUY" => "Đã Hủy",
+                "HET_HAN" => "Hết Hạn",
                 _ => val
             };
         }

@@ -24,6 +24,7 @@ namespace GUI.Views.Dialogs
         private int _maChoMoi = 0;
         private int _soGheMoi = 0;
         private string _tenToaMoi = "";
+        private string _tenHK = "";
         private string _loaiTau = "TAU_CHO";
         private decimal _giaVeMoi = 0;
         private Button? _btnGheDangChon = null;
@@ -59,6 +60,7 @@ namespace GUI.Views.Dialogs
             _maGaDen = maGaDen;
             _giaVeCu = giaVeHienTai;
             _loaiTau = loaiTau;
+            _tenHK = tenHK;
 
             lblMaVeCode.Text = maVeCode;
             lblMaPNR.Text = maPNR;
@@ -121,7 +123,9 @@ namespace GUI.Views.Dialogs
                 {
                     int maCho = Convert.ToInt32(row["MaChoNgoi"]);
                     int soGhe = Convert.ToInt32(row["SoGhe"]);
-                    string trangThai = row["TrangThai"].ToString() ?? "CON_TRONG";
+                    string trangThai = row.Table.Columns.Contains("TrangThai") && row["TrangThai"] != DBNull.Value
+                        ? row["TrangThai"].ToString() ?? "CON_TRONG"
+                        : (row.Table.Columns.Contains("DaDat") && Convert.ToInt32(row["DaDat"]) == 1 ? "DA_DAT" : "CON_TRONG");
                     int? tangGiuong = row["TangGiuong"] != DBNull.Value ? Convert.ToInt32(row["TangGiuong"]) : null;
 
                     bool daBan = (trangThai == "DA_DAT" || trangThai == "DA_BAN");
@@ -165,7 +169,17 @@ namespace GUI.Views.Dialogs
                         btn.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F1F5F9"));
                         btn.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CBD5E1"));
                         btn.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94A3B8"));
-                        btn.ToolTip = $"Ghế số {soGhe} (Đã có khách đặt trên hành trình này)";
+
+                        string tenGaDi = row.Table.Columns.Contains("TenGaDiVe") && row["TenGaDiVe"] != DBNull.Value ? row["TenGaDiVe"].ToString()! : "";
+                        string tenGaDen = row.Table.Columns.Contains("TenGaDenVe") && row["TenGaDenVe"] != DBNull.Value ? row["TenGaDenVe"].ToString()! : "";
+                        if (!string.IsNullOrEmpty(tenGaDi) && !string.IsNullOrEmpty(tenGaDen))
+                        {
+                            btn.ToolTip = $"Ghế số {soGhe}: Đã có khách đặt ({tenGaDi} → {tenGaDen}) trên chặng này";
+                        }
+                        else
+                        {
+                            btn.ToolTip = $"Ghế số {soGhe}: Đã có khách đặt trên chặng này";
+                        }
                     }
                     else
                     {
@@ -255,13 +269,13 @@ namespace GUI.Views.Dialogs
                 : (diff > 0 ? $"Phụ thu thêm: {diff:N0} VNĐ" : $"Hoàn lại cho khách: {Math.Abs(diff):N0} VNĐ");
 
             bool dongY = ThongBaoDialog.XacNhan(
-                $"XÁC NHẬN THỦ TỤC ĐỔI CHỖ NGỒI VÉ #{_maVeCodeCu}?\n\n" +
-                $"- Chỗ ngồi mới: {_tenToaMoi} — Ghế {_soGheMoi}\n" +
-                $"- Chi phí: {chiPhiMsg}\n\n" +
-                "Chỗ ngồi cũ sẽ được giải phóng ngay lập tức cho khách khác!",
+                $"Xác nhận đổi chỗ ngồi cho hành khách {_tenHK}?\n\n" +
+                $"• Chỗ ngồi mới: {_tenToaMoi} — Ghế {_soGheMoi}\n" +
+                $"• Chi phí: {chiPhiMsg}\n\n" +
+                "Chỗ ngồi cũ sẽ được mở lại để bán cho khách khác.",
                 "Xác Nhận Đổi Ghế",
                 "Đổi Ghế",
-                "Hủy");
+                "Bỏ Qua");
 
             if (!dongY) return;
 
@@ -270,10 +284,10 @@ namespace GUI.Views.Dialogs
             {
                 MaVeMoi = maVeMoi;
                 ThongBaoDialog.ThanhCong(
-                    $"ĐÃ ĐỔI CHỖ THÀNH CÔNG!\n\n" +
-                    $"- Mã vé điện tử mới: {maVeMoi}\n" +
-                    $"- Chỗ ngồi mới: {_tenToaMoi} — Ghế số {_soGheMoi}\n\n" +
-                    "Vé cũ đã được thu hồi và giải phóng trên hệ thống.",
+                    $"Đã đổi chỗ ngồi thành công!\n\n" +
+                    $"• Chỗ ngồi mới: {_tenToaMoi} — Ghế {_soGheMoi}\n" +
+                    $"• Mã vé mới: {maVeMoi}\n\n" +
+                    "Thẻ lên tàu điện tử đã được cập nhật theo vị trí mới.",
                     "Đổi Chỗ Thành Công");
 
                 DialogResult = true;

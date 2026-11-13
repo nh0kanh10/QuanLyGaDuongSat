@@ -50,7 +50,7 @@ namespace GUI.Views.Dialogs
                     borderIcon.BorderBrush = Brush("#FCA5A5");
                     iconThongBao.Symbol = SymbolRegular.DismissCircle24;
                     iconThongBao.Foreground = Brush("#DC2626");
-                    txtTieuDeHeader.Text = "LỖI THAO TÁC / TRUY VẤN DỮ LIỆU";
+                    txtTieuDeHeader.Text = "THÔNG BÁO LỖI";
                     btnChinh.Background = Brush("#475569");
                     btnChinh.BorderBrush = Brush("#334155");
                     btnHuy.Visibility = Visibility.Collapsed;
@@ -63,7 +63,7 @@ namespace GUI.Views.Dialogs
                     borderIcon.BorderBrush = Brush("#86EFAC");
                     iconThongBao.Symbol = SymbolRegular.CheckmarkCircle24;
                     iconThongBao.Foreground = Brush("#16A34A");
-                    txtTieuDeHeader.Text = "THAO TÁC THÀNH CÔNG";
+                    txtTieuDeHeader.Text = "THÀNH CÔNG";
                     btnChinh.Background = Brush("#15803D");
                     btnChinh.BorderBrush = Brush("#166534");
                     btnHuy.Visibility = Visibility.Collapsed;
@@ -76,7 +76,7 @@ namespace GUI.Views.Dialogs
                     borderIcon.BorderBrush = Brush("#FCD34D");
                     iconThongBao.Symbol = SymbolRegular.Warning24;
                     iconThongBao.Foreground = Brush("#EA580C");
-                    txtTieuDeHeader.Text = "CẢNH BÁO AN TOÀN HỆ THỐNG";
+                    txtTieuDeHeader.Text = "LƯU Ý";
                     btnChinh.Background = Brush("#003B73");
                     btnChinh.BorderBrush = Brush("#002855");
                     btnHuy.Visibility = Visibility.Collapsed;
@@ -93,7 +93,7 @@ namespace GUI.Views.Dialogs
                         borderIcon.BorderBrush = Brush("#FCA5A5");
                         iconThongBao.Symbol = SymbolRegular.Delete24;
                         iconThongBao.Foreground = Brush("#DC2626");
-                        txtTieuDeHeader.Text = "XÁC NHẬN XÓA DỮ LIỆU KHỎI CSDL";
+                        txtTieuDeHeader.Text = "XÁC NHẬN XÓA";
                         btnChinh.Background = Brush("#B91C1C");
                         btnChinh.BorderBrush = Brush("#991B1B");
                     }
@@ -105,7 +105,7 @@ namespace GUI.Views.Dialogs
                         borderIcon.BorderBrush = Brush("#CBD5E1");
                         iconThongBao.Symbol = SymbolRegular.QuestionCircle24;
                         iconThongBao.Foreground = Brush("#003B73");
-                        txtTieuDeHeader.Text = "XÁC NHẬN ĐIỀU ĐỘ CHẠY TÀU";
+                        txtTieuDeHeader.Text = "XÁC NHẬN";
                         btnChinh.Background = Brush("#003B73");
                         btnChinh.BorderBrush = Brush("#002855");
                     }
@@ -119,7 +119,7 @@ namespace GUI.Views.Dialogs
                     borderIcon.BorderBrush = Brush("#CBD5E1");
                     iconThongBao.Symbol = SymbolRegular.Info24;
                     iconThongBao.Foreground = Brush("#003B73");
-                    txtTieuDeHeader.Text = "THÔNG BÁO HỆ THỐNG ĐIỀU HÀNH";
+                    txtTieuDeHeader.Text = "THÔNG BÁO";
                     btnChinh.Background = Brush("#003B73");
                     btnChinh.BorderBrush = Brush("#002855");
                     btnHuy.Visibility = Visibility.Collapsed;

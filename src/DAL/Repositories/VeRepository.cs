@@ -10,16 +10,32 @@ namespace DAL.Repositories
         public DataTable LayDanhSach()
         {
             string sql = @"SELECT v.MaVe, v.MaVeCode, mt.SoHieuMacTau, mt.LoaiTau,
-                                  dv.MaPNR, dv.MaDonVe, dv.ThoiDiemTao AS ThoiDiemTaoDon, dv.HinhThucTT, dv.TrangThaiTT,
+                                  dv.MaPNR, dv.MaDonVe, DATEADD(HOUR, 7, dv.ThoiDiemTao) AS ThoiDiemTaoDon, dv.HinhThucTT, dv.TrangThaiTT,
                                   kh.HoTen AS TenNguoiMua, kh.SoDienThoai AS SdtNguoiMua, kh.SoCCCD AS CccdNguoiMua,
                                   g1.TenGa AS TenGaDi, g2.TenGa AS TenGaDen,
                                   v.TenHanhKhach, v.CCCDHanhKhach, cn.SoGhe, cn.TangGiuong, cn.MaChoNgoi,
                                   tx.LoaiToa, tx.NhanHieuToa, tx.MaToaXeKhach,
                                   v.GiaVeGoc, v.SoTienGiam, v.GiaVeThucThu,
-                                  v.TrangThai, v.ThoiDiemXuatVe,
+                                  CASE 
+                                      WHEN v.TrangThai = 'DA_DAT' AND (
+                                          ct.TrangThai IN ('HOAN_THANH', 'DA_HUY') 
+                                          OR CAST(ct.NgayXuatPhat AS DATE) < CAST(GETDATE() AS DATE)
+                                          OR (ct.TrangThai = 'DANG_CHAY' AND (
+                                              EXISTS (
+                                                  SELECT 1 FROM vanhanh.LichDungGa ld 
+                                                  WHERE ld.MaChuyenTau = ct.MaChuyenTau 
+                                                    AND ld.MaGa = v.MaGaDi 
+                                                    AND (ld.GioDiThucTe IS NOT NULL OR ld.GioDiKeHoach < GETDATE())
+                                              )
+                                          ))
+                                      ) THEN 'HET_HAN'
+                                      ELSE v.TrangThai
+                                  END AS TrangThai,
+                                  v.TrangThai AS TrangThaiGoc,
+                                  DATEADD(HOUR, 7, v.ThoiDiemXuatVe) AS ThoiDiemXuatVe,
                                   v.MaChuyenTau, v.MaGaDi, v.MaGaDen,
                                   ct.NgayXuatPhat, ct.GioXuatPhatKH,
-                                  hh.ThoiDiemHoan, hh.TyLeLePhi, hh.LePhiHoan, hh.SoTienThucHoan, hh.HinhThucHoan, hh.LyDoHoan
+                                  DATEADD(HOUR, 7, hh.ThoiDiemHoan) AS ThoiDiemHoan, hh.TyLeLePhi, hh.LePhiHoan, hh.SoTienThucHoan, hh.HinhThucHoan, hh.LyDoHoan
                            FROM vantai.Ve v
                            JOIN vantai.DonDatVe dv ON v.MaDonVe = dv.MaDonVe
                            LEFT JOIN vantai.KhachHang kh ON dv.MaKhachHang = kh.MaKhachHang
@@ -37,16 +53,32 @@ namespace DAL.Repositories
         public DataTable TimKiemVe(string keyword)
         {
             string sql = @"SELECT v.MaVe, v.MaVeCode, mt.SoHieuMacTau, mt.LoaiTau,
-                                  dv.MaPNR, dv.MaDonVe, dv.ThoiDiemTao AS ThoiDiemTaoDon, dv.HinhThucTT, dv.TrangThaiTT,
+                                  dv.MaPNR, dv.MaDonVe, DATEADD(HOUR, 7, dv.ThoiDiemTao) AS ThoiDiemTaoDon, dv.HinhThucTT, dv.TrangThaiTT,
                                   kh.HoTen AS TenNguoiMua, kh.SoDienThoai AS SdtNguoiMua, kh.SoCCCD AS CccdNguoiMua,
                                   g1.TenGa AS TenGaDi, g2.TenGa AS TenGaDen,
                                   v.TenHanhKhach, v.CCCDHanhKhach, cn.SoGhe, cn.TangGiuong, cn.MaChoNgoi,
                                   tx.LoaiToa, tx.NhanHieuToa, tx.MaToaXeKhach,
                                   v.GiaVeGoc, v.SoTienGiam, v.GiaVeThucThu,
-                                  v.TrangThai, v.ThoiDiemXuatVe,
+                                  CASE 
+                                      WHEN v.TrangThai = 'DA_DAT' AND (
+                                          ct.TrangThai IN ('HOAN_THANH', 'DA_HUY') 
+                                          OR CAST(ct.NgayXuatPhat AS DATE) < CAST(GETDATE() AS DATE)
+                                          OR (ct.TrangThai = 'DANG_CHAY' AND (
+                                              EXISTS (
+                                                  SELECT 1 FROM vanhanh.LichDungGa ld 
+                                                  WHERE ld.MaChuyenTau = ct.MaChuyenTau 
+                                                    AND ld.MaGa = v.MaGaDi 
+                                                    AND (ld.GioDiThucTe IS NOT NULL OR ld.GioDiKeHoach < GETDATE())
+                                              )
+                                          ))
+                                      ) THEN 'HET_HAN'
+                                      ELSE v.TrangThai
+                                  END AS TrangThai,
+                                  v.TrangThai AS TrangThaiGoc,
+                                  DATEADD(HOUR, 7, v.ThoiDiemXuatVe) AS ThoiDiemXuatVe,
                                   v.MaChuyenTau, v.MaGaDi, v.MaGaDen,
                                   ct.NgayXuatPhat, ct.GioXuatPhatKH,
-                                  hh.ThoiDiemHoan, hh.TyLeLePhi, hh.LePhiHoan, hh.SoTienThucHoan, hh.HinhThucHoan, hh.LyDoHoan
+                                  DATEADD(HOUR, 7, hh.ThoiDiemHoan) AS ThoiDiemHoan, hh.TyLeLePhi, hh.LePhiHoan, hh.SoTienThucHoan, hh.HinhThucHoan, hh.LyDoHoan
                            FROM vantai.Ve v
                            JOIN vantai.DonDatVe dv ON v.MaDonVe = dv.MaDonVe
                            LEFT JOIN vantai.KhachHang kh ON dv.MaKhachHang = kh.MaKhachHang
@@ -80,7 +112,10 @@ namespace DAL.Repositories
                     WHERE gDi.MaGa = @gaDi AND gDen.MaGa = @gaDen
                 )
                 SELECT ct.MaChuyenTau, ct.MaMacTau, mt.SoHieuMacTau, mt.LoaiTau, mt.HuongChay,
-                       ct.NgayXuatPhat, ct.GioXuatPhatKH, ct.GioVeDichKH, ct.TrangThai,
+                       ct.NgayXuatPhat,
+                       ISNULL((SELECT TOP 1 ldDi.GioDiKeHoach FROM vanhanh.LichDungGa ldDi WHERE ldDi.MaChuyenTau = ct.MaChuyenTau AND ldDi.MaGa = @gaDi), ct.GioXuatPhatKH) AS GioXuatPhatKH,
+                       ISNULL((SELECT TOP 1 ldDen.GioDenKeHoach FROM vanhanh.LichDungGa ldDen WHERE ldDen.MaChuyenTau = ct.MaChuyenTau AND ldDen.MaGa = @gaDen), ct.GioVeDichKH) AS GioVeDichKH,
+                       ct.TrangThai,
                        gDi.TenGa AS TenGaXuatPhat, gDen.TenGa AS TenGaKetThuc,
                        (SELECT COUNT(*) FROM vantai.ToaXeKhach tx WHERE tx.MaChuyenTau = ct.MaChuyenTau) AS SoToaXe,
                        (SELECT COUNT(*) FROM vantai.ChoNgoi cn 
@@ -102,7 +137,23 @@ namespace DAL.Repositories
                 JOIN hatang.Ga gDi ON mt.MaGaDi = gDi.MaGa
                 JOIN hatang.Ga gDen ON mt.MaGaDen = gDen.MaGa
                 WHERE ct.TrangThai IN ('DA_LEN_LICH', 'SAN_SANG', 'DANG_CHAY', 'TRE_GIO')
-                  AND CAST(ct.NgayXuatPhat AS DATE) = CAST(@ngayDi AS DATE)
+                  AND (
+                      -- Ưu tiên xét theo ngày đón khách thực tế tại ga đi (hỗ trợ tàu chạy xuyên ngày / xuyên đêm)
+                      EXISTS (
+                          SELECT 1 FROM vanhanh.LichDungGa ldDi
+                          WHERE ldDi.MaChuyenTau = ct.MaChuyenTau 
+                            AND ldDi.MaGa = @gaDi 
+                            AND CAST(ldDi.GioDiKeHoach AS DATE) = CAST(@ngayDi AS DATE)
+                            -- Nếu đi ngày hôm nay: Không bán vé cho chuyến tàu có giờ chạy kế hoạch trong quá khứ
+                            AND (CAST(@ngayDi AS DATE) > CAST(GETDATE() AS DATE) OR ldDi.GioDiKeHoach >= GETDATE())
+                      )
+                      -- Dự phòng: Nếu chuyến tàu chưa lập bảng lịch dừng chi tiết, đối chiếu theo ngày xuất phát của tàu
+                      OR (
+                          NOT EXISTS (SELECT 1 FROM vanhanh.LichDungGa ld WHERE ld.MaChuyenTau = ct.MaChuyenTau)
+                          AND CAST(ct.NgayXuatPhat AS DATE) = CAST(@ngayDi AS DATE)
+                          AND (CAST(@ngayDi AS DATE) > CAST(GETDATE() AS DATE) OR ct.GioXuatPhatKH >= GETDATE())
+                      )
+                  )
                   -- Ngăn bán vé khi chuyến tàu đã rời ga đi của hành khách
                   AND NOT EXISTS (
                       SELECT 1 
@@ -211,23 +262,30 @@ namespace DAL.Repositories
                            WHEN v.MaChoNgoi IS NOT NULL THEN 1 
                            ELSE 0 
                        END AS DaDat,
+                       CASE 
+                           WHEN v.MaChoNgoi IS NOT NULL THEN 'DA_DAT' 
+                           ELSE 'CON_TRONG' 
+                       END AS TrangThai,
                        v.TenHanhKhach AS KhachHienTai,
-                       v.MaVeCode
+                       v.MaVeCode,
+                       v.TenGaDiVe,
+                       v.TenGaDenVe
                 FROM vantai.ChoNgoi cn
                 JOIN vantai.ToaXeKhach tx ON cn.MaToaXeKhach = tx.MaToaXeKhach
                 CROSS JOIN UserChang uc
-                LEFT JOIN (
-                    SELECT vSub.MaChoNgoi, vSub.TenHanhKhach, vSub.MaVeCode,
-                           IIF(gDi.LyTrinhKm < gDen.LyTrinhKm, gDi.LyTrinhKm, gDen.LyTrinhKm) AS VeKmMin,
-                           IIF(gDi.LyTrinhKm < gDen.LyTrinhKm, gDen.LyTrinhKm, gDi.LyTrinhKm) AS VeKmMax
+                OUTER APPLY (
+                    SELECT TOP 1 vSub.MaChoNgoi, vSub.TenHanhKhach, vSub.MaVeCode,
+                           gDi.TenGa AS TenGaDiVe, gDen.TenGa AS TenGaDenVe
                     FROM vantai.Ve vSub
                     JOIN hatang.Ga gDi ON vSub.MaGaDi = gDi.MaGa
                     JOIN hatang.Ga gDen ON vSub.MaGaDen = gDen.MaGa
                     WHERE vSub.MaChuyenTau = @chuyenTau
+                      AND vSub.MaChoNgoi = cn.MaChoNgoi
                       AND vSub.TrangThai IN ('DA_DAT', 'DA_LEN_TAU')
-                ) v ON cn.MaChoNgoi = v.MaChoNgoi 
-                    AND v.VeKmMin < uc.UserKmMax 
-                    AND v.VeKmMax > uc.UserKmMin
+                      AND IIF(gDi.LyTrinhKm < gDen.LyTrinhKm, gDi.LyTrinhKm, gDen.LyTrinhKm) < uc.UserKmMax
+                      AND IIF(gDi.LyTrinhKm > gDen.LyTrinhKm, gDi.LyTrinhKm, gDen.LyTrinhKm) > uc.UserKmMin
+                    ORDER BY vSub.MaVe ASC
+                ) v
                 WHERE cn.MaToaXeKhach = @toa
                 ORDER BY cn.SoGhe ASC";
 
@@ -330,6 +388,48 @@ namespace DAL.Repositories
                 // 3. Dat tung ve qua Stored Procedure vantai.sp_DatVeTheoChang (kiem tra chang giao nhau, UPDLOCK, HOLDLOCK)
                 foreach (var ve in danhSachVe)
                 {
+                    // 3.0. Kiem tra hanh khach (CCCD) da co ve tren chuyen tau nay trong cung chang chua (chong mua trung ve)
+                    string checkTrungVeSql = @"
+                        WITH UserChang AS (
+                            SELECT 
+                                IIF(gDi.LyTrinhKm < gDen.LyTrinhKm, gDi.LyTrinhKm, gDen.LyTrinhKm) AS UserKmMin,
+                                IIF(gDi.LyTrinhKm < gDen.LyTrinhKm, gDen.LyTrinhKm, gDi.LyTrinhKm) AS UserKmMax
+                            FROM hatang.Ga gDi, hatang.Ga gDen
+                            WHERE gDi.MaGa = @gaDi AND gDen.MaGa = @gaDen
+                        )
+                        SELECT TOP 1 v.MaVeCode, v.TenHanhKhach, cn.SoGhe, tx.NhanHieuToa
+                        FROM vantai.Ve v
+                        JOIN hatang.Ga gvDi ON v.MaGaDi = gvDi.MaGa
+                        JOIN hatang.Ga gvDen ON v.MaGaDen = gvDen.MaGa
+                        JOIN vantai.ChoNgoi cn ON v.MaChoNgoi = cn.MaChoNgoi
+                        JOIN vantai.ToaXeKhach tx ON cn.MaToaXeKhach = tx.MaToaXeKhach
+                        CROSS JOIN UserChang uc
+                        WHERE v.MaChuyenTau = @chuyenTau
+                          AND v.CCCDHanhKhach = @cccd
+                          AND v.TrangThai IN ('DA_DAT', 'DA_LEN_TAU')
+                          AND IIF(gvDi.LyTrinhKm < gvDen.LyTrinhKm, gvDi.LyTrinhKm, gvDen.LyTrinhKm) < uc.UserKmMax
+                          AND IIF(gvDi.LyTrinhKm > gvDen.LyTrinhKm, gvDi.LyTrinhKm, gvDen.LyTrinhKm) > uc.UserKmMin";
+
+                    using (var cmdCheckCccd = new SqlCommand(checkTrungVeSql, conn, trans))
+                    {
+                        cmdCheckCccd.Parameters.AddWithValue("@chuyenTau", ve.MaChuyenTau);
+                        cmdCheckCccd.Parameters.AddWithValue("@gaDi", ve.MaGaDi);
+                        cmdCheckCccd.Parameters.AddWithValue("@gaDen", ve.MaGaDen);
+                        cmdCheckCccd.Parameters.AddWithValue("@cccd", ve.CCCDHanhKhach ?? "");
+
+                        using var rCccd = cmdCheckCccd.ExecuteReader();
+                        if (rCccd.Read())
+                        {
+                            string maTrung = rCccd["MaVeCode"]?.ToString() ?? "";
+                            string tenTrung = rCccd["TenHanhKhach"]?.ToString() ?? "";
+                            string toaTrung = rCccd["NhanHieuToa"]?.ToString() ?? "";
+                            string gheTrung = rCccd["SoGhe"]?.ToString() ?? "";
+                            thongBaoLoi = $"Hành khách '{tenTrung}' (CCCD: {ve.CCCDHanhKhach}) đã có vé [{maTrung}] (Toa {toaTrung}, Ghế {gheTrung}) trên chuyến tàu này trong cung chặng trùng lặp!";
+                            trans.Rollback();
+                            return false;
+                        }
+                    }
+
                     using var cmdSP = new SqlCommand("vantai.sp_DatVeTheoChang", conn, trans);
                     cmdSP.CommandType = CommandType.StoredProcedure;
                     cmdSP.Parameters.AddWithValue("@MaDonVe", maDonVe);
@@ -511,16 +611,32 @@ namespace DAL.Repositories
         public DataTable LayDanhSachVeTheoCCCD(string cccd)
         {
             string sql = @"SELECT v.MaVe, v.MaVeCode, mt.SoHieuMacTau, 
-                                  dv.MaPNR, dv.MaDonVe, dv.ThoiDiemTao AS ThoiDiemTaoDon, dv.HinhThucTT, dv.TrangThaiTT,
+                                  dv.MaPNR, dv.MaDonVe, DATEADD(HOUR, 7, dv.ThoiDiemTao) AS ThoiDiemTaoDon, dv.HinhThucTT, dv.TrangThaiTT,
                                   kh.HoTen AS TenNguoiMua, kh.SoDienThoai AS SdtNguoiMua, kh.SoCCCD AS CccdNguoiMua,
                                   g1.TenGa AS TenGaDi, g2.TenGa AS TenGaDen,
                                   v.TenHanhKhach, v.CCCDHanhKhach, cn.SoGhe, cn.TangGiuong, cn.MaChoNgoi,
                                   tx.LoaiToa, tx.NhanHieuToa, tx.MaToaXeKhach,
                                   v.GiaVeGoc, v.SoTienGiam, v.GiaVeThucThu,
-                                  v.TrangThai, v.ThoiDiemXuatVe,
+                                  CASE 
+                                      WHEN v.TrangThai = 'DA_DAT' AND (
+                                          ct.TrangThai IN ('HOAN_THANH', 'DA_HUY') 
+                                          OR CAST(ct.NgayXuatPhat AS DATE) < CAST(GETDATE() AS DATE)
+                                          OR (ct.TrangThai = 'DANG_CHAY' AND (
+                                              EXISTS (
+                                                  SELECT 1 FROM vanhanh.LichDungGa ld 
+                                                  WHERE ld.MaChuyenTau = ct.MaChuyenTau 
+                                                    AND ld.MaGa = v.MaGaDi 
+                                                    AND (ld.GioDiThucTe IS NOT NULL OR ld.GioDiKeHoach < GETDATE())
+                                              )
+                                          ))
+                                      ) THEN 'HET_HAN'
+                                      ELSE v.TrangThai
+                                  END AS TrangThai,
+                                  v.TrangThai AS TrangThaiGoc,
+                                  DATEADD(HOUR, 7, v.ThoiDiemXuatVe) AS ThoiDiemXuatVe,
                                   v.MaChuyenTau, v.MaGaDi, v.MaGaDen,
                                   ct.NgayXuatPhat, ct.GioXuatPhatKH,
-                                  hh.ThoiDiemHoan, hh.TyLeLePhi, hh.LePhiHoan, hh.SoTienThucHoan, hh.HinhThucHoan, hh.LyDoHoan
+                                  DATEADD(HOUR, 7, hh.ThoiDiemHoan) AS ThoiDiemHoan, hh.TyLeLePhi, hh.LePhiHoan, hh.SoTienThucHoan, hh.HinhThucHoan, hh.LyDoHoan
                            FROM vantai.Ve v
                            JOIN vantai.DonDatVe dv ON v.MaDonVe = dv.MaDonVe
                            LEFT JOIN vantai.KhachHang kh ON dv.MaKhachHang = kh.MaKhachHang
