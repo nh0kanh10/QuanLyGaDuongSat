@@ -315,6 +315,7 @@ namespace GUI.Views.Pages
         // chuyenTab = false khi goi tu tab Canh bao: mo dialog tai cho, khong nhay tab
         private void GhiNhanBaoDuong(string? khoaPhuongTien = null, bool chuyenTab = true)
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.GhiNhatKyBaoTri, "ghi nhận bảo dưỡng")) return;   // Sprint 3: phan quyen
             if (chuyenTab) tabBaoTri.SelectedIndex = 2;
             if (!KiemTraKetNoi()) return;
 
@@ -330,6 +331,7 @@ namespace GUI.Views.Pages
 
         private void SuaBaoDuong()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.GhiNhatKyBaoTri, "sửa phiếu bảo dưỡng")) return;   // Sprint 3: phan quyen
             if (dgBaoDuong.SelectedItem is not BaoDuongHienThi dangChon) return;
             if (!KiemTraKetNoi()) return;
             if (PhieuMoiHon(dangChon) is { } moiHon)

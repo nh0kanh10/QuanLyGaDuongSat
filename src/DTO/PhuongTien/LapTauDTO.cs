@@ -92,6 +92,9 @@ namespace DTO.PhuongTien
         public decimal TuTrongTan { get; set; }
         public decimal TaiTrongToiDaTan { get; set; }
 
+        // phuongtien.ChungLoaiToa.SucChuaChuan (cho / giuong) - suc chua toa ban ve khi mo ban toa nay (13/11)
+        public int SucChuaChuan { get; set; }
+
         public decimal TongTrongLuongTan => TuTrongTan + TaiTrongToiDaTan;
 
         // Cac chuyen KHAC con hieu luc, chong khung gio voi chuyen dang xet, co toa nay trong doan
@@ -140,6 +143,11 @@ namespace DTO.PhuongTien
         // --- Phuong tien (toan doi, kem thong tin ai dang dung) ---
         public List<DauMayLapTauDTO> DauMay { get; set; } = new();
         public List<ToaXeLapTauDTO> ToaXe { get; set; } = new();
+
+        // --- Ban ve (13/11): toa ban ve dang ban + ve tren cac toa do (de dong bo, khong lam hong ve da ban) ---
+        public List<ToaBanVeDTO> ToaBanVe { get; set; } = new();
+        public List<VeTrenToaDTO> VeTrenToa { get; set; } = new();
+        public bool LaTauKhach => LoaiTau != "TAU_HANG";
 
         // --- Quyen sua theo trang thai chuyen (LapTauService dien) ---
         public bool ChoPhepSua { get; set; }
@@ -273,6 +281,9 @@ namespace DTO.PhuongTien
         public string MoTaCatNoi { get; set; } = "";
         public bool CoCatNoi => MoTaCatNoi.Length > 0;
 
+        // Toa ban ve sau khi luu phuong an (13/11): them / bo toa ban ve, ve da ban bi anh huong
+        public KeHoachDongBoToaBanVeDTO? DongBoToaBanVe { get; set; }
+
         public int SoLoi => HangMuc.Count(h => h.MucDo == MucDoKiemTra.Loi);
         public int SoCanhBao => HangMuc.Count(h => h.MucDo == MucDoKiemTra.CanhBao);
         public bool CoLoi => SoLoi > 0;
@@ -290,6 +301,10 @@ namespace DTO.PhuongTien
         public decimal TongChieuDaiM { get; set; }
         public decimal TongTrongLuongTan { get; set; }
         public string MoTaCatNoi { get; set; } = "";
+
+        // Toa ban ve da dong bo (13/11): "mở bán toa 11, 12 · bỏ toa 5 cũ"; rong = khong doi
+        public string MoTaDongBoBanVe { get; set; } = "";
+        public int SoToaBanVe { get; set; }
     }
 
     // Loi nhap lieu cua mot truong tren dialog (Truong = ten truong, vd "SoHieu")

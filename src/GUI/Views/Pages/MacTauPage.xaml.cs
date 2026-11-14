@@ -34,6 +34,8 @@ namespace GUI.Views.Pages
             DataObject.AddPastingHandler(txtSoHieuMac, TxtSoHieuMac_Pasting);
             KhoiTaoDuLieu();
             _isInitialized = true;
+            // Dong dau duoc chon ngay trong KhoiTaoDuLieu (luc _isInitialized con false) -> tinh lai huong + khoang cach
+            CapNhatHuongVaHanhTrinh();
         }
 
         private void KhoiTaoDuLieu()
@@ -760,7 +762,7 @@ namespace GUI.Views.Pages
                 DangKhaiThac = dangKt
             };
 
-            if (_macTauService.Luu(m, _isAddingNew, out string loi, "admin"))
+            if (_macTauService.Luu(m, _isAddingNew, out string loi, PhanQuyenService.TenDangNhapHienTai))
             {
                 _selectedMaMacTau = m.MaMacTau;
                 _selectedDangKhaiThacGoc = m.DangKhaiThac;
@@ -812,7 +814,7 @@ namespace GUI.Views.Pages
 
             if (dlg.HuyChuyenTuongLai)
             {
-                if (_macTauService.TamDungMacTauVaXuLyChuyen(maMac, true, dlg.LyDoHuy, out soChuyenDaHuy, out string loiHuy, "admin"))
+                if (_macTauService.TamDungMacTauVaXuLyChuyen(maMac, true, dlg.LyDoHuy, out soChuyenDaHuy, out string loiHuy, PhanQuyenService.TenDangNhapHienTai))
                 {
                     daHuyChuyenHangLoat = true;
                     return true;
@@ -1053,7 +1055,7 @@ namespace GUI.Views.Pages
                     }
                     else
                     {
-                        if (_macTauService.DoiTrangThaiKhaiThac(maMac, false, out string loi, "admin"))
+                        if (_macTauService.DoiTrangThaiKhaiThac(maMac, false, out string loi, PhanQuyenService.TenDangNhapHienTai))
                         {
                             if (soChuyenKeHoach > 0)
                             {
@@ -1074,7 +1076,7 @@ namespace GUI.Views.Pages
                 else
                 {
                     // Kích hoạt lại mác tàu
-                    if (_macTauService.DoiTrangThaiKhaiThac(maMac, true, out string loi, "admin"))
+                    if (_macTauService.DoiTrangThaiKhaiThac(maMac, true, out string loi, PhanQuyenService.TenDangNhapHienTai))
                     {
                         ThongBaoDialog.ThanhCong($"Đã kích hoạt khai thác trở lại mác tàu '{soHieu}' (Sẵn sàng để lập chuyến mới).", "Thành Công");
                         LoadData();

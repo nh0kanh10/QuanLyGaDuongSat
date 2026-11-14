@@ -61,7 +61,15 @@ namespace GUI.ViewModels.KyThuat
             _ => SymbolRegular.ShieldError24
         };
 
-        public bool CoHanhDong => HanhDong.Length > 0;
+        // [12/11] Nut xu ly chi hien khi tai khoan duoc lam viec do (nguoi chi xem van thay nut "Xem ..." / "Mo ...")
+        public bool CoHanhDong => HanhDong.Length > 0 && DuocThaoTac(HanhDong);
+
+        public static bool DuocThaoTac(string hanhDong) => hanhDong switch
+        {
+            "KHAM_LAI" or "LAP_BIEN_BAN" or "DUYET" => BUS.Services.PhanQuyenService.CoQuyen(DTO.Common.MaQuyen.NghiemThuKhamXe),
+            "GHI_NHAN_BD" => BUS.Services.PhanQuyenService.CoQuyen(DTO.Common.MaQuyen.GhiNhatKyBaoTri),
+            _ => true
+        };
         public string NhanLienQuan => DoanTauLienQuan.Count > 0 ? "Đoàn tàu liên quan: " + string.Join(", ", DoanTauLienQuan) : "";
     }
 
@@ -102,7 +110,9 @@ namespace GUI.ViewModels.KyThuat
         };
 
         // Nut duyet an toan: hien khi tau chua chay ma chua duyet; bat khi phan ky thuat da sach
-        public Visibility HienNutDuyet => !DaXuatPhat && !DoanTau.DaDuyetAnToan ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility HienNutDuyet => !DaXuatPhat && !DoanTau.DaDuyetAnToan
+                                          && BUS.Services.PhanQuyenService.CoQuyen(DTO.Common.MaQuyen.NghiemThuKhamXe)
+            ? Visibility.Visible : Visibility.Collapsed;
         public bool CoTheDuyet => DieuKienDuyet.CoTheDuyet;
         public string NhanNutDuyet => CoTheDuyet ? $"Duyệt an toàn {DoanTau.SoHieuMacTau}" : "Chưa duyệt được";
         public string GoiYNutDuyet => CoTheDuyet

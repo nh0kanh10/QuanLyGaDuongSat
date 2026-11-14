@@ -9,6 +9,7 @@
     xmlns:uc="clr-namespace:GUI.Views.UserControls"
       
     xmlns:conv="clr-namespace:GUI.Converters"
+    xmlns:helpers="clr-namespace:GUI.Helpers"
       Title="Quản Lý Danh Mục Mác Tàu Mẫu"
       PreviewKeyDown="Page_PreviewKeyDown">
     <Page.Resources>
@@ -53,7 +54,7 @@
     </Page.Resources>
     <Grid Margin="12,10,12,10">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="560"/>
+            <ColumnDefinition Width="*" MinWidth="480"/>
             <ColumnDefinition Width="8"/>
             <ColumnDefinition Width="520" MinWidth="440" MaxWidth="750"/>
         </Grid.ColumnDefinitions>
@@ -78,9 +79,15 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <!-- Dòng 1: Tiêu đề & Nút hành động -->
-                        <Grid Grid.Row="0" Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Border Width="30" Height="30" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="4" Margin="0,0,10,0">
+                        <!-- Hẹp (cửa sổ 1100 px): cụm nút tự xuống dòng dưới tiêu đề, không đè lên tiêu đề (BoCucHepHelper) -->
+                        <Grid Grid.Row="0" Margin="0,0,0,10"
+                              helpers:BoCucHepHelper.XuongDongKhiHep="True" helpers:BoCucHepHelper.DoRongTraiToiThieu="350">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <DockPanel VerticalAlignment="Center">
+                                <Border DockPanel.Dock="Left" Width="30" Height="30" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="4" Margin="0,0,10,0">
                                     <ui:SymbolIcon Symbol="Navigation24" FontSize="16" Foreground="#003B73" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
@@ -90,11 +97,12 @@
                                             <TextBlock x:Name="txtBadgeSoLuong" Text="0 mác" FontSize="10.5" FontWeight="Bold" Foreground="#003B73"/>
                                         </Border>
                                     </StackPanel>
-                                    <TextBlock Text="Quy hoạch danh mục mác tàu mẫu, hành trình chuẩn và thông số kỹ thuật toàn mạng lưới" FontSize="11" Foreground="#64748B"/>
+                                    <TextBlock Text="Quy hoạch danh mục mác tàu mẫu, hành trình chuẩn và thông số kỹ thuật toàn mạng lưới" FontSize="11" Foreground="#64748B"
+                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
                                 </StackPanel>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Click="BtnThemMoi_Click" Style="{StaticResource PrimaryDesktopButton}" Height="30" Padding="12,0" Margin="0,0,8,0" ToolTip="Khai báo mác tàu mới (F2)">
+                            </DockPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,0,0,0">
+                                <Button Click="BtnThemMoi_Click" helpers:QuyenGiaoDienHelper.CanQuyen="INFRA_EDIT,TRAIN_SCHEDULE_EDIT" Style="{StaticResource PrimaryDesktopButton}" Height="30" Padding="12,0" Margin="0,0,8,0" ToolTip="Khai báo mác tàu mới (F2)">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Add24" FontSize="13" Margin="0,0,6,0"/>
                                         <TextBlock Text="Thêm Mác Mới" FontSize="11" FontWeight="SemiBold"/>
@@ -122,25 +130,10 @@
                         </Grid>
                         <!-- Dòng 2: Thanh tìm kiếm nhanh & Lọc phân loại, trạng thái chuẩn Fluent -->
                         <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="8,6">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <!-- Ô tìm kiếm -->
-                                    <ColumnDefinition Width="Auto"/>
-                                    <!-- Đường phân cách -->
-                                    <ColumnDefinition Width="Auto"/>
-                                    <!-- Lọc Loại tàu -->
-                                    <ColumnDefinition Width="Auto"/>
-                                    <!-- Đường phân cách -->
-                                    <ColumnDefinition Width="Auto"/>
-                                    <!-- Lọc Trạng thái -->
-                                    <ColumnDefinition Width="Auto"/>
-                                    <!-- Nút Xóa Lọc -->
-                                    <ColumnDefinition Width="*"/>
-                                    <!-- Khoảng đệm dạt sang phải -->
-                                </Grid.ColumnDefinitions>
+                            <!-- WrapPanel: cửa sổ hẹp thì ô lọc tự xuống dòng thay vì bị cắt -->
+                            <WrapPanel>
                                 <!-- 1. Ô tìm kiếm đa năng kèm placeholder & icon kính lúp (chuẩn như Mạng Lưới Ga) -->
-                                <Border Grid.Column="0" Width="280" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Height="28">
+                                <Border Width="280" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Height="28" Margin="0,2">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="28"/>
@@ -176,9 +169,9 @@
                                         </StackPanel>
                                     </Grid>
                                 </Border>
-                                <Rectangle Grid.Column="1" Width="1" Height="18" Fill="#CBD5E1" Margin="8,0"/>
+                                <Rectangle Width="1" Height="18" Fill="#CBD5E1" Margin="8,0" VerticalAlignment="Center"/>
                                 <!-- 2. Lọc theo Loại Tàu (Width 180, hiển thị trọn vẹn 100% chữ) -->
-                                <ComboBox Grid.Column="2" x:Name="cboLocLoaiTau" Width="180" Height="28" FontSize="11"
+                                <ComboBox x:Name="cboLocLoaiTau" Width="180" Height="28" FontSize="11" Margin="0,2"
                                           SelectionChanged="CboLocLoaiTau_SelectionChanged"
                                           ToolTip="Lọc mác tàu theo loại hình chạy tàu (Tàu nhanh, Tàu khách khu đoạn, Tàu hàng)">
                                     <ComboBoxItem Content="Tất cả loại tàu" IsSelected="True"/>
@@ -186,18 +179,18 @@
                                     <ComboBoxItem Content="Tàu Khách Khu Đoạn" Tag="TAU_CHO"/>
                                     <ComboBoxItem Content="Tàu Hàng Chuyên Tuyến" Tag="TAU_HANG"/>
                                 </ComboBox>
-                                <Rectangle Grid.Column="3" Width="1" Height="18" Fill="#CBD5E1" Margin="8,0"/>
+                                <Rectangle Width="1" Height="18" Fill="#CBD5E1" Margin="8,0" VerticalAlignment="Center"/>
                                 <!-- 3. Lọc theo Trạng Thái (Width 180, hiển thị trọn vẹn 100% không bao giờ bị cắt) -->
-                                <ComboBox Grid.Column="4" x:Name="cboLocTrangThai" Width="180" Height="28" FontSize="11"
+                                <ComboBox x:Name="cboLocTrangThai" Width="180" Height="28" FontSize="11" Margin="0,2"
                                           SelectionChanged="CboLocTrangThai_SelectionChanged"
                                           ToolTip="Lọc mác tàu theo trạng thái sẵn sàng khai thác vận hành">
                                     <ComboBoxItem Content="Tất cả trạng thái" IsSelected="True"/>
                                     <ComboBoxItem Content="Đang khai thác"/>
                                     <ComboBoxItem Content="Tạm ngừng khai thác"/>
                                 </ComboBox>
-                                <Rectangle Grid.Column="5" Width="1" Height="18" Fill="#CBD5E1" Margin="8,0"/>
+                                <Rectangle Width="1" Height="18" Fill="#CBD5E1" Margin="8,0" VerticalAlignment="Center"/>
                                 <!-- 4. Nút Xóa Lọc -->
-                                <Button Grid.Column="6" x:Name="btnDatLaiLoc" Click="BtnDatLaiLoc_Click" 
+                                <Button x:Name="btnDatLaiLoc" Click="BtnDatLaiLoc_Click" Margin="0,2" 
                                         Height="28" Padding="10,0" Style="{StaticResource DesktopButton}"
                                         Visibility="Collapsed"
                                         ToolTip="Xóa tất cả điều kiện tìm kiếm và bộ lọc về mặc định (Esc)">
@@ -206,7 +199,7 @@
                                         <TextBlock Text="Xóa Lọc" FontSize="11"/>
                                     </StackPanel>
                                 </Button>
-                            </Grid>
+                            </WrapPanel>
                         </Border>
                     </Grid>
                 </Border>
@@ -263,13 +256,13 @@
                                 </MenuItem.Icon>
                             </MenuItem>
                             <Separator Background="#E2E8F0"/>
-                            <MenuItem x:Name="ctxDoiTrangThai" Header="Đổi nhanh Trạng Thái Khai Thác" InputGestureText="Space" Click="CtxDoiTrangThai_Click" ToolTip="Chuyển đổi trạng thái Đang khai thác ↔ Tạm ngừng">
+                            <MenuItem x:Name="ctxDoiTrangThai" helpers:QuyenGiaoDienHelper.CanQuyen="INFRA_EDIT,TRAIN_SCHEDULE_EDIT" Header="Đổi nhanh Trạng Thái Khai Thác" InputGestureText="Space" Click="CtxDoiTrangThai_Click" ToolTip="Chuyển đổi trạng thái Đang khai thác ↔ Tạm ngừng">
                                 <MenuItem.Icon>
                                     <ui:SymbolIcon Symbol="ArrowSyncCircle24" FontSize="14" Foreground="#D97706"/>
                                 </MenuItem.Icon>
                             </MenuItem>
                             <Separator Background="#E2E8F0"/>
-                            <MenuItem x:Name="ctxThemMoi" Header="Khai Báo Mác Tàu Mới" InputGestureText="F2" Click="BtnThemMoi_Click" ToolTip="Tạo mới một mác tàu trên tuyến">
+                            <MenuItem x:Name="ctxThemMoi" Header="Khai Báo Mác Tàu Mới" InputGestureText="F2" Click="BtnThemMoi_Click" helpers:QuyenGiaoDienHelper.CanQuyen="INFRA_EDIT,TRAIN_SCHEDULE_EDIT" ToolTip="Tạo mới một mác tàu trên tuyến">
                                 <MenuItem.Icon>
                                     <ui:SymbolIcon Symbol="AddCircle24" FontSize="14" Foreground="#059669"/>
                                 </MenuItem.Icon>
@@ -280,7 +273,7 @@
                                 </MenuItem.Icon>
                             </MenuItem>
                             <Separator Background="#E2E8F0"/>
-                            <MenuItem x:Name="ctxXoa" Header="Xóa Vĩnh Viễn Mác Tàu Này..." InputGestureText="Delete" Click="CtxXoa_Click" ToolTip="Xóa mác tàu khỏi hệ thống nếu chưa có lịch chạy">
+                            <MenuItem x:Name="ctxXoa" helpers:QuyenGiaoDienHelper.CanQuyen="INFRA_EDIT,TRAIN_SCHEDULE_EDIT" Header="Xóa Vĩnh Viễn Mác Tàu Này..." InputGestureText="Delete" Click="CtxXoa_Click" ToolTip="Xóa mác tàu khỏi hệ thống nếu chưa có lịch chạy">
                                 <MenuItem.Icon>
                                     <ui:SymbolIcon Symbol="Delete24" FontSize="14" Foreground="#DC2626"/>
                                 </MenuItem.Icon>
@@ -440,7 +433,7 @@
                     <!-- CrudActionBar Footer -->
                 </Grid.RowDefinitions>
                 <!-- 0. Header Inspector -->
-                <uc:InspectorHeader Grid.Row="0" x:Name="inspectorHeader"
+                <uc:InspectorHeader Grid.Row="0" x:Name="inspectorHeader" QuyenThaoTac="INFRA_EDIT,TRAIN_SCHEDULE_EDIT"
                                     DeleteClicked="InspectorHeader_DeleteClicked"/>
                 <!-- 1. Thân Form Inspector -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14,12">
@@ -736,7 +729,7 @@
                     </StackPanel>
                 </ScrollViewer>
                 <!-- 2. Thanh Nút Thao Tác CRUD Mác Tàu -->
-                <uc:CrudActionBar Grid.Row="2" x:Name="crudActionBar"
+                <uc:CrudActionBar Grid.Row="2" x:Name="crudActionBar" helpers:QuyenGiaoDienHelper.CanQuyen="INFRA_EDIT,TRAIN_SCHEDULE_EDIT"
                                   SaveClicked="CrudActionBar_SaveClicked"
                                   CancelClicked="CrudActionBar_CancelClicked"
                                   DeleteClicked="CrudActionBar_DeleteClicked"/>

@@ -25,7 +25,10 @@ namespace GUI.Views.Dialogs
         private int _soGheMoi = 0;
         private string _tenToaMoi = "";
         private string _loaiTau = "TAU_CHO";
-        private decimal _giaVeMoi = 0;
+        private decimal _giaVeMoi = 0;      // gia goc ghe moi (truoc giam) - truyen xuong giao dich
+        private decimal _giaGocCu;          // gia goc + so tien giam cua ve cu: ghe moi giu cung ty le giam
+        private decimal _giamCu;
+        private decimal _chenhLech = 0;     // tinh bang VeService.TinhGiaDoiGhe, khop so ghi CSDL
         private Button? _btnGheDangChon = null;
 
         public string MaVeMoi { get; private set; } = "";
@@ -49,7 +52,9 @@ namespace GUI.Views.Dialogs
             string toaHienTai, 
             int gheHienTai, 
             decimal giaVeHienTai,
-            string loaiTau = "TAU_CHO")
+            string loaiTau = "TAU_CHO",
+            decimal? giaGocCu = null,
+            decimal giamCu = 0)
         {
             _maVeCu = maVe;
             _maVeCodeCu = maVeCode;
@@ -59,6 +64,8 @@ namespace GUI.Views.Dialogs
             _maGaDen = maGaDen;
             _giaVeCu = giaVeHienTai;
             _loaiTau = loaiTau;
+            _giaGocCu = giaGocCu ?? giaVeHienTai;
+            _giamCu = giaGocCu.HasValue ? giamCu : 0m;
 
             lblMaVeCode.Text = maVeCode;
             lblMaPNR.Text = maPNR;
@@ -211,9 +218,13 @@ namespace GUI.Views.Dialogs
             try
             {
                 _giaVeMoi = _veService.TinhGiaVe(loaiToa, _maGaDi, _maGaDen, tangGiuong, _loaiTau);
-                lblGiaVeMoi.Text = $"{_giaVeMoi:N0} VNĐ ({_tenToaMoi} - Ghế {soGhe})";
+                var gia = VeService.TinhGiaDoiGhe(_giaGocCu, _giamCu, _giaVeMoi);
+                _chenhLech = gia.ChenhLech;
+                lblGiaVeMoi.Text = gia.GiamMoi > 0
+                    ? $"{gia.ThucThuMoi:N0} VNĐ (giá {_giaVeMoi:N0} − giảm {gia.GiamMoi:N0}; {_tenToaMoi} - Ghế {soGhe})"
+                    : $"{gia.ThucThuMoi:N0} VNĐ ({_tenToaMoi} - Ghế {soGhe})";
 
-                decimal diff = _giaVeMoi - _giaVeCu;
+                decimal diff = _chenhLech;
                 if (diff > 0)
                 {
                     lblTieuDeChenhLech.Text = "Phụ thu nâng hạng:";
@@ -249,7 +260,7 @@ namespace GUI.Views.Dialogs
                 return;
             }
 
-            decimal diff = _giaVeMoi - _giaVeCu;
+            decimal diff = _chenhLech;
             string chiPhiMsg = diff == 0 
                 ? "Không phát sinh chi phí đổi chỗ."
                 : (diff > 0 ? $"Phụ thu thêm: {diff:N0} VNĐ" : $"Hoàn lại cho khách: {Math.Abs(diff):N0} VNĐ");
@@ -265,7 +276,7 @@ namespace GUI.Views.Dialogs
 
             if (!dongY) return;
 
-            int maNhanVien = PhienLamViec.MaNhanVien ?? (PhienLamViec.MaTaiKhoan > 0 ? PhienLamViec.MaTaiKhoan : 3);
+            int maNhanVien = PhanQuyenService.MaTaiKhoanHienTai /* cot FK toi phanquyen.TaiKhoan, khong phai NhanVien */;
             if (_veService.DoiGheCungChuyen(_maVeCu, _maChoMoi, _giaVeMoi, maNhanVien, out string maVeMoi, out string thongBaoLoi))
             {
                 MaVeMoi = maVeMoi;

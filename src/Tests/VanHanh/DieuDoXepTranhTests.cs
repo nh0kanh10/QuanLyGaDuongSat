@@ -55,6 +55,9 @@ namespace Tests.VanHanh
                 Assert.True(xd.SoPhutDungDeXuat >= 15, $"Thời gian dừng đề xuất phải >= 15 phút (thực tế: {xd.SoPhutDungDeXuat})");
                 Assert.True(xd.SoPhutTangLichTrinh >= 0, $"Thời gian tịnh tiến phải >= 0 (thực tế: {xd.SoPhutTangLichTrinh})");
                 Assert.False(string.IsNullOrWhiteSpace(xd.TenGaDeXuatTranh), "Phải xác định được ga đề xuất tránh");
+                // Chờ quá ngưỡng (khu gian dài không có ga tránh) thì phải báo cho trực ban, không lặng lẽ đề xuất
+                if (xd.SoPhutTangLichTrinh > DieuDoService.SoPhutChoToiDaGiuUuTien)
+                    Assert.Contains("CẢNH BÁO", xd.MoTaChiTiet);
             }
         }
 

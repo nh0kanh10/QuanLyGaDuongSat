@@ -7,6 +7,7 @@ using System.Windows.Media;
 using BUS.Services;
 using ET.VanTai;
 using DTO.Common;
+using GUI.Views.Dialogs;
 using SymbolIcon = Wpf.Ui.Controls.SymbolIcon;
 using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
 
@@ -84,7 +85,7 @@ namespace GUI.Views.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi khởi tạo màn hình Hàng Hóa: {ex.Message}", "Lỗi CSDL", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi($"Lỗi khởi tạo màn hình Hàng Hóa: {ex.Message}", "Lỗi CSDL");
             }
             finally
             {
@@ -252,7 +253,7 @@ namespace GUI.Views.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải danh sách vận đơn: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi($"Lỗi tải danh sách vận đơn: {ex.Message}", "Lỗi");
             }
         }
 
@@ -429,37 +430,37 @@ namespace GUI.Views.Pages
             // Kiểm tra ga gửi và ga nhận
             if (maGaGui <= 0 || maGaNhan <= 0)
             {
-                MessageBox.Show("Vui lòng chọn ga gửi và ga nhận hợp lệ.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng chọn ga gửi và ga nhận hợp lệ.", "Cảnh báo");
                 return;
             }
             if (maGaGui == maGaNhan)
             {
-                MessageBox.Show("Ga gửi và ga nhận không được trùng nhau.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Ga gửi và ga nhận không được trùng nhau.", "Cảnh báo");
                 return;
             }
 
             // Kiểm tra thông tin người gửi / người nhận
             if (string.IsNullOrWhiteSpace(txtNguoiGui.Text))
             {
-                MessageBox.Show("Vui lòng nhập họ tên người gửi hàng.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng nhập họ tên người gửi hàng.", "Cảnh báo");
                 txtNguoiGui.Focus();
                 return;
             }
             if (string.IsNullOrWhiteSpace(txtSDTGui.Text))
             {
-                MessageBox.Show("Vui lòng nhập số điện thoại người gửi.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng nhập số điện thoại người gửi.", "Cảnh báo");
                 txtSDTGui.Focus();
                 return;
             }
             if (string.IsNullOrWhiteSpace(txtNguoiNhan.Text))
             {
-                MessageBox.Show("Vui lòng nhập họ tên người nhận hàng.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng nhập họ tên người nhận hàng.", "Cảnh báo");
                 txtNguoiNhan.Focus();
                 return;
             }
             if (string.IsNullOrWhiteSpace(txtSDTNhan.Text))
             {
-                MessageBox.Show("Vui lòng nhập số điện thoại người nhận.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng nhập số điện thoại người nhận.", "Cảnh báo");
                 txtSDTNhan.Focus();
                 return;
             }
@@ -467,13 +468,13 @@ namespace GUI.Views.Pages
             // Trọng lượng & cước phí
             if (!FormatHelper.TryParseWeight(txtTrongLuong.Text, out decimal tl) || tl <= 0)
             {
-                MessageBox.Show("Trọng lượng hàng hóa phải lớn hơn 0.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Trọng lượng hàng hóa phải lớn hơn 0.", "Cảnh báo");
                 txtTrongLuong.Focus();
                 return;
             }
             if (!FormatHelper.TryParseCurrency(txtCuocPhiText.Text, out decimal cuoc) || cuoc <= 0)
             {
-                MessageBox.Show("Cước phí chưa được tính hợp lệ.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Cước phí chưa được tính hợp lệ.", "Cảnh báo");
                 return;
             }
 
@@ -484,14 +485,13 @@ namespace GUI.Views.Pages
             {
                 if (string.IsNullOrWhiteSpace(txtBienSo.Text))
                 {
-                    MessageBox.Show("Vui lòng nhập Biển kiểm soát của xe máy ký gửi.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThongBaoDialog.CanhBao("Vui lòng nhập Biển kiểm soát của xe máy ký gửi.", "Cảnh báo");
                     txtBienSo.Focus();
                     return;
                 }
                 if (chkDaRutXang.IsChecked != true)
                 {
-                    MessageBox.Show("Quy chuẩn an toàn PCCC VNR: Xe máy chưa rút sạch xăng không được phép tiếp nhận vận chuyển.",
-                                    "Cảnh báo PCCC", MessageBoxButton.OK, MessageBoxImage.Stop);
+                    ThongBaoDialog.Loi("Quy chuẩn an toàn PCCC VNR: Xe máy chưa rút sạch xăng không được phép tiếp nhận vận chuyển.", "Cảnh báo PCCC");
                     return;
                 }
             }
@@ -500,13 +500,13 @@ namespace GUI.Views.Pages
             {
                 if (string.IsNullOrWhiteSpace(txtSoContainer.Text))
                 {
-                    MessageBox.Show("Vui lòng nhập Số hiệu Container đường sắt.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThongBaoDialog.CanhBao("Vui lòng nhập Số hiệu Container đường sắt.", "Cảnh báo");
                     txtSoContainer.Focus();
                     return;
                 }
                 if (tl < 1.0m)
                 {
-                    MessageBox.Show("Trọng lượng container phải từ 1.00 tấn trở lên.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThongBaoDialog.CanhBao("Trọng lượng container phải từ 1.00 tấn trở lên.", "Cảnh báo");
                     txtTrongLuong.Focus();
                     return;
                 }
@@ -546,24 +546,22 @@ namespace GUI.Views.Pages
                 // Thực hiện cập nhật vận đơn
                 if (!_service.CapNhat(vd, out string error))
                 {
-                    MessageBox.Show($"Không thể cập nhật vận đơn: {error}", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThongBaoDialog.CanhBao($"Không thể cập nhật vận đơn: {error}", "Cảnh báo");
                     return;
                 }
 
-                MessageBox.Show($"Cập nhật thành công vận đơn #{maVD}.\nTổng cước thu: {FormatHelper.FormatCurrency(cuoc)} VNĐ.",
-                                "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThanhCong($"Cập nhật thành công vận đơn #{maVD}.\nTổng cước thu: {FormatHelper.FormatCurrency(cuoc)} VNĐ.", "Thành công");
             }
             else
             {
                 // Thực hiện thêm mới vận đơn
                 if (!_service.Them(vd, out string error))
                 {
-                    MessageBox.Show($"Không thể lưu vận đơn: {error}", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThongBaoDialog.CanhBao($"Không thể lưu vận đơn: {error}", "Cảnh báo");
                     return;
                 }
 
-                MessageBox.Show($"Lưu thành công vận đơn #{maVD}.\nTổng cước thu: {FormatHelper.FormatCurrency(cuoc)} VNĐ.",
-                                "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThanhCong($"Lưu thành công vận đơn #{maVD}.\nTổng cước thu: {FormatHelper.FormatCurrency(cuoc)} VNĐ.", "Thành công");
                 SinhMaVanDonMoi();
             }
 
@@ -598,33 +596,30 @@ namespace GUI.Views.Pages
 
             if (maVanDon <= 0)
             {
-                MessageBox.Show("Vui lòng chọn vận đơn cần hủy.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng chọn vận đơn cần hủy.", "Cảnh báo");
                 return;
             }
 
             if (trangThai != "DA_NHAN")
             {
-                MessageBox.Show($"Vận đơn #{maCode} đã được xếp toa hoặc vận chuyển, không thể hủy bỏ.", 
-                                "Không thể hủy", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao($"Vận đơn #{maCode} đã được xếp toa hoặc vận chuyển, không thể hủy bỏ.", "Không thể hủy");
                 return;
             }
 
-            var confirm = MessageBox.Show(
-                $"Bạn có chắc chắn muốn hủy (xóa) vận đơn #{maCode} khỏi hệ thống không?\n" +
-                $"Thao tác này sẽ xóa phiếu tiếp nhận khỏi ca trực.",
-                "Xác nhận hủy vận đơn", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            bool confirm = ThongBaoDialog.XacNhan($"Bạn có chắc chắn muốn hủy (xóa) vận đơn #{maCode} khỏi hệ thống không?\n" +
+                $"Thao tác này sẽ xóa phiếu tiếp nhận khỏi ca trực.", "Xác nhận hủy vận đơn", laHanhDongXoa: true);
 
-            if (confirm == MessageBoxResult.Yes)
+            if (confirm)
             {
                 if (_service.Huy(maVanDon, out string error))
                 {
-                    MessageBox.Show($"Đã hủy thành công vận đơn #{maCode}.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThongBaoDialog.ThanhCong($"Đã hủy thành công vận đơn #{maCode}.", "Thành công");
                     NapLaiDanhSachVanDon();
                     SinhMaVanDonMoi();
                 }
                 else
                 {
-                    MessageBox.Show($"Hủy vận đơn thất bại: {error}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ThongBaoDialog.Loi($"Hủy vận đơn thất bại: {error}", "Lỗi");
                 }
             }
         }
@@ -634,15 +629,14 @@ namespace GUI.Views.Pages
         {
             if (dgVanDon.SelectedItem is not DataRowView row)
             {
-                MessageBox.Show("Vui lòng chọn vận đơn cần chỉnh sửa.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng chọn vận đơn cần chỉnh sửa.", "Cảnh báo");
                 return;
             }
 
             string trangThai = row["TrangThai"]?.ToString() ?? "";
             if (trangThai != "DA_NHAN")
             {
-                MessageBox.Show($"Vận đơn #{row["MaVanDonCode"]} đã xếp toa hoặc đang chạy trên ray, không được phép sửa đổi.",
-                                "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao($"Vận đơn #{row["MaVanDonCode"]} đã xếp toa hoặc đang chạy trên ray, không được phép sửa đổi.", "Thông báo");
                 return;
             }
 
@@ -1114,7 +1108,7 @@ namespace GUI.Views.Pages
         {
             if (dgVanDon.SelectedItem is not DataRowView row)
             {
-                MessageBox.Show("Vui lòng chọn vận đơn cần cập nhật tiến độ.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng chọn vận đơn cần cập nhật tiến độ.", "Cảnh báo");
                 return;
             }
 
@@ -1125,19 +1119,19 @@ namespace GUI.Views.Pages
 
             if (newTT == currentTT && string.IsNullOrWhiteSpace(ghiChu))
             {
-                MessageBox.Show("Trạng thái không có sự thay đổi.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThongTin("Trạng thái không có sự thay đổi.", "Thông báo");
                 return;
             }
 
             if (_service.CapNhatTrangThai(maVD, newTT, string.IsNullOrWhiteSpace(ghiChu) ? null : ghiChu))
             {
-                MessageBox.Show($"Cập nhật trạng thái vận đơn #{row["MaVanDonCode"]} thành công.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThongTin($"Cập nhật trạng thái vận đơn #{row["MaVanDonCode"]} thành công.", "Thông báo");
                 txtGhiChuGiaoNhan.Text = "";
                 NapLaiDanhSachVanDon();
             }
             else
             {
-                MessageBox.Show("Cập nhật trạng thái thất bại.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi("Cập nhật trạng thái thất bại.", "Lỗi");
             }
         }
 
@@ -1145,7 +1139,7 @@ namespace GUI.Views.Pages
         {
             if (dgVanDon.SelectedItem is not DataRowView row)
             {
-                MessageBox.Show("Vui lòng chọn vận đơn cần bàn giao cho khách.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng chọn vận đơn cần bàn giao cho khách.", "Cảnh báo");
                 return;
             }
 
@@ -1155,27 +1149,25 @@ namespace GUI.Views.Pages
 
             if (trangThai == "DA_GIAO")
             {
-                MessageBox.Show($"Vận đơn #{maVDCode} đã được giao cho khách trước đó.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThongTin($"Vận đơn #{maVDCode} đã được giao cho khách trước đó.", "Thông báo");
                 return;
             }
 
-            var confirm = MessageBox.Show(
-                $"Xác nhận giao hàng cho khách nhận: {row["TenNguoiNhan"]} (SĐT: {row["SDTNguoiNhan"]})?\n" +
+            bool confirm = ThongBaoDialog.XacNhan($"Xác nhận giao hàng cho khách nhận: {row["TenNguoiNhan"]} (SĐT: {row["SDTNguoiNhan"]})?\n" +
                 $"Vận đơn: #{maVDCode}\n" +
-                $"Hàng hóa: {row["TenHangHoa"]}",
-                "Xác nhận bàn giao hàng", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                $"Hàng hóa: {row["TenHangHoa"]}", "Xác nhận bàn giao hàng");
 
-            if (confirm == MessageBoxResult.Yes)
+            if (confirm)
             {
                 string ghiChu = $"[GIAO HÀNG - {DateTime.Now:dd/MM/yyyy HH:mm}]: Đã bàn giao cho {row["TenNguoiNhan"]}.";
                 if (_service.CapNhatTrangThai(maVanDon, "DA_GIAO", ghiChu))
                 {
-                    MessageBox.Show($"Đã xác nhận bàn giao hàng thành công cho #{maVDCode}.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThongBaoDialog.ThanhCong($"Đã xác nhận bàn giao hàng thành công cho #{maVDCode}.", "Thành công");
                     NapLaiDanhSachVanDon();
                 }
                 else
                 {
-                    MessageBox.Show("Giao hàng thất bại.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ThongBaoDialog.Loi("Giao hàng thất bại.", "Lỗi");
                 }
             }
         }
@@ -1190,7 +1182,7 @@ namespace GUI.Views.Pages
 
             if (row == null)
             {
-                MessageBox.Show("Vui lòng chọn vận đơn trong danh sách để in phiếu.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng chọn vận đơn trong danh sách để in phiếu.", "Cảnh báo");
                 return;
             }
 
@@ -1208,7 +1200,7 @@ namespace GUI.Views.Pages
                     var doc = TaoPhieuGuiHangFlowDoc(row, code, cuoc, dacThu);
                     var paginator = ((IDocumentPaginatorSource)doc).DocumentPaginator;
                     printDlg.PrintDocument(paginator, $"PhieuGuiHang_{code}");
-                    MessageBox.Show($"Đã gửi lệnh in phiếu vận đơn #{code} đến máy in thành công.", "In hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThongBaoDialog.ThanhCong($"Đã gửi lệnh in phiếu vận đơn #{code} đến máy in thành công.", "In hoàn tất");
                     return;
                 }
             }
@@ -1218,8 +1210,7 @@ namespace GUI.Views.Pages
             }
 
             // Hiển thị xem trước phiếu gửi hàng nếu hủy in hoặc không có máy in
-            MessageBox.Show(
-                $"TỔNG CÔNG TY ĐƯỜNG SẮT VIỆT NAM (VNR)\n" +
+            ThongBaoDialog.ThongTin($"TỔNG CÔNG TY ĐƯỜNG SẮT VIỆT NAM (VNR)\n" +
                 $"PHIẾU GỬI HÀNG HÓA & BIÊN NHẬN VẬN TẢI\n" +
                 $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
                 $"Mã Vận Đơn:  {code}\n" +
@@ -1229,8 +1220,7 @@ namespace GUI.Views.Pages
                 $"Hàng hóa:     {row["TenHangHoa"]} {dacThu}\n" +
                 $"Trọng lượng:  {Convert.ToDecimal(row["TrongLuongTan"]):N2} tấn\n" +
                 $"Tổng cước:    {FormatHelper.FormatCurrency(cuoc)} VNĐ\n" +
-                $"Trạng thái:   {row["TrangThai"]}",
-                "Xem Trước Phiếu Gửi Hàng VNR", MessageBoxButton.OK, MessageBoxImage.Information);
+                $"Trạng thái:   {row["TrangThai"]}", "Xem Trước Phiếu Gửi Hàng VNR");
         }
 
         // Tạo tài liệu in ấn chuẩn mực cho vận đơn đường sắt
@@ -1296,23 +1286,21 @@ namespace GUI.Views.Pages
         {
             if (dgVanDon.SelectedItem is not DataRowView row)
             {
-                MessageBox.Show("Vui lòng chọn vận đơn cần lập biên bản sự cố.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng chọn vận đơn cần lập biên bản sự cố.", "Cảnh báo");
                 return;
             }
 
             int maVD = Convert.ToInt32(row["MaVanDon"]);
             string maCode = row["MaVanDonCode"]?.ToString() ?? "";
 
-            var confirm = MessageBox.Show(
-                $"Lập biên bản ghi nhận sự cố phát sinh cho vận đơn #{maCode}?",
-                "Xác nhận sự cố", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+            bool confirm = ThongBaoDialog.XacNhan($"Lập biên bản ghi nhận sự cố phát sinh cho vận đơn #{maCode}?", "Xác nhận sự cố");
 
-            if (confirm == MessageBoxResult.Yes)
+            if (confirm)
             {
                 string ghiChu = $"[SỰ CỐ - {DateTime.Now:dd/MM/yyyy HH:mm}]: Phát sinh sự cố vận chuyển tại ga. Chờ kiểm định xử lý.";
                 _service.CapNhatTrangThai(maVD, row["TrangThai"]?.ToString() ?? "DA_DEN", ghiChu);
                 NapLaiDanhSachVanDon();
-                MessageBox.Show("Đã ghi nhận biên bản sự cố vào hệ thống điều độ.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThongTin("Đã ghi nhận biên bản sự cố vào hệ thống điều độ.", "Thông báo");
             }
         }
 

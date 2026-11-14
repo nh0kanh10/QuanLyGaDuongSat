@@ -112,11 +112,24 @@
                                 <Rectangle x:Name="indicatorKyThuat" Height="3" VerticalAlignment="Bottom" Fill="Transparent"/>
                             </Grid>
                         </Border>
+
+                        <!-- CỤM 5: QUẢN TRỊ & BÁO CÁO (Sprint 3, Đạt — xử lý ở MainWindow.QuanTri.cs) -->
+                        <Border x:Name="clusterQuanTri" Background="Transparent" Margin="0,0,4,0" Cursor="Hand">
+                            <Grid>
+                                <Button Click="NavCluster_Click" Tag="QuanTriBaoCao" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" Height="42">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <ui:SymbolIcon x:Name="iconClusterQuanTri" Symbol="DataBarVertical24" FontSize="16" Foreground="#CBD5E1" Margin="0,0,8,0"/>
+                                        <TextBlock x:Name="txtClusterQuanTri" Text="QUẢN TRỊ &amp; BÁO CÁO" FontSize="12" FontWeight="Bold" Foreground="#CBD5E1" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Rectangle x:Name="indicatorQuanTri" Height="3" VerticalAlignment="Bottom" Fill="Transparent"/>
+                            </Grid>
+                        </Border>
                     </StackPanel>
 
                     <!-- Huy hiệu Tuyến Bắc - Nam & Tiện ích hệ thống bên phải -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#001F42" BorderBrush="#004B8D" BorderThickness="1" CornerRadius="3" Padding="8,4" Margin="0,0,10,0">
+                        <Border x:Name="bdHuyHieuTuyen" Background="#001F42" BorderBrush="#004B8D" BorderThickness="1" CornerRadius="3" Padding="8,4" Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="Location24" FontSize="13" Foreground="#38BDF8" Margin="0,0,6,0"/>
                                 <TextBlock Text="Tuyến Thống Nhất: 1,726.20 km" FontSize="11" Foreground="#E2E8F0" FontWeight="SemiBold"/>
@@ -130,7 +143,7 @@
                         <Button Click="MenuTroGiup_Click" Background="Transparent" BorderThickness="0" Padding="6,4" Margin="0,0,3,0" Cursor="Hand" ToolTip="Hướng dẫn &amp; Sổ tay phím tắt (F1)">
                             <ui:SymbolIcon Symbol="Info24" FontSize="15" Foreground="#94A3B8"/>
                         </Button>
-                        <Button Click="MenuThoat_Click" Background="Transparent" BorderThickness="0" Padding="6,4" Cursor="Hand" ToolTip="Đăng xuất / Thoát hệ thống">
+                        <Button x:Name="btnTaiKhoan" Click="MenuThoat_Click" Background="Transparent" BorderThickness="0" Padding="6,4" Cursor="Hand" ToolTip="Tài khoản: đổi mật khẩu / Đăng xuất / Thoát hệ thống" AutomationProperties.Name="Tài khoản và đăng xuất">
                             <ui:SymbolIcon Symbol="Dismiss24" FontSize="14" Foreground="#F87171"/>
                         </Button>
                     </StackPanel>
@@ -246,6 +259,26 @@
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <ui:SymbolIcon x:Name="iconTabBaoTri" Symbol="WrenchScrewdriver24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
                                     <TextBlock x:Name="txtTabBaoTri" Text="BẢO TRÌ &amp; SỬA CHỮA" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- SUB-BAR 5: QUẢN TRỊ & BÁO CÁO (Sprint 3, Đạt) -->
+                    <StackPanel x:Name="subBarQuanTri" Orientation="Horizontal" VerticalAlignment="Stretch" Visibility="Collapsed">
+                        <Border x:Name="tabNavBaoCao" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="BaoCao" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabBaoCao" Symbol="DataBarVertical24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabBaoCao" Text="BÁO CÁO THỐNG KÊ" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                        <Border x:Name="tabNavQuanTri" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="QuanTri" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabQuanTri" Symbol="ShieldCheckmark24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabQuanTri" Text="QUẢN TRỊ HỆ THỐNG" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </Border>
@@ -402,7 +435,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Điều Độ Viên Trung Tâm" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,14,0"/>
+                    <TextBlock x:Name="txtNguoiDangNhap" Text="Điều Độ Viên Trung Tâm" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,14,0"/>
                     <TextBlock x:Name="txtClock" Text="17/09/2026" FontSize="11" Foreground="#003B73" FontWeight="Bold"/>
                 </StackPanel>
             </Grid>

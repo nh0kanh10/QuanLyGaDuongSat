@@ -294,6 +294,7 @@ namespace GUI.Views.Pages
             if (dgChuyenTau.SelectedItem is DataRowView row)
             {
                 _selectedMaChuyenTau = Convert.ToInt32(row["MaChuyenTau"]);
+                GhiNhoPhienBan(row);   // [13/11] chong ghi de khi 2 nguoi cung sua chuyen
 
                 string soHieu = row["SoHieuMacTau"]?.ToString() ?? "";
                 string trangThai = row["TrangThai"]?.ToString() ?? "";
@@ -516,13 +517,20 @@ namespace GUI.Views.Pages
                 }
             }
 
-            if (txtTongSoToa != null) txtTongSoToa.Text = $"{dt.Rows.Count} toa xe";
+            // [13/11] Doan tau da lap: bang liet ke ca toa hang -> the chi dem toa dang mo ban ve
+            if (txtTongSoToa != null)
+            {
+                bool laDoanTau = dt.Columns.Contains("BanVe") && dt.Columns.Contains("MaToaXe");
+                int soToaBan = laDoanTau ? dt.Rows.Cast<DataRow>().Count(r => r["MaToaXeKhach"] != DBNull.Value) : dt.Rows.Count;
+                txtTongSoToa.Text = laDoanTau ? $"{soToaBan} / {dt.Rows.Count} toa" : $"{dt.Rows.Count} toa xe";
+            }
             if (txtTongSucChua != null) txtTongSucChua.Text = $"{tongSucChua:N0} chỗ ngồi / giường nằm";
         }
 
         private void XoaThongTinChiTiet()
         {
             _selectedMaChuyenTau = 0;
+            _phienBanChuyen = null;
 
             txtInspectorTitle.Text = "CHI TIẾT ĐIỀU HÀNH CHUYẾN TÀU";
             txtInspectorSubtitle.Text = "Không có chuyến tàu nào phù hợp với bộ lọc";
@@ -576,6 +584,7 @@ namespace GUI.Views.Pages
         {
             _isAddingNew = true;
             _selectedMaChuyenTau = 0;
+            _phienBanChuyen = null;
             _currentTrangThai = "DA_LEN_LICH";
             _currentSoPhutTre = 0;
             _currentGioDiTT = null;
@@ -935,14 +944,15 @@ namespace GUI.Views.Pages
         }
 
 
-        private void CapNhatThongSoBuoc1()
+        // [13/11] Tra false khi chuyen vua bi thay doi o noi khac (da bao + nap lai) -> khong sang buoc 2
+        private bool CapNhatThongSoBuoc1()
         {
-            if (_selectedMaChuyenTau <= 0) return;
+            if (_selectedMaChuyenTau <= 0) return true;
 
             // Khóa an toàn: Tuyệt đối không can thiệp kế hoạch nếu chuyến đang vận hành thực tế hoặc đã kết thúc/hủy
             if (_currentTrangThai == "DANG_CHAY" || _currentTrangThai == "TRE_GIO" || _currentTrangThai == "HOAN_THANH" || _currentTrangThai == "DA_HUY")
             {
-                return;
+                return true;
             }
 
             try
@@ -962,12 +972,15 @@ namespace GUI.Views.Pages
                 DateTime dtDen = ChuyenTauService.TinhToanGioVeDich(ngayDi, tDi, tDen, tgChuanGio);
 
                 // Chỉ cập nhật các thông số kế hoạch, bảo toàn 100% dữ liệu thực tế (giờ thực tế, trễ lũy kế, lý do hủy)
-                _chuyenTauService.CapNhatThongSoKeHoach(_selectedMaChuyenTau, maMac, ngayDi, dtDi, dtDen);
+                if (!_chuyenTauService.CapNhatThongSoKeHoach(_selectedMaChuyenTau, maMac, ngayDi, dtDi, dtDen, ref _phienBanChuyen, out string loiB1)
+                    && XuLyXungDotPhienBan(loiB1))
+                    return false;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Lỗi cập nhật Bước 1: {ex.Message}");
             }
+            return true;
         }
 
         private bool ThucHienLuuChuyenTau()
@@ -1061,7 +1074,7 @@ namespace GUI.Views.Pages
                     _currentTrangThai = trangThai;
 
                     ThongBaoDialog.ThanhCong($"Đã lập lịch chuyến tàu #{newId} ({cboMacTau.Text}) thành công!", "Lập Chuyến Thành Công");
-                    LoadData();
+                    NapLaiGiuChuyen(newId);   // [12/11] chon lai chuyen vua lap (LoadData lam mat dong chon)
                     return true;
                 }
                 else
@@ -1074,14 +1087,26 @@ namespace GUI.Views.Pages
             else
             {
                 ct.MaChuyenTau = _selectedMaChuyenTau;
-                _chuyenTauService.CapNhat(ct, out _);
+                int maDangSua = _selectedMaChuyenTau;
+                // [12/11] Truoc day bo qua ket qua -> Service tu choi (thieu quyen, chua du dieu kien xuat ben...) van bao "thanh cong"
+                if (!_chuyenTauService.CapNhat(ct, ref _phienBanChuyen, out string loiCapNhat))
+                {
+                    if (XuLyXungDotPhienBan(loiCapNhat)) return false;   // [13/11] chuyen vua bi sua o noi khac
+                    ThongBaoDialog.Loi(string.IsNullOrWhiteSpace(loiCapNhat) ? "Không cập nhật được chuyến tàu." : loiCapNhat, "Chưa Lưu Được");
+                    return false;
+                }
 
                 // Lưu cấu hình đoàn tàu & đầu máy kéo
-                LuuThongTinDoanTau(_selectedMaChuyenTau, maDauMayChinh, maDauMayDay, out string loiDoanTau);
+                bool okDoanTau = LuuThongTinDoanTau(maDangSua, maDauMayChinh, maDauMayDay, out string loiDoanTau);
+                if (!okDoanTau && XuLyXungDotPhienBan("Đã lưu thông tin chuyến, nhưng CHƯA lưu đầu máy kéo / đẩy:\n\n" + loiDoanTau))
+                    return false;
 
                 _currentTrangThai = trangThai;
-                ThongBaoDialog.ThanhCong("Đã cập nhật thông tin chuyến tàu thành công.", "Thông Báo");
-                LoadData();
+                if (okDoanTau || string.IsNullOrWhiteSpace(loiDoanTau))
+                    ThongBaoDialog.ThanhCong("Đã cập nhật thông tin chuyến tàu thành công.", "Thông Báo");
+                else
+                    ThongBaoDialog.CanhBao("Đã lưu thông tin chuyến tàu, nhưng chưa lưu được đầu máy / đoàn tàu:\n" + loiDoanTau, "Lưu Chưa Trọn Vẹn");
+                NapLaiGiuChuyen(maDangSua);
                 return true;
             }
         }
@@ -1108,7 +1133,7 @@ namespace GUI.Views.Pages
                     DaDuyetAnToan = chkDaDuyetAnToan.IsChecked == true
                 };
 
-                return _chuyenTauService.LuuDoanTau(doanTau, out thongBaoLoi);
+                return _chuyenTauService.LuuDoanTau(doanTau, ref _phienBanChuyen, out thongBaoLoi);
             }
             catch (Exception ex)
             {
@@ -1142,13 +1167,13 @@ namespace GUI.Views.Pages
 
             if (r)
             {
-                if (_chuyenTauService.Xoa(_selectedMaChuyenTau, out string thongBaoLoi))
+                if (_chuyenTauService.Xoa(_selectedMaChuyenTau, ref _phienBanChuyen, out string thongBaoLoi))
                 {
                     ThongBaoDialog.ThanhCong("Đã xóa chuyến tàu thành công.", "Thông Báo");
                     _selectedMaChuyenTau = 0;
                     LoadData();
                 }
-                else
+                else if (!XuLyXungDotPhienBan(thongBaoLoi))
                 {
                     string msg = !string.IsNullOrWhiteSpace(thongBaoLoi) ? thongBaoLoi : "Không thể xóa chuyến tàu này (có thể đã phát sinh giao dịch vé).";
                     ThongBaoDialog.CanhBao(msg, "Cảnh Báo An Toàn Dữ Liệu");
@@ -1682,7 +1707,9 @@ namespace GUI.Views.Pages
 
             try
             {
-                bool thanhCong = _chuyenTauService.SapXepLichDungTheoKm(_selectedMaChuyenTau, chieuBacNam, out int soDiemDungThayDoi);
+                bool thanhCong = _chuyenTauService.SapXepLichDungTheoKm(_selectedMaChuyenTau, chieuBacNam, ref _phienBanChuyen,
+                                                                       out int soDiemDungThayDoi, out string loiSapXep);
+                if (!thanhCong && XuLyXungDotPhienBan(loiSapXep)) return;
                 if (thanhCong)
                 {
                     if (soDiemDungThayDoi > 0)
@@ -2059,14 +2086,19 @@ namespace GUI.Views.Pages
                 }
 
                 // === CHẾ ĐỘ XEM/SỬA: GHI TRỰC TIẾP VÀO CSDL ===
-                if (soPhutTreCanDoi > 0)
+                // [13/11] Moi buoc ghi deu so PhienBan cua chuyen; chuyen vua bi sua o noi khac -> dung, nap lai
+                if (soPhutTreCanDoi > 0
+                    && !_chuyenTauService.TinhTienGioCacGaPhiaSau(_selectedMaChuyenTau, thuTu, soPhutTreCanDoi, ref _phienBanChuyen, out string loiLui)
+                    && XuLyXungDotPhienBan(loiLui))
                 {
-                    _chuyenTauService.TinhTienGioCacGaPhiaSau(_selectedMaChuyenTau, thuTu, soPhutTreCanDoi);
+                    return;
                 }
 
-                if (canDayThuTu)
+                if (canDayThuTu
+                    && !_chuyenTauService.DayThuTuDung(_selectedMaChuyenTau, thuTu, ref _phienBanChuyen, out string loiDay)
+                    && XuLyXungDotPhienBan(loiDay))
                 {
-                    _chuyenTauService.DayThuTuDung(_selectedMaChuyenTau, thuTu);
+                    return;
                 }
 
                 var ld = new LichDungGa
@@ -2085,12 +2117,13 @@ namespace GUI.Views.Pages
 
                 if (_editingMaDiemDung > 0)
                 {
-                    thanhCong = _chuyenTauService.CapNhatLichDungGa(ld, out thongBaoLoi);
+                    thanhCong = _chuyenTauService.CapNhatLichDungGa(ld, ref _phienBanChuyen, out thongBaoLoi);
                 }
                 else
                 {
-                    thanhCong = _chuyenTauService.ThemLichDungGa(ld, out thongBaoLoi);
+                    thanhCong = _chuyenTauService.ThemLichDungGa(ld, ref _phienBanChuyen, out thongBaoLoi);
                 }
+                if (!thanhCong && XuLyXungDotPhienBan(thongBaoLoi)) return;
 
                 if (thanhCong)
                 {
@@ -2170,7 +2203,7 @@ namespace GUI.Views.Pages
                                         "Xác Nhận Xóa Điểm Dừng", nutDongY: "Xóa Điểm Dừng", nutHuy: "Quay Lại", laHanhDongXoa: true);
                 if (r)
                 {
-                    if (_chuyenTauService.XoaLichDungGa(maDiemDung))
+                    if (_chuyenTauService.XoaLichDungGa(_selectedMaChuyenTau, maDiemDung, ref _phienBanChuyen, out string loiXoaDung))
                     {
                         LoadLichDungGa(_selectedMaChuyenTau);
                         if (TryParseDecimalInvariant(txtTongChieuDaiM.Text, out decimal cd))
@@ -2178,9 +2211,10 @@ namespace GUI.Views.Pages
                             KiemTraChieuDaiVoiDuongTranhGa(_selectedMaChuyenTau, cd);
                         }
                     }
-                    else
+                    else if (!XuLyXungDotPhienBan(loiXoaDung))
                     {
-                        ThongBaoDialog.Loi("Không thể xóa điểm dừng.", "Lỗi CSDL");
+                        ThongBaoDialog.CanhBao(string.IsNullOrWhiteSpace(loiXoaDung) ? "Không thể xóa điểm dừng." : loiXoaDung,
+                                               "Không Xóa Được Điểm Dừng");
                     }
                 }
             }
@@ -2239,7 +2273,7 @@ namespace GUI.Views.Pages
 
             if (r)
             {
-                if (_chuyenTauService.SaoChepLichDungTuChuyenMau(maMac, _selectedMaChuyenTau, ngayDi))
+                if (_chuyenTauService.SaoChepLichDungTuChuyenMau(maMac, _selectedMaChuyenTau, ngayDi, ref _phienBanChuyen, out string loiSaoChep))
                 {
                     ThongBaoDialog.ThanhCong("Đã sao chép lịch dừng thành công!", "Thông Báo");
                     LoadLichDungGa(_selectedMaChuyenTau);
@@ -2248,9 +2282,11 @@ namespace GUI.Views.Pages
                         KiemTraChieuDaiVoiDuongTranhGa(_selectedMaChuyenTau, cd);
                     }
                 }
-                else
+                else if (!XuLyXungDotPhienBan(loiSaoChep))
                 {
-                    ThongBaoDialog.ThongTin("Chưa tìm thấy chuyến tàu mẫu nào khác có dữ liệu điểm dừng của mác tàu này để sao chép.", "Thông Báo");
+                    ThongBaoDialog.ThongTin(string.IsNullOrWhiteSpace(loiSaoChep)
+                        ? "Chưa tìm thấy chuyến tàu mẫu nào khác có dữ liệu điểm dừng của mác tàu này để sao chép."
+                        : loiSaoChep, "Thông Báo");
                 }
             }
         }
@@ -2546,6 +2582,12 @@ namespace GUI.Views.Pages
         {
             if (sender is Button btn && btn.DataContext is DataRowView row)
             {
+                // [13/11] Toa that trong doan tau chua co toa ban ve (toa hang / chua dong bo) -> khong co gi de xoa
+                if (row["MaToaXeKhach"] == DBNull.Value)
+                {
+                    ThongBaoDialog.ThongTin("Toa này không có toa bán vé. Thêm / bỏ toa ở phân hệ Phương tiện (Lập đoàn tàu).", "Toa Xe");
+                    return;
+                }
                 int maToa = Convert.ToInt32(row["MaToaXeKhach"]);
                 string nhanHieu = row["NhanHieuToa"]?.ToString() ?? "";
 
@@ -2949,7 +2991,7 @@ namespace GUI.Views.Pages
                 }
                 else
                 {
-                    CapNhatThongSoBuoc1();
+                    if (!CapNhatThongSoBuoc1()) return;
                 }
 
                 CapNhatQuyTrinh(2);

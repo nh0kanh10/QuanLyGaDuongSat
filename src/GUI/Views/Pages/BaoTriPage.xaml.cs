@@ -45,6 +45,10 @@ namespace GUI.Views.Pages
             // Chan SelectionChanged ban ra tu ComboBoxItem IsSelected="True" luc dung cay giao dien
             _dangNapDuLieu = true;
             InitializeComponent();
+            // Sprint 3: an nut ghi khi chi co quyen xem (GUI/Helpers/QuyenGiaoDienHelper.cs)
+            GUI.Helpers.QuyenGiaoDienHelper.AnNeuKhongCoQuyen(DTO.Common.MaQuyen.NghiemThuKhamXe, btnLapBienBan, btnKhamLaiDoanTau);
+            GUI.Helpers.QuyenGiaoDienHelper.AnNeuKhongCoQuyen(DTO.Common.MaQuyen.GhiNhatKyBaoTri,
+                btnCapPhat, btnSuaCapDau, btnSuaCapDauChiTiet, btnGhiNhanBaoDuong, btnSuaBaoDuong, btnSuaBaoDuongChiTiet);
             _dangNapDuLieu = false;
 
             Loaded += BaoTriPage_Loaded;
@@ -435,6 +439,7 @@ namespace GUI.Views.Pages
         // chuyenTab = false khi goi tu tab Canh bao: mo dialog tai cho, khong nhay tab
         private void LapBienBan(int? maDoanTau = null, int? maNguoiKham = null, bool chuyenTab = true)
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.NghiemThuKhamXe, "lập biên bản khám xe")) return;   // Sprint 3: phan quyen
             if (chuyenTab) tabBaoTri.SelectedIndex = 0;
             if (!KiemTraKetNoi()) return;
 

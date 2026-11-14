@@ -247,7 +247,7 @@ namespace DAL.Repositories
                 FROM vanhanh.ChuyenTau ct
                 JOIN vanhanh.MacTauMau mt ON mt.MaMacTau = ct.MaMacTau
                 OUTER APPLY (SELECT SUM(t.SucChua) AS SoGhe
-                             FROM vantai.ToaXeKhach t WHERE t.MaChuyenTau = ct.MaChuyenTau) tk
+                             FROM vantai.ToaXeKhach t WHERE t.MaChuyenTau = ct.MaChuyenTau AND t.NgungBan = 0) tk
                 OUTER APPLY (SELECT SUM(CASE WHEN v.TrangThai IN ('DA_DAT', 'DA_LEN_TAU') THEN 1 ELSE 0 END) AS SoVeHieuLuc,
                                     SUM(CASE WHEN v.TrangThai = 'DA_HOAN_VE' THEN 1 ELSE 0 END) AS SoVeHoan,
                                     SUM(CASE WHEN v.TrangThai = 'DA_HUY' THEN 1 ELSE 0 END) AS SoVeHuy,

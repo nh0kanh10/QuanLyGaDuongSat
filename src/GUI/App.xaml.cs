@@ -20,6 +20,15 @@ namespace GUI
 
             DispatcherUnhandledException += (s, args) =>
             {
+                // Sprint 3: Service chan thao tac ghi khi thieu quyen (PhanQuyenService.BatBuocCoQuyen) -> bao gon, khong coi la sap app
+                var thieuQuyen = args.Exception as DTO.Common.KhongDuQuyenException
+                                 ?? args.Exception?.InnerException as DTO.Common.KhongDuQuyenException;
+                if (thieuQuyen != null)
+                {
+                    GUI.Views.Dialogs.ThongBaoDialog.CanhBao(thieuQuyen.Message, "Không đủ quyền");
+                    args.Handled = true;
+                    return;
+                }
                 string msg = $"CRASH Dispatcher: {args.Exception?.ToString()}";
                 try { System.IO.File.WriteAllText("crash.log", msg); } catch { }
                 MessageBox.Show(msg, "Lỗi Giao Diện");
@@ -57,6 +66,15 @@ namespace GUI
             base.OnStartup(e);
 
             ApplicationThemeManager.Apply(ApplicationTheme.Light);
+
+            // Sprint 3 (Dat): bat buoc dang nhap. Cua so Dang nhap mo truoc, dang nhap xong moi tao MainWindow
+            // (thay StartupUri="MainWindow.xaml"); dang xuat thi quay lai cua so nay - Helpers/PhienDangNhapHelper.cs.
+            // Cong cu kiem thu giao dien (tools\kiemtra_*) tu dung GUI.App trong tien trinh cua no -> khong mo dang nhap.
+            if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name == "GUI")
+            {
+                DTO.Common.PhienLamViec.BatBuocDangNhap = true;
+                GUI.Helpers.PhienDangNhapHelper.MoDangNhapVaManHinhChinh();
+            }
         }
     }
 }

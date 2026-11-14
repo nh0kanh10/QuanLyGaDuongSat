@@ -1,0 +1,256 @@
+<Window x:Class="GUI.Views.Dialogs.TuVanVeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Trợ Lý AI Tư Vấn Vé"
+        Width="1060" Height="700"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        FontFamily="Segoe UI, sans-serif"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GUI;component/Resources/Styles/KyThuatDialogStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Một thanh điểm tiêu chí -->
+            <DataTemplate x:Key="MauTieuChi">
+                <Grid Margin="0,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="128"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="34"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding Ten}" FontSize="10.5" Foreground="#475569"/>
+                    <Border Grid.Column="1" Height="6" Background="#E2E8F0" CornerRadius="3" VerticalAlignment="Center">
+                        <Border Height="6" Background="#0284C7" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding DoRong}"/>
+                    </Border>
+                    <TextBlock Grid.Column="2" Text="{Binding NhanDiem}" FontSize="10.5" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                </Grid>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border Style="{StaticResource KtDialogKhung}" Margin="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="46"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Style="{StaticResource KtHeader}" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                <Grid Margin="14,0,10,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Sparkle24" FontSize="17" Foreground="#FFFFFF" Margin="0,0,9,0"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="TRỢ LÝ AI TƯ VẤN VÉ" Foreground="#FFFFFF" FontSize="12" FontWeight="Bold"/>
+                            <TextBlock Text="Chấm điểm đa tiêu chí (MCDM) trên chuyến còn chỗ thật · chạy offline" Foreground="#BFDBFE" FontSize="10"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Style="{StaticResource KtNutDong}" Click="BtnDong_Click" HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip="Đóng (Esc)"/>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- NHU CẦU KHÁCH -->
+                <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,1,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,10,14,10">
+                        <StackPanel>
+                            <TextBlock Text="HÀNH TRÌNH" Style="{StaticResource KtTieuDeMuc}"/>
+                            <TextBlock Text="Ga đi" Style="{StaticResource KtNhanTruong}"/>
+                            <ComboBox x:Name="cboGaDi" Height="30" DisplayMemberPath="Nhan" IsTextSearchEnabled="True" TextSearch.TextPath="Nhan"/>
+                            <TextBlock Text="Ga đến" Style="{StaticResource KtNhanTruong}"/>
+                            <ComboBox x:Name="cboGaDen" Height="30" DisplayMemberPath="Nhan" IsTextSearchEnabled="True" TextSearch.TextPath="Nhan"/>
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="90"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Ngày đi" Style="{StaticResource KtNhanTruong}"/>
+                                    <DatePicker x:Name="dpNgayDi" Height="30"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Số khách" Style="{StaticResource KtNhanTruong}"/>
+                                    <ComboBox x:Name="cboSoKhach" Height="30" SelectedIndex="0" SelectionChanged="DoiTuong_Changed">
+                                        <ComboBoxItem Content="1"/><ComboBoxItem Content="2"/><ComboBoxItem Content="3"/>
+                                        <ComboBoxItem Content="4"/><ComboBoxItem Content="5"/><ComboBoxItem Content="6"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="ĐỐI TƯỢNG" Style="{StaticResource KtTieuDeMuc}" Margin="0,12,0,4"/>
+                            <CheckBox x:Name="chkCaoTuoi" Content="Có người cao tuổi (từ 60 tuổi)" FontSize="11.5" Margin="0,2" Checked="DoiTuong_Changed" Unchecked="DoiTuong_Changed"/>
+                            <CheckBox x:Name="chkTreEm" Content="Có trẻ em" FontSize="11.5" Margin="0,2" Checked="DoiTuong_Changed" Unchecked="DoiTuong_Changed"/>
+                            <CheckBox x:Name="chkSinhVien" Content="Học sinh / sinh viên" FontSize="11.5" Margin="0,2" Checked="DoiTuong_Changed" Unchecked="DoiTuong_Changed"/>
+                            <TextBlock x:Name="txtLoaiKhachDuKien" FontSize="10.5" Foreground="#64748B" TextWrapping="Wrap" Margin="20,0,0,2"
+                                       ToolTip="Giỏ vé đặt sẵn đối tượng theo dòng này (giảm giá tương ứng); sửa từng vé trong giỏ nếu đoàn khác."/>
+                            <CheckBox x:Name="chkXeMay" Content="Mang theo xe máy" FontSize="11.5" Margin="0,2"/>
+
+                            <TextBlock Text="NGÂN SÁCH &amp; KHUNG GIỜ" Style="{StaticResource KtTieuDeMuc}" Margin="0,12,0,4"/>
+                            <ComboBox x:Name="cboNganSach" Height="30" SelectedIndex="1">
+                                <ComboBoxItem Content="Tiết kiệm (ưu tiên giá rẻ)" Tag="TIET_KIEM"/>
+                                <ComboBoxItem Content="Tiêu chuẩn" Tag="TIEU_CHUAN"/>
+                                <ComboBoxItem Content="Cao cấp (ưu tiên tiện nghi)" Tag="CAO_CAP"/>
+                            </ComboBox>
+                            <TextBlock Text="Tối đa mỗi vé (đồng, bỏ trống = không giới hạn)" Style="{StaticResource KtNhanTruong}"/>
+                            <TextBox x:Name="txtNganSachToiDa" Height="30" Padding="6,0" VerticalContentAlignment="Center" MaxLength="12"
+                                     PreviewTextInput="ChiNhapSo"/>
+                            <TextBlock Text="Khung giờ mong muốn" Style="{StaticResource KtNhanTruong}"/>
+                            <ComboBox x:Name="cboKhungGio" Height="30" SelectedIndex="0">
+                                <ComboBoxItem Content="Không ưu tiên" Tag="KHONG"/>
+                                <ComboBoxItem Content="Muốn đi / đến ban ngày" Tag="TRANH_DEM"/>
+                                <ComboBoxItem Content="Muốn ngủ trên tàu (đi đêm)" Tag="NGU_TREN_TAU"/>
+                            </ComboBox>
+
+                            <Grid Margin="0,12,0,4">
+                                <TextBlock Text="TRỌNG SỐ TIÊU CHÍ" Style="{StaticResource KtTieuDeMuc}" Margin="0"/>
+                                <CheckBox x:Name="chkTuChinh" Content="Tự chỉnh" FontSize="11" HorizontalAlignment="Right"
+                                          Checked="ChkTuChinh_Changed" Unchecked="ChkTuChinh_Changed"/>
+                            </Grid>
+                            <StackPanel x:Name="pnlTrongSo" IsEnabled="False">
+                                <Grid Margin="0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="38"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Tiện nghi" FontSize="11" VerticalAlignment="Center"/>
+                                    <Slider x:Name="sldW0" Grid.Column="1" Minimum="0" Maximum="100" Value="35" ValueChanged="TrongSo_Changed"/>
+                                    <TextBlock x:Name="txtW0" Grid.Column="2" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Grid Margin="0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="38"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Ngân sách" FontSize="11" VerticalAlignment="Center"/>
+                                    <Slider x:Name="sldW1" Grid.Column="1" Minimum="0" Maximum="100" Value="25" ValueChanged="TrongSo_Changed"/>
+                                    <TextBlock x:Name="txtW1" Grid.Column="2" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Grid Margin="0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="38"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Khung giờ / ngủ đêm" FontSize="11" VerticalAlignment="Center"/>
+                                    <Slider x:Name="sldW2" Grid.Column="1" Minimum="0" Maximum="100" Value="20" ValueChanged="TrongSo_Changed"/>
+                                    <TextBlock x:Name="txtW2" Grid.Column="2" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Grid Margin="0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="38"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Sức khỏe &amp; đối tượng" FontSize="11" VerticalAlignment="Center"/>
+                                    <Slider x:Name="sldW3" Grid.Column="1" Minimum="0" Maximum="100" Value="20" ValueChanged="TrongSo_Changed"/>
+                                    <TextBlock x:Name="txtW3" Grid.Column="2" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                            <TextBlock x:Name="txtGoiYTrongSo" Style="{StaticResource KtGoiY}" TextWrapping="Wrap"
+                                       Text="Để trống: AI tự gán trọng số theo hồ sơ khách (ngân sách, người cao tuổi, khung giờ)."/>
+
+                            <TextBlock x:Name="txtLoi" Style="{StaticResource KtLoiTruong}" TextWrapping="Wrap"/>
+                            <Button x:Name="btnTuVan" Style="{StaticResource PrimaryDesktopButton}" Height="36" Margin="0,8,0,0"
+                                    HorizontalAlignment="Stretch" Click="BtnTuVan_Click" ToolTip="Ctrl+Enter">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Sparkle24" FontSize="15" Foreground="#FFFFFF" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Nhờ AI Tư Vấn" FontSize="12.5"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- KẾT QUẢ -->
+                <Grid Grid.Column="1" Margin="14,10,14,6">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0">
+                        <TextBlock x:Name="txtKqTieuDe" Text="Nhập nhu cầu của khách rồi bấm &quot;Nhờ AI Tư Vấn&quot;." FontSize="14" FontWeight="Bold" Foreground="#003B73" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="txtKqPhu" FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,2,0,0"
+                                   Text="AI xét mọi chuyến còn chỗ trên chặng, mỗi loại chỗ một phương án, chấm 4 tiêu chí rồi gợi ý 3 phương án tốt nhất kèm lý do."/>
+                    </StackPanel>
+                    <ItemsControl Grid.Row="1" x:Name="icGhiChu" Margin="0,6,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#FFFBEB" BorderBrush="#FCD34D" BorderThickness="1" CornerRadius="3" Padding="8,5" Margin="0,0,0,4">
+                                    <TextBlock Text="{Binding}" FontSize="11" Foreground="#92400E" TextWrapping="Wrap"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
+                        <ItemsControl x:Name="icPhuongAn">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#FFFFFF" BorderBrush="{Binding MauVien}" BorderThickness="{Binding DoDayVien}" CornerRadius="4"
+                                            Padding="12,10" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="12"/>
+                                                <ColumnDefinition Width="250"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Border Background="{Binding MauHang}" CornerRadius="10" Padding="8,1" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding NhanHang}" FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding TieuDe}" FontSize="13" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding DongGio}" FontSize="11.5" Foreground="#334155" Margin="0,4,0,0"/>
+                                                <TextBlock Text="{Binding DongGhe}" FontSize="11.5" Foreground="#334155"/>
+                                                <ItemsControl ItemsSource="{Binding LyDo}" Margin="0,6,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock FontSize="11" Foreground="#0F172A" TextWrapping="Wrap" Margin="0,1">
+                                                                <Run Text="• " Foreground="#0284C7" FontWeight="Bold"/><Run Text="{Binding Mode=OneWay}"/>
+                                                            </TextBlock>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <Grid>
+                                                    <StackPanel>
+                                                        <TextBlock Text="ĐIỂM PHÙ HỢP" FontSize="9.5" Foreground="#64748B" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding NhanDiem}" FontSize="22" FontWeight="Bold" Foreground="#003B73"/>
+                                                    </StackPanel>
+                                                    <StackPanel HorizontalAlignment="Right">
+                                                        <TextBlock Text="{Binding NhanGia}" FontSize="13" FontWeight="Bold" Foreground="#B45309" HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding NhanTongTien}" FontSize="10.5" Foreground="#64748B" HorizontalAlignment="Right"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                                <ItemsControl ItemsSource="{Binding TieuChi}" ItemTemplate="{StaticResource MauTieuChi}" Margin="0,6,0,8"/>
+                                                <Button Style="{StaticResource PrimaryDesktopButton}" Height="30" Margin="0" Tag="{Binding}"
+                                                        Visibility="{Binding HienNutChon}" Click="BtnChon_Click" HorizontalAlignment="Stretch">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ui:SymbolIcon Symbol="Checkmark24" FontSize="13" Foreground="#FFFFFF" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="Chọn Phương Án Này"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+
+            <Border Grid.Row="2" Style="{StaticResource KtFooter}">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
+                        <TextBlock x:Name="txtChanTrang" FontSize="10" Foreground="#64748B" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="820"
+                                   Text="Tư vấn chỉ đọc chỗ trống, không giữ chỗ. Điểm tiêu chí là điểm chuyên gia tham khảo; giá chưa trừ giảm giá đối tượng. Mỗi lần tư vấn được ghi nhật ký."/>
+                    </StackPanel>
+                    <Button Style="{StaticResource DesktopButton}" Height="32" Click="BtnDong_Click" HorizontalAlignment="Right">
+                        <TextBlock Text="Đóng (Esc)"/>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

@@ -42,6 +42,13 @@ namespace GUI.Views.Pages
             // Chan SelectionChanged ban ra tu ComboBoxItem IsSelected="True" luc dung cay giao dien
             _dangNapDuLieu = true;
             InitializeComponent();
+            // Sprint 3: an nut ghi khi chi co quyen xem (GUI/Helpers/QuyenGiaoDienHelper.cs)
+            GUI.Helpers.QuyenGiaoDienHelper.AnNeuKhongCoQuyen(DTO.Common.MaQuyen.QuanLyHoSoNhanVien,
+                btnThemNhanVien, btnSuaNhanVien, btnXoaNhanVien, btnSuaHoSo);
+            GUI.Helpers.QuyenGiaoDienHelper.AnNeuKhongCoQuyen(DTO.Common.MaQuyen.PhanCongKipLai,
+                btnThemKip, btnSuaKip, btnHuyKip, btnThayNguoi);
+            GUI.Helpers.QuyenGiaoDienHelper.AnNeuKhongCoQuyen(DTO.Common.MaQuyen.NhanBanKipLai,
+                btnKiemTraKip, btnNhanBan, btnBanGiao, btnGhiKiemTra, btnNhanBanHangCho);
             _dangNapDuLieu = false;
 
             Loaded += NhanSuPage_Loaded;
@@ -463,6 +470,7 @@ namespace GUI.Views.Pages
 
         private void ThemNhanVien()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.QuanLyHoSoNhanVien, "thêm hồ sơ nhân viên")) return;   // Sprint 3: phan quyen
             tabNhanSu.SelectedIndex = 0;
             if (!KiemTraKetNoi()) return;
 
@@ -481,6 +489,7 @@ namespace GUI.Views.Pages
 
         private void SuaNhanVien()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.QuanLyHoSoNhanVien, "sửa hồ sơ nhân viên")) return;   // Sprint 3: phan quyen
             if (dgNhanVien.SelectedItem is not NhanVienHienThi dangChon) return;
             if (!KiemTraKetNoi()) return;
 
@@ -538,6 +547,7 @@ namespace GUI.Views.Pages
 
         private void XoaNhanVien()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.QuanLyHoSoNhanVien, "xóa hồ sơ nhân viên")) return;   // Sprint 3: phan quyen
             if (dgNhanVien.SelectedItem is not NhanVienHienThi dangChon) return;
             if (!KiemTraKetNoi()) return;
 

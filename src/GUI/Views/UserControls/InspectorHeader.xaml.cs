@@ -16,6 +16,13 @@ namespace GUI.Views.UserControls
 
         public event System.Windows.RoutedEventHandler? DeleteClicked;
 
+        // [12/11] Quyen can de thay nut "..." (chi co muc Xoa vinh vien). Gan trong XAML cua trang: QuyenThaoTac="INFRA_EDIT".
+        public string? QuyenThaoTac
+        {
+            get => GUI.Helpers.QuyenGiaoDienHelper.GetCanQuyen(btnMoreActions);
+            set => GUI.Helpers.QuyenGiaoDienHelper.SetCanQuyen(btnMoreActions, value);
+        }
+
         private void BtnMoreActions_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             if (btnMoreActions.ContextMenu != null)

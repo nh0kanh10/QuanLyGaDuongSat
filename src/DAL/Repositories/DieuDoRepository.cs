@@ -151,6 +151,14 @@ namespace DAL.Repositories
                 SET XACT_ABORT ON;
                 BEGIN TRANSACTION;
                 BEGIN TRY
+                    -- [13/11 Đạt] Khóa sửa chuyến (cùng khóa với màn Lịch trình / Lập đoàn tàu): không ghi chồng lên người đang sửa
+                    DECLARE @tenKhoa NVARCHAR(255) = CONCAT(N'vanhanh.SuaChuyen:', @ct);
+                    DECLARE @kqKhoa INT;
+                    EXEC @kqKhoa = sp_getapplock @Resource = @tenKhoa, @LockMode = 'Exclusive',
+                                                 @LockOwner = 'Transaction', @LockTimeout = 10000;
+                    IF @kqKhoa < 0
+                        RAISERROR(N'Chuyến tàu đang được người khác sửa ở màn Lịch trình, chưa xếp tránh được. Vui lòng thử lại sau ít giây.', 16, 1);
+
                     -- Khóa độc quyền chuyến tàu đang cập nhật để chống xung đột điều độ đồng thời
                     IF NOT EXISTS (SELECT 1 FROM vanhanh.ChuyenTau WITH (UPDLOCK, ROWLOCK) WHERE MaChuyenTau = @ct AND TrangThai <> 'DA_HUY')
                     BEGIN
@@ -270,6 +278,14 @@ namespace DAL.Repositories
                     INSERT INTO vanhanh.NhatKyChamGio (MaChuyenTau, MaGa, LoaiSuCo, SoPhutCham, GhiChuXuLy, ThoiDiemBaoCao)
                     VALUES (@ct, @ga, 'CHO_TRANH_TAU', @phutTangThucTe, @lyDo, SYSDATETIME());
 
+                    -- [13/11 Đạt] Đổi PhienBan của chuyến (màn Lịch trình đang mở chuyến này biết dữ liệu đã đổi) + nhật ký hệ thống
+                    UPDATE vanhanh.ChuyenTau SET SoPhutTreLuyKe = SoPhutTreLuyKe WHERE MaChuyenTau = @ct;
+                    DECLARE @khoaNk VARCHAR(50) = CAST(@ct AS VARCHAR(50));
+                    DECLARE @nkMoi NVARCHAR(MAX) = CONCAT(N'{""ThaoTac"":""Xếp tránh tại ', (SELECT TenGa FROM hatang.Ga WHERE MaGa = @ga),
+                                                          N' (+', @phutTangThucTe, N' phút)""}');
+                    EXEC kiemtoan.sp_GhiNhatKyHeThong @MaTaiKhoan = @nguoi, @HanhDong = 'XEP_TRANH_TAU',
+                         @TenBang = 'vanhanh.ChuyenTau', @KhoaChinhRecord = @khoaNk, @DuLieuMoi = @nkMoi;
+
                     COMMIT TRANSACTION;
                 END TRY
                 BEGIN CATCH
@@ -285,7 +301,8 @@ namespace DAL.Repositories
                 new SqlParameter("@gioDi", gioDiMoi),
                 new SqlParameter("@ray", (object?)maDuongRay ?? DBNull.Value),
                 new SqlParameter("@soPhutTang", soPhutTang),
-                new SqlParameter("@lyDo", lyDo)
+                new SqlParameter("@lyDo", lyDo),
+                new SqlParameter("@nguoi", SqlDbType.Int) { Value = DTO.Common.PhienLamViec.MaTaiKhoan > 0 ? (object)DTO.Common.PhienLamViec.MaTaiKhoan : DBNull.Value }
             };
 
             return DatabaseHelper.ExecuteNonQuery(sql, parameters) > 0;

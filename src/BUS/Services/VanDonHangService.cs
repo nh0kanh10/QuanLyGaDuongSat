@@ -40,6 +40,8 @@ namespace BUS.Services
 
         public bool Them(VanDonHang vd, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapVanDonHang, "lập / sửa vận đơn hàng hóa", out error)) return false;
             error = string.Empty;
 
             if (string.IsNullOrWhiteSpace(vd.MaVanDonCode))
@@ -54,6 +56,7 @@ namespace BUS.Services
             {
                 bool ok = _repo.Them(vd) > 0;
                 if (!ok) error = "Không thể ghi nhận vận đơn vào cơ sở dữ liệu.";
+                else GhiNhatKy("LAP_VAN_DON", vd.MaVanDonCode, null, MoTa(vd));
                 return ok;
             }
             catch (Exception ex)
@@ -66,6 +69,8 @@ namespace BUS.Services
         // Cập nhật thông tin vận đơn khi chưa xếp toa
         public bool CapNhat(VanDonHang vd, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapVanDonHang, "lập / sửa vận đơn hàng hóa", out error)) return false;
             error = string.Empty;
 
             if (vd.MaVanDon <= 0)
@@ -83,6 +88,7 @@ namespace BUS.Services
                 {
                     error = "Không thể cập nhật. Vận đơn đã được xếp toa, đang vận chuyển hoặc không tồn tại.";
                 }
+                else GhiNhatKy("SUA_VAN_DON", vd.MaVanDonCode.Length > 0 ? vd.MaVanDonCode : vd.MaVanDon.ToString(), null, MoTa(vd));
                 return ok;
             }
             catch (Exception ex)
@@ -95,6 +101,8 @@ namespace BUS.Services
         // Hủy vận đơn khi còn ở trạng thái tiếp nhận
         public bool Huy(int maVanDon, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapVanDonHang, "lập / sửa vận đơn hàng hóa", out error)) return false;
             error = string.Empty;
             if (maVanDon <= 0)
             {
@@ -109,6 +117,7 @@ namespace BUS.Services
                 {
                     error = "Không thể hủy. Vận đơn đã được xếp lên toa, đang chạy hoặc không tồn tại.";
                 }
+                else GhiNhatKy("HUY_VAN_DON", maVanDon.ToString(), null, new { MaVanDon = maVanDon });
                 return ok;
             }
             catch (Exception ex)
@@ -120,9 +129,35 @@ namespace BUS.Services
 
         public bool CapNhatTrangThai(int maVanDon, string trangThai, string? ghiChu = null)
         {
+            PhanQuyenService.BatBuocCoQuyen(DTO.Common.MaQuyen.LapVanDonHang, "lập / sửa vận đơn hàng hóa"); // [Sprint 3] thieu quyen -> KhongDuQuyenException
             if (maVanDon <= 0) return false;
-            return _repo.CapNhatTrangThaiVaGhiChu(maVanDon, trangThai, ghiChu) > 0;
+            bool ok = _repo.CapNhatTrangThaiVaGhiChu(maVanDon, trangThai, ghiChu) > 0;
+            if (ok) GhiNhatKy("DOI_TRANG_THAI_VAN_DON", maVanDon.ToString(), null, new { TrangThai = trangThai, GhiChu = ghiChu });
+            return ok;
         }
+
+        // [12/11] Nhat ky he thong cho van don (trang Quan tri > Nhat ky). Repository cua van don ghi bang 1 lenh, khong mo
+        // giao dich -> ghi nhat ky ngay sau khi ghi thanh cong; loi khi ghi nhat ky khong lam hong thao tac da xong.
+        private static void GhiNhatKy(string hanhDong, string khoa, object? cu, object? moi)
+        {
+            try
+            {
+                using var gd = DAL.Connection.PhienGiaoDich.Mo();
+                gd.GhiNhatKyHeThong(PhanQuyenService.MaTaiKhoanHienTai, hanhDong, "vantai.VanDonHang", khoa,
+                    cu == null ? null : PhanQuyenService.Json(cu), moi == null ? null : PhanQuyenService.Json(moi));
+                gd.XacNhan();
+            }
+            catch (Exception)
+            {
+                // mat ket noi luc ghi nhat ky: thao tac chinh da luu, bo qua
+            }
+        }
+
+        private static object MoTa(VanDonHang vd) => new
+        {
+            vd.MaVanDonCode, vd.TenNguoiGui, vd.TenNguoiNhan, vd.MaGaGui, vd.MaGaNhan, vd.MaLoaiHang,
+            vd.TrongLuongTan, vd.CuocPhi, vd.LoaiVanChuyen, vd.TrangThai
+        };
 
         // Kiểm tra hợp lệ dữ liệu nhập cho vận đơn
         private bool KiemTraHopLe(VanDonHang vd, out string error)

@@ -53,6 +53,8 @@ namespace GUI
         {
             InitializeComponent();
             _bieuDoPage.DuLieuDieuDoThayDoi += () => _lichTrinhPage.LoadData();
+            ThemCumQuanTri();            // Sprint 3 (Dat): cum Quan tri & Bao cao - MainWindow.QuanTri.cs
+            ApDungPhanQuyenGiaoDien();   // Sprint 3 (Dat): an tab theo quyen - MainWindow.PhanQuyen.cs
             NavigateTo("MangLuoiGa");
             
             _timer = new System.Windows.Threading.DispatcherTimer
@@ -110,6 +112,11 @@ namespace GUI
 
         public void NavigateTo(string tag, int? focusId = null)
         {
+            // Sprint 3 (Dat): khong mo tab khong co quyen xem - MainWindow.PhanQuyen.cs
+            if (KiemTraQuyenDieuHuong(tag) is not { } tagDuocMo) return;
+            if (tagDuocMo != tag) focusId = null;
+            tag = tagDuocMo;
+
             _currentTag = tag;
             var clusterKey = TagToClusterMap.TryGetValue(tag, out var ck) ? ck : "MasterData";
             _lastActiveTabPerCluster[clusterKey] = tag;
@@ -189,6 +196,11 @@ namespace GUI
                         _nhanSuPage.ChonChuyenDePhanCong(focusId.Value);
                     }
                     break;
+
+                case "BaoCao":       // Sprint 3 (Dat) - MainWindow.QuanTri.cs
+                case "QuanTri":
+                    DieuHuongTrangQuanTri(tag);
+                    break;
             }
 
             CapNhatThanhPhimTatTheoPhanHe(tag);
@@ -232,6 +244,7 @@ namespace GUI
 
         private void CapNhatThanhPhimTatTheoPhanHe(string tag)
         {
+            if (CapNhatPhimTatQuanTri(tag)) return;   // Sprint 3 (Dat) - MainWindow.QuanTri.cs
             btnScF7.Visibility = Visibility.Collapsed;
             sepScF7.Visibility = Visibility.Collapsed;
             btnScF8.Visibility = Visibility.Collapsed;
@@ -595,6 +608,7 @@ namespace GUI
                 case "PhuongTien": SetTabActive(tabNavPhuongTien, txtTabPhuongTien, iconTabPhuongTien); break;
                 case "BaoTri": SetTabActive(tabNavBaoTri, txtTabBaoTri, iconTabBaoTri); break;
             }
+            CapNhatRibbonQuanTri(clusterKey, activeSubTag);   // Sprint 3 (Dat) - MainWindow.QuanTri.cs
         }
 
         private static void DatTrangThaiCluster(Border clusterBorder, Wpf.Ui.Controls.SymbolIcon icon, TextBlock text, System.Windows.Shapes.Rectangle indicator, bool isActive)
@@ -712,14 +726,17 @@ namespace GUI
 
         private void MenuKetNoi_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Chuỗi kết nối CSDL hiện tại:\nServer=.\\SQLEXPRESS; Database=QuanLyDuongSatV2; Trusted_Connection=True;", "Thông tin kết nối", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Doc tu cau hinh dang dung (truoc day viet cung .\SQLEXPRESS - sai khi chay may khac / CSDL khac)
+            ThongBaoDialog.ThongTin(
+                $"Máy chủ: {GUI.Helpers.KetNoiCsdlHelper.MayChuDangDung}\n" +
+                $"CSDL: {DTO.Common.CauHinhUngDung.TenCsdl}\n" +
+                $"Trạng thái: {(GUI.Helpers.KetNoiCsdlHelper.KetNoiThanhCong ? "đã kết nối" : "chưa kết nối")}\n\n" +
+                GUI.Helpers.KetNoiCsdlHelper.MoTaCauHinh,
+                "Thông tin kết nối");
         }
 
-        private void MenuThoat_Click(object sender, RoutedEventArgs e)
-        {
-            var r = MessageBox.Show("Bạn có muốn thoát khỏi hệ thống điều hành?", "Xác nhận", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (r == MessageBoxResult.Yes) Application.Current.Shutdown();
-        }
+        // Sprint 3 (Dat): menu tai khoan (doi mat khau / dang xuat / thoat) - MainWindow.PhanQuyen.cs
+        private void MenuThoat_Click(object sender, RoutedEventArgs e) => MoMenuTaiKhoan(sender);
 
         private void MenuBaoCao_Click(object sender, RoutedEventArgs e) => ThucHienBaoCao();
         private void MenuTroGiup_Click(object sender, RoutedEventArgs e) => ThucHienTroGiup();
@@ -809,6 +826,7 @@ namespace GUI
         // Xử lý các tác vụ theo phân hệ
         private void ThucHienTraCuu()
         {
+            if (PhimTatQuanTri("F3")) return;   // Sprint 3 (Dat)
             switch (_currentTag)
             {
                 case "MangLuoiGa":
@@ -846,6 +864,7 @@ namespace GUI
 
         private void ThucHienThemMoi()
         {
+            if (PhimTatQuanTri("F2")) return;   // Sprint 3 (Dat)
             switch (_currentTag)
             {
                 case "MangLuoiGa":
@@ -880,6 +899,7 @@ namespace GUI
 
         private void ThucHienNapLai()
         {
+            if (PhimTatQuanTri("F5")) return;   // Sprint 3 (Dat)
             switch (_currentTag)
             {
                 case "MangLuoiGa":
@@ -936,6 +956,7 @@ namespace GUI
 
         private void ThucHienXuatTep()
         {
+            if (PhimTatQuanTri("F6")) return;   // Sprint 3 (Dat)
             switch (_currentTag)
             {
                 case "MangLuoiGa":
@@ -979,6 +1000,7 @@ namespace GUI
 
         private void ThucHienHuy()
         {
+            if (PhimTatQuanTri("ESC")) return;   // Sprint 3 (Dat)
             switch (_currentTag)
             {
                 case "MangLuoiGa":

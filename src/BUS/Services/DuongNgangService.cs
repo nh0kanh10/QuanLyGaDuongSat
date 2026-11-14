@@ -18,6 +18,8 @@ namespace BUS.Services
 
         public bool Them(DuongNgang dn, decimal minKm, decimal maxKm, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SuaHaTang, "sửa hạ tầng / mác tàu", out error)) return false;
             error = string.Empty;
 
             if (dn.MaKhuGian <= 0)
@@ -82,6 +84,8 @@ namespace BUS.Services
 
         public bool CapNhat(DuongNgang dn, decimal minKm, decimal maxKm, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SuaHaTang, "sửa hạ tầng / mác tàu", out error)) return false;
             error = string.Empty;
 
             if (dn.MaDuongNgang <= 0 || dn.MaKhuGian <= 0)
@@ -145,6 +149,8 @@ namespace BUS.Services
 
         public bool Xoa(int maDuongNgang, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SuaHaTang, "sửa hạ tầng / mác tàu", out error)) return false;
             error = string.Empty;
             if (maDuongNgang <= 0)
             {

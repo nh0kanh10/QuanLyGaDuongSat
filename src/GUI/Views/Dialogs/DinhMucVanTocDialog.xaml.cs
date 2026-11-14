@@ -62,7 +62,7 @@ namespace GUI.Views.Dialogs
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải danh mục định mức vận tốc: {ex.Message}", "Lỗi CSDL", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi($"Lỗi tải danh mục định mức vận tốc: {ex.Message}", "Lỗi CSDL");
             }
         }
 
@@ -142,21 +142,21 @@ namespace GUI.Views.Dialogs
 
             if (string.IsNullOrWhiteSpace(ma))
             {
-                MessageBox.Show("Vui lòng nhập Mã loại tàu (ví dụ: TAU_NHANH, TAU_CHO).", "Thiếu Dữ Liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng nhập Mã loại tàu (ví dụ: TAU_NHANH, TAU_CHO).", "Thiếu Dữ Liệu");
                 txtMaLoaiTau.Focus();
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(ten))
             {
-                MessageBox.Show("Vui lòng nhập Tên loại tàu.", "Thiếu Dữ Liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng nhập Tên loại tàu.", "Thiếu Dữ Liệu");
                 txtTenLoaiTau.Focus();
                 return;
             }
 
             if (!decimal.TryParse(rawVt, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal vanToc) || vanToc < 10.0m || vanToc > 200.0m)
             {
-                MessageBox.Show("Vận tốc định mức lữ hành phải là số thực từ 10.0 đến 200.0 km/h (ví dụ: 53.0).", "Sai Dữ Liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vận tốc định mức lữ hành phải là số thực từ 10.0 đến 200.0 km/h (ví dụ: 53.0).", "Sai Dữ Liệu");
                 txtVanTocDinhMuc.Focus();
                 txtVanTocDinhMuc.SelectAll();
                 return;
@@ -193,12 +193,12 @@ namespace GUI.Views.Dialogs
             if (ok)
             {
                 CoThayDoiDuLieu = true;
-                MessageBox.Show($"Đã lưu định mức loại tàu '{ma}' ({vanToc:F1} km/h) thành công!", "Thành Công", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThanhCong($"Đã lưu định mức loại tàu '{ma}' ({vanToc:F1} km/h) thành công!", "Thành Công");
                 NapDanhSach(ma);
             }
             else
             {
-                MessageBox.Show($"Không thể lưu định mức:\n{loi}", "Lỗi Nghiệp Vụ", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao($"Không thể lưu định mức:\n{loi}", "Lỗi Nghiệp Vụ");
             }
         }
 
@@ -206,24 +206,23 @@ namespace GUI.Views.Dialogs
         {
             if (_isAddingNew || string.IsNullOrWhiteSpace(_currentMaLoaiTau))
             {
-                MessageBox.Show("Vui lòng chọn một loại tàu từ danh sách để xóa.", "Thông Báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThongTin("Vui lòng chọn một loại tàu từ danh sách để xóa.", "Thông Báo");
                 return;
             }
 
-            var xn = MessageBox.Show($"Bạn có chắc chắn muốn xóa định mức loại tàu '{_currentMaLoaiTau}' không?\n\nLưu ý: Chỉ xóa được nếu không có mác tàu nào đang dùng loại này.",
-                "Xác Nhận Xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            bool xn = ThongBaoDialog.XacNhan($"Bạn có chắc chắn muốn xóa định mức loại tàu '{_currentMaLoaiTau}' không?\n\nLưu ý: Chỉ xóa được nếu không có mác tàu nào đang dùng loại này.", "Xác Nhận Xóa", laHanhDongXoa: true);
 
-            if (xn != MessageBoxResult.Yes) return;
+            if (!xn) return;
 
             if (_service.Xoa(_currentMaLoaiTau, out string loi))
             {
                 CoThayDoiDuLieu = true;
-                MessageBox.Show($"Đã xóa định mức loại tàu '{_currentMaLoaiTau}' thành công!", "Thành Công", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThanhCong($"Đã xóa định mức loại tàu '{_currentMaLoaiTau}' thành công!", "Thành Công");
                 NapDanhSach();
             }
             else
             {
-                MessageBox.Show(loi, "Không Thể Xóa", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao(loi, "Không Thể Xóa");
             }
         }
 

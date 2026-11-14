@@ -216,6 +216,7 @@ namespace GUI.Views.Pages
 
         private void DuyetAnToan(int maDoanTau)
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.NghiemThuKhamXe, "duyệt an toàn đoàn tàu")) return;   // Sprint 3: phan quyen
             if (!KiemTraKetNoi()) return;
             var dt = _duLieu.TimDoanTau(maDoanTau);
             if (dt == null) return;
