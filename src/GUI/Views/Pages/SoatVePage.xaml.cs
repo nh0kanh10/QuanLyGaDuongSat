@@ -253,14 +253,24 @@ namespace GUI.Views.Pages
                 // Lọc theo combobox trạng thái
                 if (cboLocTrangThaiManifest?.SelectedItem is ComboBoxItem item)
                 {
-                    string tag = item.Tag?.ToString() ?? "ALL";
+                    string tag = item.Tag?.ToString() ?? "DON_GA_ALL";
                     switch (tag)
                     {
+                        case "DON_GA_ALL":
+                            if (_currentSoatMaGa > 0)
+                                filters.Add($"MaGaDi = {_currentSoatMaGa}");
+                            break;
                         case "DON_GA_CHUA_LEN":
-                            filters.Add($"MaGaDi = {_currentSoatMaGa} AND TrangThai = 'DA_DAT'");
+                            if (_currentSoatMaGa > 0)
+                                filters.Add($"MaGaDi = {_currentSoatMaGa} AND TrangThai = 'DA_DAT'");
                             break;
                         case "DON_GA_DA_LEN":
-                            filters.Add($"MaGaDi = {_currentSoatMaGa} AND TrangThai = 'DA_LEN_TAU'");
+                            if (_currentSoatMaGa > 0)
+                                filters.Add($"MaGaDi = {_currentSoatMaGa} AND TrangThai = 'DA_LEN_TAU'");
+                            break;
+                        case "TRA_GA":
+                            if (_currentSoatMaGa > 0)
+                                filters.Add($"MaGaDen = {_currentSoatMaGa}");
                             break;
                         case "DA_LEN_TAU":
                             filters.Add("TrangThai = 'DA_LEN_TAU'");
@@ -270,6 +280,9 @@ namespace GUI.Views.Pages
                             break;
                         case "HUY_HOAN":
                             filters.Add("TrangThai IN ('DA_HUY', 'DA_HOAN_VE')");
+                            break;
+                        case "ALL":
+                            // Hiển thị toàn bộ hành khách trên đoàn tàu
                             break;
                     }
                 }
@@ -390,6 +403,27 @@ namespace GUI.Views.Pages
                     return;
                 }
 
+                // Kiểm tra trạng thái chuyến tàu
+                string trangThaiChuyen = row.Table.Columns.Contains("TrangThaiChuyenTau") && row["TrangThaiChuyenTau"] != DBNull.Value
+                    ? row["TrangThaiChuyenTau"].ToString() ?? ""
+                    : "";
+
+                if (trangThaiChuyen == "HOAN_THANH")
+                {
+                    HienThiKetQuaLoi("CHUYẾN TÀU ĐÃ HOÀN THÀNH", $"Chuyến tàu {soHieuMacTau} đã kết thúc toàn bộ hành trình về ga đích, không thể soát vé!");
+                    txtScannerInput.SelectAll();
+                    txtScannerInput.Focus();
+                    return;
+                }
+
+                if (trangThaiChuyen == "DA_HUY")
+                {
+                    HienThiKetQuaLoi("CHUYẾN TÀU ĐÃ BỊ HỦY", $"Chuyến tàu {soHieuMacTau} đã bị hủy bỏ trên hệ thống điều hành!");
+                    txtScannerInput.SelectAll();
+                    txtScannerInput.Focus();
+                    return;
+                }
+
                 // Kiểm tra vé đã lên tàu trước đó
                 if (trangThaiVe == "DA_LEN_TAU")
                 {
@@ -402,17 +436,62 @@ namespace GUI.Views.Pages
                     return;
                 }
 
-                // Kiểm tra ga đi
+                // Kiểm tra sai ga kiểm soát (vé đón tại ga A nhưng lại quét tại ga B)
                 if (_currentSoatMaGa > 0 && maGaDiCuaVe != _currentSoatMaGa)
                 {
-                    HienThiKetQuaCanhBao("CHÚ Ý GA ĐÓN TÀU", 
-                        $"Ga đi trên vé là [{tenGaDi}], ga kiểm soát hiện tại khác ga đi. Khách có thể đi tàu từ ga sau hoặc cần đối chiếu thông tin!");
+                    string tenGaSoat = cboGaKiemSoat.Text;
+                    HienThiKetQuaLoi("SAI GA LÊN TÀU", 
+                        $"Vé này đăng ký đón tại ga [{tenGaDi}], không thể soát vé tại ga [{tenGaSoat}]! Cửa kiểm soát từ chối mở.");
+                    txtScannerInput.SelectAll();
+                    txtScannerInput.Focus();
+                    return;
                 }
-                else
+
+                // Kiểm tra tàu đã xuất phát rời ga đón của hành khách (Khách bị trễ tàu)
+                if (row.Table.Columns.Contains("GioDiThucTe") && row["GioDiThucTe"] != DBNull.Value)
                 {
-                    // HỢP LỆ!
-                    HienThiKetQuaHopLe("HỢP LỆ - ĐƯỢC PHÉP LÊN TÀU", "Vé hoàn toàn hợp lệ và đúng lịch trình chuyến tàu.");
+                    DateTime gioDiTT = Convert.ToDateTime(row["GioDiThucTe"]);
+                    HienThiKetQuaLoi("TÀU ĐÃ RỜI GA (TRỄ TÀU)", 
+                        $"Tàu {soHieuMacTau} đã thực tế khởi hành rời ga đón [{tenGaDi}] lúc {gioDiTT:HH:mm dd/MM/yyyy}. Hành khách đã bị trễ chuyến!");
+                    txtScannerInput.SelectAll();
+                    txtScannerInput.Focus();
+                    return;
                 }
+
+                // Kiểm tra giờ chạy theo kế hoạch tại ga đón (nếu chưa có giờ thực tế)
+                DateTime? gioDiKH = null;
+                if (row.Table.Columns.Contains("GioDiKH") && row["GioDiKH"] != DBNull.Value)
+                    gioDiKH = Convert.ToDateTime(row["GioDiKH"]);
+                else if (row.Table.Columns.Contains("GioXuatPhatKH") && row["GioXuatPhatKH"] != DBNull.Value)
+                    gioDiKH = Convert.ToDateTime(row["GioXuatPhatKH"]);
+
+                if (gioDiKH.HasValue)
+                {
+                    if (gioDiKH.Value.Date < DateTime.Today)
+                    {
+                        HienThiKetQuaLoi("VÉ QUÁ HẠN SỬ DỤNG", 
+                            $"Vé này thuộc chuyến tàu ngày {gioDiKH.Value:dd/MM/yyyy}, đã quá hạn sử dụng!");
+                        txtScannerInput.SelectAll();
+                        txtScannerInput.Focus();
+                        return;
+                    }
+
+                    // Nếu là chuyến hôm nay: Kiểm tra quá giờ chạy (cho phép trễ tối đa 5 phút sau giờ tàu lăn bánh nếu chưa cập nhật giờ thực tế)
+                    if (gioDiKH.Value.Date == DateTime.Today && trangThaiChuyen != "TRE_GIO")
+                    {
+                        if (DateTime.Now > gioDiKH.Value.AddMinutes(5))
+                        {
+                            HienThiKetQuaLoi("CỬA SOÁT VÉ ĐÃ ĐÓNG (TRỄ TÀU)", 
+                                $"Tàu {soHieuMacTau} đã khởi hành lúc {gioDiKH.Value:HH:mm} tại ga [{tenGaDi}]. Cửa kiểm soát lên tàu đã đóng!");
+                            txtScannerInput.SelectAll();
+                            txtScannerInput.Focus();
+                            return;
+                        }
+                    }
+                }
+
+                // HỢP LỆ!
+                HienThiKetQuaHopLe("HỢP LỆ - ĐƯỢC PHÉP LÊN TÀU", "Vé hoàn toàn hợp lệ và đúng lịch trình chuyến tàu.");
 
                 // Tự động cho lên tàu nếu bật toggle auto
                 if (chkTuDongSoatVe.IsChecked == true && trangThaiVe == "DA_DAT")

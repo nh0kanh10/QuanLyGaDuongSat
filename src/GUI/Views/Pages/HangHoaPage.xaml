@@ -313,6 +313,7 @@
                                                     <TextBlock Text="TL THỰC (TẤN)" FontSize="9" FontWeight="Bold" Foreground="#64748B" HorizontalAlignment="Center"/>
                                                     <TextBox Grid.Row="1" x:Name="txtTrongLuong" Text="0.15" Height="20" BorderThickness="0" Background="Transparent"
                                                              HorizontalContentAlignment="Center" FontWeight="Bold" FontSize="12" Foreground="#003B73"
+                                                             PreviewTextInput="TxtSoThuc_PreviewTextInput" PreviewKeyDown="TxtSoThuc_PreviewKeyDown"
                                                              LostFocus="TxtTrongLuong_LostFocus" TextChanged="TxtThongSoCuoc_TextChanged"/>
                                                 </Grid>
                                             </Border>
@@ -327,6 +328,7 @@
                                                     <TextBlock Text="THỂ TÍCH (M³)" FontSize="9" FontWeight="Bold" Foreground="#64748B" HorizontalAlignment="Center"/>
                                                     <TextBox Grid.Row="1" x:Name="txtTheTich" Text="0.00" Height="20" BorderThickness="0" Background="Transparent"
                                                              HorizontalContentAlignment="Center" FontWeight="Bold" FontSize="12" Foreground="#003B73"
+                                                             PreviewTextInput="TxtSoThuc_PreviewTextInput" PreviewKeyDown="TxtSoThuc_PreviewKeyDown"
                                                              LostFocus="TxtTheTich_LostFocus" TextChanged="TxtThongSoCuoc_TextChanged"/>
                                                 </Grid>
                                             </Border>

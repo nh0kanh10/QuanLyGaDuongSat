@@ -25,5 +25,8 @@ migrations\V20261108_1300__dat__baocao-views.sql
 # --- 13/11 (Dat): toa ban ve dong bo theo doan tau + chan ban ve ngoai pham vi toa ---
 migrations\V20261113_1000__dat__toabanve-dongbo-doantau.sql
 
+# --- 13/11 (A Ba, Dat sua 15/11): chuyen SE1/SE2 moi ngay + SE3/SE4 cuoi tuan 14 ngay toi de ban ve truoc ---
+seed\S20261113_1200__dat__kich-hoat-ban-ve-truoc-cuoi-tuan.sql
+
 # --- Kiem tra du lieu (chi doc) ---
 tests\T20261009_0840__dat__kiem-tra-du-lieu-sprint1.sql

@@ -424,11 +424,13 @@
                         <!-- Lọc trạng thái trong manifest -->
                         <ComboBox Grid.Column="4" x:Name="cboLocTrangThaiManifest" Height="30"
                                   SelectionChanged="CboLocTrangThaiManifest_SelectionChanged">
-                            <ComboBoxItem Content="Tất cả hành khách" Tag="ALL"/>
+                            <ComboBoxItem Content="Đón tại ga này (Tất cả)" Tag="DON_GA_ALL"/>
                             <ComboBoxItem Content="Đón tại ga này (Chưa lên)" Tag="DON_GA_CHUA_LEN"/>
                             <ComboBoxItem Content="Đón tại ga này (Đã lên)" Tag="DON_GA_DA_LEN"/>
-                            <ComboBoxItem Content="Đã lên tàu (Toàn bộ)" Tag="DA_LEN_TAU"/>
+                            <ComboBoxItem Content="Trả tại ga này (Khách xuống)" Tag="TRA_GA"/>
+                            <ComboBoxItem Content="Toàn bộ khách trên tàu" Tag="ALL"/>
                             <ComboBoxItem Content="Chưa lên tàu (Toàn bộ)" Tag="DA_DAT"/>
+                            <ComboBoxItem Content="Đã lên tàu (Toàn bộ)" Tag="DA_LEN_TAU"/>
                             <ComboBoxItem Content="Đã hủy / Hoàn vé" Tag="HUY_HOAN"/>
                         </ComboBox>
 
