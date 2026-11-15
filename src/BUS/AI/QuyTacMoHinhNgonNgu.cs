@@ -256,8 +256,12 @@ namespace BUS.AI
                     den = $"{p.GioDen:HH:mm} ngày {p.GioDen:dd/MM}",
                     so_gio_chay = p.SoGioChay.ToString("0.#", Vi),
                     chay_qua_dem = p.QuaDem,
-                    gia_mot_ve = p.GiaMotVe.ToString("N0", Vi) + " đ",
-                    tong_tien_ca_doan = p.TongTien.ToString("N0", Vi) + " đ",
+                    // [16/11] Tach gia goc / gia tung ve sau giam: lan chay that, mo hinh goi gia goc la "gia sau giam".
+                    gia_goc_mot_ve_chua_giam = p.GiaMotVe.ToString("N0", Vi) + " đ",
+                    gia_tung_ve_sau_giam = p.CacGiaSauGiam.Count > 0
+                        ? p.CacGiaSauGiam.Select((g, i) => $"{g.ToString("N0", Vi)} đ ({QuyTacTuVanVe.TenLoaiKhach(i < p.CacLoaiKhach.Count ? p.CacLoaiKhach[i] : "THUONG")})").ToList()
+                        : null,
+                    tong_tien_ca_doan_sau_giam = p.TongTien.ToString("N0", Vi) + " đ",
                     da_giam_gia_doi_tuong = p.CoGiamGia,
                     vuot_ngan_sach = p.VuotNganSach,
                     chenh_lech_so_voi_phuong_an_1 = p.XepHang > 1 && kq.CacPhuongAn.Count > 0
@@ -286,10 +290,15 @@ namespace BUS.AI
 
             var hopLe = new HashSet<long>(SoLon.Matches(duLieuHeThong ?? "").Select(m => GiaTri(m.Value)));
             kq.SoLieuLa.AddRange(SoLon.Matches(noiDung).Select(m => m.Value).Where(v => !hopLe.Contains(GiaTri(v))).Distinct());
-            kq.SoLieuLa.AddRange(SoKhongDayDu.Matches(noiDung).Select(m => m.Value.Trim()).Distinct());
+            // "1 triệu", "800k": khong doi chieu duoc -> bao, TRU KHI nhac lai dung cum tu da co (vd khach tu noi "toi da 1 triệu").
+            string duLieuThuong = Gon(duLieuHeThong);
+            kq.SoLieuLa.AddRange(SoKhongDayDu.Matches(noiDung).Select(m => m.Value.Trim())
+                                             .Where(v => !duLieuThuong.Contains(Gon(v))).Distinct());
             kq.KhopHet = kq.SoLieuLa.Count == 0;
             return kq;
         }
+
+        private static string Gon(string? s) => Regex.Replace((s ?? "").ToLowerInvariant(), @"\s+", " ");
 
         private static long GiaTri(string so)
         {

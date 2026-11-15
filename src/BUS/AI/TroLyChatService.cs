@@ -81,14 +81,14 @@ namespace BUS.AI
             _ycTuVan = null;
         }
 
-        // Tu van bang form (ngoai chat) -> the phuong an doi -> bao cho AI biet de "dat phuong an 2" dung bo dang hien.
+        // Tu van bang che do Loc nang cao (ngoai chat) -> the phuong an doi -> bao cho AI biet de "dat phuong an 2" dung bo dang hien.
         public void GhiNhanTuVanTuForm(YeuCauTuVanVe yc, KetQuaTuVanVe kq)
         {
             _tuVan = kq.CacPhuongAn.Count > 0 ? kq : null;
             _ycTuVan = kq.CacPhuongAn.Count > 0 ? yc : null;
             _daDat.Clear();
             if (SanSang && kq.CacPhuongAn.Count > 0)
-                _lichSu.Add(TinNhanChat.NguoiDung("[Ghi chú hệ thống] Nhân viên vừa tư vấn bằng form, các phương án đang hiện trên màn hình: " +
+                _lichSu.Add(TinNhanChat.NguoiDung("[Ghi chú hệ thống] Nhân viên vừa tư vấn bằng chế độ Lọc nâng cao, các phương án đang hiện trên màn hình: " +
                                                   QuyTacMoHinhNgonNgu.KetQuaTuVanChoMoHinh(yc, kq)));
         }
 
@@ -238,7 +238,12 @@ namespace BUS.AI
                 };
             }
             if (r.NguoiDungHuy)
-                return new KetQuaCongCu { ChoMoHinh = "NHÂN VIÊN ĐÃ HỦY: đóng cửa sổ xác nhận, chưa đặt vé nào.", MoTa = $"Đặt vé phương án {n}: nhân viên hủy" };
+                return new KetQuaCongCu
+                {
+                    ChoMoHinh = "NHÂN VIÊN ĐÃ HỦY: nhân viên chủ động đóng cửa sổ xác nhận, chưa đặt vé nào (không phải lỗi hệ thống). " +
+                                "Chỉ cần xác nhận ngắn gọn là chưa đặt; đặt lại khi người dùng yêu cầu.",
+                    MoTa = $"Đặt vé phương án {n}: nhân viên hủy",
+                };
             return KetQuaCongCu.BaoLoi("Không đặt được: " + r.Loi);
         }
     }

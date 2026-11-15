@@ -22,8 +22,9 @@ namespace GUI.Views.Dialogs
     // [16/11] 2 che do o cot trai:
     //   - "Hoi AI": tro chuyen tu do, nho hoi thoai trong cua so (TroLyChatService). AI tu tra du lieu that bang cong cu
     //     (tim chuyen, lich trinh, cho trong + gia, tu van MCDM) va co the dat ve ho (mo XacNhanDatVeHoDialog).
-    //   - "Nhap form": nhap nhu cau -> cham diem MCDM, chay offline nhu truoc (khong co khoa API van dung duoc).
-    // Cot phai: 3 phuong an (tu AI hoac form). Moi the: "Dat Ve Ngay" (cua so xac nhan) hoac "Dua Vao Gio Ve" (trang Ban ve).
+    //   - "Loc nang cao" (truoc goi "Nhap form", Dat doi ten 16/11): nhap tieu chi -> cham diem MCDM, chay offline nhu truoc
+    //     (khong co khoa API van dung duoc).
+    // Cot phai: 3 phuong an (tu AI hoac loc nang cao). Moi the: "Dat Ve Ngay" (cua so xac nhan) hoac "Dua Vao Gio Ve" (trang Ban ve).
     // =========================================================================
     public partial class TuVanVeDialog : Window
     {
@@ -79,8 +80,8 @@ namespace GUI.Views.Dialogs
             {
                 rdoHoiAI.IsEnabled = false;
                 rdoHoiAI.ToolTip = _chat.LyDoChuaSanSang;
-                rdoNhapForm.IsChecked = true;
-                _tinNhan.Add(TinNhanHienThi.HeThong(_chat.LyDoChuaSanSang + " Dùng chế độ \"Nhập form\" để tư vấn (chạy offline)."));
+                rdoLocNangCao.IsChecked = true;
+                _tinNhan.Add(TinNhanHienThi.HeThong(_chat.LyDoChuaSanSang + " Dùng chế độ \"Lọc nâng cao\" để tư vấn (chạy offline)."));
             }
             if (!choPhepChon) txtChanTrang.Text += " Mở từ trang Bán vé để đưa phương án vào giỏ.";
             Closed += (_, _) => _huy.Cancel();
@@ -96,10 +97,10 @@ namespace GUI.Views.Dialogs
 
         private void CheDo_Checked(object sender, RoutedEventArgs e)
         {
-            if (pnlChat == null || pnlForm == null) return;      // dang dung cay XAML
+            if (pnlChat == null || pnlLocNangCao == null) return;      // dang dung cay XAML
             bool chat = rdoHoiAI.IsChecked == true;
             pnlChat.Visibility = chat ? Visibility.Visible : Visibility.Collapsed;
-            pnlForm.Visibility = chat ? Visibility.Collapsed : Visibility.Visible;
+            pnlLocNangCao.Visibility = chat ? Visibility.Collapsed : Visibility.Visible;
             if (chat && IsLoaded) txtCauHoi.Focus();
         }
 
@@ -208,7 +209,7 @@ namespace GUI.Views.Dialogs
             CuonXuong();
         }
 
-        // --- Form (offline) -------------------------------------------------------------
+        // --- Loc nang cao (offline) -------------------------------------------------------------
         // [12/11] Hien loai khach du kien (gio ve dat san doi tuong + gia sau giam theo dong nay)
         private void DoiTuong_Changed(object sender, RoutedEventArgs e)
         {
@@ -259,7 +260,7 @@ namespace GUI.Views.Dialogs
             finally { Mouse.OverrideCursor = null; }
             if (!ok) { txtLoi.Text = loi; return; }
 
-            HienKetQua(yc, kq, "form");
+            HienKetQua(yc, kq, "loc");
             if (chkTuChinh.IsChecked != true) HienTrongSo(kq.TrongSoDaDung);
             _chat.GhiNhanTuVanTuForm(yc, kq);       // AI biet cac phuong an dang hien -> "dat phuong an 2" dung bo nay
         }
@@ -273,7 +274,7 @@ namespace GUI.Views.Dialogs
             txtKqTieuDe.Text = kq.CacPhuongAn.Count == 0
                 ? $"Không tìm được phương án cho {kq.TenGaDi} → {kq.TenGaDen}"
                 : $"{kq.CacPhuongAn.Count} phương án gợi ý · {kq.TenGaDi} → {kq.TenGaDen} · {kq.CuLyKm.ToString("N0", Vi)} km";
-            txtKqPhu.Text = $"Theo {(nguon == "AI" ? "yêu cầu AI đọc từ cuộc trò chuyện" : "form")}: {yc.SoNguoi} khách, ngày {yc.NgayDi:dd/MM/yyyy} · " +
+            txtKqPhu.Text = $"Theo {(nguon == "AI" ? "yêu cầu AI đọc từ cuộc trò chuyện" : "lọc nâng cao")}: {yc.SoNguoi} khách, ngày {yc.NgayDi:dd/MM/yyyy} · " +
                             $"đã xét {kq.SoPhuongAnDaXet} phương án (chuyến × loại chỗ × tầng) trên {kq.SoChuyenDaXet} chuyến · trọng số " +
                             string.Join(" · ", kq.TrongSoDaDung.Select((w, i) => $"{QuyTacTuVanVe.TenTieuChi[i].ToLower(Vi)} {w:P0}"));
             icGhiChu.ItemsSource = kq.GhiChu;

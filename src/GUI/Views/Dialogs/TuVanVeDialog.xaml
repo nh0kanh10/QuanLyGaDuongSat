@@ -72,7 +72,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- [16/11] 2 chế độ: hỏi AI (trò chuyện tự do, AI tự tra dữ liệu, đặt vé hộ) · nhập form (chấm điểm offline như cũ) -->
+                    <!-- [16/11] 2 chế độ: hỏi AI (trò chuyện tự do, AI tự tra dữ liệu, đặt vé hộ) · lọc nâng cao (nhập tiêu chí, chấm điểm offline như cũ) -->
                     <Border Grid.Row="0" Background="#EEF2F7" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,8">
                         <StackPanel Orientation="Horizontal">
                             <RadioButton x:Name="rdoHoiAI" Style="{StaticResource KtChipRadio}" GroupName="CheDo" IsChecked="True" Checked="CheDo_Checked" Margin="0,0,6,0">
@@ -81,10 +81,10 @@
                                     <TextBlock Text="Hỏi AI"/>
                                 </StackPanel>
                             </RadioButton>
-                            <RadioButton x:Name="rdoNhapForm" Style="{StaticResource KtChipRadio}" GroupName="CheDo" Checked="CheDo_Checked">
+                            <RadioButton x:Name="rdoLocNangCao" Style="{StaticResource KtChipRadio}" GroupName="CheDo" Checked="CheDo_Checked">
                                 <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon Symbol="Edit24" FontSize="12" Margin="0,0,5,0"/>
-                                    <TextBlock Text="Nhập form"/>
+                                    <ui:SymbolIcon Symbol="Search24" FontSize="12" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Lọc nâng cao"/>
                                 </StackPanel>
                             </RadioButton>
                         </StackPanel>
@@ -153,8 +153,8 @@
                         </Grid>
                     </Grid>
 
-                    <!-- FORM (chấm điểm offline, như trước) -->
-                    <ScrollViewer Grid.Row="1" x:Name="pnlForm" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="16,10,14,10">
+                    <!-- LỌC NÂNG CAO (nhập tiêu chí, chấm điểm offline như trước) -->
+                    <ScrollViewer Grid.Row="1" x:Name="pnlLocNangCao" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="16,10,14,10">
                         <StackPanel>
                             <TextBlock Text="HÀNH TRÌNH" Style="{StaticResource KtTieuDeMuc}"/>
                             <TextBlock Text="Ga đi" Style="{StaticResource KtNhanTruong}"/>
@@ -239,7 +239,7 @@
                                     HorizontalAlignment="Stretch" Click="BtnTuVan_Click" ToolTip="Ctrl+Enter">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="Sparkle24" FontSize="15" Foreground="#FFFFFF" Margin="0,0,6,0"/>
-                                    <TextBlock Text="Chấm Điểm &amp; Tư Vấn" FontSize="12.5"/>
+                                    <TextBlock Text="Lọc &amp; Chấm Điểm" FontSize="12.5"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

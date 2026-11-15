@@ -146,6 +146,16 @@ namespace Tests.AI
             Assert.Contains(soLa, kq.SoLieuLa);
         }
 
+        [Fact]
+        public void KiemSoLieu_NhacLaiCumTuKhachNoi_KhongBao()
+        {
+            // Lan chay that 16/11: AI nhac lai "ngân sách 1 triệu" cua khach -> truoc day bi bao "chua doi chieu".
+            var kq = QuyTacMoHinhNgonNgu.KiemSoLieu("Phương án 1 không vượt ngân sách 1 triệu.",
+                                                    "Hai ông bà đi Đà Nẵng, tối đa 1 TRIỆU một vé. " + DuLieu);
+            Assert.True(kq.KhopHet, string.Join(",", kq.SoLieuLa));
+            Assert.False(QuyTacMoHinhNgonNgu.KiemSoLieu("Khoảng 2 triệu cả đoàn.", "tối đa 1 triệu một vé").KhopHet);
+        }
+
         // --- Cat lich su -----------------------------------------------------------------------
         static List<TinNhanChat> LichSuMau(int soLuot)
         {
@@ -429,7 +439,7 @@ namespace Tests.AI
             sv2.XacNhanDatVe = _ => Task.FromResult(new KetQuaDatVeHo { NguoiDungHuy = true });
             await sv2.GuiAsync("đặt phương án 2");
             Assert.StartsWith("NHÂN VIÊN ĐÃ HỦY", kenh2.CacLanGoi[1][^1].NoiDung);
-            Assert.Contains(kenh2.CacLanGoi[0], t => t.NoiDung.StartsWith("[Ghi chú hệ thống] Nhân viên vừa tư vấn bằng form"));
+            Assert.Contains(kenh2.CacLanGoi[0], t => t.NoiDung.StartsWith("[Ghi chú hệ thống] Nhân viên vừa tư vấn bằng chế độ Lọc nâng cao"));
             await sv2.GuiAsync("đặt phương án 5");
             Assert.Contains("chỉ có 2 phương án", kenh2.CacLanGoi[3][^1].NoiDung);
 
