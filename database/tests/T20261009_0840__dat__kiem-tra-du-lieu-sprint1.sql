@@ -9,7 +9,7 @@
      GHI_CHU = điểm lệch trong dữ liệu của phân hệ khác (A Bá) → chỉ liệt kê để báo, không tính là lỗi.
 
    Luật lấy từ giao diện của Đạt (LapTauKeoThaDialog, DanhGiaKipLai) và PHAN_TICH_NHAN_SU_KIP_LAI.md (R1–R13):
-   PT-01..PT-11 phương tiện / lập tàu · NS-01..NS-13 nhân sự / kíp lái · AB-* ghi chú dữ liệu A Bá.
+   PT-01..PT-12 phương tiện / lập tàu (PT-12: toa bán vé, 13/11) · NS-01..NS-13 nhân sự / kíp lái · AB-* ghi chú dữ liệu A Bá.
    ========================================================================= */
 SET NOCOUNT ON;
 
@@ -249,6 +249,50 @@ FROM phuongtien.DauMay dm
 WHERE dm.TrangThai = 'DANG_CHAY'
   AND NOT EXISTS (SELECT 1 FROM #Chuyen c WHERE c.TrangThai = 'DANG_CHAY' AND dm.MaDauMay IN (c.MaDauMayChinh, c.MaDauMayDay));
 
+-- PT-12 (13/11) Toa bán vé khớp đoàn tàu (chuyến còn hiệu lực đã lập toa): toa khách thứ k ↔ "Toa k" đang bán
+--       cùng loại, đúng toa thật, đúng phạm vi ga; không thừa toa bán vé; vé còn hiệu lực không nằm trên toa đã ngừng bán
+--       và nằm trong phạm vi chạy của toa. Chỉ kiểm khi CSDL đã chạy migration V20261113_1000 (có cột NgungBan).
+IF OBJECT_ID('tempdb..#PT12') IS NOT NULL DROP TABLE #PT12;
+CREATE TABLE #PT12 (ChiTiet NVARCHAR(400));
+IF COL_LENGTH(N'vantai.ToaXeKhach', N'NgungBan') IS NOT NULL
+    EXEC (N'
+    ;WITH K AS (
+        SELECT c.MaChuyenTau, c.Mac, ct.MaToaXe, tx.SoHieuToaXe, cl.MaChungLoaiCode AS Loai, ct.MaGaNoi, ct.MaGaCat,
+               ROW_NUMBER() OVER (PARTITION BY c.MaChuyenTau ORDER BY ct.ThuTuNoi) AS k
+        FROM #Chuyen c
+        JOIN vanhanh.ChiTietDoanTau ct ON ct.MaDoanTau = c.MaDoanTau
+        JOIN phuongtien.ToaXe tx ON tx.MaToaXe = ct.MaToaXe
+        JOIN phuongtien.ChungLoaiToa cl ON cl.MaChungLoai = tx.MaChungLoai
+        WHERE c.ConHieuLuc = 1 AND c.LoaiTau <> ''TAU_HANG'' AND cl.MaChungLoaiCode IN (''NC'', ''NML'', ''BN'', ''AN''))
+    INSERT INTO #PT12
+    SELECT CONCAT(K.Mac, N'': toa khách thứ '', K.k, N'' ('', K.SoHieuToaXe, N'') '',
+                  CASE WHEN b.MaToaXeKhach IS NULL THEN N''chưa có toa bán vé''
+                       WHEN b.LoaiToa <> K.Loai THEN CONCAT(N''nhưng toa bán vé là loại '', b.LoaiToa)
+                       WHEN ISNULL(b.MaToaXe, 0) <> K.MaToaXe THEN N''nhưng toa bán vé trỏ toa thật khác''
+                       ELSE N''nhưng phạm vi ga của toa bán vé lệch đoàn tàu'' END)
+    FROM K
+    LEFT JOIN vantai.ToaXeKhach b ON b.MaChuyenTau = K.MaChuyenTau AND b.ThuTuToa = K.k AND b.NgungBan = 0
+    WHERE b.MaToaXeKhach IS NULL OR b.LoaiToa <> K.Loai OR ISNULL(b.MaToaXe, 0) <> K.MaToaXe
+       OR ISNULL(b.MaGaNoi, 0) <> ISNULL(K.MaGaNoi, 0) OR ISNULL(b.MaGaCat, 0) <> ISNULL(K.MaGaCat, 0)
+    UNION ALL
+    SELECT CONCAT(c.Mac, N'': toa bán vé '', b.ThuTuToa, N'' đang bán nhưng đoàn tàu chỉ có '',
+                  (SELECT COUNT(*) FROM K WHERE K.MaChuyenTau = c.MaChuyenTau), N'' toa khách'')
+    FROM #Chuyen c
+    JOIN vantai.ToaXeKhach b ON b.MaChuyenTau = c.MaChuyenTau AND b.NgungBan = 0
+    WHERE c.ConHieuLuc = 1
+      AND EXISTS (SELECT 1 FROM vanhanh.ChiTietDoanTau x WHERE x.MaDoanTau = c.MaDoanTau)
+      AND b.ThuTuToa > (SELECT COUNT(*) FROM K WHERE K.MaChuyenTau = c.MaChuyenTau)
+    UNION ALL
+    SELECT CONCAT(c.Mac, N'': vé '', v.MaVeCode, N'' còn hiệu lực ở '', b.NhanHieuToa,
+                  CASE WHEN b.NgungBan = 1 THEN N'' đã ngừng bán'' ELSE N'' nhưng ngoài phạm vi chạy của toa'' END)
+    FROM #Chuyen c
+    JOIN vantai.ToaXeKhach b ON b.MaChuyenTau = c.MaChuyenTau
+    JOIN vantai.ChoNgoi cn ON cn.MaToaXeKhach = b.MaToaXeKhach
+    JOIN vantai.Ve v ON v.MaChoNgoi = cn.MaChoNgoi AND v.TrangThai IN (''DA_DAT'', ''DA_LEN_TAU'')
+    WHERE c.ConHieuLuc = 1
+      AND (b.NgungBan = 1 OR vantai.fn_ToaChayQuaChang(b.MaToaXeKhach, v.MaGaDi, v.MaGaDen) = 0);');
+INSERT INTO @KetQua SELECT 'LOI', 'PT-12', N'Toa bán vé khớp đoàn tàu, vé trong phạm vi toa', ChiTiet FROM #PT12;
+
 /* =========================================================================
    NHÂN SỰ
    ========================================================================= */
@@ -453,6 +497,7 @@ FROM (VALUES
     ('PT-09', N'Toa không thuộc 2 chuyến chồng giờ'),
     ('PT-10', N'Không dùng đầu máy / toa đang bảo dưỡng / ngừng khai thác'),
     ('PT-11', N'Trạng thái toa / đầu máy khớp chuyến đang chạy'),
+    ('PT-12', N'Toa bán vé khớp đoàn tàu, vé trong phạm vi toa'),
     ('NS-01', N'R2 đúng chức danh'),
     ('NS-02', N'R3 không ở 2 chuyến chồng giờ'),
     ('NS-03', N'R3 cùng chuyến'),

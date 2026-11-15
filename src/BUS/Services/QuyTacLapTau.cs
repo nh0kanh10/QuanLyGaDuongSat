@@ -413,6 +413,32 @@ namespace BUS.Services
                         $"{string.Join(" · ", dong)}. Toa nối dọc đường cần khám xe, thử hãm tại ga nối."));
             }
 
+            // 10. Toa ban ve (13/11): toa khach thu k <-> "Toa k" ban ve; khong lam hong ve con hieu luc
+            var keHoach = QuyTacToaBanVe.LapKeHoach(bc, pa);
+            kq.DongBoToaBanVe = keHoach;
+            const string tenBanVe = "Toa bán vé";
+            if (keHoach.CoXungDot)
+            {
+                hm.Add(HangMucKiemTraDTO.Loi(tenBanVe,
+                    $"{keHoach.VeBiAnhHuong.Count} vé còn hiệu lực sẽ bị hỏng. Đổi ghế hoặc hoàn các vé này ở Bán vé trước khi lưu:\n"
+                    + QuyTacToaBanVe.MoTaVeBiAnhHuong(keHoach)));
+            }
+            else if (keHoach.LaTauKhach && keHoach.SoToaKhachTrongDoan == 0)
+            {
+                hm.Add(HangMucKiemTraDTO.CanhBao(tenBanVe,
+                    "Đoàn tàu không có toa khách nào (NC / NML / BN / AN): chuyến sẽ không bán được vé."));
+            }
+            else if (keHoach.LaTauKhach)
+            {
+                hm.Add(HangMucKiemTraDTO.Dat(tenBanVe, keHoach.CoThayDoi
+                    ? $"Khi lưu: {keHoach.MoTaThayDoi}. {keHoach.SoToaKhachTrongDoan} toa khách mở bán; vé đã bán giữ nguyên toa / chỗ."
+                    : $"Khớp đoàn tàu: {keHoach.SoToaKhachTrongDoan} toa khách đang mở bán."));
+            }
+            else if (keHoach.CoThayDoi)
+            {
+                hm.Add(HangMucKiemTraDTO.Dat(tenBanVe, $"Tàu hàng không bán vé: {keHoach.MoTaThayDoi}."));
+            }
+
             return kq;
         }
 

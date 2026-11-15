@@ -50,6 +50,16 @@ namespace DTO.Common
 
         public static IReadOnlyCollection<string> CacQuyen => _cacQuyen.ToList();
 
+        // Ten cac vai tro dang kich hoat cua tai khoan (hien tren thanh trang thai).
+        public static IReadOnlyList<string> CacVaiTro { get; private set; } = Array.Empty<string>();
+
+        public static string MoTaVaiTro => CacVaiTro.Count == 0 ? "" : string.Join(", ", CacVaiTro);
+
+        // Sprint 3 (08/11): ung dung bat buoc dang nhap -> App dat true luc khoi dong.
+        // true + chua dang nhap that => CoQuyen() tra false (khong con "mo het quyen").
+        // Cong cu kiem thu / unit test khong dat => giu phien mac dinh mo het quyen nhu Sprint 1-2.
+        public static bool BatBuocDangNhap { get; set; }
+
         // --- Quyen ---------------------------------------------------------------
 
         // =====================================================================
@@ -63,7 +73,7 @@ namespace DTO.Common
         // =====================================================================
         public static bool CoQuyen(string maQuyenCode)
         {
-            if (!DaDangNhapThat) return true;
+            if (!DaDangNhapThat) return !BatBuocDangNhap;
             if (string.IsNullOrWhiteSpace(maQuyenCode)) return false;
             return _cacQuyen.Contains(maQuyenCode.Trim());
         }
@@ -90,7 +100,8 @@ namespace DTO.Common
             string tenDangNhap,
             string hoTen,
             int? maNhanVien = null,
-            IEnumerable<string>? cacQuyen = null)
+            IEnumerable<string>? cacQuyen = null,
+            IEnumerable<string>? cacVaiTro = null)
         {
             if (maTaiKhoan <= 0)
                 throw new ArgumentOutOfRangeException(nameof(maTaiKhoan), "Mã tài khoản phải lớn hơn 0.");
@@ -103,6 +114,7 @@ namespace DTO.Common
             MaNhanVien = maNhanVien;
             DaDangNhapThat = true;
             ThoiDiemBatDau = DateTime.Now;
+            CacVaiTro = cacVaiTro?.Where(v => !string.IsNullOrWhiteSpace(v)).ToList() ?? new List<string>();
 
             _cacQuyen.Clear();
             if (cacQuyen != null)
@@ -125,6 +137,7 @@ namespace DTO.Common
             MaNhanVien = null;
             DaDangNhapThat = false;
             ThoiDiemBatDau = DateTime.Now;
+            CacVaiTro = Array.Empty<string>();
             _cacQuyen.Clear();
 
             PhienDaDoi?.Invoke();
@@ -150,9 +163,8 @@ namespace DTO.Common
         public const string LapVanDonHang = "CARGO_DISPATCH";
         public const string NghiemThuKhamXe = "TECH_SAFETY_APPROVE";
 
-        // --- De xuat them, CHUA co trong seed -----------------------------------
-        // Theo KE_HOACH_BACK_END.md §7.3. Hai ma duoi cho A Ba xac nhan; danh muc
-        // day du Dat cong bo truoc 01/11 roi them migration INSERT vao phanquyen.Quyen.
+        // --- Quyen GHI them o Sprint 1-2, co trong CSDL tu migration V20261108_1000 ---
+        // (danh muc day du 24 quyen + bang vai tro: database/README.md)
         public const string SuaHaTang = "INFRA_EDIT";
         public const string SoatVe = "TICKET_CHECK";
 
@@ -169,6 +181,18 @@ namespace DTO.Common
         // Phan he Bao tri (Dat, Sprint 2). Kham xe + duyet an toan dung NghiemThuKhamXe (da co trong seed);
         // ma duoi de xuat, cung lo trinh nhu tren (SRS: KY_THUAT, QUAN_LY)
         public const string GhiNhatKyBaoTri = "MAINTENANCE_LOG";    // cap nhien lieu, bao duong dinh ky
+
+        // --- Quyen XEM (Sprint 3, migration V20261108_1000) ----------------------
+        // Moi phan he 1 quyen xem -> khop ma tran F / R / - cua bao cao (R = xem, khong ghi).
+        // Tab hien khi co quyen xem HOAC mot quyen ghi cua phan he (QuyenTheoTab trong GUI).
+        public const string XemMangLuoi = "NETWORK_VIEW";           // ga, khu gian, mac tau, lich trinh, bieu do
+        public const string XemVe = "TICKET_VIEW";                  // ban ve, soat ve
+        public const string XemHangHoa = "CARGO_VIEW";
+        public const string XemPhuongTien = "VEHICLE_VIEW";
+        public const string XemBaoTri = "MAINT_VIEW";
+        public const string XemNhanSu = "STAFF_VIEW";
+        public const string XemBaoCao = "REPORT_VIEW";
+        public const string DungTroLyAI = "AI_ADVISOR";
     }
 
     // =========================================================================

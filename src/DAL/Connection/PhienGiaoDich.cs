@@ -82,6 +82,33 @@ namespace DAL.Connection
             lenh.ExecuteNonQuery();
         }
 
+        // [12/11] Ghi nhat ky tu Repository dang tu mo SqlConnection / SqlTransaction rieng (vd VeRepository cua A Ba):
+        // cung giao dich voi thao tac -> rollback thi nhat ky cung mat. Nguoi thao tac lay tu phien dang nhap.
+        public static void GhiNhatKy(SqlConnection ketNoi, SqlTransaction? giaoDich, string hanhDong, string tenBang,
+                                     string khoaChinh, object? duLieuCu, object? duLieuMoi)
+        {
+            using var lenh = new SqlCommand("kiemtoan.sp_GhiNhatKyHeThong", ketNoi, giaoDich) { CommandType = CommandType.StoredProcedure };
+            int ma = DTO.Common.PhienLamViec.MaTaiKhoan;
+            lenh.Parameters.Add(new SqlParameter("@MaTaiKhoan", SqlDbType.Int) { Value = ma > 0 ? ma : DBNull.Value });
+            lenh.Parameters.Add(new SqlParameter("@HanhDong", SqlDbType.VarChar, 50) { Value = hanhDong });
+            lenh.Parameters.Add(new SqlParameter("@TenBang", SqlDbType.VarChar, 50) { Value = tenBang });
+            lenh.Parameters.Add(new SqlParameter("@KhoaChinhRecord", SqlDbType.VarChar, 50) { Value = khoaChinh });
+            lenh.Parameters.Add(new SqlParameter("@DuLieuCu", SqlDbType.NVarChar, -1) { Value = (object?)Json(duLieuCu) ?? DBNull.Value });
+            lenh.Parameters.Add(new SqlParameter("@DuLieuMoi", SqlDbType.NVarChar, -1) { Value = (object?)Json(duLieuMoi) ?? DBNull.Value });
+            lenh.Parameters.Add(new SqlParameter("@DiaChiIP", SqlDbType.VarChar, 45) { Value = Environment.MachineName });
+            lenh.ExecuteNonQuery();
+        }
+
+        private static string? Json(object? o) => o switch
+        {
+            null => null,
+            string s => s,
+            _ => System.Text.Json.JsonSerializer.Serialize(o, new System.Text.Json.JsonSerializerOptions
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            })
+        };
+
         public void XacNhan()
         {
             if (_daKetThuc) throw new InvalidOperationException("Giao dịch đã kết thúc.");

@@ -22,6 +22,8 @@ namespace BUS.Services
 
         public bool Them(KhuGian kg, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SuaHaTang, "sửa hạ tầng / mác tàu", out error)) return false;
             error = "";
             if (kg.MaGaDau <= 0 || kg.MaGaCuoi <= 0)
             {
@@ -101,6 +103,8 @@ namespace BUS.Services
 
         public bool CapNhat(KhuGian kg, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SuaHaTang, "sửa hạ tầng / mác tàu", out error)) return false;
             error = "";
             if (kg.MaKhuGian <= 0)
             {
@@ -153,6 +157,8 @@ namespace BUS.Services
 
         public bool Xoa(int maKhuGian, out string error, bool xoaDuongNgangKemTheo = true)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SuaHaTang, "sửa hạ tầng / mác tàu", out error)) return false;
             error = "";
             if (maKhuGian <= 0)
             {

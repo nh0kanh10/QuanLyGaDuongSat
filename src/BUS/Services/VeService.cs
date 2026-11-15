@@ -117,6 +117,9 @@ namespace BUS.Services
             out string maPNR, 
             out string thongBaoLoi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            maPNR = string.Empty;
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.BanVe, "bán / đổi vé", out thongBaoLoi)) return false;
             maPNR = string.Empty;
             thongBaoLoi = string.Empty;
 
@@ -157,6 +160,8 @@ namespace BUS.Services
 
         public bool HoanVe(int maVe, decimal tyLeLePhi, string lyDo, string hinhThucHoan, int maNhanVien, out string thongBaoLoi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.HoanVe, "hoàn vé", out thongBaoLoi)) return false;
             if (maVe <= 0)
             {
                 thongBaoLoi = "Mã vé không hợp lệ!";
@@ -171,8 +176,16 @@ namespace BUS.Services
             return _repo.LayDanhSachVeTheoCCCD(cccd.Trim());
         }
 
+        /// <summary>Gia ve moi + chenh lech khi doi ghe (giu ty le giam cua ve cu) - dung cho hop thoai.</summary>
+        public static (decimal GiamMoi, decimal ThucThuMoi, decimal ChenhLech) TinhGiaDoiGhe(
+            decimal giaGocCu, decimal giamCu, decimal giaGocMoi)
+            => VeRepository.TinhGiaDoiGhe(giaGocCu, giamCu, giaGocMoi);
+
         public bool DoiGheCungChuyen(int maVeCu, int maChoNgoiMoi, decimal giaVeGocMoi, int maNhanVien, out string maVeCodeMoi, out string thongBaoLoi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            maVeCodeMoi = string.Empty;
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.BanVe, "bán / đổi vé", out thongBaoLoi)) return false;
             if (maVeCu <= 0 || maChoNgoiMoi <= 0)
             {
                 maVeCodeMoi = string.Empty;
@@ -186,6 +199,8 @@ namespace BUS.Services
 
         public bool SoatVe(int maVe, int? maGaSoat, out string thongBaoLoi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SoatVe, "soát vé", out thongBaoLoi)) return false;
             if (maVe <= 0)
             {
                 thongBaoLoi = "Mã vé không hợp lệ!";
@@ -196,6 +211,9 @@ namespace BUS.Services
 
         public bool SoatVeTheoLo(int maChuyenTau, int maGaSoat, out int soVeDaSoat, out string thongBaoLoi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            soVeDaSoat = 0;
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SoatVe, "soát vé", out thongBaoLoi)) return false;
             if (maChuyenTau <= 0 || maGaSoat <= 0)
             {
                 soVeDaSoat = 0;
@@ -207,6 +225,8 @@ namespace BUS.Services
 
         public bool HuySoatVe(int maVe, out string thongBaoLoi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SoatVe, "soát vé", out thongBaoLoi)) return false;
             if (maVe <= 0)
             {
                 thongBaoLoi = "Mã vé không hợp lệ!";

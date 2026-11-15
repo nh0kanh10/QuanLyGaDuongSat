@@ -557,7 +557,7 @@ namespace DAL.Repositories
                                WHERE cn.MaToaXeKhach = tx.MaToaXeKhach), 0) AS SoGheDaBan
                 FROM vantai.ToaXeKhach tx
                 LEFT JOIN phuongtien.ChungLoaiToa cl ON cl.MaChungLoaiCode = tx.LoaiToa
-                WHERE tx.MaChuyenTau = @ct
+                WHERE tx.MaChuyenTau = @ct AND tx.NgungBan = 0          -- [13/11] bo toa da ngung ban (doan tau lap lai)
                 ORDER BY tx.ThuTuToa ASC";
             return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@ct", maChuyenTau) });
         }

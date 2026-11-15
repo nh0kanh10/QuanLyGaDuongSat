@@ -166,11 +166,13 @@ namespace BUS.Services
             return true;
         }
 
-        public bool Them(DinhMucVanToc dm, out string loi, string nguoiThucHien = "admin")
+        public bool Them(DinhMucVanToc dm, out string loi, string? nguoiThucHien = null)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraBatKyQuyen(PhanQuyenService.QuyenSuaMacTau, "khai báo / sửa mác tàu và định mức chạy tàu", out loi)) return false;
             if (!KiemTraHopLe(dm, true, out loi)) return false;
 
-            dm.NguoiTao = nguoiThucHien;
+            dm.NguoiTao = string.IsNullOrWhiteSpace(nguoiThucHien) ? PhanQuyenService.TenDangNhapHienTai : nguoiThucHien;
             int row = _repo.Them(dm);
             if (row > 0)
             {
@@ -182,11 +184,13 @@ namespace BUS.Services
             return false;
         }
 
-        public bool CapNhat(DinhMucVanToc dm, out string loi, string nguoiThucHien = "admin")
+        public bool CapNhat(DinhMucVanToc dm, out string loi, string? nguoiThucHien = null)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraBatKyQuyen(PhanQuyenService.QuyenSuaMacTau, "khai báo / sửa mác tàu và định mức chạy tàu", out loi)) return false;
             if (!KiemTraHopLe(dm, false, out loi)) return false;
 
-            dm.NguoiCapNhat = nguoiThucHien;
+            dm.NguoiCapNhat = string.IsNullOrWhiteSpace(nguoiThucHien) ? PhanQuyenService.TenDangNhapHienTai : nguoiThucHien;
             int row = _repo.CapNhat(dm);
             if (row > 0)
             {
@@ -200,6 +204,8 @@ namespace BUS.Services
 
         public bool Xoa(string maLoaiTau, out string loi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraBatKyQuyen(PhanQuyenService.QuyenSuaMacTau, "khai báo / sửa mác tàu và định mức chạy tàu", out loi)) return false;
             loi = string.Empty;
             if (string.IsNullOrWhiteSpace(maLoaiTau))
             {

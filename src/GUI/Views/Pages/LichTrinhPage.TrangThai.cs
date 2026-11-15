@@ -31,7 +31,9 @@ namespace GUI.Views.Pages
         private void CapNhatNutDoiTrangThai()
         {
             bool coChuyen = !_isAddingNew && _selectedMaChuyenTau > 0 && dgChuyenTau.SelectedItem != null;
-            btnDoiTrangThai.Visibility = coChuyen && TrangThaiDoiDuoc(_currentTrangThai).Count > 0
+            // [Đạt 09/11] Ẩn với tài khoản không có quyền Lập biểu đồ chạy tàu (Service kiểm lại trước khi ghi)
+            bool coQuyen = PhanQuyenService.CoQuyen(ChuyenTauService.MaQuyenDoiTrangThai);
+            btnDoiTrangThai.Visibility = coChuyen && coQuyen && TrangThaiDoiDuoc(_currentTrangThai).Count > 0
                 ? Visibility.Visible : Visibility.Collapsed;
         }
 
@@ -41,6 +43,7 @@ namespace GUI.Views.Pages
         private void BtnDoiTrangThai_Click(object sender, RoutedEventArgs e)
         {
             if (_isAddingNew || _selectedMaChuyenTau <= 0) return;
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(ChuyenTauService.MaQuyenDoiTrangThai, "đổi trạng thái chuyến tàu")) return;
 
             var menu = new ContextMenu { PlacementTarget = btnDoiTrangThai, Placement = PlacementMode.Top };
             foreach (string tt in TrangThaiDoiDuoc(_currentTrangThai))
@@ -78,9 +81,9 @@ namespace GUI.Views.Pages
                         "Chuyển Trạng Thái Chuyến", "Chuyển")) return;
 
                 // Service đọc lại trạng thái trong CSDL và kiểm tra lại lần nữa trước khi ghi
-                if (!_chuyenTauService.DoiTrangThai(maChuyen, trangThaiMoi, out string loi))
+                if (!_chuyenTauService.DoiTrangThai(maChuyen, trangThaiMoi, ref _phienBanChuyen, out string loi))
                 {
-                    ThongBaoDialog.CanhBao(loi, "Không Chuyển Được Trạng Thái");
+                    ThongBaoDialog.CanhBao(loi, _chuyenTauService.VuaXungDotPhienBan ? "Chuyến Vừa Được Thay Đổi" : "Không Chuyển Được Trạng Thái");
                     NapLaiGiuChuyen(maChuyen);
                     return;
                 }

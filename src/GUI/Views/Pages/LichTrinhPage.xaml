@@ -3,6 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:conv="clr-namespace:GUI.Converters"
+      xmlns:helpers="clr-namespace:GUI.Helpers"
       Title="Quản Lý Lịch Trình Chạy Tàu">
 
     <Page.Resources>
@@ -77,7 +78,7 @@
 
     <Grid Margin="12,10,12,10">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="560"/>
+            <ColumnDefinition Width="*" MinWidth="480"/>
             <ColumnDefinition Width="8"/>
             <ColumnDefinition Width="540" MinWidth="440" MaxWidth="700"/>
         </Grid.ColumnDefinitions>
@@ -110,19 +111,26 @@
                         </Grid.RowDefinitions>
 
                         <!-- Dòng 1: Tiêu đề & Nút hành động -->
-                        <Grid Grid.Row="0" Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Border Width="30" Height="30" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="4" Margin="0,0,10,0">
+                        <!-- Hẹp (cửa sổ 1100 px): cụm nút tự xuống dòng dưới tiêu đề (BoCucHepHelper) -->
+                        <Grid Grid.Row="0" Margin="0,0,0,10"
+                              helpers:BoCucHepHelper.XuongDongKhiHep="True" helpers:BoCucHepHelper.DoRongTraiToiThieu="300">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <DockPanel VerticalAlignment="Center">
+                                <Border DockPanel.Dock="Left" Width="30" Height="30" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="4" Margin="0,0,10,0">
                                     <ui:SymbolIcon Symbol="CalendarClock24" FontSize="16" Foreground="#003B73" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="ĐIỀU HÀNH LỊCH TRÌNH CHẠY TÀU" FontSize="14" FontWeight="Bold" Foreground="#003B73"/>
-                                    <TextBlock Text="Kế hoạch chạy tàu, biểu đồ giờ và giám sát lộ trình dừng ga toàn tuyến" FontSize="11" Foreground="#64748B"/>
+                                    <TextBlock Text="ĐIỀU HÀNH LỊCH TRÌNH CHẠY TÀU" FontSize="14" FontWeight="Bold" Foreground="#003B73" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="Kế hoạch chạy tàu, biểu đồ giờ và giám sát lộ trình dừng ga toàn tuyến" FontSize="11" Foreground="#64748B"
+                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
                                 </StackPanel>
-                            </StackPanel>
+                            </DockPanel>
 
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Click="BtnThem_Click" Style="{StaticResource PrimaryDesktopButton}" Height="30" Padding="12,0" Margin="0,0,8,0">
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,0,0,0">
+                                <Button Click="BtnThem_Click" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT" Style="{StaticResource PrimaryDesktopButton}" Height="30" Padding="12,0" Margin="0,0,8,0">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Add24" FontSize="13" Margin="0,0,6,0"/>
                                         <TextBlock Text="Lập Chuyến Mới" FontSize="11" FontWeight="SemiBold"/>
@@ -139,29 +147,23 @@
                         </Grid>
 
                         <!-- Dòng 2: Bộ lọc ngày xuất phát, mác tàu, trạng thái -->
-                        <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                        <!-- WrapPanel: cửa sổ hẹp thì bộ lọc tự xuống dòng thay vì bị khung bên phải che -->
+                        <WrapPanel Grid.Row="1">
 
                             <!-- Lọc Ngày -->
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,4">
                                 <TextBlock Text="Ngày chạy:" Style="{StaticResource FieldLabel}"/>
                                 <DatePicker x:Name="dpLocNgay" Width="135" SelectedDateChanged="DpLocNgay_SelectedDateChanged"/>
                             </StackPanel>
 
                             <!-- Lọc Mác Tàu (Width 195 để hiển thị trọn vẹn "Tất cả mác tàu" trên mọi DPI) -->
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,4">
                                 <TextBlock Text="Mác tàu:" Style="{StaticResource FieldLabel}"/>
                                 <ComboBox x:Name="cboLocMacTau" Width="195" DisplayMemberPath="SoHieuMacTau" SelectedValuePath="MaMacTau" SelectionChanged="CboLocMacTau_SelectionChanged"/>
                             </StackPanel>
 
                             <!-- Lọc Trạng Thái (Width 200 để hiển thị trọn vẹn "Tất cả trạng thái" trên mọi DPI) -->
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,4">
                                 <TextBlock Text="Trạng thái:" Style="{StaticResource FieldLabel}"/>
                                 <ComboBox x:Name="cboLocTrangThai" Width="200" SelectionChanged="CboLocTrangThai_SelectionChanged">
                                     <ComboBoxItem Content="Tất cả trạng thái" Tag="ALL" IsSelected="True"/>
@@ -175,13 +177,13 @@
                             </StackPanel>
 
                             <!-- Nút Xóa Lọc đặt ngay cạnh bộ lọc -->
-                            <Button Grid.Column="3" Click="BtnHienTatCa_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="10,0" ToolTip="Xóa bộ lọc về mặc định">
+                            <Button Click="BtnHienTatCa_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="10,0" Margin="0,0,0,4" ToolTip="Xóa bộ lọc về mặc định">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="Dismiss24" FontSize="11" Margin="0,0,4,0"/>
                                     <TextBlock Text="Xóa Lọc" FontSize="11"/>
                                 </StackPanel>
                             </Button>
-                        </Grid>
+                        </WrapPanel>
                     </Grid>
                 </Border>
 
@@ -466,7 +468,7 @@
                                 <TextBlock x:Name="txtInspectorBadge" Text="ID: #0" FontSize="10" FontWeight="SemiBold" Foreground="#475569"/>
                             </Border>
 
-                            <Button x:Name="btnXoaChuyen" Click="BtnXoa_Click" 
+                            <Button x:Name="btnXoaChuyen" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT" Click="BtnXoa_Click" 
                                     Style="{StaticResource DangerDesktopButton}" Height="26" Padding="8,0"
                                     ToolTip="Xóa vĩnh viễn chuyến tàu này khỏi kế hoạch">
                                 <StackPanel Orientation="Horizontal">
@@ -725,21 +727,21 @@
 
                                         <!-- Bên phải: Các nút thao tác điểm dừng -->
                                         <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                            <Button x:Name="btnSapXepTheoKm" Click="BtnSapXepTheoKm_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="8,0" Margin="0,0,6,0" ToolTip="Tự động chuẩn hóa và sắp xếp lại thứ tự toàn bộ các ga theo đúng trục Lý trình Km của hành trình (Sửa ngay lỗi ga bị nhảy cóc hoặc sau ga đích)">
+                                            <Button x:Name="btnSapXepTheoKm" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT" Click="BtnSapXepTheoKm_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="8,0" Margin="0,0,6,0" ToolTip="Tự động chuẩn hóa và sắp xếp lại thứ tự toàn bộ các ga theo đúng trục Lý trình Km của hành trình (Sửa ngay lỗi ga bị nhảy cóc hoặc sau ga đích)">
                                                 <StackPanel Orientation="Horizontal">
                                                     <ui:SymbolIcon Symbol="ArrowSort24" FontSize="12" Foreground="#003B73" Margin="0,0,4,0"/>
                                                     <TextBlock Text="Sắp Xếp Chuẩn Km" FontSize="11" FontWeight="SemiBold"/>
                                                 </StackPanel>
                                             </Button>
 
-                                            <Button x:Name="btnSaoChepMau" Click="BtnSaoChepMau_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="8,0" Margin="0,0,6,0" ToolTip="Sao chép danh sách điểm dừng chuẩn từ chuyến gần nhất cùng mác tàu">
+                                            <Button x:Name="btnSaoChepMau" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT" Click="BtnSaoChepMau_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="8,0" Margin="0,0,6,0" ToolTip="Sao chép danh sách điểm dừng chuẩn từ chuyến gần nhất cùng mác tàu">
                                                 <StackPanel Orientation="Horizontal">
                                                     <ui:SymbolIcon Symbol="ArrowDownload24" FontSize="12" Margin="0,0,4,0"/>
                                                     <TextBlock Text="Lấy Mẫu Tuyến" FontSize="11"/>
                                                 </StackPanel>
                                             </Button>
 
-                                            <Button x:Name="btnMoFormThemDung" Click="BtnMoFormThemDung_Click" Style="{StaticResource PrimaryDesktopButton}" Height="28" Padding="10,0">
+                                            <Button x:Name="btnMoFormThemDung" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT" Click="BtnMoFormThemDung_Click" Style="{StaticResource PrimaryDesktopButton}" Height="28" Padding="10,0">
                                                 <StackPanel Orientation="Horizontal">
                                                     <ui:SymbolIcon Symbol="Add24" FontSize="12" Margin="0,0,4,0"/>
                                                     <TextBlock Text="Thêm Ga Dừng" FontSize="11" FontWeight="SemiBold"/>
@@ -876,7 +878,7 @@
                                         <TextBlock Text="Khi lưu ga chèn ở giữa: Các ga phía sau giữ nguyên giờ nếu kịp, hoặc tự động tịnh tiến giờ." FontSize="9.5" Foreground="#64748B" VerticalAlignment="Center"/>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                             <Button Click="BtnDongFormThemDung_Click" Style="{StaticResource DesktopButton}" Height="26" Padding="12,0" Margin="0,0,6,0" Content="Hủy"/>
-                                            <Button Click="BtnLuuThemDiemDung_Click" Style="{StaticResource PrimaryDesktopButton}" Height="26" Padding="14,0">
+                                            <Button Click="BtnLuuThemDiemDung_Click" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT" Style="{StaticResource PrimaryDesktopButton}" Height="26" Padding="14,0">
                                                 <StackPanel Orientation="Horizontal">
                                                     <ui:SymbolIcon Symbol="Checkmark24" FontSize="11" Margin="0,0,4,0"/>
                                                     <TextBlock x:Name="txtBtnLuuDiemDung" Text="Lưu Điểm Dừng" FontSize="10.5" FontWeight="Bold"/>
@@ -1010,10 +1012,10 @@
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                    <Button Click="BtnSuaDiemDung_Click" Background="Transparent" BorderThickness="0" Padding="3,2" Margin="0,0,2,0" ToolTip="Chỉnh sửa giờ đến/giờ đi và tác nghiệp ga này">
+                                                    <Button Click="BtnSuaDiemDung_Click" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT,DISPATCH_INCIDENT_REPORT" Background="Transparent" BorderThickness="0" Padding="3,2" Margin="0,0,2,0" ToolTip="Chỉnh sửa giờ đến/giờ đi và tác nghiệp ga này">
                                                         <ui:SymbolIcon Symbol="Edit24" FontSize="11" Foreground="#003B73"/>
                                                     </Button>
-                                                    <Button Click="BtnXoaDiemDung_Click" Background="Transparent" BorderThickness="0" Padding="3,2" ToolTip="Xóa điểm dừng này khỏi lịch trình">
+                                                    <Button Click="BtnXoaDiemDung_Click" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT" Background="Transparent" BorderThickness="0" Padding="3,2" ToolTip="Xóa điểm dừng này khỏi lịch trình">
                                                         <ui:SymbolIcon Symbol="Delete24" FontSize="11" Foreground="#B91C1C"/>
                                                     </Button>
                                                 </StackPanel>
@@ -1238,6 +1240,18 @@
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
 
+                                            <!-- [13/11] Toa that trong doan tau <-> "Toa k" ban ve (dong bo khi luu doan tau o Phuong tien) -->
+                                            <DataGridTextColumn Header="Bán Vé" Binding="{Binding BanVe}" Width="150">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#475569"/>
+                                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                                        <Setter Property="ToolTip" Value="{Binding BanVe}"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+
                                             <DataGridTextColumn Header="Sức Chứa" Binding="{Binding SucChua, StringFormat={}{0} chỗ}" Width="85">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
@@ -1309,7 +1323,7 @@
                             </Button>
 
                             <!-- Nút Lưu Lịch Trình (Nút chính ở Bước 3, hoặc lưu nhanh kế hoạch) -->
-                            <Button x:Name="btnLuuChuyen" Click="BtnLuu_Click" 
+                            <Button x:Name="btnLuuChuyen" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT" Click="BtnLuu_Click" 
                                     Style="{StaticResource PrimaryDesktopButton}" Height="30" Padding="14,0">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="Save24" FontSize="12" Foreground="#FFFFFF" Margin="0,0,5,0"/>

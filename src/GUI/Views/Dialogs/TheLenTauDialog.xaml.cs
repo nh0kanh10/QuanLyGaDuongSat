@@ -85,12 +85,12 @@ namespace GUI.Views.Dialogs
                 if (printDlg.ShowDialog() == true)
                 {
                     printDlg.PrintVisual(bdInVe, $"TheLenTau_{txtMaVeCode.Text}");
-                    MessageBox.Show("Lệnh in thẻ lên tàu đã được gửi thành công!", "Thông Báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThongBaoDialog.ThanhCong("Lệnh in thẻ lên tàu đã được gửi thành công!", "Thông Báo");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Không thể thực hiện in: {ex.Message}", "Lỗi In Ấn", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi($"Không thể thực hiện in: {ex.Message}", "Lỗi In Ấn");
             }
         }
 

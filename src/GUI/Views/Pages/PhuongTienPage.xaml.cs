@@ -46,6 +46,10 @@ namespace GUI.Views.Pages
             // luc do chua ket noi CSDL nen phai chan lai.
             _dangNapDuLieu = true;
             InitializeComponent();
+            // Sprint 3: an nut ghi khi chi co quyen xem (GUI/Helpers/QuyenGiaoDienHelper.cs)
+            GUI.Helpers.QuyenGiaoDienHelper.AnNeuKhongCoQuyen(DTO.Common.MaQuyen.QuanLyPhuongTien,
+                btnThemDauMay, btnSuaDauMay, btnXoaDauMay, btnSuaChiTietDauMay, btnThemToaXe, btnSuaToaXe, btnXoaToaXe);
+            GUI.Helpers.QuyenGiaoDienHelper.AnNeuKhongCoQuyen(DTO.Common.MaQuyen.LapDoanTau, btnLapTauKeoTha);
             _dangNapDuLieu = false;
 
             Loaded += PhuongTienPage_Loaded;
@@ -382,6 +386,7 @@ namespace GUI.Views.Pages
 
         private void ThemDauMay()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.QuanLyPhuongTien, "thêm đầu máy")) return;   // Sprint 3: phan quyen
             if (!_coKetNoiCsdl) return;
             tabPhuongTien.SelectedIndex = 0;
 
@@ -413,6 +418,7 @@ namespace GUI.Views.Pages
 
         private void SuaDauMay()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.QuanLyPhuongTien, "sửa đầu máy")) return;   // Sprint 3: phan quyen
             if (!_coKetNoiCsdl || dgDauMay.SelectedItem is not DauMayHienThi dangChon) return;
 
             // Ban ghi luc nguoi dung mo dialog: Service dung de phat hien nguoi khac sua chen giua
@@ -503,6 +509,7 @@ namespace GUI.Views.Pages
 
         private void XoaDauMay()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.QuanLyPhuongTien, "xóa đầu máy")) return;   // Sprint 3: phan quyen
             if (!_coKetNoiCsdl || dgDauMay.SelectedItem is not DauMayHienThi dangChon) return;
             var goc = dangChon.ToET();
 
@@ -662,6 +669,7 @@ namespace GUI.Views.Pages
 
         private void ThemToaXe()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.QuanLyPhuongTien, "thêm toa xe")) return;   // Sprint 3: phan quyen
             if (!_coKetNoiCsdl) return;
             tabPhuongTien.SelectedIndex = 1;
 
@@ -696,6 +704,7 @@ namespace GUI.Views.Pages
 
         private void SuaToaXe()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.QuanLyPhuongTien, "sửa toa xe")) return;   // Sprint 3: phan quyen
             if (!_coKetNoiCsdl || dgToaXeDoi.SelectedItem is not ToaXeHienThi dangChon) return;
 
             var goc = dangChon.ToET();
@@ -771,6 +780,7 @@ namespace GUI.Views.Pages
 
         private void XoaToaXe()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.QuanLyPhuongTien, "xóa toa xe")) return;   // Sprint 3: phan quyen
             if (!_coKetNoiCsdl || dgToaXeDoi.SelectedItem is not ToaXeHienThi dangChon) return;
             var goc = dangChon.ToET();
 
@@ -1093,6 +1103,7 @@ namespace GUI.Views.Pages
 
         private void MoLapTauKeoTha()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.LapDoanTau, "lập đoàn tàu")) return;   // Sprint 3: phan quyen
             if (!_coKetNoiCsdl) return;
             tabPhuongTien.SelectedIndex = 2;
 
@@ -1152,6 +1163,9 @@ namespace GUI.Views.Pages
                           $"Lớn nhất {kq.TongSoToa} toa · dài {kq.TongChieuDaiM:N1} m · nặng {kq.TongTrongLuongTan:N1} t.";
             if (kq.DaHuyDuyetAnToan)
                 moTa += "\n\nThành phần đoàn tàu đã đổi nên cờ \"đã duyệt an toàn\" được bỏ: cần duyệt lại trước khi xuất ga.";
+            // [13/11] Toa ban ve dong bo theo doan tau trong cung giao dich
+            if (kq.MoTaDongBoBanVe.Length > 0)
+                moTa += $"\n\nToa bán vé: {kq.MoTaDongBoBanVe}. Đang mở bán {kq.SoToaBanVe} toa khách; vé đã bán giữ nguyên toa / chỗ.";
             ThongBaoDialog.ThanhCong(moTa, kq.LaLapMoi ? "Lập đoàn tàu" : "Lưu đoàn tàu");
         }
 

@@ -399,6 +399,30 @@ namespace BUS.Services
             };
         }
 
+        /// <summary>Tàu cấp thấp nhường đường chỉ khi phải chờ không quá số phút này; quá thì so tổng thiệt hại 2 phương án.</summary>
+        public const int SoPhutChoToiDaGiuUuTien = 60;
+
+        /// <summary>
+        /// Chọn phương án xếp tránh cho một cặp tàu (hàm thuần, dùng chung với unit test).
+        /// Phương án 1 = tàu 1 chạy suốt, tàu 2 dừng tránh (trễ <paramref name="phutTre1"/>); phương án 2 ngược lại.
+        /// Luật: (1) phương án có đường tránh trống thắng phương án không có;
+        /// (2) khác cấp: tàu cấp thấp (MucUuTien lớn hơn) nhường, trừ khi phải chờ quá <see cref="SoPhutChoToiDaGiuUuTien"/> phút
+        ///     và phương án ngược lại có chi phí nhỏ hơn (chi phí = phút trễ × trọng số cấp tàu + khoảng cách tới điểm xung đột);
+        /// (3) cùng cấp: chi phí nhỏ hơn.
+        /// </summary>
+        /// <returns>true = chọn phương án 1 (tàu 1 chạy suốt).</returns>
+        public static bool ChonPhuongAnTau1ChaySuot(int mucUuTien1, int mucUuTien2,
+            int phutTre1, bool coRay1, double chiPhi1,
+            int phutTre2, bool coRay2, double chiPhi2)
+        {
+            if (coRay1 != coRay2) return coRay1;
+            if (mucUuTien1 < mucUuTien2)
+                return phutTre1 <= SoPhutChoToiDaGiuUuTien || chiPhi1 <= chiPhi2;
+            if (mucUuTien2 < mucUuTien1)
+                return !(phutTre2 <= SoPhutChoToiDaGiuUuTien || chiPhi2 <= chiPhi1);
+            return chiPhi1 <= chiPhi2;
+        }
+
         private XungDotKhuGianDTO TaoXungDot(int id, HanhTrinhTauDTO t1, HanhTrinhTauDTO t2,
                                              DiemChayTauDTO d1_start, DiemChayTauDTO d1_end,
                                              DiemChayTauDTO d2_start, DiemChayTauDTO d2_end,
@@ -436,28 +460,26 @@ namespace BUS.Services
             var pa1 = DanhGiaPhuongAnTranh(t1, t2, d1_start, d1_end, d2_start, d2_end, kmXungDot, dtGaCoDuongTranh);
             var pa2 = DanhGiaPhuongAnTranh(t2, t1, d2_start, d2_end, d1_start, d1_end, kmXungDot, dtGaCoDuongTranh);
 
-            PhuongAnTranh paChon;
-            // Áp dụng Quy chuẩn Điều độ Đường sắt:
-            // 1. Nếu 2 tàu khác cấp ưu tiên -> Tàu cấp thấp hơn (số MucUuTien lớn hơn) BẮT BUỘC phải dừng tránh nhường đường cho tàu cấp cao hơn
-            if (t1.MucUuTien < t2.MucUuTien)
-            {
-                // t1 ưu tiên cao hơn t2 (ví dụ SE4 mức 1 vs NA1 mức 3) -> pa1 (t1 ưu tiên chạy suốt, t2 dừng nhường đường) được chọn
-                paChon = (pa1.MaRayTranh.HasValue || !pa2.MaRayTranh.HasValue) ? pa1 : pa2;
-            }
-            else if (t2.MucUuTien < t1.MucUuTien)
-            {
-                // t2 ưu tiên cao hơn t1 -> pa2 (t2 ưu tiên chạy suốt, t1 dừng nhường đường) được chọn
-                paChon = (pa2.MaRayTranh.HasValue || !pa1.MaRayTranh.HasValue) ? pa2 : pa1;
-            }
-            else
-            {
-                // 2. Cùng cấp ưu tiên (SE gặp SE, hoặc tàu chợ gặp tàu chợ) -> Chọn phương án có tổng chi phí / độ trễ nhỏ nhất
-                paChon = (pa1.DiemChiPhi <= pa2.DiemChiPhi) ? pa1 : pa2;
-            }
+            // Áp dụng Quy chuẩn Điều độ Đường sắt (xem ChonPhuongAnTau1ChaySuot):
+            // tàu cấp thấp nhường tàu cấp cao, trừ khi tàu cấp thấp phải chờ quá SoPhutChoToiDaGiuUuTien phút
+            // mà để tàu cấp cao chờ lại ít thiệt hại hơn (vd SE19 chờ 306' ở Thanh Hóa so với SE4 chờ 65' ở Vinh).
+            bool chonPa1 = ChonPhuongAnTau1ChaySuot(t1.MucUuTien, t2.MucUuTien,
+                pa1.SoPhutTang, pa1.MaRayTranh.HasValue, pa1.DiemChiPhi,
+                pa2.SoPhutTang, pa2.MaRayTranh.HasValue, pa2.DiemChiPhi);
+            PhuongAnTranh paChon = chonPa1 ? pa1 : pa2;
+            PhuongAnTranh paKhac = chonPa1 ? pa2 : pa1;
 
             string moTa = loaiXungDot == "DOI_DAU"
                 ? $"Xung đột đối đầu: Tàu {t1.SoHieuMacTau} ({t1.HuongChay}) và {t2.SoHieuMacTau} ({t2.HuongChay}) đối đầu tại Km {kmXungDot:F1} (khu gian {tenGaDau} - {tenGaCuoi}) lúc {thoiDiem:HH:mm}."
                 : $"Vi phạm giãn cách an toàn (<10 phút): Tàu {t1.SoHieuMacTau} và {t2.SoHieuMacTau} cùng chạy qua khu gian {tenGaDau} - {tenGaCuoi}.";
+            if (paChon.TauBiTranh.MucUuTien < paChon.TauUuTien.MucUuTien)
+            {
+                moTa += $" Tàu {paChon.TauBiTranh.SoHieuMacTau} (cấp cao hơn) chờ +{paChon.SoPhutTang}' tại {paChon.TenGaTranh} vì nếu {paKhac.TauBiTranh.SoHieuMacTau} nhường thì phải chờ +{paKhac.SoPhutTang}' tại {paKhac.TenGaTranh}.";
+            }
+            if (paChon.SoPhutTang > SoPhutChoToiDaGiuUuTien)
+            {
+                moTa += $" CẢNH BÁO: phương án tốt nhất vẫn phải chờ +{paChon.SoPhutTang}' (khu gian dài, không có ga tránh trung gian phù hợp) — trực ban cần xem lại lịch.";
+            }
 
             return new XungDotKhuGianDTO
             {
@@ -509,6 +531,8 @@ namespace BUS.Services
         /// </summary>
         public bool GiaiQuyetMotXungDot(XungDotKhuGianDTO xd, out string baoCaoChiTiet)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out baoCaoChiTiet)) return false;
             string thongTinRay = xd.SoHieuDuongRayDeXuat.HasValue
                 ? $"Đường tránh #{xd.SoHieuDuongRayDeXuat.Value}"
                 : "Đường tránh chỉ định bởi Trực ban ga";
@@ -546,6 +570,8 @@ namespace BUS.Services
         /// </summary>
         public bool TuDongGiaiQuyetTranhTau(DateTime ngay, out string baoCaoChiTiet)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out baoCaoChiTiet)) return false;
             var dsBanDau = KiemTraXungDotToanTuyen(ngay);
             if (dsBanDau.Count == 0)
             {
@@ -559,6 +585,7 @@ namespace BUS.Services
             sb.AppendLine("---------------------------------------------------------------");
 
             int thanhCong = 0;
+            int soChoQuaLau = 0;
             int maxVongLap = 15;
             int vong = 0;
             var daXuLy = new HashSet<string>();
@@ -583,6 +610,11 @@ namespace BUS.Services
                     thanhCong++;
                     string thongTinRay = xdSomNhat.SoHieuDuongRayDeXuat.HasValue ? $"Đường #{xdSomNhat.SoHieuDuongRayDeXuat.Value}" : "Đường tránh phân bổ";
                     sb.AppendLine($" Bước {thanhCong}: Đã xếp tàu {xdSomNhat.SoHieuTauBiTranh} dừng tránh tại Ga {xdSomNhat.TenGaDeXuatTranh} ({thongTinRay}) đỗ {xdSomNhat.SoPhutDungDeXuat} phút (Đến {xdSomNhat.GioDenGaTranh:HH:mm} - Đi {xdSomNhat.GioDiGaTranh:HH:mm}).");
+                    if (xdSomNhat.SoPhutTangLichTrinh > SoPhutChoToiDaGiuUuTien)
+                    {
+                        soChoQuaLau++;
+                        sb.AppendLine($"    ⚠ Chờ +{xdSomNhat.SoPhutTangLichTrinh} phút (quá {SoPhutChoToiDaGiuUuTien} phút): khu gian dài không có ga tránh trung gian — trực ban cần xem lại.");
+                    }
                 }
                 else
                 {
@@ -597,7 +629,9 @@ namespace BUS.Services
             var dsConLai = KiemTraXungDotToanTuyen(ngay);
             if (dsConLai.Count == 0)
             {
-                sb.AppendLine($" TẤT CẢ XUNG ĐỘT ĐÃ ĐƯỢC GIẢI QUYẾT TRIỆT ĐỂ! Tuyến đường sắt an toàn 100%.");
+                sb.AppendLine(soChoQuaLau == 0
+                    ? $" TẤT CẢ XUNG ĐỘT ĐÃ ĐƯỢC GIẢI QUYẾT TRIỆT ĐỂ! Tuyến đường sắt an toàn 100%."
+                    : $" Hết xung đột khu gian, nhưng {soChoQuaLau} điểm tránh phải chờ quá {SoPhutChoToiDaGiuUuTien} phút (đánh dấu ⚠) — trực ban cần xem lại lịch.");
             }
             else
             {

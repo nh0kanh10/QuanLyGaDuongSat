@@ -1,5 +1,6 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
+using DAL.Connection;
 using DAL.Repositories;
 using ET.VanHanh;
 
@@ -81,6 +82,8 @@ namespace BUS.Services
 
         public int Them(ChuyenTau ct, out string thongBaoLoi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBaoLoi)) return 0;
             thongBaoLoi = string.Empty;
             if (ct.MaMacTau <= 0)
             {
@@ -156,6 +159,15 @@ namespace BUS.Services
 
         public bool CapNhat(ChuyenTau ct, out string thongBaoLoi)
         {
+            byte[]? phienBan = null;
+            return CapNhat(ct, ref phienBan, out thongBaoLoi);
+        }
+
+        // [13/11 Dat] phienBan = ChuyenTau.PhienBan luc man hinh nap (null = khong kiem, chi cham)
+        public bool CapNhat(ChuyenTau ct, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBaoLoi)) return false;
             thongBaoLoi = string.Empty;
             if (ct.MaChuyenTau <= 0 || ct.MaMacTau <= 0)
             {
@@ -177,27 +189,32 @@ namespace BUS.Services
                 thongBaoLoi = "Thời gian chạy kế hoạch của một chuyến tàu không được vượt quá 7 ngày!";
                 return false;
             }
-            if (_repo.KiemTraTrungLich(ct.MaMacTau, ct.NgayXuatPhat, ct.MaChuyenTau))
+            // [13/11] Kiem tra doc CSDL + ghi chay trong khoa chuyen, sau khi so PhienBan
+            return TrenChuyen(ct.MaChuyenTau, ref phienBan,
+                $"Lưu thông tin chuyến (giờ đi {ct.GioXuatPhatKH:HH:mm dd/MM}, giờ đến {ct.GioVeDichKH:HH:mm dd/MM})", () =>
             {
-                thongBaoLoi = $"Mác tàu này đã được lập lịch cho ngày {ct.NgayXuatPhat:dd/MM/yyyy} trên một chuyến khác!";
-                return false;
-            }
-            // [Đạt 30/10] Sang Sẵn sàng / Đang chạy phải qua kiểm tra xuất bến (hợp đồng §7.2)
-            string? lyDoChanXuatBen = LyDoChanXuatBen(ct.MaChuyenTau, _repo.LayTrangThai(ct.MaChuyenTau), ct.TrangThai);
-            if (lyDoChanXuatBen != null)
-            {
-                thongBaoLoi = lyDoChanXuatBen;
-                return false;
-            }
-            bool kq = _repo.CapNhat(ct) > 0;
-            if (!kq) thongBaoLoi = "Không thể cập nhật chuyến tàu vào CSDL.";
-            return kq;
+                if (_repo.KiemTraTrungLich(ct.MaMacTau, ct.NgayXuatPhat, ct.MaChuyenTau))
+                    return $"Mác tàu này đã được lập lịch cho ngày {ct.NgayXuatPhat:dd/MM/yyyy} trên một chuyến khác!";
+                // [Đạt 30/10] Sang Sẵn sàng / Đang chạy phải qua kiểm tra xuất bến (hợp đồng §7.2)
+                string? lyDoChanXuatBen = LyDoChanXuatBen(ct.MaChuyenTau, _repo.LayTrangThai(ct.MaChuyenTau), ct.TrangThai);
+                if (lyDoChanXuatBen != null) return lyDoChanXuatBen;
+                return _repo.CapNhat(ct) > 0 ? null : "Không thể cập nhật chuyến tàu vào CSDL.";
+            }, out thongBaoLoi);
         }
 
         public bool CapNhat(ChuyenTau ct) => CapNhat(ct, out _);
 
         public bool CapNhatThongSoKeHoach(int maChuyenTau, int maMacTau, DateTime ngayXuatPhat, DateTime gioXuatPhatKH, DateTime gioVeDichKH, out string thongBaoLoi)
         {
+            byte[]? phienBan = null;
+            return CapNhatThongSoKeHoach(maChuyenTau, maMacTau, ngayXuatPhat, gioXuatPhatKH, gioVeDichKH, ref phienBan, out thongBaoLoi);
+        }
+
+        public bool CapNhatThongSoKeHoach(int maChuyenTau, int maMacTau, DateTime ngayXuatPhat, DateTime gioXuatPhatKH, DateTime gioVeDichKH,
+                                          ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBaoLoi)) return false;
             thongBaoLoi = string.Empty;
             if (maChuyenTau <= 0 || maMacTau <= 0)
             {
@@ -214,14 +231,14 @@ namespace BUS.Services
                 thongBaoLoi = "Thời gian chạy kế hoạch của chuyến tàu tối thiểu phải từ 30 phút trở lên!";
                 return false;
             }
-            if (_repo.KiemTraTrungLich(maMacTau, ngayXuatPhat, maChuyenTau))
+            return TrenChuyen(maChuyenTau, ref phienBan,
+                $"Lưu thông số kế hoạch (giờ đi {gioXuatPhatKH:HH:mm dd/MM}, giờ đến {gioVeDichKH:HH:mm dd/MM})", () =>
             {
-                thongBaoLoi = $"Mác tàu này đã được lập lịch cho ngày {ngayXuatPhat:dd/MM/yyyy} trên một chuyến khác!";
-                return false;
-            }
-            bool kq = _repo.CapNhatThongSoKeHoach(maChuyenTau, maMacTau, ngayXuatPhat, gioXuatPhatKH, gioVeDichKH) > 0;
-            if (!kq) thongBaoLoi = "Không thể cập nhật thông số kế hoạch chuyến tàu vào CSDL.";
-            return kq;
+                if (_repo.KiemTraTrungLich(maMacTau, ngayXuatPhat, maChuyenTau))
+                    return $"Mác tàu này đã được lập lịch cho ngày {ngayXuatPhat:dd/MM/yyyy} trên một chuyến khác!";
+                return _repo.CapNhatThongSoKeHoach(maChuyenTau, maMacTau, ngayXuatPhat, gioXuatPhatKH, gioVeDichKH) > 0
+                    ? null : "Không thể cập nhật thông số kế hoạch chuyến tàu vào CSDL.";
+            }, out thongBaoLoi);
         }
 
         public bool CapNhatThongSoKeHoach(int maChuyenTau, int maMacTau, DateTime ngayXuatPhat, DateTime gioXuatPhatKH, DateTime gioVeDichKH)
@@ -229,6 +246,7 @@ namespace BUS.Services
 
         public bool CapNhatTrangThai(int maChuyenTau, string trangThai)
         {
+            PhanQuyenService.BatBuocCoQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu"); // [Sprint 3] thieu quyen -> KhongDuQuyenException
             if (maChuyenTau <= 0) return false;
             if (LyDoChanXuatBen(maChuyenTau, _repo.LayTrangThai(maChuyenTau), trangThai) != null) return false;   // [Đạt 30/10]
             return _repo.CapNhatTrangThai(maChuyenTau, trangThai) > 0;
@@ -259,7 +277,26 @@ namespace BUS.Services
 
         // Đổi riêng trạng thái (nút "Chuyển Trạng Thái" ở Lịch trình): đọc trạng thái hiện tại trong CSDL,
         // kiểm quy trình chuyển + kiểm tra xuất bến rồi mới ghi.
+        // [Đạt 09/11] Chỉ người có quyền Lập biểu đồ chạy tàu (TRAIN_SCHEDULE_EDIT) mới được đổi; ghi trạng thái + nhật ký
+        // hệ thống DOI_TRANG_THAI_CHUYEN trong cùng một giao dịch (trước đây ai có quyền xem lịch trình cũng đổi được, không để lại vết).
+        public const string MaQuyenDoiTrangThai = DTO.Common.MaQuyen.LapBieuDoChayTau;
+
         public bool DoiTrangThai(int maChuyenTau, string trangThaiMoi, out string thongBaoLoi)
+        {
+            byte[]? phienBan = null;
+            return DoiTrangThai(maChuyenTau, trangThaiMoi, ref phienBan, out thongBaoLoi);
+        }
+
+        // [13/11] Chay trong khoa chuyen + so PhienBan (chong ghi de ca chuyen)
+        public bool DoiTrangThai(int maChuyenTau, string trangThaiMoi, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            if (!PhanQuyenService.KiemTraQuyen(MaQuyenDoiTrangThai, "đổi trạng thái chuyến tàu", out thongBaoLoi)) return false;
+            return TrenChuyen(maChuyenTau, ref phienBan, "", () =>
+                DoiTrangThaiTrongKhoa(maChuyenTau, trangThaiMoi, out string loi) ? null : loi,
+                out thongBaoLoi, ghiNhatKy: false);
+        }
+
+        private bool DoiTrangThaiTrongKhoa(int maChuyenTau, string trangThaiMoi, out string thongBaoLoi)
         {
             thongBaoLoi = string.Empty;
             string trangThaiCu = _repo.LayTrangThai(maChuyenTau);
@@ -276,19 +313,66 @@ namespace BUS.Services
                 thongBaoLoi = lyDo;
                 return false;
             }
-            bool kq = _repo.CapNhatTrangThai(maChuyenTau, trangThaiMoi) > 0;
-            if (!kq) thongBaoLoi = "Không thể cập nhật trạng thái chuyến tàu vào CSDL.";
-            return kq;
+            try
+            {
+                using var gd = DAL.Connection.PhienGiaoDich.Mo();
+                if (new LapTauRepository().DoiTrangThaiChuyen(maChuyenTau, trangThaiCu, trangThaiMoi, gd) == 0)
+                {
+                    thongBaoLoi = "Trạng thái chuyến vừa được người khác thay đổi. Hãy nạp lại danh sách rồi thử lại.";
+                    return false;
+                }
+                gd.GhiNhatKyHeThong(PhanQuyenService.MaTaiKhoanHienTai, "DOI_TRANG_THAI_CHUYEN", "vanhanh.ChuyenTau",
+                    maChuyenTau.ToString(),
+                    PhanQuyenService.Json(new { TrangThai = trangThaiCu }),
+                    PhanQuyenService.Json(new { TrangThai = trangThaiMoi }));
+                gd.XacNhan();
+                return true;
+            }
+            catch (Exception ex) when (DichLoiSqlPhuongTien.LaLoiCsdl(ex))
+            {
+                thongBaoLoi = "Không thể cập nhật trạng thái chuyến tàu vào CSDL: " + DichLoiSqlPhuongTien.ThongDiep(ex);
+                return false;
+            }
         }
 
         public bool CapNhatGioThucTe(int maDiemDung, DateTime? gioDenTT, DateTime? gioDiTT)
         {
+            PhanQuyenService.BatBuocCoQuyen(DTO.Common.MaQuyen.GhiNhanSuCoChamGio, "ghi giờ chạy thực tế"); // [Sprint 3] thieu quyen -> KhongDuQuyenException
             if (maDiemDung <= 0) return false;
-            return _repo.CapNhatGioThucTe(maDiemDung, gioDenTT, gioDiTT) > 0;
+            bool ok = _repo.CapNhatGioThucTe(maDiemDung, gioDenTT, gioDiTT) > 0;
+            if (ok)
+            {
+                // [12/11] Tre qua nguong tai ga moi nhat -> chuyen tu dat "Tre gio" (va nguoc lai khi da bat kip), ghi nhat ky
+                var doi = _repo.CapNhatTrangThaiTheoGioThucTe(maDiemDung, SoPhutTreToiDaDungGio);
+                if (doi is { } d)
+                {
+                    try
+                    {
+                        using var gd = DAL.Connection.PhienGiaoDich.Mo();
+                        gd.GhiNhatKyHeThong(PhanQuyenService.MaTaiKhoanHienTai, "DOI_TRANG_THAI_CHUYEN", "vanhanh.ChuyenTau",
+                            d.MaChuyenTau.ToString(), PhanQuyenService.Json(new { TrangThai = d.Cu }),
+                            PhanQuyenService.Json(new { TrangThai = d.Moi, LyDo = "Tự động theo giờ chạy thực tế" }));
+                        gd.XacNhan();
+                    }
+                    catch (Exception) { /* nhat ky khong chan thao tac chinh */ }
+                }
+            }
+            return ok;
         }
+
+        // Dung gio: tre <= 5 phut (cung nguong voi bao cao ty le dung gio - baocao.vw_DungGioChuyen)
+        public const int SoPhutTreToiDaDungGio = 5;
 
         public bool ThemLichDungGa(LichDungGa ld, out string thongBaoLoi)
         {
+            byte[]? phienBan = null;
+            return ThemLichDungGa(ld, ref phienBan, out thongBaoLoi);
+        }
+
+        public bool ThemLichDungGa(LichDungGa ld, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBaoLoi)) return false;
             thongBaoLoi = string.Empty;
             if (ld.MaChuyenTau <= 0 || ld.MaGa <= 0 || ld.ThuTuDung <= 0)
             {
@@ -306,6 +390,13 @@ namespace BUS.Services
                 return false;
             }
 
+            return TrenChuyen(ld.MaChuyenTau, ref phienBan, $"Thêm điểm dừng thứ {ld.ThuTuDung} ({TenGa(ld.MaGa)})", () =>
+                ThemLichDungGaTrongKhoa(ld, out string loi) ? null : loi, out thongBaoLoi);
+        }
+
+        private bool ThemLichDungGaTrongKhoa(LichDungGa ld, out string thongBaoLoi)
+        {
+            thongBaoLoi = string.Empty;
             // Kiểm tra tính đơn điệu thời gian và không trùng thứ tự/ga với các điểm dừng đã có
             var dtLich = _repo.LayLichDungGa(ld.MaChuyenTau);
             foreach (DataRow r in dtLich.Rows)
@@ -363,6 +454,14 @@ namespace BUS.Services
 
         public bool CapNhatLichDungGa(LichDungGa ld, out string thongBaoLoi)
         {
+            byte[]? phienBan = null;
+            return CapNhatLichDungGa(ld, ref phienBan, out thongBaoLoi);
+        }
+
+        public bool CapNhatLichDungGa(LichDungGa ld, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBaoLoi)) return false;
             thongBaoLoi = string.Empty;
             if (ld.MaDiemDung <= 0 || ld.MaChuyenTau <= 0)
             {
@@ -380,6 +479,14 @@ namespace BUS.Services
                 return false;
             }
 
+            return TrenChuyen(ld.MaChuyenTau, ref phienBan,
+                $"Sửa giờ điểm dừng thứ {ld.ThuTuDung} (đến {ld.GioDenKeHoach:HH:mm}, đi {ld.GioDiKeHoach:HH:mm})", () =>
+                CapNhatLichDungGaTrongKhoa(ld, out string loi) ? null : loi, out thongBaoLoi);
+        }
+
+        private bool CapNhatLichDungGaTrongKhoa(LichDungGa ld, out string thongBaoLoi)
+        {
+            thongBaoLoi = string.Empty;
             // Kiểm tra tính đơn điệu thời gian và không xung đột với các điểm dừng liền trước/sau
             var dtLich = _repo.LayLichDungGa(ld.MaChuyenTau);
             foreach (DataRow r in dtLich.Rows)
@@ -426,35 +533,222 @@ namespace BUS.Services
 
         public bool XoaLichDungGa(int maDiemDung)
         {
+            PhanQuyenService.BatBuocCoQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu"); // [Sprint 3] thieu quyen -> KhongDuQuyenException
             if (maDiemDung <= 0) return false;
-            return _repo.XoaLichDungGa(maDiemDung) > 0;
+            int maChuyenTau = _repo.LayMaChuyenCuaDiemDung(maDiemDung);
+            if (maChuyenTau <= 0) return false;
+            byte[]? phienBan = null;
+            return XoaLichDungGa(maChuyenTau, maDiemDung, ref phienBan, out _);
+        }
+
+        // [13/11] Khong xoa ga co ve con hieu luc len / xuong, hoac la ga noi / cat toa cua doan tau (lam hong ve, toa ban ve)
+        public bool XoaLichDungGa(int maChuyenTau, int maDiemDung, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            PhanQuyenService.BatBuocCoQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu"); // [Sprint 3] thieu quyen -> KhongDuQuyenException
+            thongBaoLoi = string.Empty;
+            if (maChuyenTau <= 0 || maDiemDung <= 0)
+            {
+                thongBaoLoi = "Điểm dừng không hợp lệ!";
+                return false;
+            }
+            return TrenChuyen(maChuyenTau, ref phienBan, "Xóa một điểm dừng", () =>
+            {
+                var (tenGa, soVe, soToa, cuaChuyen) = _repo.DemRangBuocXoaDiemDung(maDiemDung, maChuyenTau);
+                if (!cuaChuyen) return "Điểm dừng không còn thuộc chuyến này (có thể vừa bị xóa). Hãy nạp lại lịch dừng.";
+                if (soVe > 0)
+                    return $"Không xóa được ga {tenGa}: còn {soVe} vé hiệu lực lên / xuống tại ga này. Đổi chặng hoặc hoàn các vé đó trước.";
+                if (soToa > 0)
+                    return $"Không xóa được ga {tenGa}: là ga nối / cắt {soToa} toa của đoàn tàu. Sửa đoàn tàu ở phân hệ Phương tiện trước.";
+                return _repo.XoaLichDungGa(maDiemDung) > 0 ? null : "Không xóa được điểm dừng (có thể đã bị xóa trước đó).";
+            }, out thongBaoLoi);
         }
 
         public bool DayThuTuDung(int maChuyenTau, int tuThuTu)
         {
             if (maChuyenTau <= 0 || tuThuTu <= 0) return false;
-            return _repo.DayThuTuDung(maChuyenTau, tuThuTu);
+            byte[]? phienBan = null;
+            return DayThuTuDung(maChuyenTau, tuThuTu, ref phienBan, out _);
+        }
+
+        public bool DayThuTuDung(int maChuyenTau, int tuThuTu, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            thongBaoLoi = string.Empty;
+            if (maChuyenTau <= 0 || tuThuTu <= 0) return false;
+            return TrenChuyen(maChuyenTau, ref phienBan, $"Dời thứ tự các ga từ #{tuThuTu}", () =>
+                _repo.DayThuTuDung(maChuyenTau, tuThuTu) ? null : "Không dời được thứ tự các điểm dừng.", out thongBaoLoi);
         }
 
         public bool SapXepLichDungTheoKm(int maChuyenTau, bool chieuBacNam, out int soDiemDungThayDoi)
         {
+            byte[]? phienBan = null;
+            return SapXepLichDungTheoKm(maChuyenTau, chieuBacNam, ref phienBan, out soDiemDungThayDoi, out _);
+        }
+
+        public bool SapXepLichDungTheoKm(int maChuyenTau, bool chieuBacNam, ref byte[]? phienBan, out int soDiemDungThayDoi, out string thongBaoLoi)
+        {
             soDiemDungThayDoi = 0;
+            thongBaoLoi = string.Empty;
             if (maChuyenTau <= 0) return false;
-            return _repo.SapXepLichDungTheoKm(maChuyenTau, chieuBacNam, out soDiemDungThayDoi);
+            int soThayDoi = 0;
+            bool ok = TrenChuyen(maChuyenTau, ref phienBan, "Sắp xếp lại lịch dừng theo lý trình", () =>
+                _repo.SapXepLichDungTheoKm(maChuyenTau, chieuBacNam, out soThayDoi) ? null : "Không sắp xếp được lịch dừng.",
+                out thongBaoLoi);
+            soDiemDungThayDoi = soThayDoi;
+            return ok;
         }
 
         public bool TinhTienGioCacGaPhiaSau(int maChuyenTau, int tuThuTu, int soPhut)
         {
             if (maChuyenTau <= 0 || tuThuTu <= 0 || soPhut <= 0) return false;
-            return _repo.TinhTienGioCacGaPhiaSau(maChuyenTau, tuThuTu, soPhut);
+            byte[]? phienBan = null;
+            return TinhTienGioCacGaPhiaSau(maChuyenTau, tuThuTu, soPhut, ref phienBan, out _);
+        }
+
+        public bool TinhTienGioCacGaPhiaSau(int maChuyenTau, int tuThuTu, int soPhut, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            thongBaoLoi = string.Empty;
+            if (maChuyenTau <= 0 || tuThuTu <= 0 || soPhut <= 0) return false;
+            return TrenChuyen(maChuyenTau, ref phienBan, $"Lùi giờ các ga từ #{tuThuTu} thêm {soPhut} phút", () =>
+                _repo.TinhTienGioCacGaPhiaSau(maChuyenTau, tuThuTu, soPhut) ? null : "Không lùi được giờ các ga phía sau.",
+                out thongBaoLoi);
         }
 
         public bool SaoChepLichDungTuChuyenMau(int maMacTau, int maChuyenDich, DateTime ngayKhoiHanh)
         {
+            byte[]? phienBan = null;
+            return SaoChepLichDungTuChuyenMau(maMacTau, maChuyenDich, ngayKhoiHanh, ref phienBan, out _);
+        }
+
+        public bool SaoChepLichDungTuChuyenMau(int maMacTau, int maChuyenDich, DateTime ngayKhoiHanh, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            PhanQuyenService.BatBuocCoQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu"); // [Sprint 3] thieu quyen -> KhongDuQuyenException
+            thongBaoLoi = string.Empty;
             if (maMacTau <= 0 || maChuyenDich <= 0) return false;
-            int maChuyenMau = _repo.TimChuyenMauGanNhatCungMac(maMacTau, maChuyenDich);
-            if (maChuyenMau <= 0) return false;
-            return _repo.SaoChepLichDungTuChuyenKhac(maChuyenMau, maChuyenDich, ngayKhoiHanh) > 0;
+            return TrenChuyen(maChuyenDich, ref phienBan, "Sao chép lịch dừng từ chuyến mẫu", () =>
+            {
+                int maChuyenMau = _repo.TimChuyenMauGanNhatCungMac(maMacTau, maChuyenDich);
+                if (maChuyenMau <= 0) return "Không tìm thấy chuyến mẫu cùng mác tàu để sao chép lịch dừng.";
+                // Thay ca lich dung: khong duoc lam mat ga co ve / ga noi cat toa
+                string? chan = _repo.LyDoKhongThayLichDung(maChuyenDich, maChuyenMau);
+                if (chan != null) return chan;
+                return _repo.SaoChepLichDungTuChuyenKhac(maChuyenMau, maChuyenDich, ngayKhoiHanh) > 0
+                    ? null : "Chuyến mẫu không có điểm dừng nào để sao chép.";
+            }, out thongBaoLoi);
+        }
+
+        // =========================================================================
+        // [13/11 Dat] CHONG GHI DE KHI HAI NGUOI CUNG SUA MOT CHUYEN
+        //
+        // Moi thao tac ghi tren chuyen (form chuyen, lich dung ga, dau may buoc 3, xoa, doi trang thai) chay trong
+        // khoa "vanhanh.SuaChuyen:<ma>" (KhoaSuaChuyen): doc PhienBan cua chuyen -> khac PhienBan man hinh dang giu
+        // -> KHONG ghi, bao "vua duoc thay doi" (VuaXungDotPhienBan = true, man hinh nap lai) -> kiem tra doc CSDL
+        // + ghi (ham cu cua A Ba) -> cham PhienBan + nhat ky SUA_LICH_TRINH -> tra PhienBan moi cho man hinh.
+        // phienBan = null: khong so (ham cu, tool), van khoa + cham.
+        // =========================================================================
+        public bool VuaXungDotPhienBan { get; private set; }
+
+        private bool TrenChuyen(int maChuyenTau, ref byte[]? phienBan, string moTa, Func<string?> thaoTac,
+                                out string thongBaoLoi, bool ghiNhatKy = true)
+        {
+            VuaXungDotPhienBan = false;
+            thongBaoLoi = string.Empty;
+            if (maChuyenTau <= 0)
+            {
+                thongBaoLoi = "Chưa chọn chuyến tàu.";
+                return false;
+            }
+            try
+            {
+                using var khoa = KhoaSuaChuyen.Mo(maChuyenTau);
+                byte[]? hienTai = khoa.DocPhienBan();
+                if (hienTai == null)
+                {
+                    VuaXungDotPhienBan = true;
+                    thongBaoLoi = "Không tìm thấy chuyến tàu trong CSDL (có thể vừa bị người khác xóa). Màn hình sẽ nạp lại danh sách.";
+                    return false;
+                }
+                if (phienBan != null && !hienTai.AsSpan().SequenceEqual(phienBan))
+                {
+                    VuaXungDotPhienBan = true;
+                    thongBaoLoi = ThongDiepXungDot(maChuyenTau);
+                    return false;
+                }
+
+                string? loi = thaoTac();
+                if (loi == null)
+                {
+                    khoa.Cham();
+                    if (ghiNhatKy) khoa.GhiNhatKy("SUA_LICH_TRINH", new { ThaoTac = moTa });
+                }
+                // Doc lai ca khi loi: thao tac khong ghi gi thi PhienBan khong doi; man hinh luon giu ban moi nhat
+                phienBan = khoa.DocPhienBan();
+                if (loi != null)
+                {
+                    thongBaoLoi = loi;
+                    return false;
+                }
+                return true;
+            }
+            catch (TimeoutException ex)
+            {
+                thongBaoLoi = ex.Message;
+                return false;
+            }
+            catch (SqlException ex)
+            {
+                thongBaoLoi = "Không ghi được vào CSDL: " + (ex.Errors.Count > 0 ? ex.Errors[0].Message : ex.Message);
+                return false;
+            }
+        }
+
+        public static string ThongDiepXungDot(int maChuyenTau)
+        {
+            string lanGanNhat = "";
+            try
+            {
+                var lan = KhoaSuaChuyen.LayLanSuaGanNhat(maChuyenTau);
+                if (lan != null)
+                    lanGanNhat = $"\nLần ghi gần nhất trong nhật ký: {(lan.NguoiSua.Length > 0 ? lan.NguoiSua : "không rõ người")} "
+                               + $"lúc {lan.LucSua:HH:mm dd/MM} — {TenThaoTac(lan)}.";
+            }
+            catch (SqlException) { /* chi la thong tin them */ }
+
+            return "Chuyến tàu này vừa được thay đổi sau khi bạn mở (ở máy khác, ở phân hệ Phương tiện / Bảo trì, "
+                 + "hoặc do xếp tránh tự động). Để không ghi đè, thao tác của bạn CHƯA được lưu."
+                 + lanGanNhat
+                 + "\nMàn hình sẽ nạp lại dữ liệu mới nhất; hãy kiểm tra rồi làm lại.";
+        }
+
+        private static string TenThaoTac(LanSuaChuyenDTO lan)
+        {
+            // SUA_LICH_TRINH, XEP_TRANH_TAU ghi {"ThaoTac": "..."} -> dung nguyen cau do (co ten ga, so phut)
+            if (lan.DuLieuMoi != null && lan.HanhDong is "SUA_LICH_TRINH" or "XEP_TRANH_TAU")
+            {
+                try
+                {
+                    using var json = System.Text.Json.JsonDocument.Parse(lan.DuLieuMoi);
+                    if (json.RootElement.TryGetProperty("ThaoTac", out var tt) && tt.GetString() is { Length: > 0 } s) return s;
+                }
+                catch (System.Text.Json.JsonException) { }
+            }
+            return lan.HanhDong switch
+            {
+                "SUA_LICH_TRINH" => "Sửa lịch trình chuyến",
+                "DOI_TRANG_THAI_CHUYEN" => "Đổi trạng thái chuyến",
+                "LAP_DOAN_TAU" => "Lập đoàn tàu (Phương tiện)",
+                "SUA_DOAN_TAU" => "Sửa đoàn tàu (Phương tiện)",
+                "DONG_BO_TOA_BAN_VE" => "Đồng bộ toa bán vé theo đoàn tàu",
+                "XEP_TRANH_TAU" => "Xếp tránh tàu (Biểu đồ chạy tàu)",
+                "DUYET_AN_TOAN" => "Duyệt an toàn đoàn tàu (Bảo trì)",
+                "BO_DUYET_AN_TOAN" => "Bỏ duyệt an toàn đoàn tàu (Bảo trì)",
+                _ => lan.HanhDong
+            };
+        }
+
+        private string TenGa(int maGa)
+        {
+            try { return _repo.LayTenGa(maGa) ?? $"ga #{maGa}"; }
+            catch (SqlException) { return $"ga #{maGa}"; }
         }
 
         public static bool KiemTraCoTheXoaChuyen(string trangThai, out string thongBaoLoi)
@@ -541,17 +835,25 @@ namespace BUS.Services
 
         public bool Xoa(int maChuyenTau, out string thongBaoLoi)
         {
+            byte[]? phienBan = null;
+            return Xoa(maChuyenTau, ref phienBan, out thongBaoLoi);
+        }
+
+        public bool Xoa(int maChuyenTau, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBaoLoi)) return false;
             if (maChuyenTau <= 0)
             {
                 thongBaoLoi = "Mã chuyến tàu không hợp lệ!";
                 return false;
             }
-            string trangThai = _repo.LayTrangThai(maChuyenTau);
-            if (!KiemTraCoTheXoaChuyen(trangThai, out thongBaoLoi))
+            return TrenChuyen(maChuyenTau, ref phienBan, "Xóa chuyến tàu", () =>
             {
-                return false;
-            }
-            return _repo.Xoa(maChuyenTau, out thongBaoLoi);
+                string trangThai = _repo.LayTrangThai(maChuyenTau);
+                if (!KiemTraCoTheXoaChuyen(trangThai, out string loi)) return loi;
+                return _repo.Xoa(maChuyenTau, out loi) ? null : loi;
+            }, out thongBaoLoi);
         }
 
         public bool Xoa(int maChuyenTau) => Xoa(maChuyenTau, out _);
@@ -589,6 +891,14 @@ namespace BUS.Services
 
         public bool LuuDoanTau(DoanTau dt, out string thongBaoLoi)
         {
+            byte[]? phienBan = null;
+            return LuuDoanTau(dt, ref phienBan, out thongBaoLoi);
+        }
+
+        public bool LuuDoanTau(DoanTau dt, ref byte[]? phienBan, out string thongBaoLoi)
+        {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBaoLoi)) return false;
             thongBaoLoi = string.Empty;
             if (dt.MaChuyenTau <= 0)
             {
@@ -616,7 +926,8 @@ namespace BUS.Services
                 return false;
             }
 
-            return _repo.LuuDoanTau(dt) > 0;
+            return TrenChuyen(dt.MaChuyenTau, ref phienBan, "Lưu đầu máy kéo / đẩy (bước 3 Lịch trình)", () =>
+                _repo.LuuDoanTau(dt) > 0 ? null : "Không lưu được đoàn tàu vào CSDL.", out thongBaoLoi);
         }
 
         public bool KiemTraChieuDaiVoiGaDung(int maChuyenTau, decimal tongChieuDaiM, out string canhBao)
@@ -635,6 +946,8 @@ namespace BUS.Services
 
         public bool ThemToaXeKhach(ET.VanTai.ToaXeKhach tx, bool tuDongSinhGhe, out string thongBaoLoi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBaoLoi)) return false;
             thongBaoLoi = string.Empty;
             if (tx.MaChuyenTau <= 0)
             {
@@ -657,15 +970,29 @@ namespace BUS.Services
                 return false;
             }
 
+            // [13/11] Chuyen da lap doan tau o Phuong tien: toa ban ve di theo doan tau (dong bo khi luu doan tau)
+            if (_repo.CoChiTietDoanTau(tx.MaChuyenTau))
+            {
+                thongBaoLoi = "Chuyến đã lập đoàn tàu: toa bán vé tự đồng bộ theo đoàn tàu. Thêm toa ở phân hệ Phương tiện (Lập đoàn tàu).";
+                return false;
+            }
             int maToa = _repo.ThemToaXeKhach(tx, tuDongSinhGhe);
             return maToa > 0;
         }
 
         public bool XoaToaXeKhach(int maToaXeKhach, out string thongBaoLoi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBaoLoi)) return false;
             if (maToaXeKhach <= 0)
             {
                 thongBaoLoi = "Mã toa xe không hợp lệ!";
+                return false;
+            }
+            // [13/11] Toa ban ve cua chuyen da lap doan tau chi doi qua Lap doan tau (Phuong tien)
+            if (_repo.ToaBanVeThuocChuyenDaLapDoan(maToaXeKhach))
+            {
+                thongBaoLoi = "Toa bán vé này đi theo đoàn tàu đã lập. Bỏ toa ở phân hệ Phương tiện (Lập đoàn tàu) — hệ thống kiểm vé đã bán khi lưu.";
                 return false;
             }
             return _repo.XoaToaXeKhach(maToaXeKhach, out thongBaoLoi);
@@ -673,6 +1000,8 @@ namespace BUS.Services
 
         public bool SaoChepBienCheTuChuyenMau(int maMacTau, int maChuyenDich, out string thongBao)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau, "lập / sửa lịch trình chạy tàu", out thongBao)) return false;
             thongBao = string.Empty;
             if (maMacTau <= 0 || maChuyenDich <= 0)
             {
@@ -687,6 +1016,11 @@ namespace BUS.Services
                 return false;
             }
 
+            if (_repo.CoChiTietDoanTau(maChuyenDich))
+            {
+                thongBao = "Chuyến đã lập đoàn tàu: toa bán vé tự đồng bộ theo đoàn tàu, không sao chép biên chế mẫu.";
+                return false;
+            }
             int soToaSaoChep = _repo.SaoChepBienCheToaXe(maChuyenMau, maChuyenDich);
             thongBao = $"Đã sao chép thành công {soToaSaoChep} toa xe từ chuyến mẫu (Mã #{maChuyenMau})!";
             return soToaSaoChep > 0;

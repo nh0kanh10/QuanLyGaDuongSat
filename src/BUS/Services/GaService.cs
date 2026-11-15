@@ -20,6 +20,8 @@ namespace BUS.Services
 
         public bool Them(Ga ga, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SuaHaTang, "sửa hạ tầng / mác tàu", out error)) return false;
             error = string.Empty;
 
             // 1. Kiểm tra Mã Ga Code (VARCHAR(10) NOT NULL UNIQUE)
@@ -143,6 +145,8 @@ namespace BUS.Services
 
         public bool CapNhat(Ga ga, out string error)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SuaHaTang, "sửa hạ tầng / mác tàu", out error)) return false;
             error = string.Empty;
 
             if (ga.MaGa <= 0)
@@ -242,6 +246,9 @@ namespace BUS.Services
 
         public bool Xoa(int maGa, out bool daXoaVinhVien, out string message)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            daXoaVinhVien = false;
+            if (!PhanQuyenService.KiemTraQuyen(DTO.Common.MaQuyen.SuaHaTang, "sửa hạ tầng / mác tàu", out message)) return false;
             daXoaVinhVien = false;
             message = string.Empty;
             if (maGa <= 0)

@@ -138,7 +138,8 @@ namespace GUI.Views.Pages
                 }
 
                 TimChuyenTau();
-                LoadDanhSachVeTab2();
+                // [12/11] So tra cuu ve (~34.000 dong) chi nap khi mo tab lan dau - truoc day nap ngay khi tao man hinh chinh,
+                // may it RAM bi "Execution Timeout" luc dang nhap.
                 RenderGioVe();
             }
             catch (Exception ex)
@@ -2302,7 +2303,7 @@ namespace GUI.Views.Pages
                 TongTien = tongTien,
                 HinhThucTT = httt,
                 TrangThaiTT = "DA_THANH_TOAN",
-                MaNhanVienBan = PhienLamViec.MaNhanVien ?? (PhienLamViec.MaTaiKhoan > 0 ? PhienLamViec.MaTaiKhoan : 3)
+                MaNhanVienBan = PhanQuyenService.MaTaiKhoanHienTai /* cot FK toi phanquyen.TaiKhoan, khong phai NhanVien */
             };
 
             var listVe = new List<Ve>();
@@ -2405,8 +2406,17 @@ namespace GUI.Views.Pages
 
         private async void LoadDanhSachVeTab2() => await LoadDanhSachVeTab2Async();
 
+        private bool _daMoTabTraCuuVe;
+        private Task? _taskNapSoVe;
+
         private async Task LoadDanhSachVeTab2Async()
         {
+            // Chua mo tab So tra cuu: khong nap (bo ban cu de lan mo dau nap moi)
+            if (!_daMoTabTraCuuVe)
+            {
+                _cachedDanhSachVe = null;
+                return;
+            }
             try
             {
                 DataTable dt = await Task.Run(() => _veService.LayDanhSach());
@@ -2981,7 +2991,9 @@ namespace GUI.Views.Pages
                 dlg.KhoiTao(
                     maVe, maVeCode, maPNR, maChuyenTau, 
                     maGaDi, maGaDen, tenGaDi, tenGaDen, 
-                    macTau, tenHK, toaHienTai, gheHienTai, giaHienTai, loaiTau);
+                    macTau, tenHK, toaHienTai, gheHienTai, giaHienTai, loaiTau,
+                    giaGocCu: row.Row.Table.Columns.Contains("GiaVeGoc") && row["GiaVeGoc"] != DBNull.Value ? Convert.ToDecimal(row["GiaVeGoc"]) : null,
+                    giamCu: row.Row.Table.Columns.Contains("SoTienGiam") && row["SoTienGiam"] != DBNull.Value ? Convert.ToDecimal(row["SoTienGiam"]) : 0m);
 
                 if (dlg.ShowDialog() == true)
                 {
@@ -3068,7 +3080,7 @@ namespace GUI.Views.Pages
                 decimal lePhi = Math.Round(giaGoc * tyLeLePhi, 0);
                 decimal thucHoan = giaGoc - lePhi;
 
-                string viTriGhe = $"Toa {row["NhanHieuToa"]}, Ghế {row["SoGhe"]}";
+                string viTriGhe = $"{row["NhanHieuToa"]}, Ghế {row["SoGhe"]}";   // NhanHieuToa da co chu "Toa" (vd "Toa 2 (BN)")
                 bool xacNhan = ThongBaoDialog.XacNhan(
                     $"Xác nhận làm thủ tục hoàn trả vé cho hành khách {row["TenHanhKhach"]}?\n\n" +
                     $"• Chuyến tàu: {row["SoHieuMacTau"]} ({row["TenGaDi"]} → {row["TenGaDen"]})\n" +
@@ -3084,7 +3096,7 @@ namespace GUI.Views.Pages
 
                 if (xacNhan)
                 {
-                    int maNhanVien = PhienLamViec.MaNhanVien ?? (PhienLamViec.MaTaiKhoan > 0 ? PhienLamViec.MaTaiKhoan : 3);
+                    int maNhanVien = PhanQuyenService.MaTaiKhoanHienTai /* cot FK toi phanquyen.TaiKhoan, khong phai NhanVien */;
                     if (_veService.HoanVe(maVe, tyLeLePhi, $"Khách hoàn vé tại ga ({lyDoPhi})", "TIEN_MAT", maNhanVien, out string err))
                     {
                         ThongBaoDialog.ThanhCong(
@@ -3113,6 +3125,13 @@ namespace GUI.Views.Pages
 
         private void TabMainBanVe_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // [12/11] Nap so tra cuu ve lan dau mo tab (SelectionChanged cua o chon / luoi ben trong noi bot len -> loc nguon)
+            if (!ReferenceEquals(e.OriginalSource, tabMainBanVe) || tabMainBanVe.SelectedIndex != 1) return;
+            if (!_daMoTabTraCuuVe || _cachedDanhSachVe == null)
+            {
+                _daMoTabTraCuuVe = true;
+                _taskNapSoVe = LoadDanhSachVeTab2Async();
+            }
         }
 
         public void KichHoatThemMoi()
@@ -3134,9 +3153,10 @@ namespace GUI.Views.Pages
             LoadDanhSachVeTab2();
         }
 
-        public void KichHoatXuatTep()
+        public async void KichHoatXuatTep()
         {
             tabMainBanVe.SelectedIndex = 1;
+            if (_taskNapSoVe != null) await _taskNapSoVe;   // [12/11] so tra cuu nap khi mo tab -> doi nap xong moi xuat
             BtnXuatExcelVe_Click(this, new RoutedEventArgs());
         }
 

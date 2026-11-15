@@ -1,0 +1,32 @@
+# Thu tu chay cac file SQL SAU script goc 000_tao_csdl_goc.sql (tao_lai_csdl.cmd doc file nay).
+# Moi dong: <thu muc>\<ten file>. Dong bat dau bang # bi bo qua.
+# Them migration / seed moi: chen vao CUOI phan migration + seed, TRUOC dong tests.
+# File trong tests\ chi doc du lieu: bao vi pham thi canh bao, khong dung.
+
+# --- Sprint 1 (Dat): Phuong tien + Nhan su ---
+migrations\V20261009_0820__dat__chitietdoantau-ga-noi-cat.sql
+seed\S20261009_0830__dat__phuong-tien-nhan-su-sprint1.sql
+migrations\V20261011_1500__dat__nhansu-phienban-trigger-truongtau.sql
+migrations\V20261012_1100__dat__nhansu-lichsu-ma-nhanvien.sql
+migrations\V20261014_0900__dat__phuongtien-ngung-khai-thac.sql
+migrations\V20261014_1000__dat__nhansu-ngay-sinh.sql
+
+# --- Sprint 2 (Dat): Bao tri + ve mau cho tab Chi phi ---
+migrations\V20261024_1000__dat__baotri-chiphi-dinhmuc-giovn.sql
+seed\S20261024_1100__dat__baotri-sprint2.sql
+seed\S20261026_1000__dat__ve-mau-doanh-thu.sql
+
+# --- Sprint 3 (Dat): Quan tri & phan quyen, du lieu lich su + view bao cao ---
+migrations\V20261108_1000__dat__phanquyen-dangnhap-quyen.sql
+seed\S20261108_1100__dat__tai-khoan-demo.sql
+seed\S20261108_1200__dat__lich-su-bao-cao.sql
+migrations\V20261108_1300__dat__baocao-views.sql
+
+# --- 13/11 (Dat): toa ban ve dong bo theo doan tau + chan ban ve ngoai pham vi toa ---
+migrations\V20261113_1000__dat__toabanve-dongbo-doantau.sql
+
+# --- 13/11 (A Ba, Dat sua 15/11): chuyen SE1/SE2 moi ngay + SE3/SE4 cuoi tuan 14 ngay toi de ban ve truoc ---
+seed\S20261113_1200__dat__kich-hoat-ban-ve-truoc-cuoi-tuan.sql
+
+# --- Kiem tra du lieu (chi doc) ---
+tests\T20261009_0840__dat__kiem-tra-du-lieu-sprint1.sql

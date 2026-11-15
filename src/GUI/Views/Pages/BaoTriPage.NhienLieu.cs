@@ -287,6 +287,7 @@ namespace GUI.Views.Pages
 
         private void CapPhatNhienLieu(int? maDauMay = null)
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.GhiNhatKyBaoTri, "cấp phát nhiên liệu")) return;   // Sprint 3: phan quyen
             tabBaoTri.SelectedIndex = 1;
             if (!KiemTraKetNoi()) return;
 
@@ -306,6 +307,7 @@ namespace GUI.Views.Pages
 
         private void SuaCapDau()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.GhiNhatKyBaoTri, "sửa phiếu cấp nhiên liệu")) return;   // Sprint 3: phan quyen
             if (dgCapDau.SelectedItem is not CapNhienLieuHienThi dangChon) return;
             if (!KiemTraKetNoi()) return;
 

@@ -8,24 +8,33 @@
 --   1. Giải quyết bài toán "Mua vé cuối tuần từ đầu tuần" (Advance Booking).
 --   2. Tự động sinh lịch chạy tàu (vanhanh.ChuyenTau) trạng thái DA_LEN_LICH cho các ngày Thứ 6,
 --      Thứ 7, Chủ Nhật trong vòng 14 ngày tới tính từ ngày chạy script.
---   3. Tự động khởi tạo Đoàn tàu, Toa xe khách (vantai.ToaXeKhach: AN, NML, BN), và Chỗ ngồi
+--   3. Tự động khởi tạo Toa xe khách (vantai.ToaXeKhach: AN, NML, BN) và Chỗ ngồi
 --      (vantai.ChoNgoi: 134 chỗ/chuyến) sẵn sàng 100% mở bán vé.
 --   4. Tự động lập Lịch dừng ga (vanhanh.LichDungGa) chi tiết qua các ga dọc tuyến Bắc - Nam.
 --   5. Cung cấp Stored Procedure 'vantai.sp_LayDanhSachNgayCoChuyen' hỗ trợ giao diện hiển thị danh
 --      sách các ngày có chuyến tàu khả dụng.
 --
+-- SỬA 15/11 (Đạt, khi đưa vào database\thu_tu_chay.txt):
+--   - Bỏ "USE QuanLyDuongSatV2": tao_lai_csdl.cmd dựng CSDL tên khác (CSDL tạm) thì không ghi nhầm vào CSDL thật.
+--   - KHÔNG tạo vanhanh.DoanTau: trước đây gán cùng 1 đầu máy cho mọi chuyến (chồng giờ, luật PT-08) và đặt sẵn
+--     DaDuyetAnToan = 1 khi chưa khám xe. Đầu máy + toa do Phương tiện lập, duyệt an toàn do Bảo trì làm.
+--     Bán vé chỉ cần ToaXeKhach + ChoNgoi nên vẫn mở bán bình thường.
+--   - Bỏ đoạn xoá chuyến tương lai chưa có vé (gặp chuyến đã lập toa / có kíp / có biên bản thì lỗi khoá ngoại,
+--     rollback cả file). Vẫn chạy lại được: chuyến đã có (cùng mác, cùng ngày) thì thủ tục bỏ qua.
+--   - Sinh từ NGÀY MAI (chuyến hôm nay do seed khác tạo, đã có kíp lái); SET QUOTED_IDENTIFIER ON vì ToaXeKhach
+--     có chỉ mục lọc (migration V20261113_1000) và thủ tục giữ thiết lập lúc tạo.
+--
 -- HƯỚNG DẪN DÀNH CHO DEVELOPER KHÁC:
 --   - Mở file này trong SQL Server Management Studio (SSMS) hoặc Azure Data Studio.
---   - Chọn database dự án (mặc định QuanLyDuongSatV2).
+--   - CHỌN DATABASE dự án trước khi chạy (mặc định QuanLyDuongSatV2) — file không tự USE.
 --   - Bấm Execute (hoặc nhấn phím F5).
---   - Script an toàn 100% (Idempotent), chạy lại nhiều lần không trùng dữ liệu, có bọc Transaction.
+--   - Chạy lại nhiều lần không trùng dữ liệu, có bọc Transaction.
 -- ==============================================================================================
-
-USE QuanLyDuongSatV2;
-GO
 
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
 GO
 
 PRINT N'==============================================================================================';
@@ -102,19 +111,9 @@ BEGIN
     VALUES (@MaMacTau, @NgayChay, @GioXuatPhatKH, @GioVeDichKH, 'DA_LEN_LICH', 0);
     SET @MaChuyenTauMoi = SCOPE_IDENTITY();
 
-    -- 2. Thêm DoanTau
-    DECLARE @MaDauMay INT;
-    SELECT TOP 1 @MaDauMay = MaDauMay FROM phuongtien.DauMay WHERE TrangThai = 'SAN_SANG';
-    IF @MaDauMay IS NULL
-    BEGIN
-        SELECT TOP 1 @MaDauMay = MaDauMay FROM phuongtien.DauMay;
-    END
-
-    IF @MaDauMay IS NOT NULL
-    BEGIN
-        INSERT INTO vanhanh.DoanTau (MaChuyenTau, MaDauMayChinh, TongSoToa, TongChieuDaiM, TongTrongLuongTan, DaDuyetAnToan)
-        VALUES (@MaChuyenTauMoi, @MaDauMay, 10, 216.5, 430.0, 1);
-    END
+    -- 2. (Sửa 15/11) Không tạo DoanTau ở đây: đầu máy + toa thật do màn hình Phương tiện lập (kiểm chồng giờ,
+    --    tải trục, đường tránh), cờ duyệt an toàn do Bảo trì đặt sau khi khám xe. Chưa lập đoàn tàu thì
+    --    kiểm tra xuất bến chặn chuyển "Sẵn sàng" — đúng nghiệp vụ; bán vé không cần DoanTau.
 
     -- 3. Thêm ToaXeKhach (3 Toa: Toa 1 AN 28 chỗ, Toa 2 NML 64 chỗ, Toa 3 BN 42 chỗ)
     DECLARE @ToaAN INT, @ToaNML INT, @ToaBN INT;
@@ -246,50 +245,15 @@ GO
 BEGIN TRANSACTION;
 BEGIN TRY
     DECLARE @NgayHienTai DATE = CAST(GETDATE() AS DATE);
-    DECLARE @i INT = 0;
+    DECLARE @i INT = 1;   -- (Sửa 15/11) từ ngày mai; chuyến hôm nay do seed khác tạo (đã có kíp lái)
     DECLARE @NgayLoop DATE;
     DECLARE @MaChuyen INT;
     DECLARE @DayOfWeekName NVARCHAR(20);
 
-    PRINT N'>> Đang dọn dẹp các chuyến tàu tương lai cũ (chưa bán vé) để tái tạo đầy đủ 25 ga khách...';
+    -- (Sửa 15/11) Bỏ đoạn xoá chuyến tương lai chưa có vé: xoá DoanTau khi còn ChiTietDoanTau / kíp lái / biên bản
+    -- khám xe trỏ tới thì lỗi khoá ngoại và rollback cả file. Thủ tục đã tự bỏ qua chuyến có sẵn (cùng mác, cùng ngày).
 
-    -- Xóa an toàn các chuyến tàu chưa bán vé từ ngày hôm nay trở đi để cập nhật đầy đủ 25 ga
-    DELETE ld
-    FROM vanhanh.LichDungGa ld
-    JOIN vanhanh.ChuyenTau ct ON ld.MaChuyenTau = ct.MaChuyenTau
-    WHERE ct.TrangThai = 'DA_LEN_LICH' 
-      AND CAST(ct.NgayXuatPhat AS DATE) >= @NgayHienTai
-      AND NOT EXISTS (SELECT 1 FROM vantai.Ve v WHERE v.MaChuyenTau = ct.MaChuyenTau);
-
-    DELETE dt
-    FROM vanhanh.DoanTau dt
-    JOIN vanhanh.ChuyenTau ct ON dt.MaChuyenTau = ct.MaChuyenTau
-    WHERE ct.TrangThai = 'DA_LEN_LICH' 
-      AND CAST(ct.NgayXuatPhat AS DATE) >= @NgayHienTai
-      AND NOT EXISTS (SELECT 1 FROM vantai.Ve v WHERE v.MaChuyenTau = ct.MaChuyenTau);
-
-    DELETE cn
-    FROM vantai.ChoNgoi cn
-    JOIN vantai.ToaXeKhach tx ON cn.MaToaXeKhach = tx.MaToaXeKhach
-    JOIN vanhanh.ChuyenTau ct ON tx.MaChuyenTau = ct.MaChuyenTau
-    WHERE ct.TrangThai = 'DA_LEN_LICH' 
-      AND CAST(ct.NgayXuatPhat AS DATE) >= @NgayHienTai
-      AND NOT EXISTS (SELECT 1 FROM vantai.Ve v WHERE v.MaChuyenTau = ct.MaChuyenTau);
-
-    DELETE tx
-    FROM vantai.ToaXeKhach tx
-    JOIN vanhanh.ChuyenTau ct ON tx.MaChuyenTau = ct.MaChuyenTau
-    WHERE ct.TrangThai = 'DA_LEN_LICH' 
-      AND CAST(ct.NgayXuatPhat AS DATE) >= @NgayHienTai
-      AND NOT EXISTS (SELECT 1 FROM vantai.Ve v WHERE v.MaChuyenTau = ct.MaChuyenTau);
-
-    DELETE ct
-    FROM vanhanh.ChuyenTau ct
-    WHERE ct.TrangThai = 'DA_LEN_LICH' 
-      AND CAST(ct.NgayXuatPhat AS DATE) >= @NgayHienTai
-      AND NOT EXISTS (SELECT 1 FROM vantai.Ve v WHERE v.MaChuyenTau = ct.MaChuyenTau);
-
-    PRINT N'>> Đang tự động quét và sinh chuyến tàu cho 14 ngày tới (từ ' + CONVERT(NVARCHAR(10), @NgayHienTai, 103) + N')...';
+    PRINT N'>> Đang tự động quét và sinh chuyến tàu cho 14 ngày tới (từ ' + CONVERT(NVARCHAR(10), DATEADD(DAY, 1, @NgayHienTai), 103) + N')...';
 
     WHILE @i <= 14
     BEGIN

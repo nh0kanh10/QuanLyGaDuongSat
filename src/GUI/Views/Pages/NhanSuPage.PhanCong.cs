@@ -375,6 +375,7 @@ namespace GUI.Views.Pages
 
         private void ThemKip(int? maGaNhan = null, int? maGaGiao = null)
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.PhanCongKipLai, "phân công kíp lái")) return;   // Sprint 3: phan quyen
             tabNhanSu.SelectedIndex = 1;
             if (!KiemTraKetNoi()) return;
             var tt = ChuyenDangChon;
@@ -416,6 +417,7 @@ namespace GUI.Views.Pages
 
         private void SuaKip(KipLaiDong? dong = null, string? vaiTroThay = null)
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.PhanCongKipLai, "sửa kíp lái / thay người")) return;   // Sprint 3: phan quyen
             dong ??= dgKip.SelectedItem as KipLaiDong;
             if (dong == null || !KiemTraKetNoi()) return;
             if (!dong.LaDaPhanCong)
@@ -448,6 +450,7 @@ namespace GUI.Views.Pages
 
         private void HuyKip()
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.PhanCongKipLai, "hủy kíp lái")) return;   // Sprint 3: phan quyen
             if (dgKip.SelectedItem is not KipLaiDong dong || !dong.LaDaPhanCong || !KiemTraKetNoi()) return;
 
             bool dongY = ThongBaoDialog.XacNhan(
@@ -476,6 +479,7 @@ namespace GUI.Views.Pages
         // Ghi ket qua kiem tra len ban cho kip; sau do goi y thay nguoi / nhan ban
         private void KiemTraKip(KipLaiDong dong)
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.NhanBanKipLai, "ghi kiểm tra lên ban")) return;   // Sprint 3: phan quyen
             if (!dong.LaDaPhanCong || !KiemTraKetNoi()) return;
 
             int maPhanCong = dong.PhanCong.MaPhanCong;
@@ -525,6 +529,7 @@ namespace GUI.Views.Pages
 
         private void NhanBan(KipLaiDong dong, bool hoiXacNhan = true)
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.NhanBanKipLai, "xác nhận nhận ban")) return;   // Sprint 3: phan quyen
             if (!dong.LaDaPhanCong || !KiemTraKetNoi()) return;
 
             if (!dong.CoTheNhanBan)
@@ -564,6 +569,7 @@ namespace GUI.Views.Pages
 
         private void BanGiao(KipLaiDong dong)
         {
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.NhanBanKipLai, "xác nhận bàn giao ca")) return;   // Sprint 3: phan quyen
             if (dong.PhanCong.TrangThai != PhanCongKipHienThi.DangThucHien || !KiemTraKetNoi()) return;
 
             bool dongY = ThongBaoDialog.XacNhan(

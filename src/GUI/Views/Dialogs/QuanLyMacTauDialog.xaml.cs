@@ -57,7 +57,7 @@ namespace GUI.Views.Dialogs
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi khởi tạo dữ liệu mác tàu: {ex.Message}", "Lỗi CSDL", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi($"Lỗi khởi tạo dữ liệu mác tàu: {ex.Message}", "Lỗi CSDL");
             }
         }
 
@@ -118,7 +118,7 @@ namespace GUI.Views.Dialogs
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi nạp danh sách mác tàu: {ex.Message}", "Lỗi CSDL", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi($"Lỗi nạp danh sách mác tàu: {ex.Message}", "Lỗi CSDL");
             }
         }
 
@@ -450,14 +450,14 @@ namespace GUI.Views.Dialogs
             string soHieu = txtSoHieuMac.Text.Trim().ToUpper();
             if (string.IsNullOrWhiteSpace(soHieu))
             {
-                MessageBox.Show("Vui lòng nhập số hiệu mác tàu (ví dụ: SE7, NA1, LP3).", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng nhập số hiệu mác tàu (ví dụ: SE7, NA1, LP3).", "Thông báo");
                 txtSoHieuMac.Focus();
                 return;
             }
 
             if (cboGaDi.SelectedValue == null || cboGaDen.SelectedValue == null)
             {
-                MessageBox.Show("Vui lòng chọn đầy đủ Ga xuất phát và Ga về đích.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Vui lòng chọn đầy đủ Ga xuất phát và Ga về đích.", "Thông báo");
                 return;
             }
 
@@ -466,13 +466,13 @@ namespace GUI.Views.Dialogs
 
             if (gaDi == gaDen)
             {
-                MessageBox.Show("Ga xuất phát phải khác Ga về đích!", "Lỗi Tuyến Chạy", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Ga xuất phát phải khác Ga về đích!", "Lỗi Tuyến Chạy");
                 return;
             }
 
             if (!decimal.TryParse(txtThoiGianChuan.Text.Trim(), out decimal tgChuan) || tgChuan <= 0)
             {
-                MessageBox.Show("Thời gian chạy chuẩn phải là một số dương hợp lệ (ví dụ: 32.5 giờ).", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao("Thời gian chạy chuẩn phải là một số dương hợp lệ (ví dụ: 32.5 giờ).", "Thông báo");
                 txtThoiGianChuan.Focus();
                 return;
             }
@@ -504,14 +504,14 @@ namespace GUI.Views.Dialogs
             {
                 _currentMaMacTau = m.MaMacTau;
                 NewlySelectedOrCreatedMaMacTau = m.MaMacTau;
-                MessageBox.Show($"Đã lưu thành công mác tàu '{m.SoHieuMacTau}' vào hệ thống!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                ThongBaoDialog.ThanhCong($"Đã lưu thành công mác tàu '{m.SoHieuMacTau}' vào hệ thống!", "Thành công");
 
                 _isAddingNew = false;
                 NapDanhSachMacTau();
             }
             else
             {
-                MessageBox.Show(loi, "Không thể lưu mác tàu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThongBaoDialog.CanhBao(loi, "Không thể lưu mác tàu");
             }
         }
 
@@ -523,8 +523,8 @@ namespace GUI.Views.Dialogs
             bool trangThaiMoi = !hienTai;
 
             string hanhDong = trangThaiMoi ? "kích hoạt lại" : "tạm ngừng khai thác";
-            var r = MessageBox.Show($"Xác nhận {hanhDong} mác tàu '{txtSoHieuMac.Text}'?", "Xác nhận trạng thái", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (r == MessageBoxResult.Yes)
+            bool r = ThongBaoDialog.XacNhan($"Xác nhận {hanhDong} mác tàu '{txtSoHieuMac.Text}'?", "Xác nhận trạng thái");
+            if (r)
             {
                 if (_macTauService.DoiTrangThaiKhaiThac(_currentMaMacTau, trangThaiMoi, out string loi))
                 {
@@ -534,7 +534,7 @@ namespace GUI.Views.Dialogs
                 }
                 else
                 {
-                    MessageBox.Show(loi, "Lỗi cập nhật", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThongBaoDialog.CanhBao(loi, "Lỗi cập nhật");
                 }
             }
         }
@@ -544,21 +544,20 @@ namespace GUI.Views.Dialogs
             if (_currentMaMacTau <= 0) return;
 
             string soHieu = txtSoHieuMac.Text;
-            var r = MessageBox.Show($"Bạn có chắc chắn muốn xóa vĩnh viễn mác tàu '{soHieu}' khỏi hệ thống?\n(Hành động này không thể hoàn tác).",
-                "Xác nhận xóa mác tàu", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            bool r = ThongBaoDialog.XacNhan($"Bạn có chắc chắn muốn xóa vĩnh viễn mác tàu '{soHieu}' khỏi hệ thống?\n(Hành động này không thể hoàn tác).", "Xác nhận xóa mác tàu", laHanhDongXoa: true);
 
-            if (r == MessageBoxResult.Yes)
+            if (r)
             {
                 if (_macTauService.Xoa(_currentMaMacTau, out string loi))
                 {
-                    MessageBox.Show($"Đã xóa vĩnh viễn mác tàu '{soHieu}'.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThongBaoDialog.ThanhCong($"Đã xóa vĩnh viễn mác tàu '{soHieu}'.", "Thành công");
                     _currentMaMacTau = 0;
                     NewlySelectedOrCreatedMaMacTau = null;
                     NapDanhSachMacTau();
                 }
                 else
                 {
-                    MessageBox.Show(loi, "Không thể xóa", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThongBaoDialog.CanhBao(loi, "Không thể xóa");
                 }
             }
         }

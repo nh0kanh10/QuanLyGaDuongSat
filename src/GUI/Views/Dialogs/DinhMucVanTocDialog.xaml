@@ -1,6 +1,7 @@
 <Window x:Class="GUI.Views.Dialogs.DinhMucVanTocDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:helpers="clr-namespace:GUI.Helpers"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         Title="Cấu Hình Định Mức Vận Tốc Lữ Hành Đoàn Tàu"
         Width="1100" Height="650"
@@ -87,7 +88,7 @@
                                 </StackPanel>
 
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Click="BtnThemMoi_Click" Style="{StaticResource PrimaryDesktopButton}" Height="28" Padding="12,0" ToolTip="Khai báo thêm định mức loại tàu mới (F2)">
+                                    <Button Click="BtnThemMoi_Click" helpers:QuyenGiaoDienHelper.CanQuyen="INFRA_EDIT,TRAIN_SCHEDULE_EDIT" Style="{StaticResource PrimaryDesktopButton}" Height="28" Padding="12,0" ToolTip="Khai báo thêm định mức loại tàu mới (F2)">
                                         <StackPanel Orientation="Horizontal">
                                             <ui:SymbolIcon Symbol="Add24" FontSize="13" Margin="0,0,5,0"/>
                                             <TextBlock Text="Thêm Mới" FontSize="11" FontWeight="SemiBold"/>
@@ -327,7 +328,7 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <Button Grid.Column="0" Click="BtnLuu_Click" Style="{StaticResource PrimaryDesktopButton}" Height="30" ToolTip="Lưu thay đổi định mức (Ctrl+S)">
+                                    <Button Grid.Column="0" Click="BtnLuu_Click" helpers:QuyenGiaoDienHelper.CanQuyen="INFRA_EDIT,TRAIN_SCHEDULE_EDIT" Style="{StaticResource PrimaryDesktopButton}" Height="30" ToolTip="Lưu thay đổi định mức (Ctrl+S)">
                                         <StackPanel Orientation="Horizontal">
                                             <ui:SymbolIcon Symbol="Save24" FontSize="13" Margin="0,0,6,0"/>
                                             <TextBlock Text="Lưu Lại" FontSize="11" FontWeight="SemiBold"/>
@@ -342,7 +343,7 @@
                                     </Button>
                                 </Grid>
 
-                                <Button Click="BtnXoa_Click" Style="{StaticResource DangerDesktopButton}" Height="28" ToolTip="Xóa định mức này (Delete)">
+                                <Button Click="BtnXoa_Click" helpers:QuyenGiaoDienHelper.CanQuyen="INFRA_EDIT,TRAIN_SCHEDULE_EDIT" Style="{StaticResource DangerDesktopButton}" Height="28" ToolTip="Xóa định mức này (Delete)">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Delete24" FontSize="12" Margin="0,0,4,0"/>
                                         <TextBlock Text="Xóa Loại Tàu Này" FontSize="11"/>

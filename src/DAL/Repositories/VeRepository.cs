@@ -117,10 +117,13 @@ namespace DAL.Repositories
                        ISNULL((SELECT TOP 1 ldDen.GioDenKeHoach FROM vanhanh.LichDungGa ldDen WHERE ldDen.MaChuyenTau = ct.MaChuyenTau AND ldDen.MaGa = @gaDen), ct.GioVeDichKH) AS GioVeDichKH,
                        ct.TrangThai,
                        gDi.TenGa AS TenGaXuatPhat, gDen.TenGa AS TenGaKetThuc,
-                       (SELECT COUNT(*) FROM vantai.ToaXeKhach tx WHERE tx.MaChuyenTau = ct.MaChuyenTau) AS SoToaXe,
-                       (SELECT COUNT(*) FROM vantai.ChoNgoi cn 
-                        JOIN vantai.ToaXeKhach tx2 ON cn.MaToaXeKhach = tx2.MaToaXeKhach 
-                        WHERE tx2.MaChuyenTau = ct.MaChuyenTau) AS TongSoCho,
+                       -- [13/11] Chi toa dang ban (khong ngung ban) va chay qua ca chang cua khach (toa noi / cat doc duong)
+                       (SELECT COUNT(*) FROM vantai.ToaXeKhach tx WHERE tx.MaChuyenTau = ct.MaChuyenTau AND tx.NgungBan = 0
+                          AND vantai.fn_ToaChayQuaChang(tx.MaToaXeKhach, @gaDi, @gaDen) = 1) AS SoToaXe,
+                       ISNULL((SELECT SUM(dem.SoCho) FROM vantai.ToaXeKhach tx2
+                        CROSS APPLY (SELECT COUNT(*) AS SoCho FROM vantai.ChoNgoi cn WHERE cn.MaToaXeKhach = tx2.MaToaXeKhach) dem
+                        WHERE tx2.MaChuyenTau = ct.MaChuyenTau AND tx2.NgungBan = 0
+                          AND vantai.fn_ToaChayQuaChang(tx2.MaToaXeKhach, @gaDi, @gaDen) = 1), 0) AS TongSoCho,
                        (SELECT COUNT(DISTINCT v.MaChoNgoi) 
                         FROM vantai.Ve v 
                         JOIN hatang.Ga gvDi ON v.MaGaDi = gvDi.MaGa
@@ -235,6 +238,8 @@ namespace DAL.Repositories
                     AND v.VeKmMin < uc.UserKmMax 
                     AND v.VeKmMax > uc.UserKmMin
                 WHERE tx.MaChuyenTau = @chuyenTau
+                  AND tx.NgungBan = 0                                                      -- [13/11] toa da ngung ban
+                  AND vantai.fn_ToaChayQuaChang(tx.MaToaXeKhach, @gaDi, @gaDen) = 1      -- [13/11] toa noi / cat doc duong
                 GROUP BY tx.MaToaXeKhach, tx.MaChuyenTau, tx.NhanHieuToa, tx.LoaiToa, tx.ThuTuToa, tx.SucChua
                 ORDER BY tx.ThuTuToa ASC";
 
@@ -337,11 +342,13 @@ namespace DAL.Repositories
 
             try
             {
-                // 1. Kiem tra hoac tao moi KhachHang (tra cuu linh hoat theo CCCD hoac SDT)
+                // 1. Kiem tra hoac tao moi KhachHang.
+                //    Co CCCD thi chi tim theo CCCD (SoCCCD UNIQUE NOT NULL: nguoi khac trung SDT - vd nguoi nha -
+                //    la khach khac, khong duoc gan don vao ho). Chi khi khong co CCCD moi tim theo SDT.
                 int maKhachHang = 0;
-                string checkKhSql = @"SELECT TOP 1 MaKhachHang FROM vantai.KhachHang 
-                                      WHERE (SoCCCD = @cccd AND @cccd <> '') 
-                                         OR (SoDienThoai = @sdt AND @sdt <> '')
+                string checkKhSql = @"SELECT TOP 1 MaKhachHang FROM vantai.KhachHang
+                                      WHERE (@cccd <> '' AND SoCCCD = @cccd)
+                                         OR (@cccd = '' AND @sdt <> '' AND SoDienThoai = @sdt)
                                       ORDER BY MaKhachHang DESC";
                 using (var cmdCheckKh = new SqlCommand(checkKhSql, conn, trans))
                 {
@@ -385,6 +392,11 @@ namespace DAL.Repositories
                     maDonVe = Convert.ToInt32(cmdDon.ExecuteScalar());
                 }
 
+                // [13/11] Khoa "ban ve cua chuyen" (Shared) cho moi chuyen trong gio, theo thu tu ma chuyen:
+                //         luu doan tau (dong bo toa ban ve) lay Exclusive -> khong ban vao toa dang bi bo / doi
+                foreach (int maCt in danhSachVe.Select(v => v.MaChuyenTau).Distinct().OrderBy(m => m))
+                    KhoaBanVe(conn, trans, maCt);
+
                 // 3. Dat tung ve qua Stored Procedure vantai.sp_DatVeTheoChang (kiem tra chang giao nhau, UPDLOCK, HOLDLOCK)
                 foreach (var ve in danhSachVe)
                 {
@@ -410,12 +422,16 @@ namespace DAL.Repositories
                           AND IIF(gvDi.LyTrinhKm < gvDen.LyTrinhKm, gvDi.LyTrinhKm, gvDen.LyTrinhKm) < uc.UserKmMax
                           AND IIF(gvDi.LyTrinhKm > gvDen.LyTrinhKm, gvDi.LyTrinhKm, gvDen.LyTrinhKm) > uc.UserKmMin";
 
-                    using (var cmdCheckCccd = new SqlCommand(checkTrungVeSql, conn, trans))
+                    // [15/11 Dat] Khong co CCCD thi bo qua (tranh chan nham 2 ve cung de trong);
+                    //             doc xong dong reader roi moi Rollback (reader con mo thi Rollback nem loi tieng Anh).
+                    string? veTrungCccd = null;
+                    if (!string.IsNullOrWhiteSpace(ve.CCCDHanhKhach))
                     {
+                        using var cmdCheckCccd = new SqlCommand(checkTrungVeSql, conn, trans);
                         cmdCheckCccd.Parameters.AddWithValue("@chuyenTau", ve.MaChuyenTau);
                         cmdCheckCccd.Parameters.AddWithValue("@gaDi", ve.MaGaDi);
                         cmdCheckCccd.Parameters.AddWithValue("@gaDen", ve.MaGaDen);
-                        cmdCheckCccd.Parameters.AddWithValue("@cccd", ve.CCCDHanhKhach ?? "");
+                        cmdCheckCccd.Parameters.AddWithValue("@cccd", ve.CCCDHanhKhach.Trim());
 
                         using var rCccd = cmdCheckCccd.ExecuteReader();
                         if (rCccd.Read())
@@ -424,10 +440,14 @@ namespace DAL.Repositories
                             string tenTrung = rCccd["TenHanhKhach"]?.ToString() ?? "";
                             string toaTrung = rCccd["NhanHieuToa"]?.ToString() ?? "";
                             string gheTrung = rCccd["SoGhe"]?.ToString() ?? "";
-                            thongBaoLoi = $"Hành khách '{tenTrung}' (CCCD: {ve.CCCDHanhKhach}) đã có vé [{maTrung}] (Toa {toaTrung}, Ghế {gheTrung}) trên chuyến tàu này trong cung chặng trùng lặp!";
-                            trans.Rollback();
-                            return false;
+                            veTrungCccd = $"Hành khách '{tenTrung}' (CCCD: {ve.CCCDHanhKhach}) đã có vé [{maTrung}] ({toaTrung}, Ghế {gheTrung}) trên chuyến tàu này, chặng bị trùng với chặng đang mua!";
                         }
+                    }
+                    if (veTrungCccd != null)
+                    {
+                        thongBaoLoi = veTrungCccd;
+                        trans.Rollback();
+                        return false;
                     }
 
                     using var cmdSP = new SqlCommand("vantai.sp_DatVeTheoChang", conn, trans);
@@ -451,6 +471,13 @@ namespace DAL.Repositories
                     ve.MaVeCode = pCodeOut.Value?.ToString() ?? "";
                 }
 
+                // [12/11] Nhat ky he thong (trang Quan tri > Nhat ky) - cung giao dich voi don ve
+                DAL.Connection.PhienGiaoDich.GhiNhatKy(conn, trans, "BAN_VE", "vantai.DonDatVe", maDonVe.ToString(), null, new
+                {
+                    MaPNR = pnrCode, MaKhachHang = maKhachHang, MacTau = soHieuTau, SoVe = danhSachVe.Count,
+                    donVe.TongTien, donVe.HinhThucTT, Ve = danhSachVe.Select(v => v.MaVeCode).ToList()
+                });
+
                 trans.Commit();
                 maPNROut = pnrCode;
                 return true;
@@ -468,7 +495,8 @@ namespace DAL.Repositories
                 {
                     // Bo qua neu transaction da bi rollback boi SQL Server
                 }
-                thongBaoLoi = ex.Message;
+                // [13/11] Loi tu thu tuc (RAISERROR) dung dau; SQL Server noi them loi 266 tieng Anh khi thu tuc ROLLBACK
+                thongBaoLoi = ex is SqlException se && se.Errors.Count > 0 ? se.Errors[0].Message : ex.Message;
                 return false;
             }
         }
@@ -597,6 +625,11 @@ namespace DAL.Repositories
                     cmdHh.ExecuteNonQuery();
                 }
 
+                // [12/11] Nhat ky he thong - cung giao dich
+                DAL.Connection.PhienGiaoDich.GhiNhatKy(conn, trans, "HOAN_VE", "vantai.Ve", maVe.ToString(),
+                    new { TrangThai = trangThai },
+                    new { TrangThai = "DA_HOAN_VE", TienVeGoc = giaGoc, TyLeLePhi = tyLeLePhi, HinhThucHoan = hinhThucHoan, LyDo = lyDo });
+
                 trans.Commit();
                 return true;
             }
@@ -652,6 +685,34 @@ namespace DAL.Repositories
             return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@cccd", cccd) });
         }
 
+        /// <summary>
+        /// Gia ve moi khi doi ghe: giu nguyen ty le giam cua ve cu (tre em, sinh vien...).
+        /// Hop thoai doi ghe va giao dich ghi dung chung ham nay -> so bao khach = so ghi CSDL.
+        /// </summary>
+        public static (decimal GiamMoi, decimal ThucThuMoi, decimal ChenhLech) TinhGiaDoiGhe(
+            decimal giaGocCu, decimal giamCu, decimal giaGocMoi)
+        {
+            decimal tyLeGiam = giaGocCu > 0 ? giamCu / giaGocCu : 0m;
+            decimal giamMoi = Math.Round(giaGocMoi * tyLeGiam, 0);
+            decimal thucThuMoi = giaGocMoi - giamMoi;
+            return (giamMoi, thucThuMoi, thucThuMoi - (giaGocCu - giamCu));
+        }
+
+        // [13/11 Dat] Khoa ung dung "vantai.BanVe:<ma chuyen>" muc Shared, giu toi het giao dich.
+        // sp_DatVeTheoChang cung lay (lay lai trong cung giao dich khong sao); LapTauService lay Exclusive khi dong bo toa ban ve.
+        private static void KhoaBanVe(SqlConnection conn, SqlTransaction trans, int maChuyenTau)
+        {
+            using var cmd = new SqlCommand("sp_getapplock", conn, trans) { CommandType = CommandType.StoredProcedure };
+            cmd.Parameters.Add(new SqlParameter("@Resource", SqlDbType.NVarChar, 255) { Value = DAL.Connection.KhoaSuaChuyen.TenKhoaBanVe(maChuyenTau) });
+            cmd.Parameters.Add(new SqlParameter("@LockMode", SqlDbType.VarChar, 32) { Value = "Shared" });
+            cmd.Parameters.Add(new SqlParameter("@LockOwner", SqlDbType.VarChar, 32) { Value = "Transaction" });
+            cmd.Parameters.Add(new SqlParameter("@LockTimeout", SqlDbType.Int) { Value = 10000 });
+            var kq = cmd.Parameters.Add(new SqlParameter("@KetQua", SqlDbType.Int) { Direction = ParameterDirection.ReturnValue });
+            cmd.ExecuteNonQuery();
+            if (kq.Value is int k && k < 0)
+                throw new InvalidOperationException("Đoàn tàu của chuyến đang được cập nhật, chưa đặt được vé. Vui lòng thử lại sau ít giây.");
+        }
+
         public bool DoiGheCungChuyen(int maVeCu, int maChoNgoiMoi, decimal giaVeGocMoi, int maNhanVien, out string maVeCodeMoi, out string thongBaoLoi)
         {
             maVeCodeMoi = string.Empty;
@@ -699,12 +760,11 @@ namespace DAL.Repositories
                     giamGia = Convert.ToDecimal(r["SoTienGiam"]);
                 }
 
-                // Tinh toan gia ve moi va chenh lech tai chinh
-                decimal tyLeGiam = (giaGoc > 0) ? (giamGia / giaGoc) : 0m;
-                decimal giamGiaMoi = Math.Round(giaVeGocMoi * tyLeGiam, 0);
-                decimal thucThuCu = giaGoc - giamGia;
-                decimal thucThuMoi = giaVeGocMoi - giamGiaMoi;
-                decimal chenhLech = thucThuMoi - thucThuCu;
+                // [13/11] Khoa "ban ve cua chuyen" (Shared) truoc khi giai phong ghe cu (xem LuuDonDatVeTransaction)
+                KhoaBanVe(conn, trans, maChuyenTau);
+
+                // Tinh toan gia ve moi va chenh lech tai chinh (cung ham voi hop thoai doi ghe)
+                var (giamGiaMoi, _, chenhLech) = TinhGiaDoiGhe(giaGoc, giamGia, giaVeGocMoi);
 
                 // 2. Chuyen trang thai ve cu sang DA_HUY de giai phong ghe cu
                 string updateCu = "UPDATE vantai.Ve SET TrangThai = 'DA_HUY' WHERE MaVe = @id";
@@ -750,6 +810,11 @@ namespace DAL.Repositories
                     }
                 }
 
+                // [12/11] Nhat ky he thong - cung giao dich
+                DAL.Connection.PhienGiaoDich.GhiNhatKy(conn, trans, "DOI_GHE", "vantai.Ve", maVeCu.ToString(),
+                    new { TrangThai = trangThai, GiaVeGoc = giaGoc, SoTienGiam = giamGia },
+                    new { VeMoi = maVeCodeMoi, MaChoNgoi = maChoNgoiMoi, GiaVeGoc = giaVeGocMoi, SoTienGiam = giamGiaMoi, ChenhLech = chenhLech });
+
                 trans.Commit();
                 return true;
             }
@@ -760,7 +825,8 @@ namespace DAL.Repositories
                     if (trans.Connection != null) trans.Rollback();
                 }
                 catch { }
-                thongBaoLoi = ex.Message;
+                // [13/11] Loi tu thu tuc (RAISERROR) dung dau; SQL Server noi them loi 266 tieng Anh khi thu tuc ROLLBACK
+                thongBaoLoi = ex is SqlException se && se.Errors.Count > 0 ? se.Errors[0].Message : ex.Message;
                 return false;
             }
         }
@@ -776,14 +842,26 @@ namespace DAL.Repositories
                                SET TrangThai = @trangThai,
                                    ThoiDiemSoatVe = CASE WHEN @trangThai = 'DA_LEN_TAU' THEN SYSDATETIME() ELSE NULL END,
                                    MaGaSoat = CASE WHEN @trangThai = 'DA_LEN_TAU' THEN @maGaSoat ELSE NULL END
+                               OUTPUT DELETED.TrangThai, DELETED.MaVeCode
                                WHERE MaVe = @id";
-                int rows = DatabaseHelper.ExecuteNonQuery(sql, new[]
+                // [12/11] Cap nhat + nhat ky he thong trong mot giao dich
+                using var conn = new SqlConnection(DatabaseHelper.GetConnectionString());
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                string? cu = null, maVeCode = null;
+                using (var cmd = new SqlCommand(sql, conn, trans))
                 {
-                    new SqlParameter("@id", maVe),
-                    new SqlParameter("@trangThai", trangThai),
-                    new SqlParameter("@maGaSoat", (object?)maGaSoat ?? DBNull.Value)
-                });
-                return rows > 0;
+                    cmd.Parameters.AddWithValue("@id", maVe);
+                    cmd.Parameters.AddWithValue("@trangThai", trangThai);
+                    cmd.Parameters.AddWithValue("@maGaSoat", (object?)maGaSoat ?? DBNull.Value);
+                    using var r = cmd.ExecuteReader();
+                    if (r.Read()) { cu = r["TrangThai"].ToString(); maVeCode = r["MaVeCode"].ToString(); }
+                }
+                if (cu == null) { trans.Rollback(); return false; }
+                DAL.Connection.PhienGiaoDich.GhiNhatKy(conn, trans, trangThai == "DA_LEN_TAU" ? "SOAT_VE" : "HUY_SOAT_VE", "vantai.Ve",
+                    maVe.ToString(), new { MaVeCode = maVeCode, TrangThai = cu }, new { MaVeCode = maVeCode, TrangThai = trangThai, MaGaSoat = maGaSoat });
+                trans.Commit();
+                return true;
             }
             catch (Exception ex)
             {
@@ -805,11 +883,20 @@ namespace DAL.Repositories
                                WHERE MaChuyenTau = @maChuyenTau
                                  AND MaGaDi = @maGaSoat
                                  AND TrangThai = 'DA_DAT'";
-                soVeDaSoat = DatabaseHelper.ExecuteNonQuery(sql, new[]
+                // [12/11] Cap nhat + nhat ky he thong trong mot giao dich
+                using var conn = new SqlConnection(DatabaseHelper.GetConnectionString());
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                using (var cmd = new SqlCommand(sql, conn, trans))
                 {
-                    new SqlParameter("@maChuyenTau", maChuyenTau),
-                    new SqlParameter("@maGaSoat", maGaSoat)
-                });
+                    cmd.Parameters.AddWithValue("@maChuyenTau", maChuyenTau);
+                    cmd.Parameters.AddWithValue("@maGaSoat", maGaSoat);
+                    soVeDaSoat = cmd.ExecuteNonQuery();
+                }
+                if (soVeDaSoat > 0)
+                    DAL.Connection.PhienGiaoDich.GhiNhatKy(conn, trans, "SOAT_VE_THEO_LO", "vanhanh.ChuyenTau", maChuyenTau.ToString(),
+                        null, new { MaGaSoat = maGaSoat, SoVeDaSoat = soVeDaSoat });
+                trans.Commit();
                 return true;
             }
             catch (Exception ex)

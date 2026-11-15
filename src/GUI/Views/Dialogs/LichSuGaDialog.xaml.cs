@@ -72,7 +72,7 @@ namespace GUI.Views.Dialogs
 
                     // 3. Tài khoản thao tác & Nội dung tóm tắt từ JSON
                     string duLieuMoiStr = row["DuLieuMoi"]?.ToString() ?? "";
-                    string nguoiDung = "admin";
+                    string nguoiDung = "—"; // khong co du lieu moi (ban ghi da xoa) thi khong biet ai thao tac
                     string tomTat = "";
 
                     if (!string.IsNullOrEmpty(duLieuMoiStr))

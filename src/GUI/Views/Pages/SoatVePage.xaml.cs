@@ -124,7 +124,10 @@ namespace GUI.Views.Pages
             if (cboChuyenTauSoatVe.SelectedValue is int mct && mct > 0)
             {
                 _currentSoatMaChuyenTau = mct;
-                lblManifestSubTitle.Text = $"Chuyến tàu đang kiểm soát: {cboChuyenTauSoatVe.Text}";
+                // [Dat 15/11] .Text cua ComboBox con giu chu cua dong chon truoc trong SelectionChanged -> lay tu dong vua chon
+                string tenChuyen = (cboChuyenTauSoatVe.SelectedItem as System.Data.DataRowView)?["TenHienThi"]?.ToString()
+                                   ?? cboChuyenTauSoatVe.Text;
+                lblManifestSubTitle.Text = $"Chuyến tàu đang kiểm soát: {tenChuyen}";
                 LoadManifestChuyenTau();
                 HienThiChoQuetVe();
             }

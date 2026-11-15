@@ -21,8 +21,11 @@ namespace BUS.Services
     //   -> kiem PhienBan -> chay lai QuyTacLapTau -> ghi DoanTau + ChiTietDoanTau
     //   -> ghi nhat ky -> COMMIT.
     //
-    // Chua lam (ngoai Sprint 1): dong bo vantai.ToaXeKhach theo doan tau
-    // (ChuyenTauService.DongBoToaXeKhachTuDoanTau cua A Ba, hop dong §7.1, Sprint 2).
+    // [13/11] Dong bo vantai.ToaXeKhach (toa ban ve) theo doan tau trong CUNG giao dich (QuyTacToaBanVe):
+    //   khoa "vanhanh.SuaChuyen:<ma>" (chong ghi de ca chuyen, cung khoa voi man Lich trinh) -> "vanhanh.LapDoanTau"
+    //   -> "vantai.BanVe:<ma>" Exclusive (dat ve lay Shared: khong ban vao ghe dang bi bo) -> ... -> ghi doan tau
+    //   -> ghi toa ban ve -> cham PhienBan cua chuyen -> nhat ky -> COMMIT.
+    //   Phuong an lam hong ve con hieu luc -> hang muc "Toa ban ve" LOI -> khong luu (liet ke ve).
     // =========================================================================
     public class LapTauService
     {
@@ -85,7 +88,9 @@ namespace BUS.Services
             try
             {
                 using var gd = PhienGiaoDich.Mo();
+                gd.KhoaTaiNguyen(KhoaSuaChuyen.TenKhoa(pa.MaChuyenTau));
                 gd.KhoaTaiNguyen(TaiNguyenKhoa);
+                gd.KhoaTaiNguyen(KhoaSuaChuyen.TenKhoaBanVe(pa.MaChuyenTau));
 
                 var bc = _repo.LayBoiCanh(pa.MaChuyenTau, gd, khoaDong: true);
                 if (bc == null)
@@ -115,15 +120,26 @@ namespace BUS.Services
                 if (kt.CoLoi)
                 {
                     var hangMucLoi = kt.HangMuc.Where(h => h.MucDo == MucDoKiemTra.Loi).ToList();
+                    // Hang muc "Toa ban ve" liet ke tung ve bi anh huong -> giu ca noi dung
                     loi = $"Chưa lưu được vì còn {hangMucLoi.Count} hạng mục không đạt:\n\n" +
-                          string.Join("\n", hangMucLoi.Select(h => $"• {h.Ten}: {h.NoiDung.Split('\n')[0]}"));
+                          string.Join("\n", hangMucLoi.Select(h => h.Ten == TenHangMucBanVe
+                              ? $"• {h.Ten}: {h.NoiDung}"
+                              : $"• {h.Ten}: {h.NoiDung.Split('\n')[0]}"));
                     return false;
                 }
 
+                var dongBo = kt.DongBoToaBanVe ?? QuyTacToaBanVe.LapKeHoach(bc, pa);
                 bool laMoi = bc.MaDoanTau == null;
                 if (!laMoi && !KhacThanhPhan(bc, pa))
                 {
-                    ketQua = TaoKetQua(bc.MaDoanTau!.Value, laMoi: false, khongThayDoi: true, daHuyDuyet: false, pa, kt);
+                    // Doan tau khong doi nhung toa ban ve chua khop (du lieu cu) -> chi dong bo toa ban ve
+                    if (dongBo.CoThayDoi)
+                    {
+                        GhiDongBoToaBanVe(bc, dongBo, gd);
+                        _repo.ChamPhienBanChuyen(bc.MaChuyenTau, gd);
+                        gd.XacNhan();
+                    }
+                    ketQua = TaoKetQua(bc.MaDoanTau!.Value, laMoi: false, khongThayDoi: !dongBo.CoThayDoi, daHuyDuyet: false, pa, kt);
                     return true;
                 }
 
@@ -147,6 +163,8 @@ namespace BUS.Services
                 }
 
                 _repo.ThayChiTietDoanTau(maDoanTau, pa.DanhSachToa, gd);
+                if (dongBo.CoThayDoi) GhiDongBoToaBanVe(bc, dongBo, gd);
+                _repo.ChamPhienBanChuyen(bc.MaChuyenTau, gd);
 
                 gd.GhiNhatKyHeThong(PhanQuyenService.MaTaiKhoanHienTai,
                                     laMoi ? "LAP_DOAN_TAU" : "SUA_DOAN_TAU", "vanhanh.DoanTau", maDoanTau.ToString(),
@@ -167,6 +185,29 @@ namespace BUS.Services
         }
 
         // ---------------------------------------------------------------------
+
+        public const string TenHangMucBanVe = "Toa bán vé";
+
+        // Ghi ke hoach dong bo toa ban ve + nhat ky (bang vantai.ToaXeKhach, khoa = ma chuyen)
+        private void GhiDongBoToaBanVe(BoiCanhLapTauDTO bc, KeHoachDongBoToaBanVeDTO ke, PhienGiaoDich gd)
+        {
+            _repo.ApDungDongBoToaBanVe(bc.MaChuyenTau, ke, gd);
+            string? MaGa(int? ma) => ma == null ? null : bc.HanhTrinh.FirstOrDefault(d => d.MaGa == ma)?.MaGaCode ?? $"#{ma}";
+            gd.GhiNhatKyHeThong(PhanQuyenService.MaTaiKhoanHienTai, "DONG_BO_TOA_BAN_VE", "vantai.ToaXeKhach",
+                bc.MaChuyenTau.ToString(),
+                JsonSerializer.Serialize(bc.ToaBanVe.Select(t => new { t.ThuTuToa, t.LoaiToa, t.SucChua })),
+                JsonSerializer.Serialize(new
+                {
+                    MacTau = bc.SoHieuMacTau,
+                    TomTat = ke.MoTaThayDoi,
+                    ThaoTac = ke.ThaoTac.Where(t => t.CoGhi).Select(t => new
+                    {
+                        t.Loai, Toa = t.ThuTuToa, t.LoaiToa, t.SucChua,
+                        ToaThat = t.MaToaXe == null ? null : bc.TimToa(t.MaToaXe.Value)?.SoHieuToaXe,
+                        GaNoi = MaGa(t.MaGaNoi), GaCat = MaGa(t.MaGaCat), t.LyDo
+                    })
+                }, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
+        }
 
         private static void DienQuyenSua(BoiCanhLapTauDTO bc)
         {
@@ -227,7 +268,9 @@ namespace BUS.Services
             TongSoToa = kt.SoToaLonNhat,
             TongChieuDaiM = kt.ChieuDaiLonNhatM,
             TongTrongLuongTan = kt.TrongLuongLonNhatTan,
-            MoTaCatNoi = kt.MoTaCatNoi
+            MoTaCatNoi = kt.MoTaCatNoi,
+            MoTaDongBoBanVe = kt.DongBoToaBanVe?.MoTaThayDoi ?? "",
+            SoToaBanVe = kt.DongBoToaBanVe?.SoToaKhachTrongDoan ?? 0
         };
 
         // Anh chup doan tau cho nhat ky he thong (so hieu de doc duoc khi tra cuu nhat ky)

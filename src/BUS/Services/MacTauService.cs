@@ -271,8 +271,10 @@ namespace BUS.Services
             return $"{prefix}{(laChieuLe ? 99 : 98)}";
         }
 
-        public bool Luu(MacTauMau m, bool laThemMoi, out string loi, string nguoiThucHien = "admin")
+        public bool Luu(MacTauMau m, bool laThemMoi, out string loi, string? nguoiThucHien = null)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraBatKyQuyen(PhanQuyenService.QuyenSuaMacTau, "khai báo / sửa mác tàu và định mức chạy tàu", out loi)) return false;
             if (!KiemTraHopLe(m, laThemMoi, out loi))
             {
                 return false;
@@ -282,7 +284,7 @@ namespace BUS.Services
             {
                 if (laThemMoi)
                 {
-                    m.NguoiTao = string.IsNullOrWhiteSpace(nguoiThucHien) ? "admin" : nguoiThucHien;
+                    m.NguoiTao = string.IsNullOrWhiteSpace(nguoiThucHien) ? PhanQuyenService.TenDangNhapHienTai : nguoiThucHien;
                     int id = _repo.Them(m);
                     if (id > 0)
                     {
@@ -294,7 +296,7 @@ namespace BUS.Services
                 }
                 else
                 {
-                    m.NguoiCapNhat = string.IsNullOrWhiteSpace(nguoiThucHien) ? "admin" : nguoiThucHien;
+                    m.NguoiCapNhat = string.IsNullOrWhiteSpace(nguoiThucHien) ? PhanQuyenService.TenDangNhapHienTai : nguoiThucHien;
                     if (_repo.CapNhat(m))
                     {
                         return true;
@@ -312,6 +314,8 @@ namespace BUS.Services
 
         public bool Xoa(int maMacTau, out string loi)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraBatKyQuyen(PhanQuyenService.QuyenSuaMacTau, "khai báo / sửa mác tàu và định mức chạy tàu", out loi)) return false;
             loi = string.Empty;
             if (maMacTau <= 0)
             {
@@ -345,8 +349,10 @@ namespace BUS.Services
             }
         }
 
-        public bool DoiTrangThaiKhaiThac(int maMacTau, bool dangKhaiThac, out string loi, string nguoiThucHien = "admin")
+        public bool DoiTrangThaiKhaiThac(int maMacTau, bool dangKhaiThac, out string loi, string? nguoiThucHien = null)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            if (!PhanQuyenService.KiemTraBatKyQuyen(PhanQuyenService.QuyenSuaMacTau, "khai báo / sửa mác tàu và định mức chạy tàu", out loi)) return false;
             loi = string.Empty;
             if (maMacTau <= 0)
             {
@@ -356,7 +362,7 @@ namespace BUS.Services
 
             try
             {
-                if (_repo.DoiTrangThaiKhaiThac(maMacTau, dangKhaiThac, nguoiThucHien))
+                if (_repo.DoiTrangThaiKhaiThac(maMacTau, dangKhaiThac, string.IsNullOrWhiteSpace(nguoiThucHien) ? PhanQuyenService.TenDangNhapHienTai : nguoiThucHien))
                 {
                     return true;
                 }
@@ -377,8 +383,11 @@ namespace BUS.Services
             return _repo.LayDanhSachChuyenTauKeHoachTuongLai(maMacTau);
         }
 
-        public bool TamDungMacTauVaXuLyChuyen(int maMacTau, bool huyChuyenTuongLai, string lyDoHuy, out int soChuyenDaHuy, out string loi, string nguoiThucHien = "admin")
+        public bool TamDungMacTauVaXuLyChuyen(int maMacTau, bool huyChuyenTuongLai, string lyDoHuy, out int soChuyenDaHuy, out string loi, string? nguoiThucHien = null)
         {
+            // [Sprint 3] Service tu chan khi tai khoan khong co quyen ghi (giao dien chi an tab).
+            soChuyenDaHuy = 0;
+            if (!PhanQuyenService.KiemTraBatKyQuyen(PhanQuyenService.QuyenSuaMacTau, "khai báo / sửa mác tàu và định mức chạy tàu", out loi)) return false;
             loi = string.Empty;
             soChuyenDaHuy = 0;
             if (maMacTau <= 0)
@@ -389,7 +398,7 @@ namespace BUS.Services
 
             try
             {
-                return _repo.TamDungMacTauVaXuLyChuyen(maMacTau, huyChuyenTuongLai, lyDoHuy, nguoiThucHien, out soChuyenDaHuy);
+                return _repo.TamDungMacTauVaXuLyChuyen(maMacTau, huyChuyenTuongLai, lyDoHuy, string.IsNullOrWhiteSpace(nguoiThucHien) ? PhanQuyenService.TenDangNhapHienTai : nguoiThucHien, out soChuyenDaHuy);
             }
             catch (Exception ex)
             {

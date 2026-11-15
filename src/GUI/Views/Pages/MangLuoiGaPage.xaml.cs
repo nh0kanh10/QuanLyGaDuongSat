@@ -1031,8 +1031,8 @@ namespace GUI.Views.Pages
                     HangGa = hangGa,
                     CoCauQuay = chkCoCauQuay.IsChecked == true,
                     DangKhaiThac = IsDangKhaiThac,
-                    NguoiTao = "admin",
-                    NguoiCapNhat = "admin"
+                    NguoiTao = PhanQuyenService.TenDangNhapHienTai,
+                    NguoiCapNhat = PhanQuyenService.TenDangNhapHienTai
                 };
 
                 if (laThemMoi)
@@ -2138,7 +2138,7 @@ namespace GUI.Views.Pages
                 chkCoKeGaRay.IsChecked = true;
                 cboTrangThaiRay.SelectedIndex = 0;
 
-                if (txtNguoiTaoRay != null) txtNguoiTaoRay.Text = isNew ? "admin (Mới)" : "admin";
+                if (txtNguoiTaoRay != null) txtNguoiTaoRay.Text = isNew ? $"{PhanQuyenService.TenDangNhapHienTai} (Mới)" : PhanQuyenService.TenDangNhapHienTai;
                 if (txtNgayCapNhatRay != null) txtNgayCapNhatRay.Text = "Chưa cập nhật";
 
                 txtLuuRay.Text = "Tạo Mới Đường Ray";
@@ -2686,8 +2686,8 @@ namespace GUI.Views.Pages
                     ChieuDaiHuuDungM = chieuDai,
                     CoKeGa = chkCoKeGaRay.IsChecked == true,
                     TrangThai = tt,
-                    NguoiTao = "admin",
-                    NguoiCapNhat = "admin"
+                    NguoiTao = PhanQuyenService.TenDangNhapHienTai,
+                    NguoiCapNhat = PhanQuyenService.TenDangNhapHienTai
                 };
 
                 if (_isAddingRay)
@@ -3214,7 +3214,7 @@ namespace GUI.Views.Pages
                         HangGa = drv["HangGa"]?.ToString() ?? "HANG_3",
                         CoCauQuay = drv["CoCauQuay"] != DBNull.Value && Convert.ToBoolean(drv["CoCauQuay"]),
                         DangKhaiThac = moi,
-                        NguoiCapNhat = "admin"
+                        NguoiCapNhat = PhanQuyenService.TenDangNhapHienTai
                     };
                     _gaService.CapNhat(ga);
                     LoadData();

@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using BUS.Services;
 using DTO.VanHanh;
+using GUI.Views.Dialogs;
 
 namespace GUI.Views.Pages
 {
@@ -217,7 +218,7 @@ namespace GUI.Views.Pages
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi khi tải dữ liệu biểu đồ chạy tàu:\n{ex.Message}", "Lỗi CSDL", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi($"Lỗi khi tải dữ liệu biểu đồ chạy tàu:\n{ex.Message}", "Lỗi CSDL");
             }
             finally
             {
@@ -858,8 +859,15 @@ namespace GUI.Views.Pages
                                   $"• Kế hoạch dừng tránh: Đến {xd.GioDenGaTranh:HH:mm} — Đi {xd.GioDiGaTranh:HH:mm} ({thongTinDung} trên {thongTinRay})\n\n" +
                                   "Bạn có muốn hệ thống tự động dời giờ và xếp tránh an toàn cho đoàn tàu này ngay không?";
 
-                var r = MessageBox.Show(thongBao, "Chi Tiết Xung Đột Khu Gian", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                if (r == MessageBoxResult.Yes)
+                // [12/11] Tai khoan chi xem: chi hien chi tiet, khong hoi ap dung
+                if (!PhanQuyenService.CoQuyen(DTO.Common.MaQuyen.LapBieuDoChayTau))
+                {
+                    ThongBaoDialog.ThongTin(thongBao.Substring(0, thongBao.LastIndexOf("\n\n", StringComparison.Ordinal)), "Chi Tiết Xung Đột Khu Gian");
+                    return;
+                }
+
+                bool r = ThongBaoDialog.XacNhan(thongBao, "Chi Tiết Xung Đột Khu Gian");
+                if (r)
                 {
                     ApDungGiaiQuyetXungDot(xd);
                 }
@@ -1216,6 +1224,8 @@ namespace GUI.Views.Pages
                     e.Handled = true;
                     ApDungGiaiQuyetXungDot(xd);
                 };
+                // [12/11] Tai khoan chi xem: an nut ap dung (van xem duoc chi tiet xung dot)
+                GUI.Helpers.QuyenGiaoDienHelper.SetCanQuyen(btnApDung, DTO.Common.MaQuyen.LapBieuDoChayTau);
                 Grid.SetColumn(btnApDung, 2);
 
                 btnGrid.Children.Add(btnXem);
@@ -1293,41 +1303,39 @@ namespace GUI.Views.Pages
 
         private void ApDungGiaiQuyetXungDot(XungDotKhuGianDTO xd)
         {
+            // [12/11] Nut "Ap dung" nam trong the xung dot (tao bang ma) -> chan ngay voi tai khoan chi xem
+            if (!GUI.Helpers.QuyenGiaoDienHelper.KiemTra(DTO.Common.MaQuyen.LapBieuDoChayTau, "xếp tránh tàu (sửa lịch chạy)")) return;
             string rayApDung = xd.SoHieuDuongRayDeXuat.HasValue ? $"đường #{xd.SoHieuDuongRayDeXuat.Value}" : "đường tránh phân bổ";
             string thoiGianChiTiet = xd.SoPhutTangLichTrinh > 0 && xd.SoPhutTangLichTrinh != xd.SoPhutDungDeXuat
                 ? $"chờ tránh +{xd.SoPhutTangLichTrinh} phút (tổng đỗ {xd.SoPhutDungDeXuat} phút tại ga, gồm thời gian tác nghiệp sẵn có)"
                 : $"{xd.SoPhutDungDeXuat} phút";
 
-            var r = MessageBox.Show(
-                $"XÁC NHẬN ĐIỀU ĐỘ XẾP TRÁNH:\n\n" +
+            bool r = ThongBaoDialog.XacNhan($"XÁC NHẬN ĐIỀU ĐỘ XẾP TRÁNH:\n\n" +
                 $"• Cặp xung đột: {xd.SoHieuMacTau1} ✕ {xd.SoHieuMacTau2}\n" +
                 $"• Khu gian: {xd.TenGaDau} — {xd.TenGaCuoi} (Km {xd.LyTrinhUocTinhKm:F1})\n" +
                 $"• Phương án: Tàu {xd.SoHieuTauBiTranh} sẽ dừng tránh tại Ga {xd.TenGaDeXuatTranh} ({thoiGianChiTiet}, {rayApDung})\n" +
                 $"• Tác động: Cập nhật giờ chạy và lịch dừng trong CSDL vận hành.\n\n" +
-                $"Bạn có chắc chắn muốn áp dụng phương án xếp tránh này?",
-                "Xác Nhận Điều Độ Xếp Tránh",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                $"Bạn có chắc chắn muốn áp dụng phương án xếp tránh này?", "Xác Nhận Điều Độ Xếp Tránh");
 
-            if (r != MessageBoxResult.Yes) return;
+            if (!r) return;
 
             try
             {
                 bool ok = _dieuDoService.GiaiQuyetMotXungDot(xd, out string baoCao);
                 if (ok)
                 {
-                    MessageBox.Show(baoCao, "Điều Độ Xếp Tránh Thành Công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThongBaoDialog.ThanhCong(baoCao, "Điều Độ Xếp Tránh Thành Công");
                     LoadData();
                     DuLieuDieuDoThayDoi?.Invoke();
                 }
                 else
                 {
-                    MessageBox.Show(baoCao, "Thông Báo Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThongBaoDialog.CanhBao(baoCao, "Thông Báo Lỗi");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi khi xếp tránh tàu:\n{ex.Message}", "Lỗi Cơ Sở Dữ Liệu", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi($"Lỗi khi xếp tránh tàu:\n{ex.Message}", "Lỗi Cơ Sở Dữ Liệu");
             }
         }
 
@@ -1381,20 +1389,20 @@ namespace GUI.Views.Pages
         private void BtnTuDongXepTranh_Click(object sender, RoutedEventArgs e)
         {
             DateTime ngay = dpNgay.SelectedDate ?? DateTime.Today;
-            var r = MessageBox.Show($"Xác nhận chạy Thuật toán Tự động Xếp Tránh Tàu cho ngày {ngay:dd/MM/yyyy}?\n\n" +
+            bool r = ThongBaoDialog.XacNhan($"Xác nhận chạy Thuật toán Tự động Xếp Tránh Tàu cho ngày {ngay:dd/MM/yyyy}?\n\n" +
                                     "Hệ thống sẽ:\n" +
-                                    "1. So sánh cấp ưu tiên giữa các đoàn tàu ngược chiều (SE > Tàu Chợ > Tàu Hàng).\n" +
+                                    "1. So sánh cấp ưu tiên giữa các đoàn tàu ngược chiều (SE > Tàu Chợ > Tàu Hàng); tàu cấp thấp phải chờ quá 60 phút thì cân nhắc để tàu cấp cao chờ nếu ít trễ hơn.\n" +
                                     "2. Phân bổ đường ray tránh tại ga có chiều dài đường tránh đủ chứa đoàn tàu.\n" +
                                     "3. Tự động dời giờ đỗ và tịnh tiến lịch trình các ga sau mà không làm thay đổi tốc độ chuẩn.\n" +
-                                    "4. Ghi nhận nhật ký chậm giờ 'CHO_TRANH_TAU' phục vụ kiểm toán.",
-                                    "Tự Động Xếp Tránh Tàu", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                                    "4. Ghi nhận nhật ký chậm giờ 'CHO_TRANH_TAU' phục vụ kiểm toán.", "Tự Động Xếp Tránh Tàu");
 
-            if (r == MessageBoxResult.Yes)
+            if (r)
             {
                 try
                 {
                     bool ok = _dieuDoService.TuDongGiaiQuyetTranhTau(ngay, out string baoCao);
-                    MessageBox.Show(baoCao, ok ? "Xếp Tránh Tàu Thành Công" : "Thông Báo", MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (ok) ThongBaoDialog.ThanhCong(baoCao, "Xếp Tránh Tàu Thành Công");
+                    else ThongBaoDialog.CanhBao(baoCao, "Chưa Xếp Tránh Được");
                     LoadData();
                     if (ok)
                     {
@@ -1403,7 +1411,7 @@ namespace GUI.Views.Pages
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi trong quá trình tự động xếp tránh tàu:\n{ex.Message}", "Lỗi Thực Thi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ThongBaoDialog.Loi($"Lỗi trong quá trình tự động xếp tránh tàu:\n{ex.Message}", "Lỗi Thực Thi");
                 }
             }
         }
@@ -1420,16 +1428,16 @@ namespace GUI.Views.Pages
 
                 if (_dsXungDot.Count == 0)
                 {
-                    MessageBox.Show($"Kiểm tra an toàn toàn tuyến ngày {ngay:dd/MM/yyyy}: Không phát hiện xung đột nào!", "An Toàn Tuyệt Đối", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThongBaoDialog.ThongTin($"Kiểm tra an toàn toàn tuyến ngày {ngay:dd/MM/yyyy}: Không phát hiện xung đột nào!", "An Toàn Tuyệt Đối");
                 }
                 else
                 {
-                    MessageBox.Show($"Phát hiện {_dsXungDot.Count} xung đột khu gian cần giải quyết!\nVui lòng xem danh sách cảnh báo ở cột bên phải.", "Cảnh Báo Xung Đột", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThongBaoDialog.CanhBao($"Phát hiện {_dsXungDot.Count} xung đột khu gian cần giải quyết!\nVui lòng xem danh sách cảnh báo ở cột bên phải.", "Cảnh Báo Xung Đột");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi khi kiểm tra xung đột an toàn:\n{ex.Message}", "Lỗi Kiểm Tra", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThongBaoDialog.Loi($"Lỗi khi kiểm tra xung đột an toàn:\n{ex.Message}", "Lỗi Kiểm Tra");
             }
         }
 

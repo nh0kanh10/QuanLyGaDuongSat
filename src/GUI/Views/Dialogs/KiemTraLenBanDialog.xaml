@@ -66,7 +66,7 @@
                         <StackPanel>
                             <TextBlock Text="Quy định" FontSize="11" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,3"/>
                             <TextBlock FontSize="11" Foreground="#334155" TextWrapping="Wrap"
-                                       Text="Đủ điều kiện lên ban khi nồng độ cồn bằng 0.00 mg/L và đã nghỉ ít nhất 8.0 giờ trước ca. Kết quả đã ghi không sửa được — đo lại thì ghi lần mới, lần không đạt vẫn giữ trong sổ."/>
+                                       Text="Đủ điều kiện lên ban khi nồng độ cồn bằng 0.00 mg/L và đã nghỉ ít nhất 8.0 giờ trước ca. Mỗi người chỉ ghi một kết quả cho mỗi chuyến và không sửa được sau khi ghi — người không đạt phải được thay khỏi kíp."/>
                             <TextBlock FontSize="10" Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,0"
                                        Text="Giờ nghỉ được điền sẵn theo lịch phân công (giờ bàn giao ca trước → giờ nhận ban); sửa nếu thực tế khác."/>
                         </StackPanel>
