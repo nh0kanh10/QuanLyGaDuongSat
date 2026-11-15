@@ -1,0 +1,180 @@
+<Window x:Class="GUI.Views.Dialogs.XacNhanDatVeHoDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Xác Nhận Đặt Vé"
+        Width="940" SizeToContent="Height" MaxHeight="760"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        FontFamily="Segoe UI, sans-serif"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GUI;component/Resources/Styles/KyThuatDialogStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <!-- [16/11] Đặt vé hộ (AI hoặc nút "Đặt Vé Ngay"): xem thông tin chuyến + vé, nhập hành khách, xác nhận mới ghi CSDL -->
+    <Border Style="{StaticResource KtDialogKhung}" Margin="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="46"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Style="{StaticResource KtHeader}" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                <Grid Margin="14,0,10,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="TicketDiagonal24" FontSize="17" Foreground="#FFFFFF" Margin="0,0,9,0"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="XÁC NHẬN ĐẶT VÉ" Foreground="#FFFFFF" FontSize="12" FontWeight="Bold"/>
+                            <TextBlock x:Name="txtPhuDe" Text="Kiểm tra thông tin chuyến và vé, nhập hành khách rồi xác nhận" Foreground="#BFDBFE" FontSize="10"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Style="{StaticResource KtNutDong}" Click="BtnHuy_Click" HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip="Hủy (Esc)"/>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="18,12,18,10">
+                <StackPanel>
+                    <!-- THÔNG TIN CHUYẾN TÀU -->
+                    <TextBlock Text="THÔNG TIN CHUYẾN TÀU" Style="{StaticResource KtTieuDeMuc}"/>
+                    <Border Background="#F0F9FF" BorderBrush="#BAE6FD" BorderThickness="1" CornerRadius="4" Padding="12,9" Margin="0,4,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock x:Name="txtMacTau" FontSize="18" FontWeight="Bold" Foreground="#003B73"/>
+                                <TextBlock x:Name="txtLoaiTau" FontSize="11" Foreground="#475569"/>
+                                <TextBlock x:Name="txtNgay" FontSize="11" Foreground="#475569" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="ĐI" FontSize="9.5" FontWeight="SemiBold" Foreground="#64748B"/>
+                                <TextBlock x:Name="txtGaDi" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                <TextBlock x:Name="txtGioDi" FontSize="11.5" Foreground="#334155"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="ĐẾN" FontSize="9.5" FontWeight="SemiBold" Foreground="#64748B"/>
+                                <TextBlock x:Name="txtGaDen" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                <TextBlock x:Name="txtGioDen" FontSize="11.5" Foreground="#334155"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <TextBlock x:Name="txtHanhTrinh" FontSize="11" Foreground="#475569" Margin="2,5,0,0" TextWrapping="Wrap"/>
+
+                    <!-- VÉ & HÀNH KHÁCH -->
+                    <TextBlock Text="VÉ &amp; HÀNH KHÁCH" Style="{StaticResource KtTieuDeMuc}" Margin="0,14,0,4"/>
+                    <Grid Margin="0,0,0,3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="92"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="170"/>
+                            <ColumnDefinition Width="160"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Chỗ" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B"/>
+                        <TextBlock Grid.Column="1" Text="Họ tên hành khách" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B"/>
+                        <TextBlock Grid.Column="2" Text="CCCD (12 số)" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" Margin="6,0,0,0"/>
+                        <TextBlock Grid.Column="3" Text="Đối tượng" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" Margin="6,0,0,0"/>
+                        <TextBlock Grid.Column="4" Text="Thành tiền" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ItemsControl x:Name="icHanhKhach">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="92"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="170"/>
+                                        <ColumnDefinition Width="160"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding NhanCho}" FontSize="11.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="1" Text="{Binding HoTen, UpdateSourceTrigger=PropertyChanged}" Height="30" Padding="6,0"
+                                             VerticalContentAlignment="Center" MaxLength="100"/>
+                                    <TextBox Grid.Column="2" Text="{Binding Cccd, UpdateSourceTrigger=PropertyChanged}" Height="30" Padding="6,0" Margin="6,0,0,0"
+                                             VerticalContentAlignment="Center" MaxLength="12" PreviewTextInput="ChiNhapSo"/>
+                                    <ComboBox Grid.Column="3" Height="30" Margin="6,0,0,0" ItemsSource="{Binding CacDoiTuong}" DisplayMemberPath="Ten"
+                                              SelectedValuePath="Ma" SelectedValue="{Binding LoaiKhach}"/>
+                                    <StackPanel Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding NhanThucThu}" FontSize="12" FontWeight="Bold" Foreground="#B45309" HorizontalAlignment="Right"/>
+                                        <TextBlock Text="{Binding NhanGiam}" FontSize="10" Foreground="#64748B" HorizontalAlignment="Right"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- NGƯỜI MUA & THANH TOÁN -->
+                    <TextBlock Text="NGƯỜI MUA &amp; THANH TOÁN" Style="{StaticResource KtTieuDeMuc}" Margin="0,14,0,4"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="200"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Họ tên người mua" Style="{StaticResource KtNhanTruong}"/>
+                            <TextBox x:Name="txtNguoiMua" Height="30" Padding="6,0" VerticalContentAlignment="Center" MaxLength="100"
+                                     ToolTip="Để trống thì lấy tên hành khách đầu tiên"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Số điện thoại" Style="{StaticResource KtNhanTruong}"/>
+                            <TextBox x:Name="txtSdt" Height="30" Padding="6,0" VerticalContentAlignment="Center" MaxLength="10" PreviewTextInput="ChiNhapSo"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Hình thức thanh toán" Style="{StaticResource KtNhanTruong}"/>
+                            <ComboBox x:Name="cboHinhThuc" Height="30" DisplayMemberPath="Ten" SelectedValuePath="Ma"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Background="#FFFBEB" BorderBrush="#FCD34D" BorderThickness="1" CornerRadius="4" Padding="12,8" Margin="0,14,0,0">
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="TỔNG TIỀN PHẢI THU" FontSize="10" FontWeight="SemiBold" Foreground="#92400E"/>
+                                <TextBlock x:Name="txtChiTietTong" FontSize="10.5" Foreground="#92400E"/>
+                            </StackPanel>
+                            <TextBlock x:Name="txtTongTien" FontSize="22" FontWeight="Bold" Foreground="#B45309" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock x:Name="txtLoi" Style="{StaticResource KtLoiTruong}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Row="2" Style="{StaticResource KtFooter}">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
+                        <TextBlock FontSize="10" Foreground="#64748B" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="470"
+                                   Text="Bấm Xác Nhận thì hệ thống mới giữ ghế và xuất vé. Họ tên, CCCD, SĐT chỉ lưu trong hệ thống, không gửi cho AI."/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource DesktopButton}" Height="32" Click="BtnHuy_Click" Margin="0,0,8,0">
+                            <TextBlock Text="Hủy (Esc)"/>
+                        </Button>
+                        <Button x:Name="btnXacNhan" Style="{StaticResource PrimaryDesktopButton}" Height="32" Click="BtnXacNhan_Click" ToolTip="Ctrl+Enter">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Checkmark24" FontSize="13" Foreground="#FFFFFF" Margin="0,0,6,0"/>
+                                <TextBlock Text="Xác Nhận Đặt Vé"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

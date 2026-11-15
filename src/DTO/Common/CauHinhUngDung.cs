@@ -41,6 +41,35 @@ namespace DTO.Common
 
         public static bool TuDongDoMayChu { get; private set; } = true;
 
+        // ---- Tro ly AI: mo hinh ngon ngu OpenAI (16/11; luc dau Claude, Dat doi sang OpenAI) ----
+        // Muc "TroLyAI" trong appsettings. KHOA API CHI GHI O appsettings.Local.json (bi .gitignore loai)
+        // hoac bien moi truong OPENAI_API_KEY - khong bao gio ghi vao appsettings.json (len Git).
+        // Khong co khoa -> tro ly AI chay nhu cu (chi cham diem MCDM tren form), khong goi mang.
+        public const string MoHinhAIMacDinh = "gpt-4.1-mini";
+        private const int ThoiGianChoAiMacDinhGiay = 45;
+
+        private static string _khoaApiAI = string.Empty;
+
+        public static string MoHinhAI { get; private set; } = MoHinhAIMacDinh;
+
+        // false: tat han phan mo hinh ngon ngu (vd may demo khong co mang) du co khoa.
+        public static bool BatMoHinhNgonNgu { get; private set; } = true;
+
+        public static int ThoiGianChoAiGiay { get; private set; } = ThoiGianChoAiMacDinhGiay;
+
+        // Khoa trong cau hinh truoc, khong co thi lay bien moi truong OPENAI_API_KEY.
+        public static string KhoaApiAI
+        {
+            get
+            {
+                if (!_daNap) Nap();
+                if (!string.IsNullOrWhiteSpace(_khoaApiAI)) return _khoaApiAI;
+                return Environment.GetEnvironmentVariable("OPENAI_API_KEY")?.Trim() ?? string.Empty;
+            }
+        }
+
+        public static bool CoKhoaApiAI => !string.IsNullOrEmpty(KhoaApiAI);
+
         // Thu muc da doc cau hinh - phuc vu bao loi khi app khong noi duoc CSDL.
         public static string ThuMucCauHinh { get; private set; } = string.Empty;
 
@@ -90,6 +119,10 @@ namespace DTO.Common
             TenCsdlKiemThu = TenCsdlKiemThuMacDinh;
             ChuoiKetNoiTuyChon = string.Empty;
             TuDongDoMayChu = true;
+            _khoaApiAI = string.Empty;
+            MoHinhAI = MoHinhAIMacDinh;
+            BatMoHinhNgonNgu = true;
+            ThoiGianChoAiGiay = ThoiGianChoAiMacDinhGiay;
             LoiCauHinh = string.Empty;
             Nap(thuMuc);
         }
@@ -110,13 +143,26 @@ namespace DTO.Common
                     AllowTrailingCommas = true
                 });
 
-                if (!tep.RootElement.TryGetProperty("KetNoiCsdl", out JsonElement muc)) return true;
+                if (tep.RootElement.TryGetProperty("KetNoiCsdl", out JsonElement muc))
+                {
+                    MayChu = LayChuoi(muc, "MayChu", MayChu);
+                    TenCsdl = LayChuoi(muc, "TenCsdl", TenCsdl);
+                    TenCsdlKiemThu = LayChuoi(muc, "TenCsdlKiemThu", TenCsdlKiemThu);
+                    ChuoiKetNoiTuyChon = LayChuoi(muc, "ChuoiKetNoi", ChuoiKetNoiTuyChon);
+                    TuDongDoMayChu = LayBool(muc, "TuDongDoMayChu", TuDongDoMayChu);
+                }
 
-                MayChu = LayChuoi(muc, "MayChu", MayChu);
-                TenCsdl = LayChuoi(muc, "TenCsdl", TenCsdl);
-                TenCsdlKiemThu = LayChuoi(muc, "TenCsdlKiemThu", TenCsdlKiemThu);
-                ChuoiKetNoiTuyChon = LayChuoi(muc, "ChuoiKetNoi", ChuoiKetNoiTuyChon);
-                TuDongDoMayChu = LayBool(muc, "TuDongDoMayChu", TuDongDoMayChu);
+                if (tep.RootElement.TryGetProperty("TroLyAI", out JsonElement ai))
+                {
+                    _khoaApiAI = LayChuoi(ai, "KhoaApi", _khoaApiAI);
+                    MoHinhAI = LayChuoi(ai, "MoHinh", MoHinhAI);
+                    BatMoHinhNgonNgu = LayBool(ai, "BatMoHinhNgonNgu", BatMoHinhNgonNgu);
+                    if (ai.TryGetProperty("ThoiGianChoGiay", out JsonElement tg) && tg.ValueKind == JsonValueKind.Number
+                        && tg.TryGetInt32(out int giay) && giay is >= 5 and <= 300)
+                    {
+                        ThoiGianChoAiGiay = giay;
+                    }
+                }
                 return true;
             }
             catch (Exception ex)

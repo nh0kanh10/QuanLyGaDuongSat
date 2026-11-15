@@ -1,6 +1,19 @@
 # Thư mục `database/` — dựng CSDL `QuanLyDuongSatV2`
 
-## Dựng lại từ đầu (một lệnh)
+## Cách nhanh nhất: một file `.sql` (SSMS → F5)
+
+Tắt ứng dụng, mở **`CSDL_tron_goi.sql`** bằng SSMS → **Execute (F5)** → đợi khoảng 1–2 phút.
+Tab Messages, dòng cuối phải là **`=== HOÀN TẤT ===`**. Nếu là `=== CHƯA XONG ===` thì dòng đó ghi luôn bước bị dừng;
+kéo lên tìm dòng chữ đỏ đầu tiên.
+
+- File gồm script gốc + mọi file trong `thu_tu_chay.txt`, tự sao lưu CSDL cũ (`QuanLyDuongSatV2_truoc_tron_goi.bak`
+  trong thư mục Backup của SQL Server), ngày dữ liệu = ngày chạy (giờ máy).
+- Không có SSMS: `sqlcmd -S . -E -f 65001 -i CSDL_tron_goi.sql` (đứng trong thư mục `database`).
+- File này **sinh tự động**, không sửa tay. Thêm / sửa dòng trong `thu_tu_chay.txt` thì nhấp đúp
+  **`ghep_tron_goi.cmd`** để sinh lại, rồi commit cả `CSDL_tron_goi.sql` cùng PR.
+- Cần dựng sẵn cho một ngày khác (vd tối hôm trước cho buổi demo sáng hôm sau): dùng `tao_lai_csdl.cmd` bên dưới.
+
+## Dựng lại từ đầu (một lệnh cmd, chọn được ngày)
 
 Tắt ứng dụng trước (script gốc xoá và tạo lại CSDL), rồi mở **cmd**:
 
@@ -49,7 +62,8 @@ UPDATE phanquyen.TaiKhoan SET SoLanSaiLienTiep = 0, KhoaDenLuc = NULL WHERE TenD
 - Tên: `migrations\VyyyyMMdd_HHmm__<người>__<mô-tả>.sql`, `seed\SyyyyMMdd_HHmm__<người>__<mô-tả>.sql`.
 - Mỗi file **chạy lại được** (kiểm `COL_LENGTH`, `OBJECT_ID`, dữ liệu đánh dấu…), không có `USE`, đầu file ghi tác giả + lý do.
 - **Không sửa file đã merge** — đổi thì viết file mới.
-- Thêm một dòng vào `thu_tu_chay.txt` (trước dòng `tests\`) cùng PR.
+- Thêm một dòng vào `thu_tu_chay.txt` (trước dòng `tests\`) cùng PR, rồi chạy `ghep_tron_goi.cmd` để sinh lại
+  `CSDL_tron_goi.sql` và commit cả file đó.
 - Chạy riêng một file: đứng trong thư mục của file,
   `sqlcmd -S . -E -I -f 65001 -d QuanLyDuongSatV2 -i <tên file>` (phải có `-I`; sqlcmd hiểu `/` trong đường dẫn là tham số
   nên `cd` vào thư mục rồi truyền tên file trần).

@@ -25,7 +25,14 @@ namespace GUI.Views.Pages
             int? gaDi = cboGaDi.SelectedValue is null ? null : Convert.ToInt32(cboGaDi.SelectedValue);
             int? gaDen = cboGaDen.SelectedValue is null ? null : Convert.ToInt32(cboGaDen.SelectedValue);
             var dlg = new TuVanVeDialog(gaDi, gaDen, dpNgayDi.SelectedDate) { Owner = Window.GetWindow(this) };
-            if (dlg.ShowDialog() != true || dlg.PhuongAn is not { } pa) return;
+            bool? kq = dlg.ShowDialog();
+            // [16/11] Da dat ve ngay trong cua so tu van (AI dat ho / nut "Dat Ve Ngay") -> nap lai cho trong + so tra cuu
+            if (dlg.DaDatVe)
+            {
+                if (_currentMaChuyenTau > 0) LoadDanhSachToaXe();
+                LoadDanhSachVeTab2();
+            }
+            if (kq != true || dlg.PhuongAn is not { } pa) return;
             await ApDungPhuongAnAI(pa);
         }
 

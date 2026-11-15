@@ -2,6 +2,7 @@
 # Moi dong: <thu muc>\<ten file>. Dong bat dau bang # bi bo qua.
 # Them migration / seed moi: chen vao CUOI phan migration + seed, TRUOC dong tests.
 # File trong tests\ chi doc du lieu: bao vi pham thi canh bao, khong dung.
+# Sua file nay xong: nhap dup ghep_tron_goi.cmd de sinh lai CSDL_tron_goi.sql (1 file chay het), commit ca file do.
 
 # --- Sprint 1 (Dat): Phuong tien + Nhan su ---
 migrations\V20261009_0820__dat__chitietdoantau-ga-noi-cat.sql

@@ -47,6 +47,7 @@ scratch/
 ## Ngoai le: script CSDL chung cua nhom (migration / seed / kiem tra) - DUOC day len Git
 !database/**/*.sql
 !database/**/*.cmd
+!database/**/*.ps1
 !database/README.md
 
 ## Cau hinh rieng tung may (chuoi ket noi CSDL) - khong day len Git

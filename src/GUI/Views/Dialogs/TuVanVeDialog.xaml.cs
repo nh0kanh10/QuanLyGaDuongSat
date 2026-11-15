@@ -1,29 +1,49 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using BUS.AI;
+using BUS.Services;
 using DTO.AI;
+using DTO.Common;
 
 namespace GUI.Views.Dialogs
 {
     // =========================================================================
     // TRO LY AI TU VAN VE (Sprint 3, Dat - FR-8.1 / UC-05). Mo tu trang Ban ve (nut "Tu van AI").
-    // Moi luat cham diem o BUS/AI (QuyTacTuVanVe, TuVanVeService); dialog chi nhap nhu cau va hien 3 phuong an.
-    // "Chon phuong an nay" -> PhuongAnDuocChon, trang Ban ve tu chon chuyen / toa / ghe vao gio (khong giu cho).
+    // [16/11] 2 che do o cot trai:
+    //   - "Hoi AI": tro chuyen tu do, nho hoi thoai trong cua so (TroLyChatService). AI tu tra du lieu that bang cong cu
+    //     (tim chuyen, lich trinh, cho trong + gia, tu van MCDM) va co the dat ve ho (mo XacNhanDatVeHoDialog).
+    //   - "Loc nang cao" (truoc goi "Nhap form", Dat doi ten 16/11): nhap tieu chi -> cham diem MCDM, chay offline nhu truoc
+    //     (khong co khoa API van dung duoc).
+    // Cot phai: 3 phuong an (tu AI hoac loc nang cao). Moi the: "Dat Ve Ngay" (cua so xac nhan) hoac "Dua Vao Gio Ve" (trang Ban ve).
     // =========================================================================
     public partial class TuVanVeDialog : Window
     {
         private static readonly CultureInfo Vi = CultureInfo.GetCultureInfo("vi-VN");
         private readonly TuVanVeService _sv = new();
+        private readonly TroLyChatService _chat = new();
+        private readonly CancellationTokenSource _huy = new();
+        private readonly ObservableCollection<TinNhanHienThi> _tinNhan = new();
+        private readonly Dictionary<int, KetQuaDatVeHo> _daDatThe = new();      // so thu tu phuong an dang hien -> da dat
         private readonly bool _choPhepChon;
-        private YeuCauTuVanVe? _ycCuoi;
+        private readonly bool _coQuyenBanVe;
+        private YeuCauTuVanVe? _ycHienTai;
+        private KetQuaTuVanVe? _kqHienTai;
+        private bool _dangGui;
 
         public PhuongAnDuocChon? PhuongAn { get; private set; }
+
+        // Co dat ve trong cua so nay -> trang Ban ve nap lai so do ghe khi dong.
+        public bool DaDatVe { get; private set; }
 
         private sealed record MucGa(int MaGa, string Nhan);
 
@@ -31,6 +51,7 @@ namespace GUI.Views.Dialogs
         {
             InitializeComponent();
             _choPhepChon = choPhepChon;
+            _coQuyenBanVe = PhanQuyenService.CoQuyen(MaQuyen.BanVe);
             if (_sv.LayDanhSachGa(out var dsGa, out string loiGa))
             {
                 var ga = dsGa.Select(g => new MucGa(g.MaGa, $"{g.TenGa} ({g.MaGaCode})")).ToList();
@@ -42,11 +63,153 @@ namespace GUI.Views.Dialogs
             else txtLoi.Text = loiGa;
             dpNgayDi.SelectedDate = ngay.HasValue && ngay.Value.Date >= DateTime.Today ? ngay.Value.Date : DateTime.Today;
             dpNgayDi.DisplayDateStart = DateTime.Today;
-            if (!choPhepChon) txtChanTrang.Text += " Mở từ trang Bán vé để chọn phương án vào giỏ.";
             HienTrongSo(QuyTacTuVanVe.TrongSoMacDinh);
             DoiTuong_Changed(this, new RoutedEventArgs());
+
+            icChat.ItemsSource = _tinNhan;
+            if (_chat.SanSang)
+            {
+                _chat.XacNhanDatVe = yc => Dispatcher.InvokeAsync(() => MoXacNhanDatVe(yc, doAIDeNghi: true)).Task;
+                txtPhuDeHeader.Text = $"Trò chuyện với AI ({_chat.TenMoHinh}) · AI tự tra dữ liệu thật · chấm điểm đa tiêu chí (MCDM) · đặt vé hộ";
+                txtChanTrang.Text = "Câu hỏi và dữ liệu chuyến / giá được gửi tới OpenAI (đã ẩn dãy số dài như CCCD / SĐT); thông tin hành khách " +
+                                    "chỉ nhập ở cửa sổ xác nhận, không gửi cho AI. Đặt vé luôn phải qua bước xác nhận. Mỗi câu hỏi được ghi nhật ký.";
+                LoiChao();
+                Loaded += (_, _) => txtCauHoi.Focus();
+            }
+            else
+            {
+                rdoHoiAI.IsEnabled = false;
+                rdoHoiAI.ToolTip = _chat.LyDoChuaSanSang;
+                rdoLocNangCao.IsChecked = true;
+                _tinNhan.Add(TinNhanHienThi.HeThong(_chat.LyDoChuaSanSang + " Dùng chế độ \"Lọc nâng cao\" để tư vấn (chạy offline)."));
+            }
+            if (!choPhepChon) txtChanTrang.Text += " Mở từ trang Bán vé để đưa phương án vào giỏ.";
+            Closed += (_, _) => _huy.Cancel();
         }
 
+        private void LoiChao()
+            => _tinNhan.Add(TinNhanHienThi.TroLy(
+                "Chào anh/chị, em là trợ lý AI của quầy vé. Anh/chị cứ hỏi tự nhiên, ví dụ:\n" +
+                "- Hai ông bà đi Đà Nẵng tối thứ Sáu, tối đa 1 triệu một vé\n" +
+                "- Mai có tàu nào từ Hà Nội vào Vinh buổi sáng không?\n" +
+                "- Tàu SE3 dừng những ga nào?\n" +
+                "Cần đặt thì nói \"đặt phương án 1\", em sẽ mở cửa sổ xác nhận.", new List<string>(), ""));
+
+        private void CheDo_Checked(object sender, RoutedEventArgs e)
+        {
+            if (pnlChat == null || pnlLocNangCao == null) return;      // dang dung cay XAML
+            bool chat = rdoHoiAI.IsChecked == true;
+            pnlChat.Visibility = chat ? Visibility.Visible : Visibility.Collapsed;
+            pnlLocNangCao.Visibility = chat ? Visibility.Collapsed : Visibility.Visible;
+            if (chat && IsLoaded) txtCauHoi.Focus();
+        }
+
+        // --- [16/11] Tro chuyen -----------------------------------------------------
+        private async void BtnGui_Click(object sender, RoutedEventArgs e)
+        {
+            if (_dangGui || !_chat.SanSang) return;
+            string cau = txtCauHoi.Text.Trim();
+            if (cau.Length == 0) { txtCauHoi.Focus(); return; }
+
+            _dangGui = true;
+            btnGui.IsEnabled = false;
+            btnChatMoi.IsEnabled = false;
+            txtCauHoi.Clear();
+            _tinNhan.Add(TinNhanHienThi.NguoiDung(QuyTacMoHinhNgonNgu.AnDuLieuCaNhan(cau)));
+            CuonXuong();
+            txtTrangThaiChat.Visibility = Visibility.Visible;
+            var tienDo = new Progress<string>(s => txtTrangThaiChat.Text = s);
+            try
+            {
+                var kq = await _chat.GuiAsync(cau, tienDo, _huy.Token);
+                if (!IsLoaded) return;
+                if (!kq.ThanhCong)
+                {
+                    _tinNhan.Add(TinNhanHienThi.Loi("Chưa trả lời được: " + kq.Loi));
+                }
+                else
+                {
+                    var buoc = new List<string>(kq.CacBuocTraCuu) { kq.SoLanGoiMoHinh == 1 ? "1 lần gọi AI (không cần tra dữ liệu)" : $"{kq.SoLanGoiMoHinh} lần gọi AI" };
+                    string canhBao = kq.SoLieuChuaDoiChieu.Count > 0
+                        ? "Số chưa đối chiếu được với dữ liệu hệ thống: " + string.Join(", ", kq.SoLieuChuaDoiChieu) + " — kiểm tra lại trước khi báo khách."
+                        : "";
+                    _tinNhan.Add(TinNhanHienThi.TroLy(kq.TraLoi, buoc, canhBao));
+                    if (kq.TuVan != null && kq.YeuCauTuVan != null) HienKetQua(kq.YeuCauTuVan, kq.TuVan, "AI");
+                }
+                CuonXuong();
+            }
+            catch (OperationCanceledException) { /* dialog da dong */ }
+            finally
+            {
+                _dangGui = false;
+                if (IsLoaded)
+                {
+                    btnGui.IsEnabled = true;
+                    btnChatMoi.IsEnabled = true;
+                    txtTrangThaiChat.Visibility = Visibility.Collapsed;
+                    txtCauHoi.Focus();
+                }
+            }
+        }
+
+        private void TxtCauHoi_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            // Enter gui, Shift+Enter xuong dong (AcceptsReturn)
+            if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
+            {
+                e.Handled = true;
+                BtnGui_Click(sender, new RoutedEventArgs());
+            }
+        }
+
+        private void BtnChatMoi_Click(object sender, RoutedEventArgs e)
+        {
+            if (_dangGui) return;
+            _chat.BatDauLai();
+            _tinNhan.Clear();
+            LoiChao();
+            if (_kqHienTai != null && _ycHienTai != null) _chat.GhiNhanTuVanTuForm(_ycHienTai, _kqHienTai);   // the dang hien van dat duoc
+            txtCauHoi.Focus();
+        }
+
+        private void CuonXuong() => Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => svChat.ScrollToEnd()));
+
+        // --- Dat ve ho ----------------------------------------------------------------
+        private KetQuaDatVeHo MoXacNhanDatVe(YeuCauDatVeHo yc, bool doAIDeNghi)
+        {
+            var dlg = new XacNhanDatVeHoDialog(yc, doAIDeNghi) { Owner = this };
+            dlg.ShowDialog();
+            var kq = dlg.KetQua;
+            if (kq.DaDat)
+            {
+                DaDatVe = true;
+                if (_kqHienTai != null && _kqHienTai.CacPhuongAn.Contains(yc.PhuongAn))
+                {
+                    _daDatThe[yc.PhuongAn.XepHang] = kq;
+                    VeLaiThe();
+                }
+            }
+            return kq;
+        }
+
+        private void BtnDatVe_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.Tag is not TheHienThi the || _ycHienTai == null || _kqHienTai == null || _dangGui) return;
+            var kq = MoXacNhanDatVe(new YeuCauDatVeHo
+            {
+                PhuongAn = the.Goc,
+                YeuCau = _ycHienTai,
+                TenGaDi = _kqHienTai.TenGaDi,
+                TenGaDen = _kqHienTai.TenGaDen,
+            }, doAIDeNghi: false);
+            if (!kq.DaDat) return;
+            _chat.GhiNhanDaDatNgoaiChat(the.Goc.XepHang, kq);
+            _tinNhan.Add(TinNhanHienThi.HeThong($"Đã đặt phương án {the.Goc.XepHang} ({the.Goc.SoHieuMacTau}): đơn {kq.MaPnr}, {kq.SoVe} vé, " +
+                                                $"tổng {kq.TongTien.ToString("N0", Vi)} đ."));
+            CuonXuong();
+        }
+
+        // --- Loc nang cao (offline) -------------------------------------------------------------
         // [12/11] Hien loai khach du kien (gio ve dat san doi tuong + gia sau giam theo dong nay)
         private void DoiTuong_Changed(object sender, RoutedEventArgs e)
         {
@@ -97,22 +260,41 @@ namespace GUI.Views.Dialogs
             finally { Mouse.OverrideCursor = null; }
             if (!ok) { txtLoi.Text = loi; return; }
 
-            _ycCuoi = yc;
+            HienKetQua(yc, kq, "loc");
+            if (chkTuChinh.IsChecked != true) HienTrongSo(kq.TrongSoDaDung);
+            _chat.GhiNhanTuVanTuForm(yc, kq);       // AI biet cac phuong an dang hien -> "dat phuong an 2" dung bo nay
+        }
+
+        // --- Cot phai: phuong an -----------------------------------------------------------
+        private void HienKetQua(YeuCauTuVanVe yc, KetQuaTuVanVe kq, string nguon)
+        {
+            _ycHienTai = yc;
+            _kqHienTai = kq;
+            _daDatThe.Clear();
             txtKqTieuDe.Text = kq.CacPhuongAn.Count == 0
                 ? $"Không tìm được phương án cho {kq.TenGaDi} → {kq.TenGaDen}"
                 : $"{kq.CacPhuongAn.Count} phương án gợi ý · {kq.TenGaDi} → {kq.TenGaDen} · {kq.CuLyKm.ToString("N0", Vi)} km";
-            txtKqPhu.Text = $"Đã xét {kq.SoPhuongAnDaXet} phương án (chuyến × loại chỗ × tầng) trên {kq.SoChuyenDaXet} chuyến ngày {yc.NgayDi:dd/MM/yyyy} · " +
-                            "trọng số " + string.Join(" · ", kq.TrongSoDaDung.Select((w, i) => $"{QuyTacTuVanVe.TenTieuChi[i].ToLower(Vi)} {w:P0}"));
+            txtKqPhu.Text = $"Theo {(nguon == "AI" ? "yêu cầu AI đọc từ cuộc trò chuyện" : "lọc nâng cao")}: {yc.SoNguoi} khách, ngày {yc.NgayDi:dd/MM/yyyy} · " +
+                            $"đã xét {kq.SoPhuongAnDaXet} phương án (chuyến × loại chỗ × tầng) trên {kq.SoChuyenDaXet} chuyến · trọng số " +
+                            string.Join(" · ", kq.TrongSoDaDung.Select((w, i) => $"{QuyTacTuVanVe.TenTieuChi[i].ToLower(Vi)} {w:P0}"));
             icGhiChu.ItemsSource = kq.GhiChu;
-            icPhuongAn.ItemsSource = kq.CacPhuongAn.Select(p => new TheHienThi(p, _choPhepChon, kq.TrongSoDaDung)).ToList();
-            if (chkTuChinh.IsChecked != true) HienTrongSo(kq.TrongSoDaDung);
+            VeLaiThe();
+        }
+
+        private void VeLaiThe()
+        {
+            if (_kqHienTai == null) return;
+            icPhuongAn.ItemsSource = _kqHienTai.CacPhuongAn
+                .Select(p => new TheHienThi(p, _choPhepChon, _coQuyenBanVe, _kqHienTai.TrongSoDaDung,
+                                            _daDatThe.TryGetValue(p.XepHang, out var d) ? d : null))
+                .ToList();
         }
 
         private void BtnChon_Click(object sender, RoutedEventArgs e)
         {
-            if ((sender as FrameworkElement)?.Tag is not TheHienThi the || _ycCuoi == null) return;
+            if ((sender as FrameworkElement)?.Tag is not TheHienThi the || _ycHienTai == null) return;
             var p = the.Goc;
-            PhuongAn = new PhuongAnDuocChon(p.MaChuyenTau, _ycCuoi.MaGaDi, _ycCuoi.MaGaDen, _ycCuoi.NgayDi,
+            PhuongAn = new PhuongAnDuocChon(p.MaChuyenTau, _ycHienTai.MaGaDi, _ycHienTai.MaGaDen, _ycHienTai.NgayDi,
                                             p.MaToaXeKhach, p.LoaiToa, p.CacMaChoNgoi, p.CacLoaiKhach);
             DialogResult = true;
         }
@@ -154,26 +336,68 @@ namespace GUI.Views.Dialogs
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { e.Handled = true; DialogResult = false; }
-            else if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control) { e.Handled = true; BtnTuVan_Click(this, new RoutedEventArgs()); }
+            else if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                e.Handled = true;
+                if (rdoHoiAI.IsChecked == true && _chat.SanSang) BtnGui_Click(this, new RoutedEventArgs());
+                else BtnTuVan_Click(this, new RoutedEventArgs());
+            }
+        }
+
+        // --- Bong bong chat --------------------------------------------------------------
+        private sealed class TinNhanHienThi
+        {
+            public string NoiDung { get; init; } = "";
+            public HorizontalAlignment CanLe { get; init; } = HorizontalAlignment.Left;
+            public Brush MauNen { get; init; } = Brushes.White;
+            public Brush MauVien { get; init; } = Brushes.Transparent;
+            public Brush MauChu { get; init; } = Brushes.Black;
+            public List<string> CacBuoc { get; init; } = new();
+            public string CanhBao { get; init; } = "";
+            public Visibility HienBongBong => string.IsNullOrEmpty(NoiDung) ? Visibility.Collapsed : Visibility.Visible;
+            public Visibility HienCanhBao => string.IsNullOrEmpty(CanhBao) ? Visibility.Collapsed : Visibility.Visible;
+
+            public static TinNhanHienThi NguoiDung(string s) => new()
+            {
+                NoiDung = s, CanLe = HorizontalAlignment.Right, MauNen = Mau("#0369A1"), MauVien = Mau("#0369A1"), MauChu = Brushes.White
+            };
+            public static TinNhanHienThi TroLy(string s, List<string> buoc, string canhBao) => new()
+            {
+                NoiDung = s, MauNen = Mau("#F1F5F9"), MauVien = Mau("#E2E8F0"), MauChu = Mau("#0F172A"), CacBuoc = buoc, CanhBao = canhBao
+            };
+            public static TinNhanHienThi Loi(string s) => new()
+            {
+                NoiDung = s, MauNen = Mau("#FEF2F2"), MauVien = Mau("#FCA5A5"), MauChu = Mau("#991B1B")
+            };
+            public static TinNhanHienThi HeThong(string s) => new()
+            {
+                NoiDung = s, MauNen = Mau("#F0FDF4"), MauVien = Mau("#86EFAC"), MauChu = Mau("#166534")
+            };
         }
 
         // --- The ket qua ---------------------------------------------------------
         private sealed class TheHienThi
         {
-            public TheHienThi(PhuongAnVe p, bool choPhepChon, double[] w)
+            public TheHienThi(PhuongAnVe p, bool choPhepChon, bool coQuyenBanVe, double[] w, KetQuaDatVeHo? daDat)
             {
                 Goc = p;
-                HienNutChon = choPhepChon ? Visibility.Visible : Visibility.Collapsed;
+                DaDat = daDat;
+                HienNutChon = choPhepChon && daDat == null ? Visibility.Visible : Visibility.Collapsed;
+                HienNutDatVe = coQuyenBanVe && daDat == null ? Visibility.Visible : Visibility.Collapsed;
                 TieuChi = Enumerable.Range(0, 4).Select(i => new TieuChiHienThi(
                     $"{TenNgan[i]} ({w[i]:P0})", p.DiemTieuChi[i])).ToList();
             }
             public PhuongAnVe Goc { get; }
+            public KetQuaDatVeHo? DaDat { get; }
             public Visibility HienNutChon { get; }
+            public Visibility HienNutDatVe { get; }
+            public Visibility HienDaDat => DaDat != null ? Visibility.Visible : Visibility.Collapsed;
+            public string NhanDaDat => DaDat == null ? "" : $"ĐÃ ĐẶT · đơn {DaDat.MaPnr} · {DaDat.SoVe} vé · {DaDat.TongTien.ToString("N0", Vi)} đ";
             public List<TieuChiHienThi> TieuChi { get; }
             public List<string> LyDo => Goc.LyDo;
             public string NhanHang => Goc.XepHang == 1 ? "KHUYÊN DÙNG" : $"PHƯƠNG ÁN {Goc.XepHang}";
             public Brush MauHang => Goc.XepHang == 1 ? Mau("#15803D") : Mau("#0284C7");
-            public Brush MauVien => Goc.XepHang == 1 ? Mau("#16A34A") : Mau("#CBD5E1");
+            public Brush MauVien => DaDat != null ? Mau("#86EFAC") : Goc.XepHang == 1 ? Mau("#16A34A") : Mau("#CBD5E1");
             public Thickness DoDayVien => Goc.XepHang == 1 ? new Thickness(2) : new Thickness(1);
             public string TieuDe => $"{Goc.SoHieuMacTau} · {Goc.TenLoaiCho}";
             public string DongGio => $"Đi {Goc.GioDi:HH:mm dd/MM} → đến {Goc.GioDen:HH:mm dd/MM} · khoảng {Goc.SoGioChay:0.#} giờ" +
