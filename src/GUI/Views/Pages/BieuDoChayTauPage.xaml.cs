@@ -1416,6 +1416,37 @@ namespace GUI.Views.Pages
             }
         }
 
+        private void BtnKhoiPhucGoc_Click(object sender, RoutedEventArgs e)
+        {
+            DateTime ngay = dpNgay.SelectedDate ?? DateTime.Today;
+            var r = MessageBox.Show(
+                $"XÁC NHẬN KHÔI PHỤC BIỂU ĐỒ GỐC:\n\n" +
+                $"• Ngày áp dụng: {ngay:dd/MM/yyyy}\n" +
+                $"• Tác vụ: Reset số phút trễ lũy kế về 0, hủy các điểm dừng tránh tự động và làm sạch nhật ký điều độ.\n\n" +
+                $"Bạn có chắc chắn muốn khôi phục biểu đồ ngày này về trạng thái kế hoạch sạch ban đầu?",
+                "Khôi Phục Biểu Đồ Ban Đầu",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (r != MessageBoxResult.Yes) return;
+
+            try
+            {
+                bool ok = _dieuDoService.KhoiPhucLichTrinhNgay(ngay, out string baoCao);
+                if (ok) ThongBaoDialog.ThanhCong(baoCao, "Khôi Phục Thành Công");
+                else ThongBaoDialog.CanhBao(baoCao, "Thông Báo");
+                LoadData();
+                if (ok)
+                {
+                    DuLieuDieuDoThayDoi?.Invoke();
+                }
+            }
+            catch (Exception ex)
+            {
+                ThongBaoDialog.Loi($"Lỗi khi khôi phục biểu đồ:\n{ex.Message}", "Lỗi Cơ Sở Dữ Liệu");
+            }
+        }
+
         private void BtnKiemTraXungDot_Click(object sender, RoutedEventArgs e)
         {
             try

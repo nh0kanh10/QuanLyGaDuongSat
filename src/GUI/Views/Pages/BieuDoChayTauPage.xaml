@@ -135,6 +135,19 @@
                                 </StackPanel>
                             </Button>
 
+                            <!-- Nút Khôi Phục Gốc (Reset biểu đồ về ban đầu) -->
+                            <Button Click="BtnKhoiPhucGoc_Click" helpers:QuyenGiaoDienHelper.CanQuyen="TRAIN_SCHEDULE_EDIT"
+                                    Style="{StaticResource DesktopButton}" 
+                                    Height="26" 
+                                    Padding="9,0" 
+                                    Margin="0,0,6,0"
+                                    ToolTip="Khôi phục trạng thái lịch trình ban đầu, xóa bỏ các điểm dừng tránh tự động và reset số phút trễ lũy kế">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="ArrowReset24" FontSize="13" Margin="0,0,4,0" Foreground="#DC2626"/>
+                                    <TextBlock Text="Khôi Phục Gốc" FontSize="11" Foreground="#DC2626" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+
                             <!-- Nút Kiểm Tra Xung Đột -->
                             <Button Click="BtnKiemTraXungDot_Click" 
                                     Style="{StaticResource DesktopButton}" 

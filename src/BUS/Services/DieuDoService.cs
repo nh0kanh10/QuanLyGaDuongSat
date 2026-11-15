@@ -642,6 +642,19 @@ namespace BUS.Services
             return thanhCong > 0;
         }
 
+        /// <summary>
+        /// Khôi phục trạng thái ban đầu của biểu đồ chạy tàu ngày được chọn:
+        /// Reset điểm tránh, xóa số phút trễ và làm sạch nhật ký điều độ.
+        /// </summary>
+        public bool KhoiPhucLichTrinhNgay(DateTime ngay, out string thongBao)
+        {
+            bool ok = _repo.KhoiPhucLichTrinhNgay(ngay);
+            thongBao = ok
+                ? $"Đã khôi phục thành công trạng thái ban đầu của toàn bộ các chuyến tàu ngày {ngay:dd/MM/yyyy}!"
+                : "Không thể khôi phục lịch trình. Vui lòng thử lại.";
+            return ok;
+        }
+
         private static string ChonMauSacTheoLoaiTau(string soHieu, string loaiTau, string huongChay)
         {
             if (loaiTau == "TAU_HANG") return "#F59E0B"; // Màu vàng hổ phách tàu hàng

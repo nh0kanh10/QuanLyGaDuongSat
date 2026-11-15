@@ -307,5 +307,54 @@ namespace DAL.Repositories
 
             return DatabaseHelper.ExecuteNonQuery(sql, parameters) > 0;
         }
+
+        /// <summary>
+        /// Khôi phục trạng thái lịch trình ban đầu của các chuyến tàu trong ngày được chọn:
+        /// - Reset điểm dừng tránh LaDiemTranh = 0
+        /// - Reset SoPhutTreLuyKe = 0
+        /// - Xóa nhật ký chậm giờ do xếp tránh tự động CHO_TRANH_TAU
+        /// </summary>
+        public bool KhoiPhucLichTrinhNgay(DateTime ngay)
+        {
+            string sql = @"
+                SET XACT_ABORT ON;
+                BEGIN TRANSACTION;
+                BEGIN TRY
+                    DECLARE @Cts TABLE (MaChuyenTau INT);
+                    INSERT INTO @Cts
+                    SELECT DISTINCT ct.MaChuyenTau
+                    FROM vanhanh.ChuyenTau ct
+                    WHERE ct.GioXuatPhatKH < DATEADD(DAY, 1, @ngay)
+                      AND ct.GioVeDichKH >= @ngay
+                      AND ct.TrangThai <> 'DA_HUY';
+
+                    -- 1. Reset cờ dừng tránh trên lịch dừng ga
+                    UPDATE ld
+                    SET ld.LaDiemTranh = 0
+                    FROM vanhanh.LichDungGa ld
+                    JOIN @Cts c ON ld.MaChuyenTau = c.MaChuyenTau
+                    WHERE ld.LaDiemTranh = 1;
+
+                    -- 2. Reset số phút trễ lũy kế
+                    UPDATE ct
+                    SET ct.SoPhutTreLuyKe = 0
+                    FROM vanhanh.ChuyenTau ct
+                    JOIN @Cts c ON ct.MaChuyenTau = c.MaChuyenTau;
+
+                    -- 3. Xóa nhật ký chậm giờ do xếp tránh
+                    DELETE nk
+                    FROM vanhanh.NhatKyChamGio nk
+                    JOIN @Cts c ON nk.MaChuyenTau = c.MaChuyenTau
+                    WHERE nk.LoaiSuCo = 'CHO_TRANH_TAU';
+
+                    COMMIT TRANSACTION;
+                END TRY
+                BEGIN CATCH
+                    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+                    THROW;
+                END CATCH;";
+
+            return DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@ngay", ngay.Date) }) >= 0;
+        }
     }
 }
