@@ -244,7 +244,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Info24" FontSize="13" Foreground="#64748B" Margin="0,0,6,0"/>
                         <TextBlock x:Name="txtChanTrang" FontSize="10" Foreground="#64748B" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="820"
-                                   Text="Tư vấn chỉ đọc chỗ trống, không giữ chỗ. Điểm tiêu chí là điểm chuyên gia tham khảo; giá chưa trừ giảm giá đối tượng. Mỗi lần tư vấn được ghi nhật ký."/>
+                                   Text="Tư vấn chỉ đọc chỗ trống, không giữ chỗ. Điểm tiêu chí là điểm chuyên gia tham khảo; giá so với ngân sách là giá sau giảm theo đối tượng khách đã khai. Mỗi lần tư vấn được ghi nhật ký."/>
                     </StackPanel>
                     <Button Style="{StaticResource DesktopButton}" Height="32" Click="BtnDong_Click" HorizontalAlignment="Right">
                         <TextBlock Text="Đóng (Esc)"/>
