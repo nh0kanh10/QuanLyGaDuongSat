@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         Title="Trợ Lý AI Tư Vấn Vé"
-        Width="1060" Height="700"
+        Width="1180" Height="720"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -51,7 +51,7 @@
                         <ui:SymbolIcon Symbol="Sparkle24" FontSize="17" Foreground="#FFFFFF" Margin="0,0,9,0"/>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="TRỢ LÝ AI TƯ VẤN VÉ" Foreground="#FFFFFF" FontSize="12" FontWeight="Bold"/>
-                            <TextBlock Text="Chấm điểm đa tiêu chí (MCDM) trên chuyến còn chỗ thật · chạy offline" Foreground="#BFDBFE" FontSize="10"/>
+                            <TextBlock x:Name="txtPhuDeHeader" Text="Chấm điểm đa tiêu chí (MCDM) trên chuyến còn chỗ thật · chạy offline" Foreground="#BFDBFE" FontSize="10"/>
                         </StackPanel>
                     </StackPanel>
                     <Button Style="{StaticResource KtNutDong}" Click="BtnDong_Click" HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip="Đóng (Esc)"/>
@@ -60,13 +60,101 @@
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="410"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- NHU CẦU KHÁCH -->
                 <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,1,0">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,10,14,10">
+                  <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- [16/11] 2 chế độ: hỏi AI (trò chuyện tự do, AI tự tra dữ liệu, đặt vé hộ) · nhập form (chấm điểm offline như cũ) -->
+                    <Border Grid.Row="0" Background="#EEF2F7" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,8">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="rdoHoiAI" Style="{StaticResource KtChipRadio}" GroupName="CheDo" IsChecked="True" Checked="CheDo_Checked" Margin="0,0,6,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Sparkle24" FontSize="12" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Hỏi AI"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="rdoNhapForm" Style="{StaticResource KtChipRadio}" GroupName="CheDo" Checked="CheDo_Checked">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Edit24" FontSize="12" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Nhập form"/>
+                                </StackPanel>
+                            </RadioButton>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- KHUNG CHAT -->
+                    <Grid Grid.Row="1" x:Name="pnlChat" Margin="12,8,12,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4">
+                            <ScrollViewer x:Name="svChat" VerticalScrollBarVisibility="Auto" Padding="8,6">
+                                <ItemsControl x:Name="icChat">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,3" HorizontalAlignment="{Binding CanLe}" MaxWidth="330">
+                                                <Border Background="{Binding MauNen}" BorderBrush="{Binding MauVien}" BorderThickness="1" CornerRadius="8" Padding="9,6"
+                                                        Visibility="{Binding HienBongBong}">
+                                                    <TextBlock Text="{Binding NoiDung}" FontSize="12" Foreground="{Binding MauChu}" TextWrapping="Wrap"/>
+                                                </Border>
+                                                <ItemsControl ItemsSource="{Binding CacBuoc}" Margin="4,2,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock FontSize="10" Foreground="#64748B" TextWrapping="Wrap">
+                                                                <Run Text="↳ "/><Run Text="{Binding Mode=OneWay}"/>
+                                                            </TextBlock>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <TextBlock Text="{Binding CanhBao}" Visibility="{Binding HienCanhBao}" FontSize="10" Foreground="#B45309"
+                                                           TextWrapping="Wrap" Margin="4,2,0,0"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                        <TextBlock Grid.Row="1" x:Name="txtTrangThaiChat" FontSize="10.5" Foreground="#0369A1" Margin="2,5,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                        <Grid Grid.Row="2" Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="txtCauHoi" MinHeight="40" MaxHeight="96" Padding="6,4" TextWrapping="Wrap" AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto" MaxLength="1000" FontSize="12" VerticalContentAlignment="Top"
+                                     PreviewKeyDown="TxtCauHoi_PreviewKeyDown"
+                                     ToolTip="Hỏi gì cũng được, vd: hai ông bà đi Đà Nẵng tối thứ Sáu, tối đa 1 triệu một vé. Enter gửi · Shift+Enter xuống dòng. Không gõ CCCD / số điện thoại."/>
+                            <Button Grid.Column="1" x:Name="btnGui" Style="{StaticResource PrimaryDesktopButton}" Width="46" Height="40" Margin="6,0,0,0"
+                                    VerticalAlignment="Bottom" Click="BtnGui_Click" ToolTip="Gửi (Enter)">
+                                <ui:SymbolIcon Symbol="ArrowRight24" FontSize="16" Foreground="#FFFFFF"/>
+                            </Button>
+                        </Grid>
+                        <Grid Grid.Row="3" Margin="0,5,0,0">
+                            <TextBlock x:Name="txtGoiYChat" FontSize="10" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,118,0"
+                                       Text="Enter gửi · Shift+Enter xuống dòng · AI nhớ cuộc trò chuyện trong cửa sổ này."/>
+                            <Button x:Name="btnChatMoi" Style="{StaticResource DesktopButton}" Height="26" HorizontalAlignment="Right" Click="BtnChatMoi_Click"
+                                    ToolTip="Xóa cuộc trò chuyện, bắt đầu lại">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Broom24" FontSize="12" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Trò chuyện mới" FontSize="11"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Grid>
+
+                    <!-- FORM (chấm điểm offline, như trước) -->
+                    <ScrollViewer Grid.Row="1" x:Name="pnlForm" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="16,10,14,10">
                         <StackPanel>
                             <TextBlock Text="HÀNH TRÌNH" Style="{StaticResource KtTieuDeMuc}"/>
                             <TextBlock Text="Ga đi" Style="{StaticResource KtNhanTruong}"/>
@@ -151,11 +239,12 @@
                                     HorizontalAlignment="Stretch" Click="BtnTuVan_Click" ToolTip="Ctrl+Enter">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="Sparkle24" FontSize="15" Foreground="#FFFFFF" Margin="0,0,6,0"/>
-                                    <TextBlock Text="Nhờ AI Tư Vấn" FontSize="12.5"/>
+                                    <TextBlock Text="Chấm Điểm &amp; Tư Vấn" FontSize="12.5"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
                     </ScrollViewer>
+                  </Grid>
                 </Border>
 
                 <!-- KẾT QUẢ -->
@@ -166,7 +255,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0">
-                        <TextBlock x:Name="txtKqTieuDe" Text="Nhập nhu cầu của khách rồi bấm &quot;Nhờ AI Tư Vấn&quot;." FontSize="14" FontWeight="Bold" Foreground="#003B73" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="txtKqTieuDe" Text="Hỏi AI hoặc nhập form — các phương án sẽ hiện ở đây." FontSize="14" FontWeight="Bold" Foreground="#003B73" TextWrapping="Wrap"/>
                         <TextBlock x:Name="txtKqPhu" FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,2,0,0"
                                    Text="AI xét mọi chuyến còn chỗ trên chặng, mỗi loại chỗ một phương án, chấm 4 tiêu chí rồi gợi ý 3 phương án tốt nhất kèm lý do."/>
                     </StackPanel>
@@ -222,11 +311,24 @@
                                                     </StackPanel>
                                                 </Grid>
                                                 <ItemsControl ItemsSource="{Binding TieuChi}" ItemTemplate="{StaticResource MauTieuChi}" Margin="0,6,0,8"/>
+                                                <Border Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="3" Padding="8,5"
+                                                        Visibility="{Binding HienDaDat}">
+                                                    <TextBlock Text="{Binding NhanDaDat}" FontSize="11" FontWeight="SemiBold" Foreground="#166534" TextWrapping="Wrap"/>
+                                                </Border>
                                                 <Button Style="{StaticResource PrimaryDesktopButton}" Height="30" Margin="0" Tag="{Binding}"
-                                                        Visibility="{Binding HienNutChon}" Click="BtnChon_Click" HorizontalAlignment="Stretch">
+                                                        Visibility="{Binding HienNutDatVe}" Click="BtnDatVe_Click" HorizontalAlignment="Stretch"
+                                                        ToolTip="Mở cửa sổ xác nhận: nhập hành khách rồi xuất vé ngay">
                                                     <StackPanel Orientation="Horizontal">
-                                                        <ui:SymbolIcon Symbol="Checkmark24" FontSize="13" Foreground="#FFFFFF" Margin="0,0,6,0"/>
-                                                        <TextBlock Text="Chọn Phương Án Này"/>
+                                                        <ui:SymbolIcon Symbol="TicketDiagonal24" FontSize="13" Foreground="#FFFFFF" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="Đặt Vé Ngay"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Style="{StaticResource DesktopButton}" Height="28" Margin="0,5,0,0" Tag="{Binding}"
+                                                        Visibility="{Binding HienNutChon}" Click="BtnChon_Click" HorizontalAlignment="Stretch"
+                                                        ToolTip="Đưa ghế vào giỏ vé ở trang Bán vé (thanh toán như bán thường)">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ui:SymbolIcon Symbol="Checkmark24" FontSize="13" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="Đưa Vào Giỏ Vé"/>
                                                     </StackPanel>
                                                 </Button>
                                             </StackPanel>

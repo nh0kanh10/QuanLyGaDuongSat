@@ -9,6 +9,9 @@ namespace DTO.AI
     // Dat chot 08/11 (Q9): 4 tieu chi cham diem nhu bang vi du cua SRS (tien nghi, ngan sach,
     // khung gio / ngu dem, suc khoe & doi tuong); vi tri ghe dung de chon ghe cu the;
     // xe may chi ghi chu (CSDL khong co toa hanh ly). Cau tu van sinh theo mau, khong dung mo hinh ngon ngu.
+    // [16/11] Them TRO CHUYEN voi mo hinh ngon ngu (OpenAI) BEN NGOAI phan cham diem: hoi tu do, mo hinh tu goi
+    // "cong cu" (tim chuyen, lich trinh, cho trong + gia, tu van MCDM, dat ve) khi can du lieu that. Cham diem /
+    // xep hang van la MCDM o tren; mo hinh khong tu chon ghe, khong dat gia. Khong co khoa API thi chay nhu cu.
     // =========================================================================
 
     public static class MucNganSach
@@ -98,6 +101,61 @@ namespace DTO.AI
         public string TenGaDen { get; set; } = "";
         public decimal CuLyKm { get; set; }
         public string CauTraLoi { get; set; } = "";      // ban van tom tat (ghi NhatKyChatAI)
+    }
+
+    // [16/11] Ket qua doi chieu so lieu trong cau tra loi cua mo hinh voi du lieu he thong da gui cho no.
+    public sealed class KetQuaDoiChieuSoLieu
+    {
+        public bool KhopHet { get; set; }
+        public string NoiDung { get; set; } = "";
+        public List<string> SoLieuLa { get; set; } = new();   // so khong co trong du lieu he thong (co the do mo hinh tu tinh / tu bia)
+    }
+
+    // [16/11] Ket qua mot luot chat (1 cau hoi -> 1 hoac nhieu lan goi mo hinh, tuy co can tra du lieu khong).
+    public sealed class KetQuaLuotChat
+    {
+        public bool ThanhCong { get; set; }
+        public string Loi { get; set; } = "";
+        public string TraLoi { get; set; } = "";
+        public int SoLanGoiMoHinh { get; set; }
+        public List<string> CacBuocTraCuu { get; set; } = new();     // "Tìm chuyến Hà Nội → Đà Nẵng 20/11: 3 chuyến"
+        public List<string> SoLieuChuaDoiChieu { get; set; } = new();
+        public KetQuaTuVanVe? TuVan { get; set; }                   // != null: luot nay co tu van moi -> cap nhat the phuong an
+        public YeuCauTuVanVe? YeuCauTuVan { get; set; }
+        public KetQuaDatVeHo? DatVe { get; set; }
+    }
+
+    // [16/11] Dat ve ho (AI hoac nut "Dat ve ngay"): cua so xac nhan nhap thong tin hanh khach roi moi ghi CSDL.
+    public sealed class YeuCauDatVeHo
+    {
+        public PhuongAnVe PhuongAn { get; set; } = new();
+        public YeuCauTuVanVe YeuCau { get; set; } = new();
+        public string TenGaDi { get; set; } = "";
+        public string TenGaDen { get; set; } = "";
+    }
+
+    public sealed class HanhKhachDatVe
+    {
+        public int MaChoNgoi { get; set; }
+        public int SoGhe { get; set; }
+        public string HoTen { get; set; } = "";
+        public string Cccd { get; set; } = "";
+        public string LoaiKhach { get; set; } = "THUONG";
+        public decimal GiaGoc { get; set; }
+        public decimal SoTienGiam { get; set; }
+        public decimal ThucThu => Math.Max(0, GiaGoc - SoTienGiam);
+    }
+
+    public sealed class KetQuaDatVeHo
+    {
+        public bool DaDat { get; set; }
+        public bool NguoiDungHuy { get; set; }
+        public string Loi { get; set; } = "";
+        public string MaPnr { get; set; } = "";
+        public List<string> CacMaVe { get; set; } = new();
+        public int SoVe { get; set; }
+        public decimal TongTien { get; set; }
+        public string HinhThucTT { get; set; } = "";
     }
 
     // Ket qua tra ve cho trang Ban ve khi bam "Chon phuong an nay"
