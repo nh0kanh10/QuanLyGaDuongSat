@@ -169,6 +169,7 @@
                              Background="Transparent"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             VirtualizingStackPanel.IsVirtualizing="False"
                              SelectionMode="Single"
                              KeyDown="LstItems_KeyDown">
                         <ListBox.ItemContainerStyle>
@@ -209,8 +210,8 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Icon ga -->
-                                    <ui:SymbolIcon Symbol="Location24"
+                                    <!-- Icon mục (Ga, Mác tàu...) -->
+                                    <ui:SymbolIcon Symbol="{Binding IconSymbol}"
                                                    FontSize="12"
                                                    Foreground="#003B73"
                                                    VerticalAlignment="Center"

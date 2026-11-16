@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Diagnostics;
 using DAL.Connection;
 using DTO.Common;
 
@@ -7,14 +10,10 @@ namespace GUI.Helpers
     // Bao dam ung dung noi duoc toi SQL Server truoc khi mo cua so dau tien.
     //
     // Thu tu:
-    //   1. Lay chuoi ket noi tu cau hinh (CauHinhUngDung: appsettings.json +
-    //      appsettings.Local.json) va dat vao DatabaseHelper.
-    //   2. Thu ket noi. Duoc thi xong.
+    //   1. Uu tien file MDF cuc bo neu co trong thu muc app (LocalDB AttachDbFilename).
+    //   2. Lay chuoi ket noi tu cau hinh (appsettings.json + appsettings.Local.json).
     //   3. Khong duoc va cau hinh cho phep (TuDongDoMayChu = true) thi do lan
-    //      luot cac instance quen gap - de nguoi trong nhom chua kip tao
-    //      appsettings.Local.json van chay duoc.
-    //
-    // Chay mot lan duy nhat luc khoi dong (App.OnStartup).
+    //      luot cac instance quen gap (.\SQLEXPRESS, localhost, .).
     // =========================================================================
     public static class KetNoiCsdlHelper
     {
@@ -44,6 +43,12 @@ namespace GUI.Helpers
         public static string MoTaCauHinh =>
             $"Cấu hình đọc từ {CauHinhUngDung.CacTepDaDoc} tại {CauHinhUngDung.ThuMucCauHinh}";
 
+        public static void DatTrangThaiKetNoi(bool thanhCong, string mayChu)
+        {
+            _ketNoiThanhCong = thanhCong;
+            _mayChuDangDung = mayChu;
+        }
+
         // Tra ve true neu tim duoc mot instance ket noi duoc toi CSDL.
         public static bool DamBaoKetNoi()
         {
@@ -52,7 +57,23 @@ namespace GUI.Helpers
 
             CauHinhUngDung.Nap();
 
-            // 1-2. Uu tien dung chuoi trong cau hinh.
+            // 1. Uu tien file MDF cuc bo neu co trong thu muc app
+            string thuMucApp = AppDomain.CurrentDomain.BaseDirectory;
+            string fileMdf = Path.Combine(thuMucApp, "QuanLyDuongSatV2.mdf");
+            if (File.Exists(fileMdf))
+            {
+                KichHoatLocalDbService();
+                string chuoiMdf = TaoChuoiKetNoiMdf(fileMdf);
+                DatabaseHelper.SetConnectionString(chuoiMdf);
+                if (DatabaseHelper.TestConnection())
+                {
+                    _ketNoiThanhCong = true;
+                    _mayChuDangDung = @"(localdb)\MSSQLLocalDB [MDF]";
+                    return true;
+                }
+            }
+
+            // 2. Uu tien dung chuoi trong cau hinh.
             DatabaseHelper.SetConnectionString(CauHinhUngDung.ChuoiKetNoi());
             if (DatabaseHelper.TestConnection())
             {
@@ -83,12 +104,37 @@ namespace GUI.Helpers
                 }
             }
 
-            // Khong noi duoc may nao: tra chuoi ve dung cau hinh de thong bao loi
-            // hien ten may dung nhu nguoi dung da khai.
+            // Khong noi duoc may nao: tra chuoi ve dung cau hinh
             DatabaseHelper.SetConnectionString(CauHinhUngDung.ChuoiKetNoi());
             _ketNoiThanhCong = false;
             _mayChuDangDung = CauHinhUngDung.MayChu;
             return false;
+        }
+
+        public static string TaoChuoiKetNoiMdf(string duongDanMdf)
+        {
+            return $@"Server=(localdb)\MSSQLLocalDB;AttachDbFilename={duongDanMdf};Database=QuanLyDuongSatV2;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=8;";
+        }
+
+        public static void KichHoatLocalDbService()
+        {
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = "/c sqllocaldb start MSSQLLocalDB",
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                };
+                using var process = Process.Start(startInfo);
+                process?.WaitForExit(3000);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Cảnh báo] Kích hoạt LocalDB: {ex.Message}");
+            }
         }
     }
 }

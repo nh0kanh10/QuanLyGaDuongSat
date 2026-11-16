@@ -655,6 +655,94 @@ namespace BUS.Services
             return ok;
         }
 
+        public bool GhiNhanSuCoChamGio(int maChuyenTau, int? maGa, int soPhutCham, string loaiSuCo, string ghiChu)
+        {
+            return _repo.GhiNhanSuCoChamGioThucTe(maChuyenTau, maGa, soPhutCham, loaiSuCo, ghiChu);
+        }
+
+        public bool CapNhatTienDoGaThucTe(int maChuyenTau, int maGa, DateTime? gioDenTT, DateTime? gioDiTT)
+        {
+            return _repo.CapNhatTienDoGaThucTe(maChuyenTau, maGa, gioDenTT, gioDiTT);
+        }
+
+        public int LaySoPhutTreLuyKe(int maChuyenTau)
+        {
+            return _repo.LaySoPhutTreLuyKe(maChuyenTau);
+        }
+
+        /// <summary>
+        /// Kích hoạt 5 kịch bản demo vận hành thực tế 1-click cho Giảng viên:
+        /// 1: 05:30 - Chuẩn bị xuất phát (Mở bán tất cả chặng)
+        /// 2: 07:15 - SE1 đang chạy khu gian Phủ Lý - Nam Định (Khóa vé Hà Nội - Phủ Lý, mở vé Nam Định - Vinh)
+        /// 3: 07:45 - SE1 đỗ tại Ga Nam Định đón khách
+        /// 4: SE1 Sự cố trễ +45p (Tự động gia hạn giờ bán vé tại Nam Định, cảnh báo xung đột tránh tàu với SE2)
+        /// 5: Khôi phục gốc ban đầu
+        /// </summary>
+        public bool KichHoatKichBanDemo(int maKichBan, DateTime ngay, out string thongBao)
+        {
+            var dsTau = LayDuLieuBieuDo(ngay);
+            var tauSE1 = dsTau.FirstOrDefault(t => t.SoHieuMacTau.Equals("SE1", StringComparison.OrdinalIgnoreCase)) ?? dsTau.FirstOrDefault();
+            var tauSE2 = dsTau.FirstOrDefault(t => t.SoHieuMacTau.Equals("SE2", StringComparison.OrdinalIgnoreCase));
+
+            switch (maKichBan)
+            {
+                case 1: // Chuẩn bị xuất phát (05:30)
+                    _repo.KhoiPhucLichTrinhNgay(ngay);
+                    DTO.Common.ThoiGianHeThongHelper.BatMoPhong(new DateTime(ngay.Year, ngay.Month, ngay.Day, 5, 30, 0));
+                    thongBao = $"[KỊCH BẢN 1] Mốc 05:30: Toàn bộ đoàn tàu sẵn sàng tại ga xuất phát. Tất cả các chặng vé trên toàn tuyến MỞ BÁN BÌNH THƯỜNG.";
+                    return true;
+
+                case 2: // Đang chạy khu gian Phủ Lý - Nam Định (07:15)
+                    _repo.KhoiPhucLichTrinhNgay(ngay);
+                    DTO.Common.ThoiGianHeThongHelper.BatMoPhong(new DateTime(ngay.Year, ngay.Month, ngay.Day, 7, 15, 0));
+                    if (tauSE1 != null && tauSE1.DanhSachDiem.Count >= 2)
+                    {
+                        var gaDau = tauSE1.DanhSachDiem[0];
+                        var ga2 = tauSE1.DanhSachDiem[1];
+                        _repo.CapNhatTienDoGaThucTe(tauSE1.MaChuyenTau, gaDau.MaGa, gaDau.GioDen, gaDau.GioDi);
+                        _repo.CapNhatTienDoGaThucTe(tauSE1.MaChuyenTau, ga2.MaGa, ga2.GioDen, ga2.GioDi);
+                    }
+                    thongBao = $"[KỊCH BẢN 2] Mốc 07:15: Tàu SE1 đã rời Hà Nội (06:05), qua Phủ Lý (07:05), đang chạy ở Km 68. Chặng vé Hà Nội ➔ Phủ Lý / Nam Định đã ĐÓNG BÁN. Chặng Nam Định ➔ Vinh MỞ BÁN BÌNH THƯỜNG.";
+                    return true;
+
+                case 3: // Đỗ tại Ga Nam Định (07:45)
+                    DTO.Common.ThoiGianHeThongHelper.BatMoPhong(new DateTime(ngay.Year, ngay.Month, ngay.Day, 7, 45, 0));
+                    if (tauSE1 != null && tauSE1.DanhSachDiem.Count >= 3)
+                    {
+                        var gaNamDinh = tauSE1.DanhSachDiem.FirstOrDefault(d => d.TenGa.Contains("Nam Định") || d.MaGaCode == "NDI") ?? tauSE1.DanhSachDiem[2];
+                        _repo.CapNhatTienDoGaThucTe(tauSE1.MaChuyenTau, gaNamDinh.MaGa, new DateTime(ngay.Year, ngay.Month, ngay.Day, 7, 43, 0), null);
+                    }
+                    thongBao = $"[KỊCH BẢN 3] Mốc 07:45: Tàu SE1 đang đỗ tại Đường đón gửi #2 Ga Nam Định (đến 07:43). Chuẩn bị xuất phát đi Vinh lúc 07:48.";
+                    return true;
+
+                case 4: // Sự cố trễ +45 phút (07:20)
+                    // BƯỚC QUAN TRỌNG: Khôi phục sạch sẽ biểu đồ chạy tàu chuẩn trước khi kích hoạt trễ
+                    // Đảm bảo không bị lưu vết phương án dời ga của lần bấm trước, xung đột luôn xuất hiện chuẩn xác 100%
+                    _repo.KhoiPhucLichTrinhNgay(ngay);
+                    DTO.Common.ThoiGianHeThongHelper.BatMoPhong(new DateTime(ngay.Year, ngay.Month, ngay.Day, 7, 20, 0));
+                    
+                    var dsMoi = LayDuLieuBieuDo(ngay);
+                    var se1Moi = dsMoi.FirstOrDefault(t => t.SoHieuMacTau.Equals("SE1", StringComparison.OrdinalIgnoreCase)) ?? dsMoi.FirstOrDefault();
+                    if (se1Moi != null)
+                    {
+                        int? maGaSuCo = se1Moi.DanhSachDiem.Count >= 2 ? se1Moi.DanhSachDiem[1].MaGa : (int?)null;
+                        _repo.GhiNhanSuCoChamGioThucTe(se1Moi.MaChuyenTau, maGaSuCo, 45, "HONG_DAU_MAY", "[DEMO] Hỏng đầu máy tại Km 45, chậm 45 phút");
+                    }
+                    thongBao = $"[KỊCH BẢN 4] TÀU SE1 TRỄ 45 PHÚT! Do tàu trễ, giờ đón khách tại Ga Nam Định tự động lùi sang 08:30 -> Phân hệ Bán vé TỰ ĐỘNG GIA HẠN THỜI GIAN MỞ BÁN VÉ thêm 45 phút cho hành khách! Hệ thống cảnh báo xung đột đối đầu với SE2.";
+                    return true;
+
+                case 5: // Khôi phục gốc
+                    _repo.KhoiPhucLichTrinhNgay(ngay);
+                    DTO.Common.ThoiGianHeThongHelper.BatMoPhong(new DateTime(ngay.Year, ngay.Month, ngay.Day, 6, 0, 0));
+                    thongBao = $"[KỊCH BẢN 5] Đã khôi phục sạch sẽ toàn bộ trạng thái lịch trình, giờ thực tế và bán vé về ban đầu.";
+                    return true;
+
+                default:
+                    thongBao = "Mã kịch bản không hợp lệ.";
+                    return false;
+            }
+        }
+
         private static string ChonMauSacTheoLoaiTau(string soHieu, string loaiTau, string huongChay)
         {
             if (loaiTau == "TAU_HANG") return "#F59E0B"; // Màu vàng hổ phách tàu hàng

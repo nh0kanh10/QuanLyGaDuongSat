@@ -179,7 +179,7 @@
 
                                     <!-- POPUP BỘ LỌC CHUYÊN SÂU NỔI (PHƯƠNG ÁN B - TIẾT KIỆM 100% DIỆN TÍCH MÀN HÌNH) -->
                                     <Popup x:Name="popBoLocNangCao" PlacementTarget="{Binding ElementName=btnToggleLoc}"
-                                           Placement="Bottom" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
+                                           Placement="Bottom" StaysOpen="True" AllowsTransparency="True" PopupAnimation="Fade">
                                         <Border Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1.5"
                                                 CornerRadius="6" Padding="14,12" Width="290" Margin="0,4,0,0">
                                             <Border.Effect>
@@ -268,6 +268,7 @@
                                                     </ComboBox>
                                                     <ui:TextBox Grid.Column="2" x:Name="txtGiaNhap1" Height="28" FontSize="11"
                                                                 PlaceholderText="Nhập mức giá..." VerticalContentAlignment="Center"
+                                                                PreviewTextInput="NumberOnly_PreviewTextInput"
                                                                 TextChanged="TxtGiaNhap_TextChanged" IsEnabled="False"/>
                                                 </Grid>
 
@@ -281,6 +282,7 @@
                                                     <TextBlock Grid.Column="0" Text="Đến mức giá tối đa:" FontSize="10" Foreground="#64748B" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0"/>
                                                     <ui:TextBox Grid.Column="2" x:Name="txtGiaNhap2" Height="28" FontSize="11"
                                                                 PlaceholderText="Mức giá trần..." VerticalContentAlignment="Center"
+                                                                PreviewTextInput="NumberOnly_PreviewTextInput"
                                                                 TextChanged="TxtGiaNhap_TextChanged"/>
                                                 </Grid>
 
@@ -293,13 +295,14 @@
                                                     <Button Content="1.500k" Click="BtnChipGia_Click" Tag="1500000" Style="{StaticResource DesktopButton}" Height="20" Padding="5,0" FontSize="10" Margin="0,0,4,0"/>
                                                 </StackPanel>
 
-                                                <!-- 5. Mác tàu -->
+                                                <!-- 5. Mác tàu (Vừa chọn vừa tìm kiếm) -->
                                                 <TextBlock Text="Số hiệu mác tàu:" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
-                                                <ui:TextBox x:Name="txtLocMacTau" Height="28" FontSize="11"
-                                                            PlaceholderText="VD: SE1, TN1, SPT2..."
-                                                            VerticalContentAlignment="Center"
-                                                            TextChanged="TxtLocMacTau_TextChanged"
-                                                            Margin="0,0,0,12"/>
+                                                <uc:SearchableComboBox x:Name="cboLocMacTau" Height="28" Margin="0,0,0,12"
+                                                                       DisplayMemberPath="DisplayText" SelectedValuePath="SoHieuMacTau"
+                                                                       SubTextMemberPath="SubText" Placeholder="Tất cả mác tàu"
+                                                                       SearchWatermark="Gõ mác tàu để tìm (vd: SE1, SE2, NA1)..."
+                                                                       ItemIconSymbol="VehicleSubway24"
+                                                                       SelectionChanged="CboLocMacTau_SelectionChanged"/>
 
                                                 <!-- Footer nút bấm -->
                                                 <Grid>
@@ -337,8 +340,8 @@
                                     <Button Click="BtnQuickDate_Click" Tag="TOMORROW" Style="{StaticResource DesktopButton}" Content="Ngày mai" Height="22" Padding="6,0" FontSize="10" Margin="0,0,3,2"/>
                                     <Button Click="BtnQuickDate_Click" Tag="THIS_SATURDAY" Style="{StaticResource DesktopButton}" Content="Thứ 7 tuần này" Height="22" Padding="6,0" FontSize="10" Margin="0,0,3,2" Background="#EFF6FF" Foreground="#1D4ED8" BorderBrush="#BFDBFE"/>
                                     <Button Click="BtnQuickDate_Click" Tag="THIS_SUNDAY" Style="{StaticResource DesktopButton}" Content="Chủ nhật" Height="22" Padding="6,0" FontSize="10" Margin="0,0,3,2" Background="#EFF6FF" Foreground="#1D4ED8" BorderBrush="#BFDBFE"/>
-                                    <Button Click="BtnQuickDate_Click" Tag="PREV_DAY" Style="{StaticResource DesktopButton}" Content="◀ Ngày trước" Height="22" Padding="5,0" FontSize="10" Margin="0,0,3,2"/>
-                                    <Button Click="BtnQuickDate_Click" Tag="NEXT_DAY" Style="{StaticResource DesktopButton}" Content="Ngày sau ▶" Height="22" Padding="5,0" FontSize="10" Margin="0,0,3,2"/>
+                                    <Button Click="BtnQuickDate_Click" Tag="PREV_DAY" Style="{StaticResource DesktopButton}" Content="Ngày trước" Height="22" Padding="6,0" FontSize="10" Margin="0,0,3,2"/>
+                                    <Button Click="BtnQuickDate_Click" Tag="NEXT_DAY" Style="{StaticResource DesktopButton}" Content="Ngày sau" Height="22" Padding="6,0" FontSize="10" Margin="0,0,3,2"/>
                                 </WrapPanel>
                             </Grid>
                         </Border>
@@ -819,7 +822,8 @@
                                             <ui:SymbolIcon Symbol="Person24" FontSize="11" Foreground="#003B73" Margin="0,0,4,0"/>
                                             <TextBlock Text="Họ Tên Khách:" Style="{StaticResource FieldLabel}" Margin="0"/>
                                         </StackPanel>
-                                        <TextBox x:Name="txtNguoiMuaTen" FontWeight="SemiBold" Height="28"/>
+                                        <TextBox x:Name="txtNguoiMuaTen" FontWeight="SemiBold" Height="28" MaxLength="50"
+                                                 PreviewTextInput="TextOnly_PreviewTextInput"/>
                                         <TextBlock x:Name="lblErrNguoiMuaTen" Foreground="#DC2626" FontSize="10" Margin="0,2,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
                                     </StackPanel>
 
@@ -829,7 +833,8 @@
                                             <ui:SymbolIcon Symbol="Phone24" FontSize="11" Foreground="#003B73" Margin="0,0,4,0"/>
                                             <TextBlock Text="Số ĐT:" Style="{StaticResource FieldLabel}" Margin="0"/>
                                         </StackPanel>
-                                        <TextBox x:Name="txtNguoiMuaSdt" FontFamily="Consolas" Height="28"/>
+                                        <TextBox x:Name="txtNguoiMuaSdt" FontFamily="Consolas" Height="28" MaxLength="10"
+                                                 PreviewTextInput="NumberOnly_PreviewTextInput"/>
                                         <TextBlock x:Name="lblErrNguoiMuaSdt" Foreground="#DC2626" FontSize="10" Margin="0,2,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
                                     </StackPanel>
                                 </Grid>

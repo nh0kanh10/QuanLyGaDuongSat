@@ -8,6 +8,11 @@ namespace DAL.Repositories
     {
         public DataTable LayDuLieuBieuDo(DateTime ngay)
         {
+            if (ngay < new DateTime(1753, 1, 1))
+            {
+                ngay = LayNgayBieuDoMacDinh();
+            }
+
             string sql = @"
                 SELECT 
                     ct.MaChuyenTau, ct.NgayXuatPhat, ct.GioXuatPhatKH, ct.GioVeDichKH, ct.TrangThai,
@@ -167,6 +172,18 @@ namespace DAL.Repositories
                         RETURN;
                     END
 
+                    -- Tự động lưu bản sao lịch trình gốc vào vanhanh.LichDungGaGoc nếu chưa có
+                    IF OBJECT_ID('vanhanh.LichDungGaGoc', 'U') IS NOT NULL
+                    BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM vanhanh.LichDungGaGoc WHERE MaChuyenTau = @ct)
+                        BEGIN
+                            INSERT INTO vanhanh.LichDungGaGoc (MaChuyenTau, MaGa, ThuTuDung, GioDenKeHoach, GioDiKeHoach, MaDuongRay)
+                            SELECT ld.MaChuyenTau, ld.MaGa, ld.ThuTuDung, ld.GioDenKeHoach, ld.GioDiKeHoach, ld.MaDuongRay
+                            FROM vanhanh.LichDungGa ld
+                            WHERE ld.MaChuyenTau = @ct;
+                        END
+                    END
+
                     DECLARE @thuTuHienTai INT = NULL;
                     SELECT @thuTuHienTai = ThuTuDung 
                     FROM vanhanh.LichDungGa 
@@ -316,6 +333,11 @@ namespace DAL.Repositories
         /// </summary>
         public bool KhoiPhucLichTrinhNgay(DateTime ngay)
         {
+            if (ngay < new DateTime(1753, 1, 1))
+            {
+                ngay = LayNgayBieuDoMacDinh();
+            }
+
             string sql = @"
                 SET XACT_ABORT ON;
                 BEGIN TRANSACTION;
@@ -328,24 +350,46 @@ namespace DAL.Repositories
                       AND ct.GioVeDichKH >= @ngay
                       AND ct.TrangThai <> 'DA_HUY';
 
-                    -- 1. Reset cờ dừng tránh trên lịch dừng ga
-                    UPDATE ld
-                    SET ld.LaDiemTranh = 0
-                    FROM vanhanh.LichDungGa ld
-                    JOIN @Cts c ON ld.MaChuyenTau = c.MaChuyenTau
-                    WHERE ld.LaDiemTranh = 1;
+                    -- 1. Nếu có bảng lưu gốc vanhanh.LichDungGaGoc, khôi phục lại 100% lịch chuẩn ban đầu
+                    IF OBJECT_ID('vanhanh.LichDungGaGoc', 'U') IS NOT NULL 
+                       AND EXISTS (SELECT 1 FROM vanhanh.LichDungGaGoc g JOIN @Cts c ON g.MaChuyenTau = c.MaChuyenTau)
+                    BEGIN
+                        -- Xóa toàn bộ các điểm dừng hiện tại của chuyến tàu (kể cả điểm dừng tránh chèn thêm)
+                        DELETE ld
+                        FROM vanhanh.LichDungGa ld
+                        JOIN @Cts c ON ld.MaChuyenTau = c.MaChuyenTau
+                        WHERE EXISTS (SELECT 1 FROM vanhanh.LichDungGaGoc g WHERE g.MaChuyenTau = c.MaChuyenTau);
 
-                    -- 2. Reset số phút trễ lũy kế
+                        -- Chèn lại nguyên vẹn các điểm dừng từ bảng gốc
+                        INSERT INTO vanhanh.LichDungGa (MaChuyenTau, MaGa, ThuTuDung, GioDenKeHoach, GioDiKeHoach, LaDiemTranh, MaDuongRay)
+                        SELECT g.MaChuyenTau, g.MaGa, g.ThuTuDung, g.GioDenKeHoach, g.GioDiKeHoach, 0, g.MaDuongRay
+                        FROM vanhanh.LichDungGaGoc g
+                        JOIN @Cts c ON g.MaChuyenTau = c.MaChuyenTau;
+                    END
+                    ELSE
+                    BEGIN
+                        -- Fallback nếu chưa có LichDungGaGoc
+                        UPDATE ld
+                        SET ld.LaDiemTranh = 0,
+                            ld.GioDenThucTe = NULL,
+                            ld.GioDiThucTe = NULL
+                        FROM vanhanh.LichDungGa ld
+                        JOIN @Cts c ON ld.MaChuyenTau = c.MaChuyenTau;
+                    END
+
+                    -- 2. Reset giờ về đích, số phút trễ lũy kế và trạng thái
                     UPDATE ct
-                    SET ct.SoPhutTreLuyKe = 0
+                    SET ct.GioVeDichKH = ISNULL((SELECT MAX(ld.GioDenKeHoach) FROM vanhanh.LichDungGa ld WHERE ld.MaChuyenTau = ct.MaChuyenTau), ct.GioVeDichKH),
+                        ct.SoPhutTreLuyKe = 0,
+                        ct.TrangThai = 'SAN_SANG'
                     FROM vanhanh.ChuyenTau ct
                     JOIN @Cts c ON ct.MaChuyenTau = c.MaChuyenTau;
 
-                    -- 3. Xóa nhật ký chậm giờ do xếp tránh
+                    -- 3. Xóa nhật ký chậm giờ do xếp tránh hoặc demo
                     DELETE nk
                     FROM vanhanh.NhatKyChamGio nk
                     JOIN @Cts c ON nk.MaChuyenTau = c.MaChuyenTau
-                    WHERE nk.LoaiSuCo = 'CHO_TRANH_TAU';
+                    WHERE nk.LoaiSuCo = 'CHO_TRANH_TAU' OR nk.GhiChuXuLy LIKE '%[DEMO]%';
 
                     COMMIT TRANSACTION;
                 END TRY
@@ -355,6 +399,105 @@ namespace DAL.Repositories
                 END CATCH;";
 
             return DatabaseHelper.ExecuteNonQuery(sql, new[] { new SqlParameter("@ngay", ngay.Date) }) >= 0;
+        }
+
+        /// <summary>
+        /// Ghi nhận sự cố chậm giờ thực tế cho một đoàn tàu:
+        /// - Cộng dồn SoPhutTreLuyKe vào vanhanh.ChuyenTau
+        /// - Cập nhật TrangThai = 'TRE_GIO'
+        /// - Ghi vào vanhanh.NhatKyChamGio
+        /// </summary>
+        public bool GhiNhanSuCoChamGioThucTe(int maChuyenTau, int? maGa, int soPhutCham, string loaiSuCo, string ghiChu)
+        {
+            string sql = @"
+                SET XACT_ABORT ON;
+                BEGIN TRANSACTION;
+                BEGIN TRY
+                    -- 1. Cộng dồn phút trễ vào ChuyenTau
+                    UPDATE vanhanh.ChuyenTau
+                    SET SoPhutTreLuyKe = ISNULL(SoPhutTreLuyKe, 0) + @soPhut,
+                        TrangThai = 'TRE_GIO'
+                    WHERE MaChuyenTau = @maChuyenTau;
+
+                    -- 2. Ghi nhật ký sự cố chậm giờ
+                    INSERT INTO vanhanh.NhatKyChamGio (MaChuyenTau, MaGa, LoaiSuCo, SoPhutCham, GhiChuXuLy, ThoiDiemBaoCao)
+                    VALUES (@maChuyenTau, @maGa, @loaiSuCo, @soPhut, @ghiChu, SYSUTCDATETIME());
+
+                    COMMIT TRANSACTION;
+                END TRY
+                BEGIN CATCH
+                    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+                    THROW;
+                END CATCH;";
+
+            return DatabaseHelper.ExecuteNonQuery(sql, new[]
+            {
+                new SqlParameter("@maChuyenTau", maChuyenTau),
+                new SqlParameter("@maGa", (object?)maGa ?? DBNull.Value),
+                new SqlParameter("@soPhut", soPhutCham),
+                new SqlParameter("@loaiSuCo", loaiSuCo),
+                new SqlParameter("@ghiChu", (object?)ghiChu ?? DBNull.Value)
+            }) > 0;
+        }
+
+        /// <summary>
+        /// Cập nhật tiến độ chạy tàu thực tế tại một ga (giờ đến / giờ đi thực tế):
+        /// - Cập nhật GioDenThucTe, GioDiThucTe của ga đó
+        /// - Tự động điền GioDiThucTe cho các ga trước nếu còn NULL
+        /// - Cập nhật TrangThai ChuyenTau = 'DANG_CHAY'
+        /// </summary>
+        public bool CapNhatTienDoGaThucTe(int maChuyenTau, int maGa, DateTime? gioDenTT, DateTime? gioDiTT)
+        {
+            string sql = @"
+                SET XACT_ABORT ON;
+                BEGIN TRANSACTION;
+                BEGIN TRY
+                    DECLARE @ThuTu INT;
+                    SELECT @ThuTu = ThuTuDung 
+                    FROM vanhanh.LichDungGa 
+                    WHERE MaChuyenTau = @maChuyenTau AND MaGa = @maGa;
+
+                    IF @ThuTu IS NOT NULL
+                    BEGIN
+                        -- Cập nhật ga hiện tại
+                        UPDATE vanhanh.LichDungGa
+                        SET GioDenThucTe = ISNULL(@gioDen, GioDenThucTe),
+                            GioDiThucTe = ISNULL(@gioDi, GioDiThucTe)
+                        WHERE MaChuyenTau = @maChuyenTau AND MaGa = @maGa;
+
+                        -- Các ga trước đó: nếu chưa có giờ đi thực tế, điền giờ kế hoạch để khóa chặng bán vé
+                        UPDATE vanhanh.LichDungGa
+                        SET GioDenThucTe = ISNULL(GioDenThucTe, GioDenKeHoach),
+                            GioDiThucTe = ISNULL(GioDiThucTe, GioDiKeHoach)
+                        WHERE MaChuyenTau = @maChuyenTau AND ThuTuDung < @ThuTu;
+
+                        -- Chuyển trạng thái chuyến tàu sang Đang Chạy nếu chưa hoàn thành
+                        UPDATE vanhanh.ChuyenTau
+                        SET TrangThai = 'DANG_CHAY'
+                        WHERE MaChuyenTau = @maChuyenTau AND TrangThai NOT IN ('HOAN_THANH', 'HUY_BO');
+                    END
+
+                    COMMIT TRANSACTION;
+                END TRY
+                BEGIN CATCH
+                    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+                    THROW;
+                END CATCH;";
+
+            return DatabaseHelper.ExecuteNonQuery(sql, new[]
+            {
+                new SqlParameter("@maChuyenTau", maChuyenTau),
+                new SqlParameter("@maGa", maGa),
+                new SqlParameter("@gioDen", (object?)gioDenTT ?? DBNull.Value),
+                new SqlParameter("@gioDi", (object?)gioDiTT ?? DBNull.Value)
+            }) > 0;
+        }
+
+        public int LaySoPhutTreLuyKe(int maChuyenTau)
+        {
+            string sql = "SELECT ISNULL(SoPhutTreLuyKe, 0) FROM vanhanh.ChuyenTau WHERE MaChuyenTau = @id";
+            var dt = DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@id", maChuyenTau) });
+            return dt.Rows.Count > 0 ? Convert.ToInt32(dt.Rows[0][0]) : 0;
         }
     }
 }

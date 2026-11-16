@@ -227,5 +227,54 @@ namespace DTO.Common
             string csdl = string.IsNullOrWhiteSpace(tenCsdl) ? TenCsdl : tenCsdl!.Trim();
             return $"Server={mayChu};Database={csdl};Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=5;";
         }
+
+        // =====================================================================
+        // Luu cau hinh vao appsettings.Local.json va nap lai ngay lap tuc
+        // =====================================================================
+        public static bool LuuCauHinhLocal(string? mayChu, string? tenCsdl, string? chuoiKetNoi)
+        {
+            try
+            {
+                string duongDan = Path.Combine(AppContext.BaseDirectory, TenTepRieng);
+                var dictKetNoi = new Dictionary<string, object>();
+
+                if (!string.IsNullOrWhiteSpace(chuoiKetNoi))
+                {
+                    dictKetNoi["ChuoiKetNoi"] = chuoiKetNoi.Trim();
+                }
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(mayChu)) dictKetNoi["MayChu"] = mayChu.Trim();
+                    if (!string.IsNullOrWhiteSpace(tenCsdl)) dictKetNoi["TenCsdl"] = tenCsdl.Trim();
+                    dictKetNoi["ChuoiKetNoi"] = string.Empty;
+                }
+                dictKetNoi["TuDongDoMayChu"] = true;
+
+                var jsonRoot = new Dictionary<string, object>
+                {
+                    ["KetNoiCsdl"] = dictKetNoi
+                };
+
+                if (!string.IsNullOrEmpty(_khoaApiAI))
+                {
+                    jsonRoot["TroLyAI"] = new Dictionary<string, object>
+                    {
+                        ["KhoaApi"] = _khoaApiAI,
+                        ["MoHinh"] = MoHinhAI
+                    };
+                }
+
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(jsonRoot, options);
+                File.WriteAllText(duongDan, jsonString);
+
+                NapLai();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

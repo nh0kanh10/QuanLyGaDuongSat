@@ -239,10 +239,12 @@
                                                 <ColumnDefinition Width="125"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Người gửi:" Style="{StaticResource FieldLabel}"/>
-                                            <TextBox Grid.Column="1" x:Name="txtNguoiGui" Height="28"/>
+                                            <TextBox Grid.Column="1" x:Name="txtNguoiGui" Height="28" MaxLength="50"
+                                                     PreviewTextInput="TextOnly_PreviewTextInput" TextChanged="TxtTen_TextChanged"/>
 
                                             <TextBlock Grid.Column="3" Text="SĐT:" Style="{StaticResource FieldLabel}"/>
-                                            <TextBox Grid.Column="4" x:Name="txtSDTGui" Height="28"/>
+                                            <TextBox Grid.Column="4" x:Name="txtSDTGui" Height="28" MaxLength="10" FontFamily="Consolas"
+                                                     PreviewTextInput="NumberOnly_PreviewTextInput" TextChanged="TxtPhone_TextChanged"/>
                                         </Grid>
 
                                         <!-- Dòng 2: Người nhận & SĐT -->
@@ -255,10 +257,12 @@
                                                 <ColumnDefinition Width="125"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Người nhận:" Style="{StaticResource FieldLabel}"/>
-                                            <TextBox Grid.Column="1" x:Name="txtNguoiNhan" Height="28"/>
+                                            <TextBox Grid.Column="1" x:Name="txtNguoiNhan" Height="28" MaxLength="50"
+                                                     PreviewTextInput="TextOnly_PreviewTextInput" TextChanged="TxtTen_TextChanged"/>
 
                                             <TextBlock Grid.Column="3" Text="SĐT:" Style="{StaticResource FieldLabel}"/>
-                                            <TextBox Grid.Column="4" x:Name="txtSDTNhan" Height="28"/>
+                                            <TextBox Grid.Column="4" x:Name="txtSDTNhan" Height="28" MaxLength="10" FontFamily="Consolas"
+                                                     PreviewTextInput="NumberOnly_PreviewTextInput" TextChanged="TxtPhone_TextChanged"/>
                                         </Grid>
 
                                         <!-- Dòng 3: Ghi chú bao bì đóng gói -->
@@ -268,7 +272,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Ghi chú bao bì:" Style="{StaticResource FieldLabel}"/>
-                                            <TextBox Grid.Column="1" x:Name="txtGhiChu" Height="28"/>
+                                            <TextBox Grid.Column="1" x:Name="txtGhiChu" Height="28" MaxLength="200"/>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
@@ -358,7 +362,8 @@
                                                     <ColumnDefinition Width="1.2*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0" Text="Biển kiểm soát:" Style="{StaticResource FieldLabel}"/>
-                                                <TextBox Grid.Column="1" x:Name="txtBienSo" FontWeight="Bold" FontSize="12" Height="28"/>
+                                                <TextBox Grid.Column="1" x:Name="txtBienSo" FontWeight="Bold" FontSize="12" Height="28" MaxLength="15"
+                                                         PreviewTextInput="PlateOrCode_PreviewTextInput" TextChanged="TxtBienSo_TextChanged"/>
 
                                                 <!-- Khung An Toàn PCCC (Tem Kiểm Định Kỹ Thuật Chuẩn Công Nghiệp) -->
                                                 <Border Grid.Column="3" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="8,1">
@@ -384,10 +389,12 @@
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0" Text="Số hiệu Cont:" Style="{StaticResource FieldLabel}"/>
-                                                <TextBox Grid.Column="1" x:Name="txtSoContainer" FontWeight="Bold" Height="28"/>
+                                                <TextBox Grid.Column="1" x:Name="txtSoContainer" FontWeight="Bold" Height="28" MaxLength="15"
+                                                         PreviewTextInput="PlateOrCode_PreviewTextInput" TextChanged="TxtContainer_TextChanged"/>
 
                                                 <TextBlock Grid.Column="3" Text="Số chì HQ:" Style="{StaticResource FieldLabel}" HorizontalAlignment="Right"/>
-                                                <TextBox Grid.Column="4" x:Name="txtSoChiHQ" Height="28"/>
+                                                <TextBox Grid.Column="4" x:Name="txtSoChiHQ" Height="28" MaxLength="15"
+                                                         PreviewTextInput="PlateOrCode_PreviewTextInput"/>
                                             </Grid>
                                         </Grid>
                                     </StackPanel>
@@ -513,7 +520,7 @@
                             </Border>
 
                             <!-- DataGrid tối ưu độ rộng cột, KHÔNG BAO GIỜ BỊ CẮT CHỮ -->
-                            <DataGrid Grid.Row="1" x:Name="dgDonMoiLap" SelectionChanged="DgDonMoiLap_SelectionChanged">
+                            <DataGrid Grid.Row="1" x:Name="dgDonMoiLap" SelectionChanged="DgDonMoiLap_SelectionChanged" MouseDoubleClick="DgDonMoiLap_MouseDoubleClick">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="STT" Binding="{Binding MaVanDon}" Width="45"/>
                                     <DataGridTextColumn Header="Mã Vận Đơn" Binding="{Binding MaVanDonCode}" Width="185">
@@ -700,6 +707,8 @@
                                 <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="Auto"/> <!-- Nút Làm Mới -->
                                 <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="Auto"/> <!-- Nút Bản Kê Xếp Dỡ Ga -->
+                                <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="Auto"/> <!-- Thống kê số đơn -->
                             </Grid.ColumnDefinitions>
 
@@ -746,8 +755,16 @@
                                 </StackPanel>
                             </Button>
 
+                            <!-- Nút Bản Kê Xếp Dỡ Ga (In danh sách hàng lên / xuống theo ga cho nhân viên hiện trường) -->
+                            <Button Grid.Column="16" Click="BtnBanKeXepDoGa_Click" Style="{StaticResource PrimaryDesktopButton}" ToolTip="Xuất bản kê danh sách hàng dỡ xuống và xếp lên tại ga để in cho nhân viên theo dõi hiện trường">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="DocumentBulletList24" FontSize="13" Margin="0,0,5,0" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Bản Kê Xếp Dỡ Ga" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+
                             <!-- Thống kê tổng số -->
-                            <Border Grid.Column="16" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="8,4">
+                            <Border Grid.Column="18" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="3" Padding="8,4">
                                 <TextBlock x:Name="txtThongKe" Text="Tổng: 0 vận đơn" FontWeight="Bold" Foreground="#003B73" FontSize="11"/>
                             </Border>
                         </Grid>
@@ -783,7 +800,7 @@
                                 </Border>
 
                                 <!-- DataGrid -->
-                                <DataGrid Grid.Row="1" x:Name="dgVanDon" SelectionChanged="DgVanDon_SelectionChanged">
+                                <DataGrid Grid.Row="1" x:Name="dgVanDon" SelectionChanged="DgVanDon_SelectionChanged" MouseDoubleClick="DgVanDon_MouseDoubleClick">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="STT" Binding="{Binding MaVanDon}" Width="45">
                                             <DataGridTextColumn.ElementStyle>

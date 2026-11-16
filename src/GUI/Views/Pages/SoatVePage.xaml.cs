@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using BUS.Services;
+using DTO.Common;
 using GUI.Helpers;
 using GUI.Views.Dialogs;
 using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
@@ -24,20 +25,32 @@ namespace GUI.Views.Pages
         private bool _isLoaded = false;
         private int _pendingChuyenMaChuyenTau = 0;
         private DateTime? _pendingChuyenNgay = null;
+        private string _lastSearchedKeyword = "";
 
         public SoatVePage()
         {
             InitializeComponent();
             _isLoaded = true;
             KhoiTaoDuLieuBanDau();
+            PreviewKeyDown += SoatVePage_PreviewKeyDown;
+        }
+
+        private void SoatVePage_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F8)
+            {
+                e.Handled = true;
+                KichHoatInTheLenTau();
+            }
         }
 
         private void KhoiTaoDuLieuBanDau()
         {
             try
             {
+                DateTime ngayHienTai = ThoiGianHeThongHelper.LayGioHienTai().Date;
                 dpNgaySoatVe.Language = System.Windows.Markup.XmlLanguage.GetLanguage("vi-VN");
-                dpNgaySoatVe.SelectedDate = DateTime.Today;
+                dpNgaySoatVe.SelectedDate = ngayHienTai;
                 dpNgaySoatVe.Loaded += (s, e) => ChuanHoaDatePicker(dpNgaySoatVe);
                 dpNgaySoatVe.SelectedDateChanged += (s, e) => ChuanHoaDatePicker(dpNgaySoatVe);
                 Dispatcher.BeginInvoke(new Action(() => ChuanHoaDatePicker(dpNgaySoatVe)), System.Windows.Threading.DispatcherPriority.Loaded);
@@ -58,7 +71,7 @@ namespace GUI.Views.Pages
                 }
 
                 // Tải danh sách chuyến tàu chạy trong ngày
-                TaiDanhSachChuyenTauTheoNgay(DateTime.Today);
+                TaiDanhSachChuyenTauTheoNgay(ngayHienTai);
             }
             catch (Exception ex)
             {
@@ -114,7 +127,7 @@ namespace GUI.Views.Pages
         private void DpNgaySoatVe_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!_isLoaded || dpNgaySoatVe == null || cboChuyenTauSoatVe == null) return;
-            DateTime ngay = dpNgaySoatVe.SelectedDate ?? DateTime.Today;
+            DateTime ngay = dpNgaySoatVe.SelectedDate ?? ThoiGianHeThongHelper.LayGioHienTai().Date;
             TaiDanhSachChuyenTauTheoNgay(ngay);
         }
 
@@ -146,7 +159,7 @@ namespace GUI.Views.Pages
 
         private void BtnLamMoiSoatVe_Click(object sender, RoutedEventArgs e)
         {
-            DateTime ngay = dpNgaySoatVe.SelectedDate ?? DateTime.Today;
+            DateTime ngay = dpNgaySoatVe.SelectedDate ?? ThoiGianHeThongHelper.LayGioHienTai().Date;
             TaiDanhSachChuyenTauTheoNgay(ngay);
             LoadManifestChuyenTau();
             ThongBaoDialog.ThanhCong("Đã nạp lại dữ liệu kiểm soát vé của chuyến tàu!", "Làm Mới Dữ Liệu");
@@ -330,6 +343,8 @@ namespace GUI.Views.Pages
                 return;
             }
 
+            _lastSearchedKeyword = kw;
+
             try
             {
                 // Tìm vé trong hệ thống
@@ -342,161 +357,47 @@ namespace GUI.Views.Pages
 
                 if (dt.Rows.Count == 0)
                 {
-                    HienThiKetQuaLoi("KHÔNG TÌM THẤY VÉ", $"Không có vé nào khớp với từ khóa '{kw}' trong cơ sở dữ liệu!");
+                    HienThiKetQuaLoi("KHÔNG TÌM THẤY VÉ", $"Không tìm thấy thông tin vé phù hợp với mã '{kw}' trên hệ thống!");
                     txtScannerInput.SelectAll();
                     txtScannerInput.Focus();
                     return;
                 }
 
                 DataRow row = dt.Rows[0];
+                if (dt.Rows.Count > 1)
+                {
+                    // Quét CCCD hoặc tên có nhiều vé: ưu tiên vé chưa lên tàu ('DA_DAT')
+                    DataRow[] veChuaLen = dt.Select("TrangThai = 'DA_DAT'");
+                    if (veChuaLen.Length > 0)
+                    {
+                        row = veChuaLen[0];
+                    }
+
+                    // Tự động gõ từ khóa vào ô lọc Manifest để nhân viên thấy toàn bộ danh sách vé của CCCD/Hành khách này
+                    if (txtTimKiemManifest != null)
+                    {
+                        txtTimKiemManifest.Text = kw;
+                        ApDungLocManifest();
+                    }
+                }
                 _currentSoatVeRow = row;
                 HienThiChiTietVeSoat(row);
 
-                // Đánh giá tính hợp lệ
-                int maChuyenTauCuaVe = Convert.ToInt32(row["MaChuyenTau"]);
-                string trangThaiVe = row["TrangThai"].ToString() ?? "";
-                int maGaDiCuaVe = Convert.ToInt32(row["MaGaDi"]);
-                string tenGaDi = row["TenGaDi"].ToString() ?? "";
-                string soHieuMacTau = row["SoHieuMacTau"].ToString() ?? "";
-
-                // Kiểm tra sai chuyến tàu
-                if (_currentSoatMaChuyenTau > 0 && maChuyenTauCuaVe != _currentSoatMaChuyenTau)
+                if (!KiemTraDieuKienSoatVe(row, out string tieuDe, out string moTa, out bool chuyenChuyen, out int maChuyenMoi, out DateTime? ngayMoi, out string tenMoi))
                 {
-                    DateTime ngayXuatPhatCuaVe = row.Table.Columns.Contains("NgayXuatPhat") && row["NgayXuatPhat"] != DBNull.Value
-                        ? Convert.ToDateTime(row["NgayXuatPhat"])
-                        : DateTime.Today;
-                    DateTime ngayDangChon = dpNgaySoatVe.SelectedDate ?? DateTime.Today;
-                    string tenChuyenDangChon = cboChuyenTauSoatVe.Text;
-
-                    if (ngayXuatPhatCuaVe.Date != ngayDangChon.Date)
-                    {
-                        HienThiKetQuaLoi("SAI NGÀY KHỞI HÀNH", 
-                            $"Vé này thuộc tàu {soHieuMacTau} xuất phát ngày {ngayXuatPhatCuaVe:dd/MM/yyyy} (Chuyến #{maChuyenTauCuaVe}), không khớp với ngày bạn đang kiểm soát ({ngayDangChon:dd/MM/yyyy})!",
-                            coTheChuyenChuyen: true,
-                            maChuyenMoi: maChuyenTauCuaVe,
-                            ngayChuyenMoi: ngayXuatPhatCuaVe.Date);
-                    }
-                    else
-                    {
-                        HienThiKetQuaLoi("SAI CHUYẾN TÀU", 
-                            $"Vé này thuộc chuyến #{maChuyenTauCuaVe} (Tàu {soHieuMacTau}), không phải chuyến tàu đang kiểm soát ({tenChuyenDangChon})!",
-                            coTheChuyenChuyen: true,
-                            maChuyenMoi: maChuyenTauCuaVe,
-                            ngayChuyenMoi: ngayXuatPhatCuaVe.Date);
-                    }
+                    HienThiKetQuaLoi(tieuDe, moTa, chuyenChuyen, maChuyenMoi, ngayMoi, tenMoi);
+                    btnXacNhanLenTau.IsEnabled = false;
                     txtScannerInput.SelectAll();
                     txtScannerInput.Focus();
                     return;
-                }
-
-                // Kiểm tra vé bị hủy/hoàn
-                if (trangThaiVe == "DA_HUY")
-                {
-                    HienThiKetQuaLoi("VÉ ĐÃ BỊ HỦY", "Vé này đã bị hủy bỏ trên hệ thống, không được phép lên tàu!");
-                    txtScannerInput.SelectAll();
-                    txtScannerInput.Focus();
-                    return;
-                }
-
-                if (trangThaiVe == "DA_HOAN_VE")
-                {
-                    HienThiKetQuaLoi("VÉ ĐÃ HOÀN TRẢ", "Vé này đã làm thủ tục hoàn trả tiền, không còn giá trị sử dụng!");
-                    txtScannerInput.SelectAll();
-                    txtScannerInput.Focus();
-                    return;
-                }
-
-                // Kiểm tra trạng thái chuyến tàu
-                string trangThaiChuyen = row.Table.Columns.Contains("TrangThaiChuyenTau") && row["TrangThaiChuyenTau"] != DBNull.Value
-                    ? row["TrangThaiChuyenTau"].ToString() ?? ""
-                    : "";
-
-                if (trangThaiChuyen == "HOAN_THANH")
-                {
-                    HienThiKetQuaLoi("CHUYẾN TÀU ĐÃ HOÀN THÀNH", $"Chuyến tàu {soHieuMacTau} đã kết thúc toàn bộ hành trình về ga đích, không thể soát vé!");
-                    txtScannerInput.SelectAll();
-                    txtScannerInput.Focus();
-                    return;
-                }
-
-                if (trangThaiChuyen == "DA_HUY")
-                {
-                    HienThiKetQuaLoi("CHUYẾN TÀU ĐÃ BỊ HỦY", $"Chuyến tàu {soHieuMacTau} đã bị hủy bỏ trên hệ thống điều hành!");
-                    txtScannerInput.SelectAll();
-                    txtScannerInput.Focus();
-                    return;
-                }
-
-                // Kiểm tra vé đã lên tàu trước đó
-                if (trangThaiVe == "DA_LEN_TAU")
-                {
-                    string thoiDiem = row["ThoiDiemSoatVe"] != DBNull.Value ? Convert.ToDateTime(row["ThoiDiemSoatVe"]).ToString("HH:mm:ss dd/MM/yyyy") : "--";
-                    string gaSoat = row["TenGaSoat"]?.ToString() ?? "Cửa soát vé";
-                    HienThiKetQuaCanhBao("CẢNH BÁO: VÉ ĐÃ QUA CỬA SOÁT TRƯỚC ĐÓ", 
-                        $"Vé đã được soát vào lúc {thoiDiem} tại ga {gaSoat}. Vui lòng kiểm tra lại để tránh dùng vé trùng!");
-                    txtScannerInput.SelectAll();
-                    txtScannerInput.Focus();
-                    return;
-                }
-
-                // Kiểm tra sai ga kiểm soát (vé đón tại ga A nhưng lại quét tại ga B)
-                if (_currentSoatMaGa > 0 && maGaDiCuaVe != _currentSoatMaGa)
-                {
-                    string tenGaSoat = cboGaKiemSoat.Text;
-                    HienThiKetQuaLoi("SAI GA LÊN TÀU", 
-                        $"Vé này đăng ký đón tại ga [{tenGaDi}], không thể soát vé tại ga [{tenGaSoat}]! Cửa kiểm soát từ chối mở.");
-                    txtScannerInput.SelectAll();
-                    txtScannerInput.Focus();
-                    return;
-                }
-
-                // Kiểm tra tàu đã xuất phát rời ga đón của hành khách (Khách bị trễ tàu)
-                if (row.Table.Columns.Contains("GioDiThucTe") && row["GioDiThucTe"] != DBNull.Value)
-                {
-                    DateTime gioDiTT = Convert.ToDateTime(row["GioDiThucTe"]);
-                    HienThiKetQuaLoi("TÀU ĐÃ RỜI GA (TRỄ TÀU)", 
-                        $"Tàu {soHieuMacTau} đã thực tế khởi hành rời ga đón [{tenGaDi}] lúc {gioDiTT:HH:mm dd/MM/yyyy}. Hành khách đã bị trễ chuyến!");
-                    txtScannerInput.SelectAll();
-                    txtScannerInput.Focus();
-                    return;
-                }
-
-                // Kiểm tra giờ chạy theo kế hoạch tại ga đón (nếu chưa có giờ thực tế)
-                DateTime? gioDiKH = null;
-                if (row.Table.Columns.Contains("GioDiKH") && row["GioDiKH"] != DBNull.Value)
-                    gioDiKH = Convert.ToDateTime(row["GioDiKH"]);
-                else if (row.Table.Columns.Contains("GioXuatPhatKH") && row["GioXuatPhatKH"] != DBNull.Value)
-                    gioDiKH = Convert.ToDateTime(row["GioXuatPhatKH"]);
-
-                if (gioDiKH.HasValue)
-                {
-                    if (gioDiKH.Value.Date < DateTime.Today)
-                    {
-                        HienThiKetQuaLoi("VÉ QUÁ HẠN SỬ DỤNG", 
-                            $"Vé này thuộc chuyến tàu ngày {gioDiKH.Value:dd/MM/yyyy}, đã quá hạn sử dụng!");
-                        txtScannerInput.SelectAll();
-                        txtScannerInput.Focus();
-                        return;
-                    }
-
-                    // Nếu là chuyến hôm nay: Kiểm tra quá giờ chạy (cho phép trễ tối đa 5 phút sau giờ tàu lăn bánh nếu chưa cập nhật giờ thực tế)
-                    if (gioDiKH.Value.Date == DateTime.Today && trangThaiChuyen != "TRE_GIO")
-                    {
-                        if (DateTime.Now > gioDiKH.Value.AddMinutes(5))
-                        {
-                            HienThiKetQuaLoi("CỬA SOÁT VÉ ĐÃ ĐÓNG (TRỄ TÀU)", 
-                                $"Tàu {soHieuMacTau} đã khởi hành lúc {gioDiKH.Value:HH:mm} tại ga [{tenGaDi}]. Cửa kiểm soát lên tàu đã đóng!");
-                            txtScannerInput.SelectAll();
-                            txtScannerInput.Focus();
-                            return;
-                        }
-                    }
                 }
 
                 // HỢP LỆ!
                 HienThiKetQuaHopLe("HỢP LỆ - ĐƯỢC PHÉP LÊN TÀU", "Vé hoàn toàn hợp lệ và đúng lịch trình chuyến tàu.");
+                btnXacNhanLenTau.IsEnabled = true;
 
                 // Tự động cho lên tàu nếu bật toggle auto
+                string trangThaiVe = row["TrangThai"]?.ToString() ?? "";
                 if (chkTuDongSoatVe.IsChecked == true && trangThaiVe == "DA_DAT")
                 {
                     XacNhanLenTau(row, hienThiThongBao: false);
@@ -516,6 +417,8 @@ namespace GUI.Views.Pages
             if (pnlChoQuetVe != null) pnlChoQuetVe.Visibility = Visibility.Visible;
             if (pnlKetQuaChiTiet != null) pnlKetQuaChiTiet.Visibility = Visibility.Collapsed;
             if (btnChuyenSangChuyenTauNay != null) btnChuyenSangChuyenTauNay.Visibility = Visibility.Collapsed;
+            _pendingChuyenMaChuyenTau = 0;
+            _pendingChuyenNgay = null;
             _currentSoatVeRow = null;
         }
 
@@ -539,7 +442,9 @@ namespace GUI.Views.Pages
             lblSoatGaDen.Text = row["TenGaDen"]?.ToString() ?? "";
 
             string macTau = row["SoHieuMacTau"]?.ToString() ?? "";
-            DateTime ngayXP = row["NgayXuatPhat"] != DBNull.Value ? Convert.ToDateTime(row["NgayXuatPhat"]) : DateTime.Today;
+            DateTime ngayXP = row["NgayXuatPhat"] != DBNull.Value 
+                ? Convert.ToDateTime(row["NgayXuatPhat"]) 
+                : ThoiGianHeThongHelper.LayGioHienTai().Date;
             lblSoatMacTauNgay.Text = $"{macTau} - {ngayXP:dd/MM/yyyy}";
 
             lblSoatGioXuatPhat.Text = DateTimeFormatHelper.DinhDangGio(row, "GioDiKH", "GioXuatPhatKH", "--:--");
@@ -568,10 +473,10 @@ namespace GUI.Views.Pages
 
         private void HienThiKetQuaHopLe(string tieuDe, string moTa)
         {
-            bdBannerTrangThai.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DCFCE7"));
-            bdBannerTrangThai.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15803D"));
+            bdBannerTrangThai.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F0FDF4"));
+            bdBannerTrangThai.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#BBF7D0"));
             iconBannerTrangThai.Symbol = SymbolRegular.CheckmarkCircle24;
-            iconBannerTrangThai.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15803D"));
+            iconBannerTrangThai.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#16A34A"));
             lblBannerTieuDe.Text = tieuDe;
             lblBannerTieuDe.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15803D"));
             lblBannerMoTa.Text = moTa;
@@ -581,10 +486,10 @@ namespace GUI.Views.Pages
 
         private void HienThiKetQuaCanhBao(string tieuDe, string moTa)
         {
-            bdBannerTrangThai.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7"));
-            bdBannerTrangThai.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"));
+            bdBannerTrangThai.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFBEB"));
+            bdBannerTrangThai.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FDE68A"));
             iconBannerTrangThai.Symbol = SymbolRegular.Warning24;
-            iconBannerTrangThai.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"));
+            iconBannerTrangThai.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D97706"));
             lblBannerTieuDe.Text = tieuDe;
             lblBannerTieuDe.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"));
             lblBannerMoTa.Text = moTa;
@@ -592,19 +497,19 @@ namespace GUI.Views.Pages
             if (btnChuyenSangChuyenTauNay != null) btnChuyenSangChuyenTauNay.Visibility = Visibility.Collapsed;
         }
 
-        private void HienThiKetQuaLoi(string tieuDe, string moTa, bool coTheChuyenChuyen = false, int maChuyenMoi = 0, DateTime? ngayChuyenMoi = null)
+        private void HienThiKetQuaLoi(string tieuDe, string moTa, bool coTheChuyenChuyen = false, int maChuyenMoi = 0, DateTime? ngayChuyenMoi = null, string tenChuyenMoi = "")
         {
             pnlChoQuetVe.Visibility = Visibility.Collapsed;
             pnlKetQuaChiTiet.Visibility = Visibility.Visible;
 
-            bdBannerTrangThai.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEE2E2"));
-            bdBannerTrangThai.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C"));
+            bdBannerTrangThai.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF2F2"));
+            bdBannerTrangThai.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FECACA"));
             iconBannerTrangThai.Symbol = SymbolRegular.DismissCircle24;
-            iconBannerTrangThai.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C"));
+            iconBannerTrangThai.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DC2626"));
             lblBannerTieuDe.Text = tieuDe;
-            lblBannerTieuDe.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C"));
+            lblBannerTieuDe.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#991B1B"));
             lblBannerMoTa.Text = moTa;
-            lblBannerMoTa.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#991B1B"));
+            lblBannerMoTa.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7F1D1D"));
 
             btnXacNhanLenTau.IsEnabled = false;
             btnHuySoatVe.IsEnabled = false;
@@ -615,7 +520,12 @@ namespace GUI.Views.Pages
                 {
                     _pendingChuyenMaChuyenTau = maChuyenMoi;
                     _pendingChuyenNgay = ngayChuyenMoi;
-                    btnChuyenSangChuyenTauNay.Content = $"Chuyển sang kiểm soát chuyến #{maChuyenMoi} (Ngày {ngayChuyenMoi:dd/MM/yyyy})";
+                    if (lblBtnChuyenTauText != null)
+                    {
+                        lblBtnChuyenTauText.Text = !string.IsNullOrEmpty(tenChuyenMoi)
+                            ? $"Chuyển cửa sang {tenChuyenMoi}"
+                            : $"Chuyển sang kiểm soát chuyến ngày {ngayChuyenMoi:dd/MM/yyyy}";
+                    }
                     btnChuyenSangChuyenTauNay.Visibility = Visibility.Visible;
                 }
                 else
@@ -625,10 +535,224 @@ namespace GUI.Views.Pages
             }
         }
 
+        private bool KiemTraDieuKienSoatVe(DataRow row, 
+            out string tieuDeLoi, 
+            out string moTaLoi, 
+            out bool coTheChuyenChuyen, 
+            out int maChuyenMoi, 
+            out DateTime? ngayChuyenMoi, 
+            out string tenChuyenMoi)
+        {
+            tieuDeLoi = string.Empty;
+            moTaLoi = string.Empty;
+            coTheChuyenChuyen = false;
+            maChuyenMoi = 0;
+            ngayChuyenMoi = null;
+            tenChuyenMoi = string.Empty;
+
+            if (row == null)
+            {
+                tieuDeLoi = "VÉ KHÔNG TỒN TẠI";
+                moTaLoi = "Không tìm thấy dữ liệu vé.";
+                return false;
+            }
+
+            int maChuyenTauCuaVe = Convert.ToInt32(row["MaChuyenTau"]);
+            string trangThaiVe = row["TrangThai"]?.ToString() ?? "";
+            int maGaDiCuaVe = Convert.ToInt32(row["MaGaDi"]);
+            string tenGaDi = row["TenGaDi"]?.ToString() ?? "";
+            string tenGaDen = row.Table.Columns.Contains("TenGaDen") ? row["TenGaDen"]?.ToString() ?? "" : "";
+            string soHieuMacTau = row["SoHieuMacTau"]?.ToString() ?? "";
+
+            // Lấy mác tàu hiện tại đang mở cửa kiểm soát
+            string macTauHienTai = "";
+            if (cboChuyenTauSoatVe.SelectedItem is DataRowView drvChuyen && drvChuyen.Row.Table.Columns.Contains("SoHieuMacTau"))
+            {
+                macTauHienTai = drvChuyen.Row["SoHieuMacTau"]?.ToString() ?? "";
+            }
+            if (string.IsNullOrWhiteSpace(macTauHienTai))
+            {
+                string rawText = cboChuyenTauSoatVe.Text;
+                int idx = rawText.IndexOf(' ');
+                macTauHienTai = idx > 0 ? rawText.Substring(0, idx) : rawText;
+            }
+
+            // Kiểm tra sai chuyến tàu
+            if (_currentSoatMaChuyenTau > 0 && maChuyenTauCuaVe != _currentSoatMaChuyenTau)
+            {
+                DateTime ngayXuatPhatCuaVe = row.Table.Columns.Contains("NgayXuatPhat") && row["NgayXuatPhat"] != DBNull.Value
+                    ? Convert.ToDateTime(row["NgayXuatPhat"])
+                    : ThoiGianHeThongHelper.LayGioHienTai().Date;
+                DateTime ngayDangChon = dpNgaySoatVe.SelectedDate ?? ThoiGianHeThongHelper.LayGioHienTai().Date;
+
+                if (ngayXuatPhatCuaVe.Date != ngayDangChon.Date)
+                {
+                    tieuDeLoi = "SAI NGÀY KHỞI HÀNH";
+                    moTaLoi = $"• Vé đăng ký khởi hành: Ngày {ngayXuatPhatCuaVe:dd/MM/yyyy} (Tàu {soHieuMacTau})\n" +
+                              $"• Cửa hiện tại kiểm soát: Ngày {ngayDangChon:dd/MM/yyyy}\n" +
+                              $"➜ Vé chưa đến ngày hoặc đã quá ngày khởi hành. Vui lòng kiểm tra lại!";
+                    coTheChuyenChuyen = true;
+                    maChuyenMoi = maChuyenTauCuaVe;
+                    ngayChuyenMoi = ngayXuatPhatCuaVe.Date;
+                    tenChuyenMoi = $"Tàu {soHieuMacTau} ({ngayXuatPhatCuaVe:dd/MM})";
+                    return false;
+                }
+                else
+                {
+                    string changDi = !string.IsNullOrEmpty(tenGaDen) ? $"{tenGaDi} ➔ {tenGaDen}" : tenGaDi;
+                    tieuDeLoi = "KHÔNG KHỚP CHUYẾN TÀU ĐANG KIỂM SOÁT";
+                    moTaLoi = $"• Vé của khách: Tàu {soHieuMacTau} ({changDi})\n" +
+                              $"• Cửa này đang mở cho: Tàu {macTauHienTai}\n" +
+                              $"➜ Vui lòng hướng dẫn hành khách di chuyển đến đúng cửa kiểm soát của Tàu {soHieuMacTau}.";
+                    coTheChuyenChuyen = true;
+                    maChuyenMoi = maChuyenTauCuaVe;
+                    ngayChuyenMoi = ngayXuatPhatCuaVe.Date;
+                    tenChuyenMoi = $"Tàu {soHieuMacTau}";
+                    return false;
+                }
+            }
+
+            // Kiểm tra vé bị hủy/hoàn
+            if (trangThaiVe == "DA_HUY")
+            {
+                tieuDeLoi = "VÉ ĐÃ BỊ HỦY BỎ";
+                moTaLoi = "Vé này đã bị hủy bỏ trên hệ thống vé điện tử. Hành khách không được phép lên tàu.";
+                return false;
+            }
+
+            if (trangThaiVe == "DA_HOAN_VE")
+            {
+                tieuDeLoi = "VÉ ĐÃ HOÀN TRẢ TIỀN";
+                moTaLoi = "Vé này đã làm thủ tục hoàn trả tại quầy vé hoặc online, không còn giá trị sử dụng.";
+                return false;
+            }
+
+            // Kiểm tra trạng thái chuyến tàu
+            string trangThaiChuyen = row.Table.Columns.Contains("TrangThaiChuyenTau") && row["TrangThaiChuyenTau"] != DBNull.Value
+                ? row["TrangThaiChuyenTau"].ToString() ?? ""
+                : "";
+
+            if (trangThaiChuyen == "HOAN_THANH")
+            {
+                tieuDeLoi = "CHUYẾN TÀU ĐÃ VỀ GA ĐÍCH";
+                moTaLoi = $"Tàu {soHieuMacTau} đã kết thúc toàn bộ hành trình về ga cuối. Cửa kiểm soát đã ngừng hoạt động.";
+                return false;
+            }
+
+            if (trangThaiChuyen == "DA_HUY")
+            {
+                tieuDeLoi = "CHUYẾN TÀU ĐÃ BỊ BÃI BỎ";
+                moTaLoi = $"Tàu {soHieuMacTau} đã có lệnh bãi bỏ chuyến trên hệ thống điều hành chạy tàu.";
+                return false;
+            }
+
+            // Kiểm tra vé đã lên tàu trước đó
+            if (trangThaiVe == "DA_LEN_TAU")
+            {
+                string thoiDiem = row["ThoiDiemSoatVe"] != DBNull.Value ? Convert.ToDateTime(row["ThoiDiemSoatVe"]).ToString("HH:mm:ss dd/MM/yyyy") : "--";
+                string gaSoat = row["TenGaSoat"]?.ToString() ?? "Cửa kiểm soát";
+                tieuDeLoi = "CẢNH BÁO: VÉ ĐÃ ĐƯỢC SOÁT QUA CỬA";
+                moTaLoi = $"• Thời điểm soát: {thoiDiem}\n• Ga kiểm soát: {gaSoat}\n➜ Vui lòng đối chiếu CCCD để ngăn chặn hành vi sử dụng trùng vé hoặc vé chụp lại!";
+                return false;
+            }
+
+            // Kiểm tra sai ga kiểm soát (vé đón tại ga A nhưng lại quét tại ga B)
+            if (_currentSoatMaGa > 0 && maGaDiCuaVe != _currentSoatMaGa)
+            {
+                string tenGaSoat = cboGaKiemSoat.Text;
+                tieuDeLoi = "SAI GA LÊN TÀU";
+                moTaLoi = $"• Ga đón theo vé: {tenGaDi}\n• Cửa kiểm soát hiện tại: Ga {tenGaSoat}\n➜ Cửa kiểm soát từ chối mở do hành khách đón không đúng ga đăng ký.";
+                return false;
+            }
+
+            // Kiểm tra tàu đã xuất phát rời ga đón của hành khách (Khách bị trễ tàu)
+            if (row.Table.Columns.Contains("GioDiThucTe") && row["GioDiThucTe"] != DBNull.Value)
+            {
+                DateTime gioDiTT = Convert.ToDateTime(row["GioDiThucTe"]);
+                tieuDeLoi = "TÀU ĐÃ RỜI GA (TRỄ CHUYẾN)";
+                moTaLoi = $"Tàu {soHieuMacTau} đã khởi hành rời ga đón {tenGaDi} lúc {gioDiTT:HH:mm dd/MM/yyyy}.\nCửa kiểm soát đã đóng. Hướng dẫn khách đến quầy vé để được hỗ trợ theo quy định.";
+                return false;
+            }
+
+            // Kiểm tra giờ chạy theo kế hoạch tại ga đón (nếu chưa có giờ thực tế)
+            DateTime? gioDiKH = null;
+            if (row.Table.Columns.Contains("GioDiKH") && row["GioDiKH"] != DBNull.Value)
+            {
+                gioDiKH = Convert.ToDateTime(row["GioDiKH"]);
+            }
+            else if (row.Table.Columns.Contains("GioXuatPhatKH") && row["GioXuatPhatKH"] != DBNull.Value)
+            {
+                DateTime ngayXP = row.Table.Columns.Contains("NgayXuatPhat") && row["NgayXuatPhat"] != DBNull.Value
+                    ? Convert.ToDateTime(row["NgayXuatPhat"])
+                    : ThoiGianHeThongHelper.LayGioHienTai().Date;
+                object gVal = row["GioXuatPhatKH"];
+                TimeSpan ts = gVal is TimeSpan t ? t : (gVal is DateTime d ? d.TimeOfDay : TimeSpan.Zero);
+                gioDiKH = ngayXP.Date.Add(ts);
+            }
+
+            if (gioDiKH.HasValue)
+            {
+                DateTime now = ThoiGianHeThongHelper.LayGioHienTai();
+                if (gioDiKH.Value.Date < now.Date)
+                {
+                    tieuDeLoi = "VÉ ĐÃ QUÁ HẠN SỬ DỤNG";
+                    moTaLoi = $"Vé này thuộc chuyến tàu chạy ngày {gioDiKH.Value:dd/MM/yyyy}. Vé đã hết hạn sử dụng!";
+                    return false;
+                }
+
+                if (gioDiKH.Value.Date > now.Date)
+                {
+                    tieuDeLoi = "VÉ CHƯA ĐẾN NGÀY KHỞI HÀNH";
+                    moTaLoi = $"Vé đăng ký đi ngày {gioDiKH.Value:dd/MM/yyyy} (Hôm nay là {now:dd/MM/yyyy}).\nCửa kiểm soát chưa mở cho hành khách đi khác ngày.";
+                    return false;
+                }
+
+                // Tính giờ đi dự kiến bao gồm số phút trễ lũy kế (nếu có)
+                int soPhutTre = 0;
+                if (row.Table.Columns.Contains("SoPhutTreLuyKe") && row["SoPhutTreLuyKe"] != DBNull.Value)
+                {
+                    soPhutTre = Convert.ToInt32(row["SoPhutTreLuyKe"]);
+                }
+                DateTime gioDiDuKien = gioDiKH.Value.AddMinutes(soPhutTre);
+
+                // Kiểm tra giờ mở cửa soát vé: Chỉ mở trước giờ tàu chạy tối đa 120 phút (2 tiếng)
+                if (gioDiKH.Value.Date == now.Date && now < gioDiDuKien.AddMinutes(-120))
+                {
+                    DateTime gioMoCua = gioDiDuKien.AddMinutes(-120);
+                    tieuDeLoi = "CHƯA ĐẾN GIỜ MỞ CỬA LÊN TÀU";
+                    moTaLoi = $"Tàu {soHieuMacTau} dự kiến chạy lúc {gioDiDuKien:HH:mm}. Cửa soát vé mở trước 120 phút (từ {gioMoCua:HH:mm}).\n➜ Vui lòng hướng dẫn hành khách nghỉ ngơi tại khu vực phòng chờ ga.";
+                    return false;
+                }
+
+                // Nếu là chuyến hôm nay: Cửa soát vé đóng sau 5 phút kể từ giờ tàu lăn bánh dự kiến (tính cả trễ giờ)
+                if (gioDiKH.Value.Date == now.Date)
+                {
+                    if (now > gioDiDuKien.AddMinutes(5))
+                    {
+                        string thongTinGio = soPhutTre > 0
+                            ? $"{gioDiDuKien:HH:mm} (kế hoạch {gioDiKH.Value:HH:mm} + trễ {soPhutTre}p)"
+                            : $"{gioDiKH.Value:HH:mm}";
+                        tieuDeLoi = "CỬA SOÁT VÉ ĐÃ ĐÓNG (QUÁ GIỜ LÊN TÀU)";
+                        moTaLoi = $"Tàu {soHieuMacTau} đã khởi hành lúc {thongTinGio} tại ga {tenGaDi}.\nCửa kiểm soát đã chính thức đóng sau 5 phút kể từ giờ tàu chạy để đảm bảo an toàn chạy tàu.";
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         private void BtnXacNhanLenTau_Click(object sender, RoutedEventArgs e)
         {
             if (_currentSoatVeRow != null)
             {
+                if (!KiemTraDieuKienSoatVe(_currentSoatVeRow, out string tieuDe, out string moTa, out _, out _, out _, out _))
+                {
+                    HienThiKetQuaLoi(tieuDe, moTa);
+                    btnXacNhanLenTau.IsEnabled = false;
+                    ThongBaoDialog.CanhBao($"{tieuDe}\n\n{moTa}", "Từ Chối Soát Vé");
+                    return;
+                }
                 XacNhanLenTau(_currentSoatVeRow, hienThiThongBao: true);
             }
         }
@@ -642,8 +766,9 @@ namespace GUI.Views.Pages
 
             if (_veService.SoatVe(maVe, _currentSoatMaGa > 0 ? _currentSoatMaGa : null, out string err))
             {
+                DateTime thoiDiem = ThoiGianHeThongHelper.LayGioHienTai();
                 row["TrangThai"] = "DA_LEN_TAU";
-                row["ThoiDiemSoatVe"] = DateTime.Now;
+                row["ThoiDiemSoatVe"] = thoiDiem;
                 if (cboGaKiemSoat.SelectedItem is DataRowView drv)
                 {
                     row["TenGaSoat"] = drv["TenGa"];
@@ -656,7 +781,7 @@ namespace GUI.Views.Pages
                     if (found.Length > 0)
                     {
                         found[0]["TrangThai"] = "DA_LEN_TAU";
-                        found[0]["ThoiDiemSoatVe"] = DateTime.Now;
+                        found[0]["ThoiDiemSoatVe"] = thoiDiem;
                         found[0]["TenGaSoat"] = row["TenGaSoat"];
                     }
                 }
@@ -670,10 +795,19 @@ namespace GUI.Views.Pages
                 {
                     ThongBaoDialog.ThanhCong($"Hành khách {tenKhach} (Toa {toa}, Ghế {soGhe}) đã được xác nhận lên tàu thành công!", "Soát Vé Thành Công");
                 }
+
+                // Tự động trả focus về ô quét mã và bôi đen toàn bộ để máy quét cầm tay quét khách tiếp theo
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    txtScannerInput?.Focus();
+                    txtScannerInput?.SelectAll();
+                }), System.Windows.Threading.DispatcherPriority.Background);
             }
             else
             {
-                ThongBaoDialog.Loi($"Không thể cập nhật soát vé: {err}", "Lỗi");
+                HienThiKetQuaLoi("TỪ CHỐI SOÁT VÉ", err);
+                btnXacNhanLenTau.IsEnabled = false;
+                ThongBaoDialog.CanhBao(err, "Không Thể Soát Vé");
             }
         }
 
@@ -710,6 +844,13 @@ namespace GUI.Views.Pages
                 CapNhatKpiSoatVe();
                 ApDungLocManifest();
                 ThongBaoDialog.ThanhCong($"Đã hoàn tác trạng thái soát vé cho hành khách {tenKhach}!", "Hoàn Tác Thành Công");
+
+                // Trả focus về ô quét mã sau khi hủy soát
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    txtScannerInput?.Focus();
+                    txtScannerInput?.SelectAll();
+                }), System.Windows.Threading.DispatcherPriority.Background);
             }
             else
             {
@@ -727,15 +868,33 @@ namespace GUI.Views.Pages
                 if (tt == "DA_LEN_TAU")
                 {
                     HienThiKetQuaHopLe("HÀNH KHÁCH ĐÃ LÊN TÀU", "Vé đã được kiểm soát hợp lệ trước đó.");
+                    btnXacNhanLenTau.IsEnabled = false;
                 }
                 else if (tt == "DA_DAT")
                 {
-                    HienThiKetQuaHopLe("HÀNH KHÁCH CHƯA LÊN TÀU", "Sẵn sàng thực hiện thủ tục lên tàu.");
+                    if (KiemTraDieuKienSoatVe(drv.Row, out string tieuDe, out string moTa, out _, out _, out _, out _))
+                    {
+                        HienThiKetQuaHopLe("HÀNH KHÁCH CHƯA LÊN TÀU", "Sẵn sàng thực hiện thủ tục lên tàu.");
+                        btnXacNhanLenTau.IsEnabled = true;
+                    }
+                    else
+                    {
+                        HienThiKetQuaLoi(tieuDe, moTa);
+                        btnXacNhanLenTau.IsEnabled = false;
+                    }
                 }
                 else
                 {
                     HienThiKetQuaLoi("VÉ ĐÃ HOÀN HOẶC HỦY", "Vé không còn giá trị lên tàu.");
+                    btnXacNhanLenTau.IsEnabled = false;
                 }
+
+                // Giữ focus cho ô quét mã để nhân viên soát vé tiếp tục dùng máy quét mã vạch/QR cầm tay
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    txtScannerInput?.Focus();
+                    txtScannerInput?.SelectAll();
+                }), System.Windows.Threading.DispatcherPriority.Background);
             }
         }
 
@@ -746,6 +905,14 @@ namespace GUI.Views.Pages
                 string tt = drv.Row["TrangThai"]?.ToString() ?? "";
                 if (tt == "DA_DAT")
                 {
+                    _currentSoatVeRow = drv.Row;
+                    if (!KiemTraDieuKienSoatVe(drv.Row, out string tieuDe, out string moTa, out _, out _, out _, out _))
+                    {
+                        HienThiKetQuaLoi(tieuDe, moTa);
+                        btnXacNhanLenTau.IsEnabled = false;
+                        ThongBaoDialog.CanhBao($"{tieuDe}\n\n{moTa}", "Từ Chối Soát Vé");
+                        return;
+                    }
                     XacNhanLenTau(drv.Row, hienThiThongBao: true);
                 }
                 else if (tt == "DA_LEN_TAU")
@@ -763,6 +930,13 @@ namespace GUI.Views.Pages
                 if (tt == "DA_DAT")
                 {
                     _currentSoatVeRow = drv.Row;
+                    if (!KiemTraDieuKienSoatVe(drv.Row, out string tieuDe, out string moTa, out _, out _, out _, out _))
+                    {
+                        HienThiKetQuaLoi(tieuDe, moTa);
+                        btnXacNhanLenTau.IsEnabled = false;
+                        ThongBaoDialog.CanhBao($"{tieuDe}\n\n{moTa}", "Từ Chối Soát Vé");
+                        return;
+                    }
                     XacNhanLenTau(drv.Row, hienThiThongBao: true);
                 }
                 else if (tt == "DA_LEN_TAU")
@@ -812,6 +986,13 @@ namespace GUI.Views.Pages
 
                 dialog.SetThongTinVe(maPNR, maVeCode, macTau, gaDi, gaDen, gioDi, tenKhach, cccd, toaXe, soGhe, giaVe);
                 dialog.ShowDialog();
+
+                // Trả focus về ô quét mã sau khi xem/in thẻ lên tàu
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    txtScannerInput?.Focus();
+                    txtScannerInput?.SelectAll();
+                }), System.Windows.Threading.DispatcherPriority.Background);
             }
             catch (Exception ex)
             {
@@ -919,9 +1100,19 @@ namespace GUI.Views.Pages
 
         public void KichHoatNapLai()
         {
-            DateTime ngay = dpNgaySoatVe.SelectedDate ?? DateTime.Today;
+            DateTime ngay = dpNgaySoatVe.SelectedDate ?? ThoiGianHeThongHelper.LayGioHienTai().Date;
             TaiDanhSachChuyenTauTheoNgay(ngay);
             LoadManifestChuyenTau();
+        }
+
+        public void KichHoatInTheLenTau()
+        {
+            if (_currentSoatVeRow == null && dgvManifest?.SelectedItem is DataRowView drv)
+            {
+                _currentSoatVeRow = drv.Row;
+                HienThiChiTietVeSoat(_currentSoatVeRow);
+            }
+            BtnXemTheLenTauSoatVe_Click(this, new RoutedEventArgs());
         }
 
         public void KichHoatXuatTep()
@@ -935,6 +1126,9 @@ namespace GUI.Views.Pages
             {
                 int targetChuyen = _pendingChuyenMaChuyenTau;
                 DateTime targetNgay = _pendingChuyenNgay.Value.Date;
+                string kwToRecheck = !string.IsNullOrWhiteSpace(_lastSearchedKeyword)
+                    ? _lastSearchedKeyword
+                    : (txtScannerInput.Text?.Trim() ?? "");
 
                 dpNgaySoatVe.SelectedDate = targetNgay;
                 TaiDanhSachChuyenTauTheoNgay(targetNgay);
@@ -945,7 +1139,14 @@ namespace GUI.Views.Pages
                     btnChuyenSangChuyenTauNay.Visibility = Visibility.Collapsed;
                 }
 
-                ThucHienKiemTraVaSoatVe();
+                if (!string.IsNullOrWhiteSpace(kwToRecheck))
+                {
+                    txtScannerInput.Text = kwToRecheck;
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        ThucHienKiemTraVaSoatVe();
+                    }), System.Windows.Threading.DispatcherPriority.Background);
+                }
             }
         }
 

@@ -211,6 +211,15 @@
                                 </StackPanel>
                             </Button>
                         </Border>
+
+                        <Border x:Name="tabDieuHanhThucTe" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2.5" CornerRadius="4,4,0,0" Margin="0,0,8,0">
+                            <Button Click="NavTab_Click" Tag="DieuHanhThucTe" Background="Transparent" BorderThickness="0" Padding="14,0" Cursor="Hand" VerticalAlignment="Stretch" ToolTip="Bàn điều độ chạy tàu thực tế (CTC) &amp; Mô phỏng vận hành liên thông bán vé">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ui:SymbolIcon x:Name="iconTabDieuHanhThucTe" Symbol="Gauge24" FontSize="15" Foreground="#64748B" Margin="0,0,7,0"/>
+                                    <TextBlock x:Name="txtTabDieuHanhThucTe" Text="ĐIỀU HÀNH THỰC TẾ (CTC)" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
                     </StackPanel>
 
                     <!-- SUB-BAR 3: KINH DOANH VẬN TẢI -->

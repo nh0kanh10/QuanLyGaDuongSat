@@ -1,0 +1,117 @@
+<Window x:Class="GUI.Views.Dialogs.CauHinhKetNoiDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Cấu Hình Kết Nối Cơ Sở Dữ Liệu"
+        Width="580" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        FontFamily="Segoe UI, sans-serif">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GUI;component/Resources/Styles/KyThuatDialogStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border Style="{StaticResource KtDialogKhung}" Margin="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- TIÊU ĐỀ DIALOG (Kéo được) -->
+            <Border Grid.Row="0" Style="{StaticResource KtHeader}" Padding="16,12" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                <DockPanel LastChildFill="True">
+                    <Button DockPanel.Dock="Right" Style="{StaticResource KtNutDong}" Click="BtnDong_Click"/>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Settings24" FontSize="16" Foreground="#38BDF8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="CẤU HÌNH KẾT NỐI CƠ SỞ DỮ LIỆU" FontSize="13.5" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- NỘI DUNG CẤU HÌNH -->
+            <StackPanel Grid.Row="1" Margin="24,18,24,14">
+                <TextBlock Text="Chọn phương thức kết nối CSDL tới hệ thống đường sắt:" FontSize="12" Foreground="#475569" Margin="0,0,0,12"/>
+
+                <!-- LỰA CHỌN 1: THEO TÊN MÁY CHỦ -->
+                <RadioButton x:Name="rbMayChu" Content="Kết nối theo Tên Máy Chủ (Khuyên dùng)" IsChecked="True"
+                             FontWeight="SemiBold" Foreground="#003B73" Checked="Rb_Checked"/>
+
+                <Border x:Name="pnlMayChu" Margin="20,8,0,14" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="14,12">
+                    <StackPanel>
+                        <TextBlock Text="Tên máy chủ / Instance SQL Server:" Style="{StaticResource KtNhanTruong}"/>
+                        <TextBox x:Name="txtMayChu" Height="32" FontSize="12.5" Padding="8,0" VerticalContentAlignment="Center" Margin="0,4,0,8"/>
+
+                        <!-- Gợi ý nhanh máy chủ -->
+                        <WrapPanel Margin="0,0,0,8">
+                            <TextBlock Text="Chọn nhanh:" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Button Content=".\SQLEXPRESS" Click="BtnChonNhanh_Click" Tag=".\SQLEXPRESS" Margin="0,0,4,4" Padding="6,2" FontSize="11" Cursor="Hand"/>
+                            <Button Content="localhost" Click="BtnChonNhanh_Click" Tag="localhost" Margin="0,0,4,4" Padding="6,2" FontSize="11" Cursor="Hand"/>
+                            <Button Content="." Click="BtnChonNhanh_Click" Tag="." Margin="0,0,4,4" Padding="6,2" FontSize="11" Cursor="Hand"/>
+                            <Button Content="(localdb)\MSSQLLocalDB" Click="BtnChonNhanh_Click" Tag="(localdb)\MSSQLLocalDB" Margin="0,0,4,4" Padding="6,2" FontSize="11" Cursor="Hand"/>
+                        </WrapPanel>
+
+                        <TextBlock Text="Tên cơ sở dữ liệu:" Style="{StaticResource KtNhanTruong}"/>
+                        <TextBox x:Name="txtTenCsdl" Height="32" FontSize="12.5" Padding="8,0" VerticalContentAlignment="Center" Margin="0,4,0,0" Text="QuanLyDuongSatV2"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- LỰA CHỌN 2: CHUỖI KẾT NỐI TÙY CHỈNH -->
+                <RadioButton x:Name="rbChuoiKetNoi" Content="Nhập chuỗi kết nối tùy chỉnh (Connection String)"
+                             FontWeight="SemiBold" Foreground="#003B73" Margin="0,4,0,0" Checked="Rb_Checked"/>
+
+                <Border x:Name="pnlChuoiKetNoi" Margin="20,8,0,14" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="14,12" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="Chuỗi kết nối SQL Server hoàn chỉnh:" Style="{StaticResource KtNhanTruong}"/>
+                        <TextBox x:Name="txtChuoiKetNoi" Height="68" FontSize="11.5" Padding="8,6" TextWrapping="Wrap"
+                                 AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,4,0,0"/>
+                        <TextBlock Text="Ví dụ: Server=.\SQLEXPRESS;Database=QuanLyDuongSatV2;Trusted_Connection=True;TrustServerCertificate=True;"
+                                   FontSize="10" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- KHUNG BÁO KẾT QUẢ KIỂM TRA -->
+                <Border x:Name="bdKetQuaTest" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="4" Padding="10,8" Margin="0,4,0,0" Visibility="Collapsed">
+                    <DockPanel>
+                        <ui:SymbolIcon x:Name="iconKetQuaTest" DockPanel.Dock="Left" Symbol="Info24" FontSize="14" Foreground="#2563EB" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtKetQuaTest" FontSize="11" Foreground="#1E40AF" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- FOOTER NÚT HÀNH ĐỘNG -->
+            <Border Grid.Row="2" Style="{StaticResource KtFooter}">
+                <Grid>
+                    <Button x:Name="btnKiemTra" Click="BtnKiemTra_Click" Height="32" Padding="12,0" Background="#F1F5F9" BorderBrush="#CBD5E1" Cursor="Hand" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ArrowSync24" FontSize="13" Foreground="#003B73" Margin="0,0,6,0"/>
+                            <TextBlock Text="Kiểm Tra Kết Nối" FontSize="11.5" FontWeight="SemiBold" Foreground="#003B73" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource DesktopButton}" Height="32" Click="BtnDong_Click" Margin="0,0,8,0">
+                            <TextBlock Text="Đóng"/>
+                        </Button>
+                        <Button x:Name="btnLuu" Style="{StaticResource PrimaryDesktopButton}" Height="32" Click="BtnLuu_Click" IsDefault="True">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Save24" FontSize="13" Foreground="#FFFFFF" Margin="0,0,6,0"/>
+                                <TextBlock Text="Lưu Cấu Hình" FontSize="11.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

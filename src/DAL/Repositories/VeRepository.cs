@@ -2,6 +2,7 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using DAL.Connection;
 using ET.VanTai;
+using DTO.Common;
 
 namespace DAL.Repositories
 {
@@ -9,6 +10,7 @@ namespace DAL.Repositories
     {
         public DataTable LayDanhSach()
         {
+            DateTime now = ThoiGianHeThongHelper.LayGioHienTai();
             string sql = @"SELECT v.MaVe, v.MaVeCode, mt.SoHieuMacTau, mt.LoaiTau,
                                   dv.MaPNR, dv.MaDonVe, DATEADD(HOUR, 7, dv.ThoiDiemTao) AS ThoiDiemTaoDon, dv.HinhThucTT, dv.TrangThaiTT,
                                   kh.HoTen AS TenNguoiMua, kh.SoDienThoai AS SdtNguoiMua, kh.SoCCCD AS CccdNguoiMua,
@@ -19,13 +21,13 @@ namespace DAL.Repositories
                                   CASE 
                                       WHEN v.TrangThai = 'DA_DAT' AND (
                                           ct.TrangThai IN ('HOAN_THANH', 'DA_HUY') 
-                                          OR CAST(ct.NgayXuatPhat AS DATE) < CAST(GETDATE() AS DATE)
+                                          OR CAST(ct.NgayXuatPhat AS DATE) < CAST(@now AS DATE)
                                           OR (ct.TrangThai = 'DANG_CHAY' AND (
                                               EXISTS (
                                                   SELECT 1 FROM vanhanh.LichDungGa ld 
                                                   WHERE ld.MaChuyenTau = ct.MaChuyenTau 
                                                     AND ld.MaGa = v.MaGaDi 
-                                                    AND (ld.GioDiThucTe IS NOT NULL OR ld.GioDiKeHoach < GETDATE())
+                                                    AND (ld.GioDiThucTe IS NOT NULL OR ld.GioDiKeHoach < @now)
                                               )
                                           ))
                                       ) THEN 'HET_HAN'
@@ -47,11 +49,12 @@ namespace DAL.Repositories
                            JOIN vantai.ToaXeKhach tx ON cn.MaToaXeKhach = tx.MaToaXeKhach
                            LEFT JOIN vantai.HoanHuyVe hh ON v.MaVe = hh.MaVe
                            ORDER BY v.ThoiDiemXuatVe DESC";
-            return DatabaseHelper.ExecuteQuery(sql);
+            return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@now", now) });
         }
 
         public DataTable TimKiemVe(string keyword)
         {
+            DateTime now = ThoiGianHeThongHelper.LayGioHienTai();
             string sql = @"SELECT v.MaVe, v.MaVeCode, mt.SoHieuMacTau, mt.LoaiTau,
                                   dv.MaPNR, dv.MaDonVe, DATEADD(HOUR, 7, dv.ThoiDiemTao) AS ThoiDiemTaoDon, dv.HinhThucTT, dv.TrangThaiTT,
                                   kh.HoTen AS TenNguoiMua, kh.SoDienThoai AS SdtNguoiMua, kh.SoCCCD AS CccdNguoiMua,
@@ -62,13 +65,13 @@ namespace DAL.Repositories
                                   CASE 
                                       WHEN v.TrangThai = 'DA_DAT' AND (
                                           ct.TrangThai IN ('HOAN_THANH', 'DA_HUY') 
-                                          OR CAST(ct.NgayXuatPhat AS DATE) < CAST(GETDATE() AS DATE)
+                                          OR CAST(ct.NgayXuatPhat AS DATE) < CAST(@now AS DATE)
                                           OR (ct.TrangThai = 'DANG_CHAY' AND (
                                               EXISTS (
                                                   SELECT 1 FROM vanhanh.LichDungGa ld 
                                                   WHERE ld.MaChuyenTau = ct.MaChuyenTau 
                                                     AND ld.MaGa = v.MaGaDi 
-                                                    AND (ld.GioDiThucTe IS NOT NULL OR ld.GioDiKeHoach < GETDATE())
+                                                    AND (ld.GioDiThucTe IS NOT NULL OR ld.GioDiKeHoach < @now)
                                               )
                                           ))
                                       ) THEN 'HET_HAN'
@@ -98,11 +101,15 @@ namespace DAL.Repositories
                               OR kh.SoCCCD LIKE @kw
                               OR kh.SoDienThoai LIKE @kw
                            ORDER BY v.ThoiDiemXuatVe DESC";
-            return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@kw", $"%{keyword}%") });
+            return DatabaseHelper.ExecuteQuery(sql, new[] {
+                new SqlParameter("@kw", $"%{keyword}%"),
+                new SqlParameter("@now", now)
+            });
         }
 
-        public DataTable TimChuyenTauTheoChang(int maGaDi, int maGaDen, DateTime ngayDi)
+        public DataTable TimChuyenTauTheoChang(int maGaDi, int maGaDen, DateTime ngayDi, DateTime? gioHienTai = null)
         {
+            DateTime thoiDiemXet = gioHienTai ?? DTO.Common.ThoiGianHeThongHelper.LayGioHienTai();
             string sql = @"
                 WITH UserChang AS (
                     SELECT 
@@ -147,23 +154,24 @@ namespace DAL.Repositories
                           WHERE ldDi.MaChuyenTau = ct.MaChuyenTau 
                             AND ldDi.MaGa = @gaDi 
                             AND CAST(ldDi.GioDiKeHoach AS DATE) = CAST(@ngayDi AS DATE)
-                            -- Nếu đi ngày hôm nay: Không bán vé cho chuyến tàu có giờ chạy kế hoạch trong quá khứ
-                            AND (CAST(@ngayDi AS DATE) > CAST(GETDATE() AS DATE) OR ldDi.GioDiKeHoach >= GETDATE())
+                            -- Nếu đi cùng ngày xét: Khóa bán vé trước giờ chạy 10 phút (sát giờ không lấy lên như qua giờ)
+                            AND (CAST(@ngayDi AS DATE) > CAST(@thoiDiemXet AS DATE) OR DATEADD(MINUTE, -10, DATEADD(MINUTE, ISNULL(ct.SoPhutTreLuyKe, 0), ldDi.GioDiKeHoach)) >= @thoiDiemXet)
                       )
                       -- Dự phòng: Nếu chuyến tàu chưa lập bảng lịch dừng chi tiết, đối chiếu theo ngày xuất phát của tàu
                       OR (
                           NOT EXISTS (SELECT 1 FROM vanhanh.LichDungGa ld WHERE ld.MaChuyenTau = ct.MaChuyenTau)
                           AND CAST(ct.NgayXuatPhat AS DATE) = CAST(@ngayDi AS DATE)
-                          AND (CAST(@ngayDi AS DATE) > CAST(GETDATE() AS DATE) OR ct.GioXuatPhatKH >= GETDATE())
+                          AND (CAST(@ngayDi AS DATE) > CAST(@thoiDiemXet AS DATE) OR DATEADD(MINUTE, -10, DATEADD(MINUTE, ISNULL(ct.SoPhutTreLuyKe, 0), ct.GioXuatPhatKH)) >= @thoiDiemXet)
                       )
                   )
-                  -- Ngăn bán vé khi chuyến tàu đã rời ga đi của hành khách
+                  -- Ngăn bán vé khi chuyến tàu đã rời ga đi của hành khách (hoặc có GioDiThucTe <= thời điểm xét)
                   AND NOT EXISTS (
                       SELECT 1 
                       FROM vanhanh.LichDungGa ld 
                       WHERE ld.MaChuyenTau = ct.MaChuyenTau 
                         AND ld.MaGa = @gaDi 
                         AND ld.GioDiThucTe IS NOT NULL
+                        AND ld.GioDiThucTe <= @thoiDiemXet
                   )
                   AND (
                       -- Kiểm tra tàu thực sự dừng ở cả 2 ga theo đúng thứ tự hành trình
@@ -198,7 +206,8 @@ namespace DAL.Repositories
             {
                 new SqlParameter("@gaDi", maGaDi),
                 new SqlParameter("@gaDen", maGaDen),
-                new SqlParameter("@ngayDi", ngayDi.Date)
+                new SqlParameter("@ngayDi", ngayDi.Date),
+                new SqlParameter("@thoiDiemXet", thoiDiemXet)
             });
         }
 
@@ -589,14 +598,15 @@ namespace DAL.Repositories
                 // Kiểm tra thời gian: hoàn vé cá nhân phải trước giờ khởi hành ít nhất 4 tiếng (Quy chuẩn ĐSVN)
                 TimeSpan gioKhoiHanh = gioDiKH ?? gioXuatPhatKH;
                 DateTime thoiDiemKhoiHanh = ngayXuatPhat.Date.Add(gioKhoiHanh);
-                if (thoiDiemKhoiHanh <= DateTime.Now)
+                DateTime now = ThoiGianHeThongHelper.LayGioHienTai();
+                if (thoiDiemKhoiHanh <= now)
                 {
                     thongBaoLoi = "Tàu đã quá giờ khởi hành tại ga đi, vé không còn giá trị hoàn trả!";
                     trans.Rollback();
                     return false;
                 }
 
-                if ((thoiDiemKhoiHanh - DateTime.Now).TotalHours < 4)
+                if ((thoiDiemKhoiHanh - now).TotalHours < 4)
                 {
                     thongBaoLoi = "Theo quy định ĐSVN, không được hoàn trả vé trước giờ tàu chạy dưới 4 tiếng!";
                     trans.Rollback();
@@ -643,6 +653,7 @@ namespace DAL.Repositories
 
         public DataTable LayDanhSachVeTheoCCCD(string cccd)
         {
+            DateTime now = ThoiGianHeThongHelper.LayGioHienTai();
             string sql = @"SELECT v.MaVe, v.MaVeCode, mt.SoHieuMacTau, 
                                   dv.MaPNR, dv.MaDonVe, DATEADD(HOUR, 7, dv.ThoiDiemTao) AS ThoiDiemTaoDon, dv.HinhThucTT, dv.TrangThaiTT,
                                   kh.HoTen AS TenNguoiMua, kh.SoDienThoai AS SdtNguoiMua, kh.SoCCCD AS CccdNguoiMua,
@@ -653,13 +664,13 @@ namespace DAL.Repositories
                                   CASE 
                                       WHEN v.TrangThai = 'DA_DAT' AND (
                                           ct.TrangThai IN ('HOAN_THANH', 'DA_HUY') 
-                                          OR CAST(ct.NgayXuatPhat AS DATE) < CAST(GETDATE() AS DATE)
+                                          OR CAST(ct.NgayXuatPhat AS DATE) < CAST(@now AS DATE)
                                           OR (ct.TrangThai = 'DANG_CHAY' AND (
                                               EXISTS (
                                                   SELECT 1 FROM vanhanh.LichDungGa ld 
                                                   WHERE ld.MaChuyenTau = ct.MaChuyenTau 
                                                     AND ld.MaGa = v.MaGaDi 
-                                                    AND (ld.GioDiThucTe IS NOT NULL OR ld.GioDiKeHoach < GETDATE())
+                                                    AND (ld.GioDiThucTe IS NOT NULL OR ld.GioDiKeHoach < @now)
                                               )
                                           ))
                                       ) THEN 'HET_HAN'
@@ -682,7 +693,10 @@ namespace DAL.Repositories
                            LEFT JOIN vantai.HoanHuyVe hh ON v.MaVe = hh.MaVe
                            WHERE v.CCCDHanhKhach = @cccd OR kh.SoCCCD = @cccd
                            ORDER BY v.ThoiDiemXuatVe DESC";
-            return DatabaseHelper.ExecuteQuery(sql, new[] { new SqlParameter("@cccd", cccd) });
+            return DatabaseHelper.ExecuteQuery(sql, new[] {
+                new SqlParameter("@cccd", cccd),
+                new SqlParameter("@now", now)
+            });
         }
 
         /// <summary>
@@ -838,12 +852,17 @@ namespace DAL.Repositories
             thongBaoLoi = string.Empty;
             try
             {
+                DateTime now = ThoiGianHeThongHelper.LayGioHienTai();
                 string sql = @"UPDATE vantai.Ve 
                                SET TrangThai = @trangThai,
-                                   ThoiDiemSoatVe = CASE WHEN @trangThai = 'DA_LEN_TAU' THEN SYSDATETIME() ELSE NULL END,
+                                   ThoiDiemSoatVe = CASE WHEN @trangThai = 'DA_LEN_TAU' THEN @thoiDiemSoat ELSE NULL END,
                                    MaGaSoat = CASE WHEN @trangThai = 'DA_LEN_TAU' THEN @maGaSoat ELSE NULL END
                                OUTPUT DELETED.TrangThai, DELETED.MaVeCode
-                               WHERE MaVe = @id";
+                               WHERE MaVe = @id
+                                 AND (
+                                     (@trangThai = 'DA_LEN_TAU' AND TrangThai = 'DA_DAT')
+                                     OR (@trangThai = 'DA_DAT' AND TrangThai = 'DA_LEN_TAU')
+                                 )";
                 // [12/11] Cap nhat + nhat ky he thong trong mot giao dich
                 using var conn = new SqlConnection(DatabaseHelper.GetConnectionString());
                 conn.Open();
@@ -853,11 +872,17 @@ namespace DAL.Repositories
                 {
                     cmd.Parameters.AddWithValue("@id", maVe);
                     cmd.Parameters.AddWithValue("@trangThai", trangThai);
+                    cmd.Parameters.AddWithValue("@thoiDiemSoat", now);
                     cmd.Parameters.AddWithValue("@maGaSoat", (object?)maGaSoat ?? DBNull.Value);
                     using var r = cmd.ExecuteReader();
                     if (r.Read()) { cu = r["TrangThai"].ToString(); maVeCode = r["MaVeCode"].ToString(); }
                 }
-                if (cu == null) { trans.Rollback(); return false; }
+                if (cu == null)
+                {
+                    trans.Rollback();
+                    thongBaoLoi = "Không thể cập nhật: Trạng thái vé không hợp lệ để soát vé hoặc vé đã bị hủy/hoàn trả!";
+                    return false;
+                }
                 DAL.Connection.PhienGiaoDich.GhiNhatKy(conn, trans, trangThai == "DA_LEN_TAU" ? "SOAT_VE" : "HUY_SOAT_VE", "vantai.Ve",
                     maVe.ToString(), new { MaVeCode = maVeCode, TrangThai = cu }, new { MaVeCode = maVeCode, TrangThai = trangThai, MaGaSoat = maGaSoat });
                 trans.Commit();
@@ -876,9 +901,10 @@ namespace DAL.Repositories
             thongBaoLoi = string.Empty;
             try
             {
+                DateTime now = ThoiGianHeThongHelper.LayGioHienTai();
                 string sql = @"UPDATE vantai.Ve 
                                SET TrangThai = 'DA_LEN_TAU',
-                                   ThoiDiemSoatVe = SYSDATETIME(),
+                                   ThoiDiemSoatVe = @thoiDiemSoat,
                                    MaGaSoat = @maGaSoat
                                WHERE MaChuyenTau = @maChuyenTau
                                  AND MaGaDi = @maGaSoat
@@ -891,6 +917,7 @@ namespace DAL.Repositories
                 {
                     cmd.Parameters.AddWithValue("@maChuyenTau", maChuyenTau);
                     cmd.Parameters.AddWithValue("@maGaSoat", maGaSoat);
+                    cmd.Parameters.AddWithValue("@thoiDiemSoat", now);
                     soVeDaSoat = cmd.ExecuteNonQuery();
                 }
                 if (soVeDaSoat > 0)
@@ -922,7 +949,10 @@ namespace DAL.Repositories
                        v.ThoiDiemSoatVe, gSoat.TenGa AS TenGaSoat,
                        v.MaGaDi, v.MaGaDen, v.MaChoNgoi, tx.MaToaXeKhach,
                        v.MaChuyenTau, mt.SoHieuMacTau, ct.NgayXuatPhat, ct.GioXuatPhatKH,
-                       ldDi.GioDiKeHoach AS GioDiKH
+                       ct.TrangThai AS TrangThaiChuyenTau,
+                       ISNULL(ct.SoPhutTreLuyKe, 0) AS SoPhutTreLuyKe,
+                       ldDi.GioDiKeHoach AS GioDiKH,
+                       ldDi.GioDiThucTe
                 FROM vantai.Ve v
                 JOIN vanhanh.ChuyenTau ct ON v.MaChuyenTau = ct.MaChuyenTau
                 JOIN vanhanh.MacTauMau mt ON ct.MaMacTau = mt.MaMacTau
@@ -961,6 +991,7 @@ namespace DAL.Repositories
                        v.MaGaDi, v.MaGaDen, v.MaChoNgoi, tx.MaToaXeKhach,
                        v.MaChuyenTau, mt.SoHieuMacTau, mt.LoaiTau,
                        ct.NgayXuatPhat, ct.GioXuatPhatKH, ct.TrangThai AS TrangThaiChuyenTau,
+                       ISNULL(ct.SoPhutTreLuyKe, 0) AS SoPhutTreLuyKe,
                        ldDi.GioDiKeHoach AS GioDiKH, ldDi.GioDiThucTe,
                        ldDen.GioDenKeHoach AS GioDenKH, ldDen.GioDenThucTe
                 FROM vantai.Ve v

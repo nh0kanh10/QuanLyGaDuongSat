@@ -821,8 +821,8 @@ namespace GUI.Views.Pages
             // Nhãn cảnh báo nổi bên cạnh
             var borderTag = new Border
             {
-                Background = TaoBrush(Color.FromRgb(254, 242, 242)),
-                BorderBrush = TaoBrush(Color.FromRgb(248, 113, 113)),
+                Background = TaoBrush(Color.FromRgb(255, 255, 255)),
+                BorderBrush = TaoBrush(Color.FromRgb(220, 38, 38)),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(2),
                 Padding = new Thickness(5, 1, 5, 1),
@@ -832,10 +832,10 @@ namespace GUI.Views.Pages
             };
             var txtTag = new TextBlock
             {
-                Text = $"⚠️ {xd.SoHieuMacTau1} x {xd.SoHieuMacTau2}",
+                Text = $"[XUNG ĐỘT] {xd.SoHieuMacTau1} - {xd.SoHieuMacTau2}",
                 FontSize = 9.5,
                 FontWeight = FontWeights.Bold,
-                Foreground = TaoBrush(Color.FromRgb(153, 27, 27))
+                Foreground = TaoBrush(Color.FromRgb(185, 28, 28))
             };
             borderTag.Child = txtTag;
 

@@ -9,6 +9,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Wpf.Ui.Controls;
 
 namespace GUI.Views.UserControls
 {
@@ -19,6 +20,7 @@ namespace GUI.Views.UserControls
         public string NormalizedDisplayText { get; set; } = "";
         public string SubText { get; set; } = "";
         public object? Value { get; set; }
+        public SymbolRegular IconSymbol { get; set; } = SymbolRegular.Location24;
         public Visibility SubTextVisibility => string.IsNullOrEmpty(SubText) ? Visibility.Collapsed : Visibility.Visible;
 
         public override string ToString() => DisplayText;
@@ -26,7 +28,7 @@ namespace GUI.Views.UserControls
 
     public partial class SearchableComboBox : UserControl
     {
-        private readonly List<SearchableComboItem> _allItems = new();
+        private List<SearchableComboItem> _allItems = new();
         private bool _isUpdatingInternally = false;
         private DateTime _lastClosedTime = DateTime.MinValue;
         private DateTime _popupOpenedTime = DateTime.MinValue;
@@ -64,6 +66,14 @@ namespace GUI.Views.UserControls
         public static readonly DependencyProperty PlaceholderProperty =
             DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(SearchableComboBox),
                 new PropertyMetadata("Chọn ga...", (d, e) => ((SearchableComboBox)d).UpdatePlaceholder()));
+
+        public static readonly DependencyProperty SearchWatermarkProperty =
+            DependencyProperty.Register(nameof(SearchWatermark), typeof(string), typeof(SearchableComboBox),
+                new PropertyMetadata("Gõ tên ga để lọc (vd: hà nội, đà nẵng)...", (d, e) => ((SearchableComboBox)d).UpdateSearchWatermark()));
+
+        public static readonly DependencyProperty ItemIconSymbolProperty =
+            DependencyProperty.Register(nameof(ItemIconSymbol), typeof(SymbolRegular), typeof(SearchableComboBox),
+                new PropertyMetadata(SymbolRegular.Location24, (d, e) => ((SearchableComboBox)d).RebuildItemsList()));
 
         public static readonly DependencyProperty IsDropDownOpenProperty =
             DependencyProperty.Register(nameof(IsDropDownOpen), typeof(bool), typeof(SearchableComboBox),
@@ -125,6 +135,18 @@ namespace GUI.Views.UserControls
             set => SetValue(PlaceholderProperty, value);
         }
 
+        public string SearchWatermark
+        {
+            get => (string)GetValue(SearchWatermarkProperty);
+            set => SetValue(SearchWatermarkProperty, value);
+        }
+
+        public SymbolRegular ItemIconSymbol
+        {
+            get => (SymbolRegular)GetValue(ItemIconSymbolProperty);
+            set => SetValue(ItemIconSymbolProperty, value);
+        }
+
         public bool IsDropDownOpen
         {
             get => (bool)GetValue(IsDropDownOpenProperty);
@@ -152,6 +174,15 @@ namespace GUI.Views.UserControls
         {
             InitializeComponent();
             UpdatePlaceholder();
+            UpdateSearchWatermark();
+        }
+
+        private void UpdateSearchWatermark()
+        {
+            if (txtSearchWatermark != null && !string.IsNullOrEmpty(SearchWatermark))
+            {
+                txtSearchWatermark.Text = SearchWatermark;
+            }
         }
 
         private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -196,10 +227,12 @@ namespace GUI.Views.UserControls
 
         private void RebuildItemsList()
         {
-            _allItems.Clear();
+            lstItems.ItemsSource = null;
+            var newItems = new List<SearchableComboItem>();
+
             if (ItemsSource == null)
             {
-                lstItems.ItemsSource = null;
+                _allItems = newItems;
                 txtResultCount.Text = "0 mục khả dụng";
                 ClearSelectionDisplay();
                 return;
@@ -219,12 +252,14 @@ namespace GUI.Views.UserControls
                     DisplayText = display,
                     NormalizedDisplayText = RemoveDiacritics(display).ToLowerInvariant(),
                     SubText = sub,
-                    Value = val
+                    Value = val,
+                    IconSymbol = ItemIconSymbol
                 };
 
-                _allItems.Add(comboItem);
+                newItems.Add(comboItem);
             }
 
+            _allItems = newItems;
             lstItems.ItemsSource = _allItems;
             txtResultCount.Text = $"{_allItems.Count} mục khả dụng";
 
@@ -412,6 +447,7 @@ namespace GUI.Views.UserControls
             }
 
             txtSearch.Text = "";
+            UpdateSearchWatermark();
             txtSearchWatermark.Visibility = Visibility.Visible;
             btnClearSearch.Visibility = Visibility.Collapsed;
             FilterItems("");
@@ -444,6 +480,7 @@ namespace GUI.Views.UserControls
         {
             if (string.IsNullOrWhiteSpace(keyword))
             {
+                lstItems.ItemsSource = null;
                 lstItems.ItemsSource = _allItems;
                 txtEmptyState.Visibility = Visibility.Collapsed;
                 txtResultCount.Text = $"{_allItems.Count} mục khả dụng";
@@ -458,6 +495,7 @@ namespace GUI.Views.UserControls
                 (!string.IsNullOrEmpty(x.SubText) && x.SubText.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
             ).ToList();
 
+            lstItems.ItemsSource = null;
             lstItems.ItemsSource = filtered;
             txtEmptyState.Visibility = filtered.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             txtResultCount.Text = $"Tìm thấy {filtered.Count}/{_allItems.Count}";

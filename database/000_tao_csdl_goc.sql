@@ -2393,3 +2393,24 @@ IF COL_LENGTH(N'vantai.Ve', N'MaGaSoat') IS NULL
     ALTER TABLE vantai.Ve ADD MaGaSoat INT NULL
         CONSTRAINT FK_Ve_GaSoat FOREIGN KEY REFERENCES hatang.Ga(MaGa);
 GO
+
+-- Lưu bản sao lịch dừng ga chuẩn ban đầu vào vanhanh.LichDungGaGoc phục vụ tác nghiệp điều độ
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'vanhanh' AND TABLE_NAME = 'LichDungGaGoc')
+BEGIN
+    CREATE TABLE vanhanh.LichDungGaGoc (
+        MaChuyenTau INT NOT NULL,
+        MaGa INT NOT NULL,
+        ThuTuDung INT NOT NULL,
+        GioDenKeHoach DATETIME2 NOT NULL,
+        GioDiKeHoach DATETIME2 NOT NULL,
+        MaDuongRay INT NULL,
+        CONSTRAINT PK_LichDungGaGoc PRIMARY KEY (MaChuyenTau, ThuTuDung)
+    );
+END
+GO
+
+INSERT INTO vanhanh.LichDungGaGoc (MaChuyenTau, MaGa, ThuTuDung, GioDenKeHoach, GioDiKeHoach, MaDuongRay)
+SELECT ld.MaChuyenTau, ld.MaGa, ld.ThuTuDung, ld.GioDenKeHoach, ld.GioDiKeHoach, ld.MaDuongRay
+FROM vanhanh.LichDungGa ld
+WHERE NOT EXISTS (SELECT 1 FROM vanhanh.LichDungGaGoc g WHERE g.MaChuyenTau = ld.MaChuyenTau AND g.ThuTuDung = ld.ThuTuDung);
+GO

@@ -25,6 +25,7 @@ namespace GUI
             ["MacTau"] = new[] { MaQuyen.XemMangLuoi, MaQuyen.SuaHaTang, MaQuyen.LapBieuDoChayTau },
             ["LichTrinh"] = new[] { MaQuyen.XemMangLuoi, MaQuyen.LapBieuDoChayTau, MaQuyen.GhiNhanSuCoChamGio },
             ["BieuDo"] = new[] { MaQuyen.XemMangLuoi, MaQuyen.LapBieuDoChayTau, MaQuyen.GhiNhanSuCoChamGio },
+            ["DieuHanhThucTe"] = new[] { MaQuyen.XemMangLuoi, MaQuyen.LapBieuDoChayTau, MaQuyen.GhiNhanSuCoChamGio },
             ["BanVe"] = new[] { MaQuyen.XemVe, MaQuyen.BanVe, MaQuyen.HoanVe },
             ["SoatVe"] = new[] { MaQuyen.XemVe, MaQuyen.SoatVe },
             ["HangHoa"] = new[] { MaQuyen.XemHangHoa, MaQuyen.LapVanDonHang },
@@ -56,7 +57,7 @@ namespace GUI
 
         // Thu tu tab de chon tab dau tien duoc xem
         private static readonly string[] ThuTuTab =
-            { "MangLuoiGa", "KhuGian", "MacTau", "NhanSu", "LichTrinh", "BieuDo", "BanVe", "SoatVe", "HangHoa", "PhuongTien", "BaoTri", "BaoCao", "QuanTri" };
+            { "MangLuoiGa", "KhuGian", "MacTau", "NhanSu", "LichTrinh", "BieuDo", "DieuHanhThucTe", "BanVe", "SoatVe", "HangHoa", "PhuongTien", "BaoTri", "BaoCao", "QuanTri" };
 
         private bool _daMoTrangDau;
 
@@ -66,7 +67,7 @@ namespace GUI
         private IEnumerable<(string Tag, Border Tab)> CacTab() => new (string, Border)[]
         {
             ("MangLuoiGa", tabGa), ("KhuGian", tabKhuGian), ("MacTau", tabMacTau), ("NhanSu", tabNavNhanSu),
-            ("LichTrinh", tabLichTrinh), ("BieuDo", tabBieuDo),
+            ("LichTrinh", tabLichTrinh), ("BieuDo", tabBieuDo), ("DieuHanhThucTe", tabDieuHanhThucTe),
             ("BanVe", tabBanVe), ("SoatVe", tabSoatVe), ("HangHoa", tabHangHoa),
             ("PhuongTien", tabNavPhuongTien), ("BaoTri", tabNavBaoTri),
             ("BaoCao", tabNavBaoCao), ("QuanTri", tabNavQuanTri),

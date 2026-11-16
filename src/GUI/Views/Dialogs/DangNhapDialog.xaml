@@ -55,7 +55,41 @@
                             <TextBlock Text="Mọi lần đăng nhập đều được ghi lại" Foreground="#CBD5E1" FontSize="11" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
-                    <TextBlock DockPanel.Dock="Bottom" x:Name="txtKetNoi" Foreground="#94A3B8" FontSize="10" TextWrapping="Wrap"/>
+                    <!-- TRẠNG THÁI & 2 NÚT THIẾT LẬP KẾT NỐI CSDL -->
+                    <StackPanel DockPanel.Dock="Bottom" Margin="0,14,0,0">
+                        <DockPanel Margin="0,0,0,8">
+                            <ui:SymbolIcon x:Name="iconKetNoi" DockPanel.Dock="Left" Symbol="Database24" FontSize="14" Foreground="#38BDF8" Margin="0,1,6,0" VerticalAlignment="Top"/>
+                            <TextBlock x:Name="txtKetNoi" Foreground="#94A3B8" FontSize="10.5" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                        </DockPanel>
+
+                        <Grid Margin="0,2,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Nút 1: Nhập chuỗi kết nối / Đổi Server -->
+                            <Button x:Name="btnNhapChuoiKetNoi" Grid.Column="0" Click="BtnNhapChuoiKetNoi_Click"
+                                    Height="30" Padding="4,0" Background="#0C4A6E" BorderBrush="#0284C7" BorderThickness="1"
+                                    Cursor="Hand" ToolTip="Mở hộp thoại nhập chuỗi kết nối hoặc chọn máy chủ SQL Server và lưu cấu hình">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <ui:SymbolIcon Symbol="Settings24" FontSize="12" Foreground="#38BDF8" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Chuỗi kết nối" FontSize="11" Foreground="#F0F9FF" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Nút 2: Tự lấy file MDF -->
+                            <Button x:Name="btnAutoMdf" Grid.Column="2" Click="BtnAutoMdf_Click"
+                                    Height="30" Padding="4,0" Background="#065F46" BorderBrush="#059669" BorderThickness="1"
+                                    Cursor="Hand" ToolTip="Tự động nhận diện hoặc chọn file CSDL QuanLyDuongSatV2.mdf chạy LocalDB">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <ui:SymbolIcon Symbol="FolderOpen24" FontSize="12" Foreground="#34D399" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Tự nhận MDF" FontSize="11" Foreground="#ECFDF5" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
                 </DockPanel>
             </Border>
 
@@ -88,6 +122,18 @@
                                  PasswordChanged="O_ThayDoi" KeyUp="MatKhau_KeyUp"/>
                     <TextBlock x:Name="txtCapsLock" Text="Caps Lock đang bật." FontSize="11" Foreground="#B45309"
                                Margin="0,4,0,0" Visibility="Collapsed"/>
+
+                    <!-- NÚT ĐĂNG NHẬP NHANH TÀI KHOẢN TOÀN QUYỀN (ADMIN) -->
+                    <Border x:Name="bdDangNhapNhanh" Margin="0,14,0,0" Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="4">
+                        <Button x:Name="btnDangNhapNhanhAdmin" Click="BtnDangNhapNhanhAdmin_Click" 
+                                Height="34" Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                ToolTip="Đăng nhập ngay với tài khoản Quản trị viên toàn quyền (admin) - Phím tắt F2">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <ui:SymbolIcon Symbol="Flash24" FontSize="15" Foreground="#16A34A" Margin="0,0,6,0"/>
+                                <TextBlock Text="Đăng Nhập Nhanh Toàn Quyền (Admin)" FontWeight="SemiBold" Foreground="#15803D" FontSize="12" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Border>
 
                     <Border x:Name="bdLoi" Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="3"
                             Padding="10,7" Margin="0,12,0,0" Visibility="Collapsed">

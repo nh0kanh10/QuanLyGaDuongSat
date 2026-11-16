@@ -436,7 +436,7 @@ namespace GUI.Views.Dialogs
                 }
                 else
                 {
-                    txtHuongChayTuDong.Text = "⚠️ Ga xuất phát trùng Ga về đích";
+                    txtHuongChayTuDong.Text = "Ga xuất phát trùng Ga về đích";
                     txtHuongChayTuDong.Foreground = new SolidColorBrush(Color.FromRgb(185, 28, 28));
                 }
 

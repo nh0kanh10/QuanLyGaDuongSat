@@ -1,0 +1,455 @@
+<Page x:Class="GUI.Views.Pages.DieuHanhThucTePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:helpers="clr-namespace:GUI.Helpers"
+      mc:Ignorable="d" 
+      d:DesignHeight="850" d:DesignWidth="1400"
+      Title="Điều Hành Chạy Tàu Thực Tế"
+      Loaded="Page_Loaded" Unloaded="Page_Unloaded">
+
+    <Grid Background="#F8FAFC">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- 0. Header Phân Hệ & Đồng hồ hệ thống -->
+            <RowDefinition Height="Auto"/> <!-- 1. Toolbar Tình huống điều độ mô phỏng -->
+            <RowDefinition Height="*"/>    <!-- 2. Sơ đồ trực quan Synoptic Canvas -->
+            <RowDefinition Height="Auto"/> <!-- 3. GridSplitter -->
+            <RowDefinition Height="240" MinHeight="160" x:Name="rowBottomConsole"/> <!-- 4. Bảng tác nghiệp điều độ & liên thông bán vé -->
+        </Grid.RowDefinitions>
+
+        <!-- ========================================================================= -->
+        <!-- 0. THANH TIÊU ĐỀ PHÂN HỆ & ĐỒNG HỒ ĐIỀU ĐỘ THỜI GIAN THỰC (OCC TOP BAR)    -->
+        <!-- ========================================================================= -->
+        <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="0,0,0,1" Padding="14,9">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Khối Tiêu đề Phân hệ (Đồng bộ chuẩn PhuongTienPage / ERP) -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="34" Height="34" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1"
+                            CornerRadius="4" Margin="0,0,10,0">
+                        <ui:SymbolIcon Symbol="Gauge24" FontSize="18" Foreground="#1D4ED8"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="BÀN ĐIỀU ĐỘ CHẠY TÀU THỰC TẾ (CTC CONSOLE)" FontSize="13" FontWeight="Bold" Foreground="#003B73"/>
+                        <TextBlock Text="Giám sát vị trí đoàn tàu thời gian thực · Tự động phát hiện xung đột &amp; liên thông bán vé" FontSize="11" Foreground="#64748B"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Khối Đồng Hồ Hệ Thống & Bộ Điều Khiển Tốc Độ (Center) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <!-- Khung Đồng hồ vận hành -->
+                    <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="10,4" Margin="0,0,12,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Đèn LED trạng thái -->
+                            <Ellipse x:Name="ledStatus" Width="8" Height="8" Fill="#10B981" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
+                                <TextBlock Text="GIỜ VẬN HÀNH" FontSize="8.5" FontWeight="Bold" Foreground="#64748B"/>
+                                <TextBlock x:Name="txtGioMoPhong" Text="07:15:00" FontFamily="Consolas" FontSize="17" FontWeight="Bold" Foreground="#003B73"/>
+                            </StackPanel>
+                            <Border Width="1" Background="#CBD5E1" Margin="4,2,8,2"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="txtNgayMoPhong" Text="16/11/2026" FontFamily="Consolas" FontSize="11" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                <TextBlock x:Name="txtTrangThaiTocDo" Text="Tốc độ: 1x (Bình thường)" FontSize="9" Foreground="#64748B"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Cụm nút tốc độ Playback & Nhảy Giờ Nhanh -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="btnDung" Click="BtnDung_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="8,0" Margin="0,0,4,0" ToolTip="Tạm dừng đồng hồ mô phỏng">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Pause24" FontSize="12" Foreground="#D97706" Margin="0,0,4,0"/>
+                                <TextBlock Text="Dừng" FontSize="11" Foreground="#1E293B"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnX1" Click="BtnX1_Click" Style="{StaticResource PrimaryDesktopButton}" Height="28" Padding="9,0" Margin="0,0,3,0" ToolTip="Tốc độ chuẩn 1 giây = 1 giây">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Play24" FontSize="11" Margin="0,0,4,0" Foreground="#FFFFFF"/>
+                                <TextBlock Text="1x" FontSize="11" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnX30" Click="BtnX30_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="9,0" Margin="0,0,3,0" ToolTip="Tốc độ nhanh 1 giây = 30 giây">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="FastForward24" FontSize="11" Margin="0,0,4,0" Foreground="#1E293B"/>
+                                <TextBlock Text="30x" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnX60" Click="BtnX60_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="9,0" Margin="0,0,3,0" ToolTip="Tốc độ nhanh 1 giây = 1 phút">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Flash24" FontSize="11" Margin="0,0,4,0" Foreground="#DC2626"/>
+                                <TextBlock Text="60x" FontSize="11" FontWeight="Bold" Foreground="#DC2626"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnX300" Click="BtnX300_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="9,0" Margin="0,0,5,0" ToolTip="Tốc độ siêu tốc 1 giây = 5 phút">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Flash24" FontSize="11" Margin="0,0,4,0" Foreground="#B91C1C"/>
+                                <TextBlock Text="300x" FontSize="11" FontWeight="Bold" Foreground="#B91C1C"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Cụm Phím Nhảy Nhanh Thời Gian (Quick Time Jump) -->
+                        <Border Width="1" Background="#CBD5E1" Height="16" Margin="2,0,5,0" VerticalAlignment="Center"/>
+
+                        <Button x:Name="btnCong15P" Click="BtnCong15P_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="7,0" Margin="0,0,3,0" ToolTip="Cộng ngay 15 phút (không cần chờ)">
+                            <TextBlock Text="+15p" FontSize="10.5" FontWeight="Bold" Foreground="#003B73"/>
+                        </Button>
+
+                        <Button x:Name="btnCong30P" Click="BtnCong30P_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="7,0" Margin="0,0,3,0" ToolTip="Cộng ngay 30 phút (không cần chờ)">
+                            <TextBlock Text="+30p" FontSize="10.5" FontWeight="Bold" Foreground="#003B73"/>
+                        </Button>
+
+                        <Button x:Name="btnCong1H" Click="BtnCong1H_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="7,0" Margin="0,0,5,0" ToolTip="Cộng ngay 1 giờ (không cần chờ)">
+                            <TextBlock Text="+1h" FontSize="10.5" FontWeight="Bold" Foreground="#0284C7"/>
+                        </Button>
+
+                        <Button x:Name="btnVeGioThat" Click="BtnVeGioThat_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="8,0" ToolTip="Quay về giờ đồng hồ máy tính thật">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="ArrowCounterclockwise24" FontSize="12" Margin="0,0,4,0" Foreground="#003B73"/>
+                                <TextBlock Text="Giờ Thật" FontSize="11" Foreground="#003B73"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Nút liên kết sang Biểu đồ Marey 24H -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Click="BtnMoBieuDo24H_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="10,0" ToolTip="Mở sang màn hình Biểu Đồ 24H Marey">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timeline24" FontSize="13" Foreground="#003B73" Margin="0,0,5,0"/>
+                            <TextBlock Text="Biểu Đồ Marey" FontSize="11" FontWeight="SemiBold" Foreground="#003B73"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ========================================================================= -->
+        <!-- 1. TOOLBAR TÌNH HUỐNG ĐIỀU ĐỘ & MÔ PHỎNG VẬN HÀNH                         -->
+        <!-- ========================================================================= -->
+        <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="12,7" Margin="12,8,12,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                    <ui:SymbolIcon Symbol="Flash24" FontSize="14" Foreground="#0284C7" Margin="0,0,6,0"/>
+                    <TextBlock Text="TÌNH HUỐNG ĐIỀU ĐỘ &amp; MÔ PHỎNG LIÊN THÔNG:" FontSize="11" FontWeight="Bold" Foreground="#003B73" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Click="BtnKichBan1_Click" Style="{StaticResource DesktopButton}" Height="26" Padding="9,0" Margin="0,0,5,0"
+                            ToolTip="05:30: Toàn bộ đoàn tàu sẵn sàng tại ga xuất phát. Vé toàn tuyến mở bán bình thường.">
+                        <TextBlock Text="1. Chuẩn Bị (05:30)" FontSize="11" FontWeight="SemiBold" Foreground="#003B73"/>
+                    </Button>
+
+                    <Button Click="BtnKichBan2_Click" Style="{StaticResource DesktopButton}" Height="26" Padding="9,0" Margin="0,0,5,0"
+                            ToolTip="07:15: Tàu SE1 chạy ở Km 68. Khóa vé chặng Hà Nội - Phủ Lý, mở bán chặng Nam Định - Vinh.">
+                        <TextBlock Text="2. Đang Chạy (07:15)" FontSize="11" FontWeight="SemiBold" Foreground="#003B73"/>
+                    </Button>
+
+                    <Button Click="BtnKichBan3_Click" Style="{StaticResource DesktopButton}" Height="26" Padding="9,0" Margin="0,0,5,0"
+                            ToolTip="07:45: Tàu SE1 đỗ tại Ga Nam Định đón khách. Chuẩn bị xuất phát đi Vinh.">
+                        <TextBlock Text="3. Đỗ Ga Nam Định (07:45)" FontSize="11" FontWeight="SemiBold" Foreground="#003B73"/>
+                    </Button>
+
+                    <Button Click="BtnKichBan4_Click" Style="{StaticResource DesktopButton}" Height="26" Padding="9,0" Margin="0,0,5,0"
+                            Background="#FFFFFF" BorderBrush="#DC2626"
+                            ToolTip="Kích hoạt sự cố SE1 chậm 45 phút tại Phủ Lý! Giờ bán vé tự động gia hạn thêm 45p, phát sinh xung đột với SE2!">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Warning24" FontSize="12" Foreground="#DC2626" Margin="0,0,4,0"/>
+                            <TextBlock Text="4. Sự Cố SE1 Trễ +45P" FontSize="11" FontWeight="Bold" Foreground="#DC2626"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Click="BtnKichBan5_Click" Style="{StaticResource DesktopButton}" Height="26" Padding="9,0"
+                            ToolTip="Khôi phục lại dữ liệu chạy tàu ban đầu sạch sẽ để mô phỏng lại tình huống.">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ArrowSync24" FontSize="12" Foreground="#475569" Margin="0,0,4,0"/>
+                            <TextBlock Text="5. Khôi Phục Giờ Chuẩn" FontSize="11" Foreground="#475569"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ========================================================================= -->
+        <!-- 2. SƠ ĐỒ SYNOPTIC ĐƯỜNG ĐƠN & ĐÈN TÍN HIỆU THỜI GIAN THỰC (MAIN CANVAS)   -->
+        <!-- ========================================================================= -->
+        <Border Grid.Row="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Margin="12,8,12,0" ClipToBounds="True">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Dải thông tin tóm tắt tuyến trên đỉnh Canvas -->
+                <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="14,7">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="SƠ ĐỒ TRỰC QUAN SYNOPTIC TUYẾN THỐNG NHẤT:" FontSize="11" FontWeight="Bold" Foreground="#003B73" Margin="0,0,8,0"/>
+                            <TextBlock Text="HÀ NỘI ➔ GIÁP BÁT ➔ PHỦ LÝ ➔ NAM ĐỊNH ➔ NINH BÌNH ➔ BỈM SƠN ➔ THANH HÓA ➔ VINH" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="#ECFDF5" BorderBrush="#A7F3D0" BorderThickness="1" CornerRadius="3" Padding="8,2" Margin="0,0,8,0">
+                                <TextBlock x:Name="txtSoTauDangChay" Text="Đang chạy: 4 đoàn tàu" FontSize="10.5" FontWeight="Bold" Foreground="#15803D"/>
+                            </Border>
+                            <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="3" Padding="8,2">
+                                <TextBlock x:Name="txtTrangThaiCanhBaoNhanh" Text="Tuyến an toàn" FontSize="10.5" FontWeight="Bold" Foreground="#1D4ED8"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- ScrollViewer chứa Sơ đồ Synoptic Canvas (Nền sáng sạch sẽ) -->
+                <ScrollViewer Grid.Row="1" x:Name="svSynoptic" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                              Background="#FFFFFF" PanningMode="HorizontalOnly">
+                    <Canvas x:Name="cvsSynoptic" Width="2400" Height="340" Background="#FFFFFF"
+                            MouseMove="CvsSynoptic_MouseMove" MouseLeave="CvsSynoptic_MouseLeave"/>
+                </ScrollViewer>
+
+                <!-- Dải chú thích ký hiệu kỹ thuật ở đáy sơ đồ -->
+                <Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="12,6">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="KÝ HIỆU KỸ THUẬT:" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,14,0"/>
+
+                        <!-- Đèn Xanh -->
+                        <Ellipse Width="8" Height="8" Fill="#16A34A" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Khu gian Thông đường" FontSize="10" Foreground="#334155" Margin="0,0,14,0" VerticalAlignment="Center"/>
+
+                        <!-- Đèn Vàng -->
+                        <Ellipse Width="8" Height="8" Fill="#D97706" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Chuẩn bị vào Ga / Đường tránh" FontSize="10" Foreground="#334155" Margin="0,0,14,0" VerticalAlignment="Center"/>
+
+                        <!-- Đèn Đỏ -->
+                        <Ellipse Width="8" Height="8" Fill="#DC2626" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Khu gian Bị chiếm dụng / Đóng đường" FontSize="10" Foreground="#DC2626" FontWeight="Bold" Margin="0,0,14,0" VerticalAlignment="Center"/>
+
+                        <!-- Tàu Bắc Nam -->
+                        <Border Background="#003B73" CornerRadius="2" Padding="4,1" Margin="0,0,4,0" VerticalAlignment="Center">
+                            <TextBlock Text="SE1 ➔" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        </Border>
+                        <TextBlock Text="Tàu Bắc ➔ Nam" FontSize="10" Foreground="#334155" Margin="0,0,14,0" VerticalAlignment="Center"/>
+
+                        <!-- Tàu Nam Bắc -->
+                        <Border Background="#0284C7" CornerRadius="2" Padding="4,1" Margin="0,0,4,0" VerticalAlignment="Center">
+                            <TextBlock Text="⬅ SE2" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        </Border>
+                        <TextBlock Text="Tàu Nam ➔ Bắc" FontSize="10" Foreground="#334155" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Tooltip chi tiết đoàn tàu khi hover -->
+                <Border Grid.Row="1" x:Name="bdTrainTooltip" Background="#FFFFFF" BorderBrush="#003B73" BorderThickness="1.5"
+                        CornerRadius="4" Padding="12,8" HorizontalAlignment="Left" VerticalAlignment="Top"
+                        Visibility="Collapsed" Panel.ZIndex="100" IsHitTestVisible="False">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.15" Color="#000000"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock x:Name="txtTooltipTieuDe" Text="TÀU SE1 (BẮC ➔ NAM)" FontSize="12" FontWeight="Bold" Foreground="#003B73"/>
+                        <TextBlock x:Name="txtTooltipChiTiet" Text="Km 68.5 | Vận tốc: 72 km/h" FontSize="11" Foreground="#0F172A" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="txtTooltipTrangThai" Text="Đang chạy khu gian Phủ Lý - Nam Định" FontSize="10.5" Foreground="#64748B" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ========================================================================= -->
+        <!-- 3. THANH KÉO CO GIÃN (GRIDSPLITTER)                                        -->
+        <!-- ========================================================================= -->
+        <GridSplitter Grid.Row="3" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#E2E8F0" Cursor="SizeNS"/>
+
+        <!-- ========================================================================= -->
+        <!-- 4. BẢNG TÁC NGHIỆP ĐIỀU ĐỘ & LIÊN THÔNG BÁN VÉ THỜI GIAN THỰC (BOTTOM)    -->
+        <!-- ========================================================================= -->
+        <Grid Grid.Row="4" Margin="12,4,12,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>      <!-- Cột Trái: Tác nghiệp xung đột điều độ -->
+                <ColumnDefinition Width="10"/>     <!-- Khoảng cách -->
+                <ColumnDefinition Width="1.2*"/>   <!-- Cột Phải: Liên thông Bán vé thực tế -->
+            </Grid.ColumnDefinitions>
+
+            <!-- CỘT TRÁI: BẢNG TÁC NGHIỆP ĐIỀU ĐỘ & XUNG ĐỘT TRÁNH TÀU -->
+            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="12,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ui:SymbolIcon Symbol="Alert24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
+                            <TextBlock Text="TÁC NGHIỆP ĐIỀU ĐỘ &amp; DỜI GA TRÁNH TÀU" FontSize="12" FontWeight="Bold" Foreground="#003B73"/>
+                        </StackPanel>
+                        <Border x:Name="bdBadgeXungDot" HorizontalAlignment="Right" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="2" Padding="8,2">
+                            <TextBlock x:Name="txtBadgeXungDot" Text="0 XUNG ĐỘT" FontSize="10" FontWeight="Bold" Foreground="#15803D"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Nội dung cảnh báo / Đề xuất giải quyết -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="pnlNoiDungDieuDo">
+                            <!-- Card thông báo an toàn -->
+                            <Border x:Name="bdAnToanNotice" Background="#F8FAFC" BorderBrush="#15803D" BorderThickness="4,1,1,1" CornerRadius="2" Padding="12,10" Margin="0,2,0,0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="13" Foreground="#15803D" Margin="0,0,6,0"/>
+                                        <TextBlock Text="TRẠNG THÁI VẬN HÀNH AN TOÀN" FontSize="11.5" FontWeight="Bold" Foreground="#15803D"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Không phát hiện xung đột đối đầu hoặc đuổi nhau trên các khu gian đơn. Các đoàn tàu tuân thủ đúng biểu đồ chạy tàu."
+                                               FontSize="11" Foreground="#475569" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card cảnh báo xung đột (Hiển thị khi có sự cố phát sinh) -->
+                            <Border x:Name="bdCanhBaoNotice" Background="#FFFFFF" BorderBrush="#B91C1C" BorderThickness="4,1,1,1" CornerRadius="2" Padding="12,10" Margin="0,4,0,0" Visibility="Collapsed">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <ui:SymbolIcon Symbol="Warning24" FontSize="13" Foreground="#B91C1C" Margin="0,0,6,0"/>
+                                        <TextBlock x:Name="txtTieuDeCanhBao" Text="CẢNH BÁO XUNG ĐỘT ĐỐI ĐẦU: SE1 - SE2" FontSize="11.5" FontWeight="Bold" Foreground="#991B1B"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="txtChiTietCanhBao" Text="Do tàu SE1 chậm 45 phút, 2 tàu sẽ đối đầu tại khu gian Nam Định - Ninh Bình lúc 08:20."
+                                               FontSize="11" Foreground="#334155" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                    <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="2" Padding="10,7" Margin="0,8,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="ĐỀ XUẤT ĐIỀU ĐỘ:" FontSize="10.5" FontWeight="Bold" Foreground="#003B73" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" x:Name="txtDeXuatDieuDo" Text="Cho tàu SE2 vào ĐƯỜNG TRÁNH Ga Ninh Bình (Đường #2), dừng chờ 12 phút để nhường tàu SE1 chạy suốt."
+                                                       FontSize="11" FontWeight="SemiBold" Foreground="#0F172A" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Footer Buttons -->
+                    <Border Grid.Row="2" Margin="0,6,0,0" Padding="0,6,0,0" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Click="BtnTuDongXepTranh_Click" Style="{StaticResource PrimaryDesktopButton}" Height="28" Padding="12,0" Margin="0,0,6,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="12" Margin="0,0,4,0" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Tự Động Xếp Tránh" FontSize="11" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Click="BtnThemSuCo_Click" Style="{StaticResource DesktopButton}" Height="28" Padding="12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="AddCircle24" FontSize="12" Margin="0,0,4,0" Foreground="#DC2626"/>
+                                    <TextBlock Text="Nhập Chậm Giờ..." FontSize="11" Foreground="#1E293B"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- CỘT PHẢI: BẢNG GIÁM SÁT LIÊN THÔNG BÁN VÉ THỜI GIAN THỰC -->
+            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="12,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ui:SymbolIcon Symbol="TicketDiagonal24" FontSize="14" Foreground="#003B73" Margin="0,0,6,0"/>
+                            <TextBlock Text="GIÁM SÁT LIÊN THÔNG BÁN VÉ (TICKET SALES LINKAGE)" FontSize="12" FontWeight="Bold" Foreground="#003B73"/>
+                        </StackPanel>
+                        <TextBlock Text="Chuyến SE1: Hà Nội ➔ Sài Gòn" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Bảng Danh Sách Chặng Vé & Trạng Thái Đóng/Mở Bán -->
+                    <DataGrid Grid.Row="1" x:Name="dgChangVeBan" AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" SelectionMode="Single" HeadersVisibility="Column"
+                              VerticalAlignment="Stretch">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Chặng Vé" Binding="{Binding TenChang}" Width="160">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="#003B73"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Giờ Đi (KH)" Binding="{Binding GioDiKH}" Width="90">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="FontFamily" Value="Consolas"/>
+                                        <Setter Property="Foreground" Value="#64748B"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Giờ Đi (Dự Kiến)" Binding="{Binding GioDiThucTe}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="FontFamily" Value="Consolas"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#003B73"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTemplateColumn Header="Trạng Thái Bán Vé" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="3" Padding="8,2" HorizontalAlignment="Left" Background="{Binding MauNenTrangThai}">
+                                            <TextBlock Text="{Binding MoTaTrangThai}" FontSize="10.5" FontWeight="Bold" Foreground="{Binding MauChuTrangThai}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Footer Action: Nút Chuyển Màn Bán Vé Kiểm Chứng -->
+                    <Border Grid.Row="2" Margin="0,6,0,0" Padding="0,6,0,0" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0">
+                        <Grid>
+                            <TextBlock Text="Chuyển sang phân hệ Bán vé để kiểm chứng liên thông kịch bản thời gian thực" FontSize="10.5" Foreground="#64748B" VerticalAlignment="Center"/>
+                            <Button Click="BtnChuyenSangBanVe_Click" Style="{StaticResource PrimaryDesktopButton}" Height="28" Padding="12,0" HorizontalAlignment="Right">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Open24" FontSize="12" Margin="0,0,5,0" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Kiểm Chứng Trên Màn Bán Vé" FontSize="11" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

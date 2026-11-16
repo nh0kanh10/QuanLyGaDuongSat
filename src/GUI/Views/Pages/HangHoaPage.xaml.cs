@@ -100,6 +100,15 @@ namespace GUI.Views.Pages
                     else e.CancelCommand();
                 });
 
+                // Gắn bộ lọc chống dán dữ liệu sai kiểu cho các trường thông tin
+                if (txtNguoiGui != null) DataObject.AddPastingHandler(txtNguoiGui, OnTenPaste);
+                if (txtNguoiNhan != null) DataObject.AddPastingHandler(txtNguoiNhan, OnTenPaste);
+                if (txtSDTGui != null) DataObject.AddPastingHandler(txtSDTGui, OnPhonePaste);
+                if (txtSDTNhan != null) DataObject.AddPastingHandler(txtSDTNhan, OnPhonePaste);
+                if (txtBienSo != null) DataObject.AddPastingHandler(txtBienSo, OnPlateOrCodePaste);
+                if (txtSoContainer != null) DataObject.AddPastingHandler(txtSoContainer, OnPlateOrCodePaste);
+                if (txtSoChiHQ != null) DataObject.AddPastingHandler(txtSoChiHQ, OnPlateOrCodePaste);
+
                 // 4. Đồng bộ loại hàng theo hình thức ban đầu (XE_MAY)
                 ApDungHinhThucVanChuyen();
 
@@ -419,6 +428,132 @@ namespace GUI.Views.Pages
             }
         }
 
+        private void TextOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // Chỉ cho phép chữ cái (tiếng Việt có dấu, không dấu) và khoảng trắng
+            e.Handled = !e.Text.All(c => char.IsLetter(c) || char.IsWhiteSpace(c));
+        }
+
+        private void NumberOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // Chỉ cho phép chữ số
+            e.Handled = !e.Text.All(char.IsDigit);
+        }
+
+        private void PlateOrCode_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // Biển kiểm soát / Số Cont / Số chì: Chữ cái, chữ số, gạch ngang, chấm, khoảng trắng
+            e.Handled = !e.Text.All(c => char.IsLetterOrDigit(c) || c == '-' || c == '.' || c == ' ');
+        }
+
+        private void OnTenPaste(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(DataFormats.Text))
+            {
+                string text = (string)e.DataObject.GetData(DataFormats.Text);
+                if (!text.All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+                {
+                    e.CancelCommand();
+                }
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private void OnPhonePaste(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(DataFormats.Text))
+            {
+                string text = (string)e.DataObject.GetData(DataFormats.Text);
+                if (!text.All(char.IsDigit))
+                {
+                    e.CancelCommand();
+                }
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private void OnPlateOrCodePaste(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(DataFormats.Text))
+            {
+                string text = (string)e.DataObject.GetData(DataFormats.Text);
+                if (!text.All(c => char.IsLetterOrDigit(c) || c == '-' || c == '.' || c == ' '))
+                {
+                    e.CancelCommand();
+                }
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private void TxtTen_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox tb)
+            {
+                string raw = tb.Text;
+                string cleaned = new string(raw.Where(c => char.IsLetter(c) || char.IsWhiteSpace(c)).ToArray());
+                if (cleaned != raw)
+                {
+                    int caret = tb.CaretIndex;
+                    tb.Text = cleaned;
+                    tb.CaretIndex = Math.Min(caret, cleaned.Length);
+                }
+            }
+        }
+
+        private void TxtPhone_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox tb)
+            {
+                string raw = tb.Text;
+                string cleaned = new string(raw.Where(char.IsDigit).ToArray());
+                if (cleaned != raw)
+                {
+                    int caret = tb.CaretIndex;
+                    tb.Text = cleaned;
+                    tb.CaretIndex = Math.Min(caret, cleaned.Length);
+                }
+            }
+        }
+
+        private void TxtBienSo_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox tb)
+            {
+                string raw = tb.Text;
+                string cleaned = new string(raw.Where(c => char.IsLetterOrDigit(c) || c == '-' || c == '.' || c == ' ').ToArray()).ToUpperInvariant();
+                if (cleaned != raw)
+                {
+                    int caret = tb.CaretIndex;
+                    tb.Text = cleaned;
+                    tb.CaretIndex = Math.Min(caret, cleaned.Length);
+                }
+            }
+        }
+
+        private void TxtContainer_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox tb)
+            {
+                string raw = tb.Text;
+                string cleaned = new string(raw.Where(c => char.IsLetterOrDigit(c) || c == '-' || c == ' ').ToArray()).ToUpperInvariant();
+                if (cleaned != raw)
+                {
+                    int caret = tb.CaretIndex;
+                    tb.Text = cleaned;
+                    tb.CaretIndex = Math.Min(caret, cleaned.Length);
+                }
+            }
+        }
+
         private void TxtTrongLuong_LostFocus(object sender, RoutedEventArgs e)
         {
             if (FormatHelper.TryParseWeight(txtTrongLuong.Text, out decimal weight))
@@ -522,27 +657,70 @@ namespace GUI.Views.Pages
             }
 
             // Kiểm tra thông tin người gửi / người nhận
-            if (string.IsNullOrWhiteSpace(txtNguoiGui.Text))
+            string nguoiGui = txtNguoiGui.Text.Trim();
+            if (string.IsNullOrWhiteSpace(nguoiGui))
             {
                 ThongBaoDialog.CanhBao("Vui lòng nhập họ tên người gửi hàng.", "Cảnh báo");
                 txtNguoiGui.Focus();
                 return;
             }
-            if (string.IsNullOrWhiteSpace(txtSDTGui.Text))
+            if (nguoiGui.Length < 2)
+            {
+                ThongBaoDialog.CanhBao("Họ tên người gửi phải có ít nhất 2 ký tự.", "Cảnh báo");
+                txtNguoiGui.Focus();
+                return;
+            }
+            if (nguoiGui.Any(char.IsDigit))
+            {
+                ThongBaoDialog.CanhBao("Họ tên người gửi chỉ được gồm chữ cái, không được chứa chữ số.", "Cảnh báo");
+                txtNguoiGui.Focus();
+                return;
+            }
+
+            string sdtGui = txtSDTGui.Text.Trim();
+            if (string.IsNullOrWhiteSpace(sdtGui))
             {
                 ThongBaoDialog.CanhBao("Vui lòng nhập số điện thoại người gửi.", "Cảnh báo");
                 txtSDTGui.Focus();
                 return;
             }
-            if (string.IsNullOrWhiteSpace(txtNguoiNhan.Text))
+            if (!System.Text.RegularExpressions.Regex.IsMatch(sdtGui, @"^0\d{9}$"))
+            {
+                ThongBaoDialog.CanhBao("Số điện thoại người gửi phải gồm đúng 10 chữ số (bắt đầu bằng 0).", "Cảnh báo");
+                txtSDTGui.Focus();
+                return;
+            }
+
+            string nguoiNhan = txtNguoiNhan.Text.Trim();
+            if (string.IsNullOrWhiteSpace(nguoiNhan))
             {
                 ThongBaoDialog.CanhBao("Vui lòng nhập họ tên người nhận hàng.", "Cảnh báo");
                 txtNguoiNhan.Focus();
                 return;
             }
-            if (string.IsNullOrWhiteSpace(txtSDTNhan.Text))
+            if (nguoiNhan.Length < 2)
+            {
+                ThongBaoDialog.CanhBao("Họ tên người nhận phải có ít nhất 2 ký tự.", "Cảnh báo");
+                txtNguoiNhan.Focus();
+                return;
+            }
+            if (nguoiNhan.Any(char.IsDigit))
+            {
+                ThongBaoDialog.CanhBao("Họ tên người nhận chỉ được gồm chữ cái, không được chứa chữ số.", "Cảnh báo");
+                txtNguoiNhan.Focus();
+                return;
+            }
+
+            string sdtNhan = txtSDTNhan.Text.Trim();
+            if (string.IsNullOrWhiteSpace(sdtNhan))
             {
                 ThongBaoDialog.CanhBao("Vui lòng nhập số điện thoại người nhận.", "Cảnh báo");
+                txtSDTNhan.Focus();
+                return;
+            }
+            if (!System.Text.RegularExpressions.Regex.IsMatch(sdtNhan, @"^0\d{9}$"))
+            {
+                ThongBaoDialog.CanhBao("Số điện thoại người nhận phải gồm đúng 10 chữ số (bắt đầu bằng 0).", "Cảnh báo");
                 txtSDTNhan.Focus();
                 return;
             }
@@ -573,9 +751,22 @@ namespace GUI.Views.Pages
             // Kiểm tra điều kiện đặc thù xe máy
             if (loaiVC == "XE_MAY")
             {
-                if (string.IsNullOrWhiteSpace(txtBienSo.Text))
+                string bienSo = txtBienSo.Text.Trim();
+                if (string.IsNullOrWhiteSpace(bienSo))
                 {
                     ThongBaoDialog.CanhBao("Vui lòng nhập Biển kiểm soát của xe máy ký gửi.", "Cảnh báo");
+                    txtBienSo.Focus();
+                    return;
+                }
+                if (bienSo.Length < 5)
+                {
+                    ThongBaoDialog.CanhBao("Biển kiểm soát không hợp lệ (tối thiểu 5 ký tự, ví dụ: 29A-123.45).", "Cảnh báo");
+                    txtBienSo.Focus();
+                    return;
+                }
+                if (!bienSo.Any(char.IsLetter) || !bienSo.Any(char.IsDigit))
+                {
+                    ThongBaoDialog.CanhBao("Biển kiểm soát phải bao gồm cả chữ và số (ví dụ: 29A-123.45).", "Cảnh báo");
                     txtBienSo.Focus();
                     return;
                 }
@@ -588,9 +779,16 @@ namespace GUI.Views.Pages
             // Kiểm tra điều kiện đặc thù container
             else if (loaiVC == "CONTAINER")
             {
-                if (string.IsNullOrWhiteSpace(txtSoContainer.Text))
+                string soCont = txtSoContainer.Text.Trim();
+                if (string.IsNullOrWhiteSpace(soCont))
                 {
                     ThongBaoDialog.CanhBao("Vui lòng nhập Số hiệu Container đường sắt.", "Cảnh báo");
+                    txtSoContainer.Focus();
+                    return;
+                }
+                if (soCont.Length < 4)
+                {
+                    ThongBaoDialog.CanhBao("Số hiệu Container không hợp lệ (tối thiểu 4 ký tự, ví dụ: CONT-VNR-7722).", "Cảnh báo");
                     txtSoContainer.Focus();
                     return;
                 }
@@ -1272,45 +1470,38 @@ namespace GUI.Views.Pages
 
             if (row == null)
             {
-                ThongBaoDialog.CanhBao("Vui lòng chọn vận đơn trong danh sách để in phiếu.", "Cảnh báo");
+                ThongBaoDialog.CanhBao("Vui lòng chọn vận đơn trong danh sách để in hoặc xem trước phiếu gửi hàng.", "Cảnh Báo");
                 return;
             }
 
-            string code = row["MaVanDonCode"]?.ToString() ?? "";
-            decimal cuoc = row["CuocPhi"] != DBNull.Value ? Convert.ToDecimal(row["CuocPhi"]) : 0;
-            string bienKS = row["BienKiemSoat"] != DBNull.Value ? row["BienKiemSoat"].ToString()! : "";
-            string cont = row["SoHieuContainer"] != DBNull.Value ? row["SoHieuContainer"].ToString()! : "";
-            string dacThu = !string.IsNullOrEmpty(bienKS) ? $"[BKS: {bienKS}]" : (!string.IsNullOrEmpty(cont) ? $"[Cont: {cont}]" : "");
-
             try
             {
-                var printDlg = new PrintDialog();
-                if (printDlg.ShowDialog() == true)
+                var dialog = new PhieuGuiHangDialog(row)
                 {
-                    var doc = TaoPhieuGuiHangFlowDoc(row, code, cuoc, dacThu);
-                    var paginator = ((IDocumentPaginatorSource)doc).DocumentPaginator;
-                    printDlg.PrintDocument(paginator, $"PhieuGuiHang_{code}");
-                    ThongBaoDialog.ThanhCong($"Đã gửi lệnh in phiếu vận đơn #{code} đến máy in thành công.", "In hoàn tất");
-                    return;
-                }
+                    Owner = Window.GetWindow(this)
+                };
+                dialog.ShowDialog();
             }
-            catch
+            catch (Exception ex)
             {
-                // Bỏ qua lỗi spooler nếu máy trạm chưa kết nối dịch vụ in ấn
+                ThongBaoDialog.Loi($"Không thể hiển thị phiếu gửi hàng: {ex.Message}", "Lỗi");
             }
+        }
 
-            // Hiển thị xem trước phiếu gửi hàng nếu hủy in hoặc không có máy in
-            ThongBaoDialog.ThongTin($"TỔNG CÔNG TY ĐƯỜNG SẮT VIỆT NAM (VNR)\n" +
-                $"PHIẾU GỬI HÀNG HÓA & BIÊN NHẬN VẬN TẢI\n" +
-                $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
-                $"Mã Vận Đơn:  {code}\n" +
-                $"Hành trình:   {row["TenGaGui"]} → {row["TenGaNhan"]}\n" +
-                $"Người gửi:    {row["TenNguoiGui"]} ({row["SDTNguoiGui"]})\n" +
-                $"Người nhận:   {row["TenNguoiNhan"]} ({row["SDTNguoiNhan"]})\n" +
-                $"Hàng hóa:     {row["TenHangHoa"]} {dacThu}\n" +
-                $"Trọng lượng:  {Convert.ToDecimal(row["TrongLuongTan"]):N2} tấn\n" +
-                $"Tổng cước:    {FormatHelper.FormatCurrency(cuoc)} VNĐ\n" +
-                $"Trạng thái:   {row["TrangThai"]}", "Xem Trước Phiếu Gửi Hàng VNR");
+        private void DgDonMoiLap_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (dgDonMoiLap.SelectedItem is DataRowView)
+            {
+                BtnInPhieu_Click(sender, e);
+            }
+        }
+
+        private void DgVanDon_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (dgVanDon.SelectedItem is DataRowView)
+            {
+                BtnInPhieu_Click(sender, e);
+            }
         }
 
         // Tạo tài liệu in ấn chuẩn mực cho vận đơn đường sắt
@@ -1406,6 +1597,31 @@ namespace GUI.Views.Pages
             cboLocGa.SelectedIndex = 0;
             if (_cachedVanDon != null) _cachedVanDon.DefaultView.RowFilter = "";
             NapLaiDanhSachVanDon();
+        }
+
+        private void BtnBanKeXepDoGa_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                int? maGaHienTai = null;
+                if (cboLocGa.SelectedValue != null)
+                {
+                    int val = Convert.ToInt32(cboLocGa.SelectedValue);
+                    if (val > 0) maGaHienTai = val;
+                }
+
+                DateTime? ngay = dpTuNgay?.SelectedDate ?? ThoiGianHeThongHelper.LayGioHienTai();
+
+                var dlg = new BanKeXepDoGaDialog(maGaHienTai, ngay)
+                {
+                    Owner = Window.GetWindow(this)
+                };
+                dlg.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                ThongBaoDialog.Loi($"Không thể mở bản kê tác nghiệp xếp dỡ ga: {ex.Message}", "Lỗi Khởi Tạo");
+            }
         }
 
         private void TabMainHangHoa_SelectionChanged(object sender, SelectionChangedEventArgs e) { }

@@ -2,6 +2,7 @@ using System.Data;
 using DAL.Connection;
 using DAL.Repositories;
 using ET.VanTai;
+using DTO.Common;
 
 namespace BUS.Services
 {
@@ -18,12 +19,12 @@ namespace BUS.Services
             return _repo.TimKiemVe(keyword.Trim());
         }
 
-        public DataTable TimChuyenTauTheoChang(int maGaDi, int maGaDen, DateTime ngayDi)
+        public DataTable TimChuyenTauTheoChang(int maGaDi, int maGaDen, DateTime ngayDi, DateTime? gioHienTai = null)
         {
             if (maGaDi <= 0 || maGaDen <= 0 || maGaDi == maGaDen)
                 return new DataTable();
 
-            return _repo.TimChuyenTauTheoChang(maGaDi, maGaDen, ngayDi);
+            return _repo.TimChuyenTauTheoChang(maGaDi, maGaDen, ngayDi, gioHienTai);
         }
 
         public DataTable LayDanhSachToaTheoChuyen(int maChuyenTau, int maGaDi, int maGaDen)
@@ -206,6 +207,96 @@ namespace BUS.Services
                 thongBaoLoi = "Mã vé không hợp lệ!";
                 return false;
             }
+
+            // Kiểm tra tính hợp lệ và giờ tàu chạy (Quy chuẩn ĐSVN: Cửa soát vé mở trước 120p, đóng sau 5p giờ chạy)
+            DataTable dtVe = _repo.TimVeSoat(null, maVe.ToString());
+            if (dtVe == null || dtVe.Rows.Count == 0)
+            {
+                thongBaoLoi = "Không tìm thấy vé trong hệ thống!";
+                return false;
+            }
+
+            DataRow row = dtVe.Rows[0];
+            string trangThaiVe = row["TrangThai"]?.ToString() ?? "";
+            if (trangThaiVe != "DA_DAT")
+            {
+                thongBaoLoi = trangThaiVe == "DA_LEN_TAU"
+                    ? "Vé này đã được soát và hành khách đã lên tàu trước đó!"
+                    : $"Vé không hợp lệ để lên tàu (Trạng thái hiện tại: {trangThaiVe})!";
+                return false;
+            }
+
+            // Kiểm tra ga đón
+            int maGaDi = row["MaGaDi"] != DBNull.Value ? Convert.ToInt32(row["MaGaDi"]) : 0;
+            string tenGaDi = row["TenGaDi"]?.ToString() ?? "";
+            string soHieuMacTau = row["SoHieuMacTau"]?.ToString() ?? "";
+
+            if (maGaSoat.HasValue && maGaSoat.Value > 0 && maGaDi > 0 && maGaDi != maGaSoat.Value)
+            {
+                thongBaoLoi = $"Cửa kiểm soát từ chối: Vé đón tại ga {tenGaDi}, không khớp ga kiểm soát hiện tại!";
+                return false;
+            }
+
+            // Kiểm tra tàu đã xuất phát thực tế rời ga đón
+            if (row.Table.Columns.Contains("GioDiThucTe") && row["GioDiThucTe"] != DBNull.Value)
+            {
+                DateTime gioDiTT = Convert.ToDateTime(row["GioDiThucTe"]);
+                thongBaoLoi = $"Tàu {soHieuMacTau} đã khởi hành rời ga đón {tenGaDi} lúc {gioDiTT:HH:mm}. Cửa kiểm soát đã đóng!";
+                return false;
+            }
+
+            // Kiểm tra giờ chạy dự kiến (bao gồm trễ lũy kế)
+            DateTime? gioDiKH = null;
+            if (row.Table.Columns.Contains("GioDiKH") && row["GioDiKH"] != DBNull.Value)
+            {
+                gioDiKH = Convert.ToDateTime(row["GioDiKH"]);
+            }
+            else if (row.Table.Columns.Contains("GioXuatPhatKH") && row["GioXuatPhatKH"] != DBNull.Value)
+            {
+                DateTime ngayXP = row.Table.Columns.Contains("NgayXuatPhat") && row["NgayXuatPhat"] != DBNull.Value
+                    ? Convert.ToDateTime(row["NgayXuatPhat"])
+                    : ThoiGianHeThongHelper.LayGioHienTai().Date;
+                object gVal = row["GioXuatPhatKH"];
+                TimeSpan ts = gVal is TimeSpan t ? t : (gVal is DateTime d ? d.TimeOfDay : TimeSpan.Zero);
+                gioDiKH = ngayXP.Date.Add(ts);
+            }
+
+            if (gioDiKH.HasValue)
+            {
+                DateTime now = ThoiGianHeThongHelper.LayGioHienTai();
+                int soPhutTre = row.Table.Columns.Contains("SoPhutTreLuyKe") && row["SoPhutTreLuyKe"] != DBNull.Value
+                    ? Convert.ToInt32(row["SoPhutTreLuyKe"])
+                    : 0;
+                DateTime gioDiDuKien = gioDiKH.Value.AddMinutes(soPhutTre);
+
+                if (gioDiKH.Value.Date < now.Date)
+                {
+                    thongBaoLoi = $"Vé đã quá hạn sử dụng (Ngày khởi hành: {gioDiKH.Value:dd/MM/yyyy})!";
+                    return false;
+                }
+
+                if (gioDiKH.Value.Date > now.Date)
+                {
+                    thongBaoLoi = $"Vé chưa đến ngày khởi hành (Ngày khởi hành: {gioDiKH.Value:dd/MM/yyyy})!";
+                    return false;
+                }
+
+                if (now < gioDiDuKien.AddMinutes(-120))
+                {
+                    thongBaoLoi = $"Chưa đến giờ mở cửa soát vé! Cửa chỉ mở trước giờ tàu chạy tối đa 120 phút (từ {gioDiDuKien.AddMinutes(-120):HH:mm}).";
+                    return false;
+                }
+
+                if (now > gioDiDuKien.AddMinutes(5))
+                {
+                    string thongTinGio = soPhutTre > 0
+                        ? $"{gioDiDuKien:HH:mm} (kế hoạch {gioDiKH.Value:HH:mm} + trễ {soPhutTre}p)"
+                        : $"{gioDiKH.Value:HH:mm}";
+                    thongBaoLoi = $"Tàu {soHieuMacTau} đã khởi hành lúc {thongTinGio} tại ga {tenGaDi}. Cửa kiểm soát đã đóng sau 5 phút kể từ giờ tàu chạy!";
+                    return false;
+                }
+            }
+
             return _repo.CapNhatTrangThaiSoatVe(maVe, "DA_LEN_TAU", maGaSoat, out thongBaoLoi);
         }
 
@@ -220,6 +311,40 @@ namespace BUS.Services
                 thongBaoLoi = "Mã chuyến tàu hoặc ga kiểm soát không hợp lệ!";
                 return false;
             }
+
+            // Kiểm tra xem tàu tại ga này đã khởi hành hay chưa
+            DataTable dtManifest = _repo.LayManifestChuyenTau(maChuyenTau, "DA_DAT");
+            if (dtManifest != null && dtManifest.Rows.Count > 0)
+            {
+                DataRow firstRow = dtManifest.Rows[0];
+                if (firstRow.Table.Columns.Contains("GioDiThucTe") && firstRow["GioDiThucTe"] != DBNull.Value)
+                {
+                    thongBaoLoi = "Tàu đã khởi hành rời ga. Cửa kiểm soát đã đóng, không thể soát vé!";
+                    return false;
+                }
+
+                DateTime? gioDiKH = null;
+                if (firstRow.Table.Columns.Contains("GioDiKH") && firstRow["GioDiKH"] != DBNull.Value)
+                {
+                    gioDiKH = Convert.ToDateTime(firstRow["GioDiKH"]);
+                }
+
+                if (gioDiKH.HasValue)
+                {
+                    DateTime now = ThoiGianHeThongHelper.LayGioHienTai();
+                    int soPhutTre = firstRow.Table.Columns.Contains("SoPhutTreLuyKe") && firstRow["SoPhutTreLuyKe"] != DBNull.Value
+                        ? Convert.ToInt32(firstRow["SoPhutTreLuyKe"])
+                        : 0;
+                    DateTime gioDiDuKien = gioDiKH.Value.AddMinutes(soPhutTre);
+
+                    if (now > gioDiDuKien.AddMinutes(5))
+                    {
+                        thongBaoLoi = $"Tàu đã chạy lúc {gioDiDuKien:HH:mm}. Cửa kiểm soát đã đóng sau 5 phút kể từ giờ tàu chạy!";
+                        return false;
+                    }
+                }
+            }
+
             return _repo.SoatVeTheoLo(maChuyenTau, maGaSoat, out soVeDaSoat, out thongBaoLoi);
         }
 
@@ -255,7 +380,7 @@ namespace BUS.Services
 
         public DataTable LayDanhSachChuyenTauHomNay(DateTime? ngay = null)
         {
-            return _repo.LayDanhSachChuyenTauHomNay(ngay ?? DateTime.Today);
+            return _repo.LayDanhSachChuyenTauHomNay(ngay ?? ThoiGianHeThongHelper.LayGioHienTai().Date);
         }
 
         #endregion

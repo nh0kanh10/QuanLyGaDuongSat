@@ -42,6 +42,7 @@ namespace GUI.Views.Pages
         private int _currentMaChuyenTau = 0;
         private string _currentSoHieuMacTau = "";
         private string _currentLoaiTau = "TAU_CHO";
+        private DateTime? _currentGioXuatPhatKH = null;
         private int _currentMaGaDi = 0;
         private int _currentMaGaDen = 0;
         private string _currentTenGaDi = "";
@@ -73,8 +74,9 @@ namespace GUI.Views.Pages
                 ChonGaMacDinhLinhHoat(cboGaDi, new[] { "Hà Nội", "HNO" }, 0);
                 ChonGaMacDinhLinhHoat(cboGaDen, new[] { "Sài Gòn", "SGO", "Hồ Chí Minh" }, _cachedDsGa.Rows.Count - 1);
                 dpNgayDi.Language = System.Windows.Markup.XmlLanguage.GetLanguage("vi-VN");
-                dpNgayDi.SelectedDate = DateTime.Today;
-                dpNgayDi.DisplayDateStart = DateTime.Today;
+                DateTime ngayMacDinh = DTO.Common.ThoiGianHeThongHelper.CheDoMoPhong ? DTO.Common.ThoiGianHeThongHelper.LayGioHienTai().Date : DateTime.Today;
+                dpNgayDi.SelectedDate = ngayMacDinh;
+                dpNgayDi.DisplayDateStart = DTO.Common.ThoiGianHeThongHelper.CheDoMoPhong ? (DateTime?)null : DateTime.Today;
                 dpNgayDi.Loaded += (s, e) => ChuanHoaDatePicker(dpNgayDi);
                 dpNgayDi.SelectedDateChanged += (s, e) =>
                 {
@@ -87,6 +89,16 @@ namespace GUI.Views.Pages
                 txtNguoiMuaSdt.LostFocus += (s, e) => ValidateNguoiMuaSdt();
                 txtNguoiMuaSdt.TextChanged += (s, e) =>
                 {
+                    string raw = txtNguoiMuaSdt.Text;
+                    string cleaned = new string(raw.Where(char.IsDigit).ToArray());
+                    if (cleaned != raw)
+                    {
+                        int caret = txtNguoiMuaSdt.CaretIndex;
+                        txtNguoiMuaSdt.Text = cleaned;
+                        txtNguoiMuaSdt.CaretIndex = Math.Min(caret, cleaned.Length);
+                        return;
+                    }
+
                     ClearNguoiMuaSdtError();
                     if (_gioVe.Count > 0 && !string.IsNullOrWhiteSpace(txtNguoiMuaTen.Text) && !string.IsNullOrWhiteSpace(txtNguoiMuaSdt.Text))
                     {
@@ -96,6 +108,16 @@ namespace GUI.Views.Pages
 
                 txtNguoiMuaTen.TextChanged += (s, e) =>
                 {
+                    string raw = txtNguoiMuaTen.Text;
+                    string cleaned = new string(raw.Where(c => char.IsLetter(c) || char.IsWhiteSpace(c)).ToArray());
+                    if (cleaned != raw)
+                    {
+                        int caret = txtNguoiMuaTen.CaretIndex;
+                        txtNguoiMuaTen.Text = cleaned;
+                        txtNguoiMuaTen.CaretIndex = Math.Min(caret, cleaned.Length);
+                        return;
+                    }
+
                     ClearNguoiMuaTenError();
                     if (_gioVe.Count == 1 && txtNguoiMuaTen.Tag == null)
                     {
@@ -136,6 +158,11 @@ namespace GUI.Views.Pages
                 {
                     toastNotification.MouseLeftButtonDown += (s, e) => toastNotification.Visibility = Visibility.Collapsed;
                 }
+
+                if (txtGiaNhap1 != null) DataObject.AddPastingHandler(txtGiaNhap1, OnGiaNhapPaste);
+                if (txtGiaNhap2 != null) DataObject.AddPastingHandler(txtGiaNhap2, OnGiaNhapPaste);
+                if (txtNguoiMuaTen != null) DataObject.AddPastingHandler(txtNguoiMuaTen, OnTenHanhKhachPaste);
+                if (txtNguoiMuaSdt != null) DataObject.AddPastingHandler(txtNguoiMuaSdt, OnCccdOrSdtPaste);
 
                 TimChuyenTau();
                 // [12/11] So tra cuu ve (~34.000 dong) chi nap khi mo tab lan dau - truoc day nap ngay khi tao man hinh chinh,
@@ -297,12 +324,13 @@ namespace GUI.Views.Pages
             _currentMaGaDen = gaDen;
             _currentTenGaDi = (cboGaDi.SelectedItem as DataRowView)?["TenGa"]?.ToString() ?? "";
             _currentTenGaDen = (cboGaDen.SelectedItem as DataRowView)?["TenGa"]?.ToString() ?? "";
-            DateTime ngayDi = dpNgayDi.SelectedDate ?? DateTime.Today;
+            DateTime ngayDi = dpNgayDi.SelectedDate ?? (DTO.Common.ThoiGianHeThongHelper.CheDoMoPhong ? DTO.Common.ThoiGianHeThongHelper.LayGioHienTai().Date : DateTime.Today);
+            DateTime ngayToiThieu = DTO.Common.ThoiGianHeThongHelper.CheDoMoPhong ? DTO.Common.ThoiGianHeThongHelper.LayGioHienTai().Date : DateTime.Today;
 
-            if (ngayDi.Date < DateTime.Today)
+            if (ngayDi.Date < ngayToiThieu)
             {
                 ThongBaoDialog.CanhBao("Ngày đi không được ở trong quá khứ!", "Ngày Đi Không Hợp Lệ");
-                dpNgayDi.SelectedDate = DateTime.Today;
+                dpNgayDi.SelectedDate = ngayToiThieu;
                 return;
             }
 
@@ -395,6 +423,7 @@ namespace GUI.Views.Pages
                 });
 
                 _cachedChuyenTau = dt;
+                NapDanhMucMacTauLoc();
                 ApDungBoLocChuyenTau();
             }
             catch (Exception ex)
@@ -415,8 +444,9 @@ namespace GUI.Views.Pages
             if (_cachedChuyenTau != null) ApDungBoLocChuyenTau();
         }
 
-        private void TxtLocMacTau_TextChanged(object sender, TextChangedEventArgs e)
+        private void CboLocMacTau_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (!_isLoaded) return;
             if (_cachedChuyenTau != null) ApDungBoLocChuyenTau();
         }
 
@@ -534,11 +564,132 @@ namespace GUI.Views.Pages
             if (_cachedChuyenTau != null) ApDungBoLocChuyenTau();
         }
 
+        private void NumberOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !e.Text.All(char.IsDigit);
+        }
+
+        private void TextOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !e.Text.All(c => char.IsLetter(c) || char.IsWhiteSpace(c));
+        }
+
+        private void OnGiaNhapPaste(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(DataFormats.Text))
+            {
+                string text = (string)e.DataObject.GetData(DataFormats.Text);
+                if (!text.All(c => char.IsDigit(c) || c == '.' || c == ','))
+                {
+                    e.CancelCommand();
+                }
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private void OnTenHanhKhachPaste(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(DataFormats.Text))
+            {
+                string text = (string)e.DataObject.GetData(DataFormats.Text);
+                if (!text.All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+                {
+                    e.CancelCommand();
+                }
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private void OnCccdOrSdtPaste(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(DataFormats.Text))
+            {
+                string text = (string)e.DataObject.GetData(DataFormats.Text);
+                if (!text.All(char.IsDigit))
+                {
+                    e.CancelCommand();
+                }
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
         private void TxtGiaNhap_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (!_isLoaded) return;
+            if (sender is TextBox tb)
+            {
+                string raw = tb.Text;
+                string cleaned = new string(raw.Where(c => char.IsDigit(c) || c == '.' || c == ',').ToArray());
+                if (cleaned != raw)
+                {
+                    int caret = tb.CaretIndex;
+                    tb.Text = cleaned;
+                    tb.CaretIndex = Math.Min(caret, cleaned.Length);
+                    return;
+                }
+            }
             if (_cachedChuyenTau != null) ApDungBoLocChuyenTau();
-            
+        }
+
+        private void NapDanhMucMacTauLoc()
+        {
+            try
+            {
+                string currentSelected = cboLocMacTau?.SelectedValue?.ToString() ?? "";
+
+                var items = new List<MacTauFilterItem>
+                {
+                    new MacTauFilterItem { SoHieuMacTau = "", DisplayText = "Tất cả mác tàu", SubText = "Toàn bộ" }
+                };
+
+                // Lấy mác tàu trực tiếp từ danh sách chuyến tàu đang tìm thấy trên bảng kết quả
+                if (_cachedChuyenTau != null && _cachedChuyenTau.Rows.Count > 0)
+                {
+                    var distinctMacTau = _cachedChuyenTau.AsEnumerable()
+                        .Select(r => new
+                        {
+                            SoHieu = r.Table.Columns.Contains("SoHieuMacTau") ? (r.Field<string>("SoHieuMacTau") ?? "") : "",
+                            LoTrinh = r.Table.Columns.Contains("LoTrinhChay") ? (r.Field<string>("LoTrinhChay") ?? "") : "",
+                            GioDi = r.Table.Columns.Contains("GioXuatPhatKH") && r["GioXuatPhatKH"] != DBNull.Value
+                                    ? Convert.ToDateTime(r["GioXuatPhatKH"]).ToString("HH:mm") : ""
+                        })
+                        .Where(x => !string.IsNullOrEmpty(x.SoHieu))
+                        .GroupBy(x => x.SoHieu)
+                        .Select(g => g.First())
+                        .OrderBy(x => x.SoHieu);
+
+                    foreach (var m in distinctMacTau)
+                    {
+                        string sub = !string.IsNullOrEmpty(m.GioDi) ? $"Đi lúc {m.GioDi}" : m.LoTrinh;
+                        items.Add(new MacTauFilterItem
+                        {
+                            SoHieuMacTau = m.SoHieu,
+                            DisplayText = m.SoHieu,
+                            SubText = sub
+                        });
+                    }
+                }
+
+                if (cboLocMacTau != null)
+                {
+                    cboLocMacTau.ItemsSource = items;
+                    int foundIdx = items.FindIndex(x => x.SoHieuMacTau == currentSelected);
+                    cboLocMacTau.SelectedIndex = foundIdx >= 0 ? foundIdx : 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Lỗi nạp mác tàu bộ lọc: {ex.Message}");
+            }
         }
 
         private void BtnChipGia_Click(object sender, RoutedEventArgs e)
@@ -584,7 +735,7 @@ namespace GUI.Views.Pages
             if (txtGiaNhap1 != null) txtGiaNhap1.Text = "";
             if (txtGiaNhap2 != null) txtGiaNhap2.Text = "";
             if (gridGiaDen != null) gridGiaDen.Visibility = Visibility.Collapsed;
-            if (txtLocMacTau != null) txtLocMacTau.Text = "";
+            if (cboLocMacTau != null) cboLocMacTau.SelectedIndex = 0;
             if (_cachedChuyenTau != null) ApDungBoLocChuyenTau();
         }
 
@@ -650,8 +801,17 @@ namespace GUI.Views.Pages
                 }
             }
 
-            string macTau = txtLocMacTau?.Text.Trim() ?? "";
-            if (!string.IsNullOrEmpty(macTau))
+            string macTau = "";
+            if (cboLocMacTau?.SelectedValue is string sv && !string.IsNullOrWhiteSpace(sv))
+            {
+                macTau = sv.Trim();
+            }
+            else if (cboLocMacTau?.SelectedItem is MacTauFilterItem mItem && !string.IsNullOrWhiteSpace(mItem.SoHieuMacTau))
+            {
+                macTau = mItem.SoHieuMacTau.Trim();
+            }
+
+            if (!string.IsNullOrEmpty(macTau) && !macTau.Equals("Tất cả mác tàu", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(r => (r.Field<string>("SoHieuMacTau") ?? "").IndexOf(macTau, StringComparison.OrdinalIgnoreCase) >= 0);
             }
@@ -703,6 +863,7 @@ namespace GUI.Views.Pages
                         ChonGaMacDinhLinhHoat(cboGaDen, new[] { "Đà Nẵng", "DAN", "DNA" }, 0);
                         break;
                 }
+
                 TimChuyenTau();
             }
         }
@@ -757,6 +918,9 @@ namespace GUI.Views.Pages
                 _currentMaChuyenTau = Convert.ToInt32(row["MaChuyenTau"]);
                 _currentSoHieuMacTau = row["SoHieuMacTau"].ToString() ?? "";
                 _currentLoaiTau = row.Row.Table.Columns.Contains("LoaiTau") ? (row["LoaiTau"]?.ToString() ?? "TAU_CHO") : "TAU_CHO";
+                _currentGioXuatPhatKH = (row.Row.Table.Columns.Contains("GioXuatPhatKH") && row["GioXuatPhatKH"] != DBNull.Value)
+                    ? Convert.ToDateTime(row["GioXuatPhatKH"])
+                    : null;
                 UpdateStepIndicator(3);
                 LoadDanhSachToaXe();
                 LoadLichDungGaChuyenTau();
@@ -1778,6 +1942,13 @@ namespace GUI.Views.Pages
             }
             else
             {
+                DateTime now = DTO.Common.ThoiGianHeThongHelper.LayGioHienTai();
+                if (_currentGioXuatPhatKH.HasValue && _currentGioXuatPhatKH.Value.AddMinutes(-10) < now)
+                {
+                    ThongBaoDialog.CanhBao($"Chuyến tàu {_currentSoHieuMacTau} (khởi hành {_currentGioXuatPhatKH.Value:HH:mm}) đã sát giờ chạy (dưới 10 phút)!\n\nHệ thống đã ngừng nhận đặt vé cho chuyến này.", "Ngừng Bán Vé Sát Giờ");
+                    return;
+                }
+
                 decimal giaGoc = _veService.TinhGiaVe(_currentLoaiToa, _currentMaGaDi, _currentMaGaDen, tangGiuong, _currentLoaiTau);
                 string loaiToaDesc = _currentLoaiToa switch
                 {
@@ -1799,6 +1970,7 @@ namespace GUI.Views.Pages
                     MaToaXeKhach = _currentMaToaXe,
                     MaChuyenTau = _currentMaChuyenTau,
                     SoHieuMacTau = _currentSoHieuMacTau,
+                    GioXuatPhatKH = _currentGioXuatPhatKH,
                     MaGaDi = _currentMaGaDi,
                     MaGaDen = _currentMaGaDen,
                     GiaGoc = giaGoc,
@@ -1978,9 +2150,28 @@ namespace GUI.Views.Pages
                 {
                     item.TenHanhKhach = txtNguoiMuaTen.Text.Trim();
                 }
-                var txtTen = new TextBox { Text = item.TenHanhKhach, Height = 28, FontSize = 12, VerticalContentAlignment = VerticalAlignment.Center };
+                var txtTen = new TextBox 
+                { 
+                    Text = item.TenHanhKhach, 
+                    Height = 28, 
+                    FontSize = 12, 
+                    MaxLength = 50,
+                    VerticalContentAlignment = VerticalAlignment.Center 
+                };
+                txtTen.PreviewTextInput += TextOnly_PreviewTextInput;
+                DataObject.AddPastingHandler(txtTen, OnTenHanhKhachPaste);
                 txtTen.TextChanged += (s, ev) =>
                 {
+                    string raw = txtTen.Text;
+                    string cleaned = new string(raw.Where(c => char.IsLetter(c) || char.IsWhiteSpace(c)).ToArray());
+                    if (cleaned != raw)
+                    {
+                        int caret = txtTen.CaretIndex;
+                        txtTen.Text = cleaned;
+                        txtTen.CaretIndex = Math.Min(caret, cleaned.Length);
+                        return;
+                    }
+
                     item.TenHanhKhach = txtTen.Text.Trim();
                     if (_gioVe.Count == 1 && (string.IsNullOrWhiteSpace(txtNguoiMuaTen.Text) || txtNguoiMuaTen.Tag?.ToString() == "AutoSync" || txtNguoiMuaTen.Text != item.TenHanhKhach))
                     {
@@ -2002,8 +2193,30 @@ namespace GUI.Views.Pages
                 rowCccd.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
                 var lblCccd = new TextBlock { Text = "CCCD:", Style = (Style)FindResource("FieldLabel"), VerticalAlignment = VerticalAlignment.Center };
-                var txtCccd = new TextBox { Text = item.CCCDHanhKhach, Height = 28, FontSize = 12, FontFamily = new FontFamily("Consolas"), VerticalContentAlignment = VerticalAlignment.Center };
-                txtCccd.TextChanged += (s, ev) => item.CCCDHanhKhach = txtCccd.Text.Trim();
+                var txtCccd = new TextBox 
+                { 
+                    Text = item.CCCDHanhKhach, 
+                    Height = 28, 
+                    FontSize = 12, 
+                    MaxLength = 12,
+                    FontFamily = new FontFamily("Consolas"), 
+                    VerticalContentAlignment = VerticalAlignment.Center 
+                };
+                txtCccd.PreviewTextInput += NumberOnly_PreviewTextInput;
+                DataObject.AddPastingHandler(txtCccd, OnCccdOrSdtPaste);
+                txtCccd.TextChanged += (s, ev) =>
+                {
+                    string raw = txtCccd.Text;
+                    string cleaned = new string(raw.Where(char.IsDigit).ToArray());
+                    if (cleaned != raw)
+                    {
+                        int caret = txtCccd.CaretIndex;
+                        txtCccd.Text = cleaned;
+                        txtCccd.CaretIndex = Math.Min(caret, cleaned.Length);
+                        return;
+                    }
+                    item.CCCDHanhKhach = txtCccd.Text.Trim();
+                };
 
                 Grid.SetColumn(lblCccd, 0);
                 Grid.SetColumn(txtCccd, 1);
@@ -2152,10 +2365,26 @@ namespace GUI.Views.Pages
                 if (_gioVe.Count > 0 && !string.IsNullOrWhiteSpace(_gioVe[0].TenHanhKhach))
                 {
                     txtNguoiMuaTen.Text = _gioVe[0].TenHanhKhach;
-                    ClearNguoiMuaTenError();
-                    return true;
+                    ten = txtNguoiMuaTen.Text.Trim();
                 }
-                lblErrNguoiMuaTen.Text = "Vui lòng nhập họ tên người mua vé";
+                else
+                {
+                    lblErrNguoiMuaTen.Text = "Vui lòng nhập họ tên người mua vé";
+                    lblErrNguoiMuaTen.Visibility = Visibility.Visible;
+                    txtNguoiMuaTen.BorderBrush = new SolidColorBrush(Color.FromRgb(220, 38, 38));
+                    return false;
+                }
+            }
+            if (ten.Any(char.IsDigit))
+            {
+                lblErrNguoiMuaTen.Text = "Họ tên không được chứa chữ số";
+                lblErrNguoiMuaTen.Visibility = Visibility.Visible;
+                txtNguoiMuaTen.BorderBrush = new SolidColorBrush(Color.FromRgb(220, 38, 38));
+                return false;
+            }
+            if (ten.Length < 2)
+            {
+                lblErrNguoiMuaTen.Text = "Họ tên phải có ít nhất 2 ký tự";
                 lblErrNguoiMuaTen.Visibility = Visibility.Visible;
                 txtNguoiMuaTen.BorderBrush = new SolidColorBrush(Color.FromRgb(220, 38, 38));
                 return false;
@@ -2207,6 +2436,16 @@ namespace GUI.Views.Pages
                 return;
             }
 
+            DateTime now = DTO.Common.ThoiGianHeThongHelper.LayGioHienTai();
+            foreach (var item in _gioVe)
+            {
+                if (item.GioXuatPhatKH.HasValue && item.GioXuatPhatKH.Value.AddMinutes(-10) < now)
+                {
+                    ThongBaoDialog.CanhBao($"Chuyến tàu {item.SoHieuMacTau} (khởi hành {item.GioXuatPhatKH.Value:HH:mm}) đã sát giờ chạy (dưới 10 phút)!\n\nHệ thống đã ngừng bán vé cho chuyến này. Vui lòng xóa vé khỏi giỏ để tiếp tục.", "Ngừng Bán Vé Sát Giờ");
+                    return;
+                }
+            }
+
             if (_gioVe.Count > 8)
             {
                 ThongBaoDialog.CanhBao($"Một đơn bán vé lẻ tại quầy chỉ được chọn tối đa 8 vé (hiện tại: {_gioVe.Count} vé)!\n\n" +
@@ -2238,6 +2477,11 @@ namespace GUI.Views.Pages
                 if (string.IsNullOrWhiteSpace(g.TenHanhKhach))
                 {
                     ThongBaoDialog.CanhBao($"Vui lòng nhập Họ tên hành khách cho vé Toa {g.NhanHieuToa} Ghế {g.SoGhe}!", "Thiếu Thông Tin");
+                    return;
+                }
+                if (g.TenHanhKhach.Trim().Length < 2 || g.TenHanhKhach.Any(char.IsDigit))
+                {
+                    ThongBaoDialog.CanhBao($"Họ tên hành khách '{g.TenHanhKhach}' (Toa {g.NhanHieuToa} Ghế {g.SoGhe}) không hợp lệ!\nHọ tên chỉ gồm chữ cái, không được chứa số và có tối thiểu 2 ký tự.", "Họ Tên Không Hợp Lệ");
                     return;
                 }
                 if (string.IsNullOrWhiteSpace(g.CCCDHanhKhach))
@@ -3043,7 +3287,8 @@ namespace GUI.Views.Pages
                 if (row.Row.Table.Columns.Contains("GioXuatPhatKH") && row["GioXuatPhatKH"] != DBNull.Value)
                 {
                     DateTime gioXuatPhat = Convert.ToDateTime(row["GioXuatPhatKH"]);
-                    TimeSpan conLai = gioXuatPhat - DateTime.Now;
+                    DateTime now = DTO.Common.ThoiGianHeThongHelper.LayGioHienTai();
+                    TimeSpan conLai = gioXuatPhat - now;
 
                     if (conLai.TotalHours < 4)
                     {
@@ -3153,6 +3398,18 @@ namespace GUI.Views.Pages
             LoadDanhSachVeTab2();
         }
 
+        /// <summary>
+        /// Cho phép màn hình Điều hành thực tế (CTC Console) kích hoạt tìm kiếm chặng vé cụ thể để kiểm chứng
+        /// </summary>
+        public void ChonChangVaNgay(int maGaDi, int maGaDen, DateTime ngayDi)
+        {
+            tabMainBanVe.SelectedIndex = 0;
+            cboGaDi.SelectedValue = maGaDi;
+            cboGaDen.SelectedValue = maGaDen;
+            dpNgayDi.SelectedDate = ngayDi.Date;
+            TimChuyenTau();
+        }
+
         public async void KichHoatXuatTep()
         {
             tabMainBanVe.SelectedIndex = 1;
@@ -3210,6 +3467,7 @@ namespace GUI.Views.Pages
         public int MaToaXeKhach { get; set; }
         public int MaChuyenTau { get; set; }
         public string SoHieuMacTau { get; set; } = "";
+        public DateTime? GioXuatPhatKH { get; set; }
         public int MaGaDi { get; set; }
         public int MaGaDen { get; set; }
         public decimal GiaGoc { get; set; }
@@ -3218,5 +3476,14 @@ namespace GUI.Views.Pages
         public string TenHanhKhach { get; set; } = "";
         public string CCCDHanhKhach { get; set; } = "";
         public string LoaiKhach { get; set; } = "THUONG";
+    }
+
+    public class MacTauFilterItem
+    {
+        public string SoHieuMacTau { get; set; } = "";
+        public string DisplayText { get; set; } = "";
+        public string SubText { get; set; } = "";
+
+        public override string ToString() => DisplayText;
     }
 }

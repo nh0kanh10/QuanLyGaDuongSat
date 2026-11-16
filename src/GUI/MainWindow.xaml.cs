@@ -13,6 +13,7 @@ namespace GUI
         private readonly KhuGianPage _khuGianPage = new();
         private readonly LichTrinhPage _lichTrinhPage = new();
         private readonly BieuDoChayTauPage _bieuDoPage = new();
+        private readonly DieuHanhThucTePage _dieuHanhPage = new();
         private readonly BanVePage _banVePage = new();
         private readonly SoatVePage _soatVePage = new();
         private readonly HangHoaPage _hangHoaPage = new();
@@ -34,6 +35,7 @@ namespace GUI
             { "NhanSu", "MasterData" },
             { "LichTrinh", "VanHanh" },
             { "BieuDo", "VanHanh" },
+            { "DieuHanhThucTe", "VanHanh" },
             { "BanVe", "KinhDoanh" },
             { "SoatVe", "KinhDoanh" },
             { "HangHoa", "KinhDoanh" },
@@ -169,6 +171,11 @@ namespace GUI
                     }
                     break;
 
+                case "DieuHanhThucTe":
+                    MainFrame.Navigate(_dieuHanhPage);
+                    _dieuHanhPage.CapNhatToanBoHeThong();
+                    break;
+
                 case "BanVe":
                     MainFrame.Navigate(_banVePage);
                     break;
@@ -213,6 +220,12 @@ namespace GUI
             {
                 _bieuDoPage.ChonChuyenTauTheoId(focusMaChuyenTau.Value, ngay);
             }
+        }
+
+        public void NavigateToBanVe(int maGaDi, int maGaDen, DateTime ngayDi)
+        {
+            NavigateTo("BanVe");
+            _banVePage.ChonChangVaNgay(maGaDi, maGaDen, ngayDi);
         }
 
         public void NavigateToLichTrinh(int? focusMaChuyenTau = null, DateTime? ngay = null)
@@ -470,6 +483,11 @@ namespace GUI
                     btnScF7.Visibility = Visibility.Collapsed;
                     sepScF7.Visibility = Visibility.Collapsed;
 
+                    btnScF8.Visibility = Visibility.Visible;
+                    sepScF8.Visibility = Visibility.Visible;
+                    txtScF8.Text = "In Thẻ Lên Tàu";
+                    btnScF8.ToolTip = "F8: Xem & in thẻ lên tàu cho vé đang chọn";
+
                     btnScF9.Visibility = Visibility.Collapsed;
                     sepScF9.Visibility = Visibility.Collapsed;
                     break;
@@ -602,6 +620,7 @@ namespace GUI
                 case "NhanSu": SetTabActive(tabNavNhanSu, txtTabNhanSu, iconTabNhanSu); break;
                 case "LichTrinh": SetTabActive(tabLichTrinh, txtTabLichTrinh, iconTabLichTrinh); break;
                 case "BieuDo": SetTabActive(tabBieuDo, txtTabBieuDo, iconTabBieuDo); break;
+                case "DieuHanhThucTe": SetTabActive(tabDieuHanhThucTe, txtTabDieuHanhThucTe, iconTabDieuHanhThucTe); break;
                 case "BanVe": SetTabActive(tabBanVe, txtTabBanVe, iconTabBanVe); break;
                 case "SoatVe": SetTabActive(tabSoatVe, txtTabSoatVe, iconTabSoatVe); break;
                 case "HangHoa": SetTabActive(tabHangHoa, txtTabHangHoa, iconTabHangHoa); break;
@@ -665,6 +684,12 @@ namespace GUI
             txtTabBieuDo.Foreground = inactiveFg;
             txtTabBieuDo.FontWeight = FontWeights.SemiBold;
             iconTabBieuDo.Foreground = inactiveIconFg;
+
+            tabDieuHanhThucTe.Background = inactiveBg;
+            tabDieuHanhThucTe.BorderBrush = inactiveBorder;
+            txtTabDieuHanhThucTe.Foreground = inactiveFg;
+            txtTabDieuHanhThucTe.FontWeight = FontWeights.SemiBold;
+            iconTabDieuHanhThucTe.Foreground = inactiveIconFg;
 
             tabBanVe.Background = inactiveBg;
             tabBanVe.BorderBrush = inactiveBorder;
@@ -781,6 +806,12 @@ namespace GUI
                     ThucHienSoatVe();
                     break;
                 case Key.F8:
+                    if (_currentTag == "SoatVe")
+                    {
+                        e.Handled = true;
+                        _soatVePage.KichHoatInTheLenTau();
+                        break;
+                    }
                     if (btnScF8.Visibility != Visibility.Visible) return;
                     e.Handled = true;
                     NavigateTo("BieuDo");
@@ -814,7 +845,15 @@ namespace GUI
                     case "F5": if (btnScF5.Visibility == Visibility.Visible) ThucHienNapLai(); break;
                     case "F6": if (btnScF6.Visibility == Visibility.Visible) ThucHienXuatTep(); break;
                     case "F7": if (btnScF7.Visibility == Visibility.Visible) ThucHienSoatVe(); break;
-                    case "F8": if (btnScF8.Visibility == Visibility.Visible) NavigateTo("BieuDo"); break;
+                    case "F8": 
+                        if (btnScF8.Visibility == Visibility.Visible)
+                        {
+                            if (_currentTag == "SoatVe")
+                                _soatVePage.KichHoatInTheLenTau();
+                            else
+                                NavigateTo("BieuDo");
+                        }
+                        break;
                     case "F9": if (btnScF9.Visibility == Visibility.Visible) ThucHienBaoCao(); break;
 
                     case "F11": ThucHienToanManHinh(); break;

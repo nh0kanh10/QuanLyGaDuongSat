@@ -5,6 +5,7 @@ using Xunit;
 
 namespace Tests.VanHanh
 {
+    [Collection("DieuDoDbCollection")]
     public class DieuDoXepTranhTests
     {
         private readonly DieuDoService _dieuDoService = new();
