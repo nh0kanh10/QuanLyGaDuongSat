@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace DTO.Common
 {
@@ -229,52 +231,91 @@ namespace DTO.Common
         }
 
         // =====================================================================
-        // Luu cau hinh vao appsettings.Local.json va nap lai ngay lap tuc
+        // Luu cau hinh ket noi vao appsettings.Local.json va nap lai ngay lap tuc
+        // (A Ba them 16/11 cho CauHinhKetNoiDialog + nut gan tep .mdf o DangNhapDialog).
+        //
+        // Sua 16/11 (Dat): CHI DOI muc "KetNoiCsdl" (MayChu / TenCsdl / ChuoiKetNoi /
+        // TuDongDoMayChu). Moi thu khac trong tep giu nguyen: muc TroLyAI (khoa API, mo
+        // hinh, ThoiGianChoGiay, BatMoHinhNgonNgu), TenCsdlKiemThu, muc khac sau nay.
+        // Ban dau ghi de ca tep nen mat ThoiGianChoGiay / BatMoHinhNgonNgu.
+        // Tep dang sai cu phap JSON -> KHONG ghi de (de khoi mat khoa API), tra false,
+        // ly do o LoiLuuCauHinh. Ghi ra tep tam roi doi ten -> dang ghi ma tat app
+        // cung khong de lai tep do dang.
+        // Ghi vao dung thu muc da doc cau hinh (ThuMucCauHinh), khong mac dinh thu muc exe.
         // =====================================================================
+        public static string LoiLuuCauHinh { get; private set; } = string.Empty;
+
         public static bool LuuCauHinhLocal(string? mayChu, string? tenCsdl, string? chuoiKetNoi)
         {
+            LoiLuuCauHinh = string.Empty;
+            if (!_daNap) Nap();
+            string thuMuc = string.IsNullOrWhiteSpace(ThuMucCauHinh) ? AppContext.BaseDirectory : ThuMucCauHinh;
+            string duongDan = Path.Combine(thuMuc, TenTepRieng);
+            string tepTam = duongDan + ".tmp";
+
             try
             {
-                string duongDan = Path.Combine(AppContext.BaseDirectory, TenTepRieng);
-                var dictKetNoi = new Dictionary<string, object>();
-
-                if (!string.IsNullOrWhiteSpace(chuoiKetNoi))
-                {
-                    dictKetNoi["ChuoiKetNoi"] = chuoiKetNoi.Trim();
-                }
-                else
-                {
-                    if (!string.IsNullOrWhiteSpace(mayChu)) dictKetNoi["MayChu"] = mayChu.Trim();
-                    if (!string.IsNullOrWhiteSpace(tenCsdl)) dictKetNoi["TenCsdl"] = tenCsdl.Trim();
-                    dictKetNoi["ChuoiKetNoi"] = string.Empty;
-                }
-                dictKetNoi["TuDongDoMayChu"] = true;
-
-                var jsonRoot = new Dictionary<string, object>
-                {
-                    ["KetNoiCsdl"] = dictKetNoi
-                };
-
-                if (!string.IsNullOrEmpty(_khoaApiAI))
-                {
-                    jsonRoot["TroLyAI"] = new Dictionary<string, object>
-                    {
-                        ["KhoaApi"] = _khoaApiAI,
-                        ["MoHinh"] = MoHinhAI
-                    };
-                }
-
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                string jsonString = JsonSerializer.Serialize(jsonRoot, options);
-                File.WriteAllText(duongDan, jsonString);
-
-                NapLai();
-                return true;
+                string? noiDungCu = File.Exists(duongDan) ? File.ReadAllText(duongDan) : null;
+                string noiDungMoi = GopCauHinhKetNoi(noiDungCu, mayChu, tenCsdl, chuoiKetNoi);
+                File.WriteAllText(tepTam, noiDungMoi);
+                File.Move(tepTam, duongDan, overwrite: true);
             }
-            catch
+            catch (Exception ex)
             {
+                LoiLuuCauHinh = ex is InvalidOperationException
+                    ? ex.Message
+                    : $"Không ghi được {TenTepRieng}: {ex.Message}";
+                try { if (File.Exists(tepTam)) File.Delete(tepTam); } catch { }
                 return false;
             }
+
+            NapLai(thuMuc);
+            return true;
+        }
+
+        // Ham thuan (unit test duoc): tra noi dung tep moi = tep cu + muc KetNoiCsdl da doi.
+        // mayChu / tenCsdl rong -> giu gia tri cu. chuoiKetNoi rong -> xoa (ghep tu MayChu + TenCsdl).
+        // Tep cu sai cu phap -> InvalidOperationException (khong ghi de).
+        public static string GopCauHinhKetNoi(string? noiDungCu, string? mayChu, string? tenCsdl, string? chuoiKetNoi)
+        {
+            JsonObject goc = new();
+            if (!string.IsNullOrWhiteSpace(noiDungCu))
+            {
+                JsonNode? nut;
+                try
+                {
+                    nut = JsonNode.Parse(noiDungCu, documentOptions: new JsonDocumentOptions
+                    {
+                        CommentHandling = JsonCommentHandling.Skip,
+                        AllowTrailingCommas = true
+                    });
+                }
+                catch (JsonException ex)
+                {
+                    throw new InvalidOperationException(
+                        $"{TenTepRieng} đang sai cú pháp JSON ({ex.Message}). Sửa tay tệp này trước; "
+                        + "chương trình không ghi đè để khỏi mất khóa API và thiết lập khác trong tệp.", ex);
+                }
+                goc = nut as JsonObject ?? throw new InvalidOperationException(
+                    $"{TenTepRieng} không phải một đối tượng JSON {{ ... }}. Sửa tay tệp này trước.");
+            }
+
+            if (goc["KetNoiCsdl"] is not JsonObject ketNoi)
+            {
+                ketNoi = new JsonObject();
+                goc["KetNoiCsdl"] = ketNoi;
+            }
+            if (!string.IsNullOrWhiteSpace(mayChu)) ketNoi["MayChu"] = mayChu.Trim();
+            if (!string.IsNullOrWhiteSpace(tenCsdl)) ketNoi["TenCsdl"] = tenCsdl.Trim();
+            ketNoi["ChuoiKetNoi"] = string.IsNullOrWhiteSpace(chuoiKetNoi) ? string.Empty : chuoiKetNoi.Trim();
+            ketNoi["TuDongDoMayChu"] = true;
+
+            // Khong \u-escape chu Viet / dau +: tep cau hinh cho nguoi doc, khong nhung vao HTML.
+            return goc.ToJsonString(new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            });
         }
     }
 }
